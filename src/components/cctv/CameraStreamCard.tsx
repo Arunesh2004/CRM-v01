@@ -10,7 +10,7 @@ export function CameraStreamCard({ camera }: { camera: any }) {
 
   async function handleSimulateEvent() {
     setIsSimulating(true);
-    const events = ['Person detected', 'Vehicle detected', 'Motion detected', 'Loitering detected'];
+    const events = ['Person detected', 'Vehicle detected', 'Motion detected', 'Restricted area intrusion'];
     const randomEvent = events[Math.floor(Math.random() * events.length)];
     const confidence = Math.random() * (0.99 - 0.75) + 0.75; // 75% to 99%
 
@@ -20,8 +20,13 @@ export function CameraStreamCard({ camera }: { camera: any }) {
       confidence,
     });
 
+    let severity = 'LOW';
+    if (randomEvent.toLowerCase().includes('person')) severity = 'HIGH';
+    else if (randomEvent.toLowerCase().includes('vehicle')) severity = 'MEDIUM';
+    else if (randomEvent.toLowerCase().includes('restricted') || randomEvent.toLowerCase().includes('intrusion')) severity = 'CRITICAL';
+
     setIsSimulating(false);
-    alert(`Simulated AI Event: ${randomEvent}`);
+    alert(`AI Event Created \n↓\nSecurity Incident Generated:\n${randomEvent} [${severity}]`);
     router.refresh();
   }
 

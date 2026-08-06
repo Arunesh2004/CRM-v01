@@ -170,12 +170,37 @@ export async function simulateAIEvent(input: SimulateAIEventInput) {
       }
     });
 
+    // Determine severity mapping
+    let severity: any = 'LOW';
+    const obj = input.detectedObject.toLowerCase();
+    if (obj.includes('person')) {
+      severity = 'HIGH';
+    } else if (obj.includes('vehicle')) {
+      severity = 'MEDIUM';
+    } else if (obj.includes('restricted') || obj.includes('intrusion')) {
+      severity = 'CRITICAL';
+    }
+
+    const title = `Security Alert: ${input.detectedObject}`;
+
     if (camera.location) {
+      const incident = await tx.incident.create({
+        data: {
+          tenantId,
+          locationId: camera.locationId!,
+          cameraId: camera.id,
+          aiEventId: aiEvent.id,
+          title,
+          severity,
+          status: 'OPEN',
+        }
+      });
+
       await tx.activityTimeline.create({
         data: {
           tenantId,
-          type: 'SYSTEM', // Map it to SYSTEM
-          content: `AI Detection: ${input.detectedObject} at ${camera.name} (${Math.round(input.confidence * 100)}% confidence)`,
+          type: 'SYSTEM',
+          content: `${title} [${severity}] at ${camera.name} (${Math.round(input.confidence * 100)}% confidence)`,
           actorId: user.id,
           entityType: 'CUSTOMER',
           entityId: camera.location.customerId
