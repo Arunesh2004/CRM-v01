@@ -33,6 +33,17 @@ export async function createLead(input: CreateLeadInput) {
       }
     });
 
+    await tx.activityTimeline.create({
+      data: {
+        tenantId,
+        type: 'SYSTEM',
+        content: `Lead created: ${lead.name || lead.company}`,
+        actorId: user.id,
+        entityType: 'LEAD',
+        entityId: lead.id
+      }
+    });
+
     return lead;
   });
 }
@@ -88,6 +99,16 @@ export async function updateLead(input: UpdateLeadInput) {
           metadata: { newAssignedUserId: input.assignedUserId }
         }
       });
+      await tx.activityTimeline.create({
+        data: {
+          tenantId,
+          type: 'SYSTEM',
+          content: `Lead assigned to user ID: ${input.assignedUserId}`,
+          actorId: user.id,
+          entityType: 'LEAD',
+          entityId: input.id
+        }
+      });
     }
 
     return tx.lead.findFirst({ where: { id: input.id, tenantId }});
@@ -140,6 +161,28 @@ export async function convertLeadToCustomer(leadId: string) {
         resource: 'CUSTOMER',
         resourceId: customer.id,
         metadata: { source: 'LEAD_CONVERSION', leadId: leadId }
+      }
+    });
+
+    await tx.activityTimeline.create({
+      data: {
+        tenantId,
+        type: 'SYSTEM',
+        content: `Lead converted to Customer`,
+        actorId: user.id,
+        entityType: 'LEAD',
+        entityId: lead.id
+      }
+    });
+
+    await tx.activityTimeline.create({
+      data: {
+        tenantId,
+        type: 'SYSTEM',
+        content: `Customer created from Lead conversion`,
+        actorId: user.id,
+        entityType: 'CUSTOMER',
+        entityId: customer.id
       }
     });
 

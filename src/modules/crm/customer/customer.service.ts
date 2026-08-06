@@ -30,6 +30,17 @@ export async function createCustomer(input: CreateCustomerInput) {
       }
     });
 
+    await tx.activityTimeline.create({
+      data: {
+        tenantId,
+        type: 'SYSTEM',
+        content: `Customer created: ${customer.name}`,
+        actorId: user.id,
+        entityType: 'CUSTOMER',
+        entityId: customer.id
+      }
+    });
+
     return customer;
   });
 }
@@ -82,6 +93,17 @@ export async function updateCustomer(input: UpdateCustomerInput) {
       }
     });
 
+    await tx.activityTimeline.create({
+      data: {
+        tenantId,
+        type: 'SYSTEM',
+        content: `Customer updated`,
+        actorId: user.id,
+        entityType: 'CUSTOMER',
+        entityId: input.id
+      }
+    });
+
     if (assignmentChanged) {
       await tx.auditLog.create({
         data: {
@@ -92,6 +114,17 @@ export async function updateCustomer(input: UpdateCustomerInput) {
           resource: 'CUSTOMER',
           resourceId: input.id,
           metadata: { newAssignedUserId: input.assignedUserId }
+        }
+      });
+
+      await tx.activityTimeline.create({
+        data: {
+          tenantId,
+          type: 'SYSTEM',
+          content: `Customer assigned to user ID: ${input.assignedUserId}`,
+          actorId: user.id,
+          entityType: 'CUSTOMER',
+          entityId: input.id
         }
       });
     }
