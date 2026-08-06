@@ -42,3 +42,43 @@ export async function markNotificationReadAction(payload: z.infer<typeof MarkNot
     return { success: false, error: error.message };
   }
 }
+
+// Fetch all notifications for the tenant (dashboard view)
+export async function getAllNotificationsAction() {
+  try {
+    await requireAuth();
+    const tenantId = await requireTenant();
+    await requirePermission('COMMUNICATION', 'READ');
+    
+    const prisma = withTenant(tenantId);
+    const notifications = await prisma.notification.findMany({
+      orderBy: { createdAt: 'desc' },
+      take: 100,
+      include: {
+        user: { select: { email: true } }
+      }
+    });
+    return { success: true, data: notifications };
+  } catch (error: any) {
+    return { success: false, error: error.message };
+  }
+}
+
+export async function getNotificationsByIncidentAction(incidentId: string) {
+  try {
+    await requireAuth();
+    const tenantId = await requireTenant();
+    await requirePermission('COMMUNICATION', 'READ');
+    
+    const prisma = withTenant(tenantId);
+    
+    const notifications = await prisma.notification.findMany({
+      where: { actionUrl: incidentId },
+      orderBy: { createdAt: 'desc' },
+    });
+
+    return { success: true, data: notifications };
+  } catch (error: any) {
+    return { success: false, error: error.message };
+  }
+}

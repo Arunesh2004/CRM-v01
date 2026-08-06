@@ -13,7 +13,11 @@ export async function sendEmail(input: CreateEmailInput) {
   const prisma = withTenant(tenantId);
   const provider = ProviderFactory.getEmailProvider();
   
-  const response = await provider.sendEmail(input.to, input.subject, input.bodyHtml);
+  const response = await provider.sendEmail(tenantId, {
+    to: input.to,
+    subject: input.subject,
+    html: input.bodyHtml
+  });
   if (!response.success) {
     throw new Error('Email provider failed');
   }

@@ -156,7 +156,7 @@ export async function simulateAIEvent(input: SimulateAIEventInput) {
 
   const prisma = withTenant(tenantId);
 
-  return await prisma.$transaction(async (tx) => {
+  const result = await prisma.$transaction(async (tx) => {
     const camera = await tx.camera.findFirst({ where: { id: input.cameraId, tenantId }, include: { location: true } });
     if (!camera) throw new Error('Camera not found');
 
@@ -182,9 +182,10 @@ export async function simulateAIEvent(input: SimulateAIEventInput) {
     }
 
     const title = `Security Alert: ${input.detectedObject}`;
+    let incident = null;
 
     if (camera.location) {
-      const incident = await tx.incident.create({
+      incident = await tx.incident.create({
         data: {
           tenantId,
           locationId: camera.locationId!,
@@ -208,6 +209,14 @@ export async function simulateAIEvent(input: SimulateAIEventInput) {
       });
     }
 
-    return aiEvent;
+    return { aiEvent, incidentId: incident?.id };
   });
+
+  if (result.incidentId) {
+    import('../communication/notification.service').then(({ sendIncidentNotification }) => {
+      sendIncidentNotification(result.incidentId!, tenantId, user.id).catch(console.error);
+    });
+  }
+
+  return result.aiEvent;
 }

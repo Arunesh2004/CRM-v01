@@ -12,7 +12,7 @@ export async function createIncident(input: CreateIncidentInput) {
 
   const prisma = withTenant(tenantId);
 
-  return await prisma.$transaction(async (tx) => {
+  const incident = await prisma.$transaction(async (tx) => {
     const incident = await tx.incident.create({
       data: {
         tenantId,
@@ -42,6 +42,13 @@ export async function createIncident(input: CreateIncidentInput) {
 
     return incident;
   });
+
+  // Trigger notification asynchronously
+  import('../communication/notification.service').then(({ sendIncidentNotification }) => {
+    sendIncidentNotification(incident.id, tenantId, user.id).catch(console.error);
+  });
+
+  return incident;
 }
 
 export async function getIncidents() {

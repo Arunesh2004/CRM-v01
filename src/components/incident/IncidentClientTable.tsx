@@ -3,6 +3,7 @@
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { updateIncidentStatusAction, resolveIncidentAction } from '@/modules/incident/actions/incident.actions';
+import { IncidentNotificationStatus } from './IncidentNotificationStatus';
 
 export function IncidentClientTable({ incidents }: { incidents: any[] }) {
   const router = useRouter();
@@ -60,6 +61,7 @@ export function IncidentClientTable({ incidents }: { incidents: any[] }) {
             <th className="py-3 px-4">Severity</th>
             <th className="py-3 px-4">Location</th>
             <th className="py-3 px-4">Camera</th>
+            <th className="py-3 px-4">Notifications</th>
             <th className="py-3 px-4">Status</th>
             <th className="py-3 px-4">Created Time</th>
             <th className="py-3 px-4">Actions</th>
@@ -72,6 +74,9 @@ export function IncidentClientTable({ incidents }: { incidents: any[] }) {
               <td className="py-3 px-4">{getSeverityBadge(incident.severity)}</td>
               <td className="py-3 px-4">{incident.location?.name || 'Unknown'}</td>
               <td className="py-3 px-4">{incident.camera?.name || 'Unknown'}</td>
+              <td className="py-3 px-4">
+                <IncidentNotificationStatus incidentId={incident.id} />
+              </td>
               <td className="py-3 px-4">{getStatusBadge(incident.status)}</td>
               <td className="py-3 px-4 text-sm text-gray-500">{new Date(incident.createdAt).toLocaleString()}</td>
               <td className="py-3 px-4 space-x-2">
