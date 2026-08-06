@@ -1,0 +1,66 @@
+name: CI/CD Pipeline
+
+on:
+  push:
+    branches: [ "main" ]
+  pull_request:
+    branches: [ "main" ]
+
+jobs:
+  build-and-test:
+    runs-on: ubuntu-latest
+    
+    services:
+      postgres:
+        image: postgres:15-alpine
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: postgres
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
+    steps:
+    - uses: actions/checkout@v3
+    
+    - name: Use Node.js 20
+      uses: actions/setup-node@v3
+      with:
+        node-version: '20'
+        cache: 'npm'
+        
+    - name: Install dependencies
+      run: npm ci
+      
+    - name: Prisma Generate
+      run: npx prisma generate
+      
+    - name: Prisma DB Push (Test Env)
+      env:
+        DATABASE_URL: postgresql://postgres:postgres@localhost:5432/postgres
+      run: npx prisma db push --accept-data-loss
+      
+    - name: Run Tests
+      env:
+        DATABASE_URL: postgresql://postgres:postgres@localhost:5432/postgres
+      # Run all our CLI testing scripts
+      run: |
+        npx tsx tests/auth-production.test.ts
+        npx tsx tests/webhook-infrastructure.test.ts
+        npx tsx tests/storage-infrastructure.test.ts
+        npx tsx tests/production-reliability.test.ts
+        npx tsx tests/distributed-reliability.test.ts
+        npx tsx tests/security-production-audit.test.ts
+        
+    - name: Run Security Audit
+      run: npm audit
+      
+    - name: Build Application
+      env:
+        NEXT_TELEMETRY_DISABLED: 1
+      run: npm run build
