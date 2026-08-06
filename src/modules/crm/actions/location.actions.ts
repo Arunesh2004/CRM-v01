@@ -1,60 +1,60 @@
 'use server'
 
 import { requireAuth, requireTenant, requirePermission } from '@/lib/auth';
-import { CreateCustomerSchema, UpdateCustomerSchema } from '../validators/customer.schema';
-import * as customerService from '../customer/customer.service';
+import { CreateLocationSchema, UpdateLocationSchema } from '../validators/location.schema';
+import * as locationService from '../location/location.service';
 import { z } from 'zod';
 
-export async function createCustomerAction(payload: z.infer<typeof CreateCustomerSchema>) {
+export async function createLocationAction(payload: z.infer<typeof CreateLocationSchema>) {
   try {
-    const validatedData = CreateCustomerSchema.parse(payload);
-    
-    await requireAuth();
-    await requireTenant();
-    await requirePermission('CUSTOMER', 'CREATE');
-    
-    const result = await customerService.createCustomer(validatedData);
-    return { success: true, data: result };
-  } catch (error: any) {
-    return { success: false, error: error.message };
-  }
-}
-
-export async function updateCustomerAction(payload: z.infer<typeof UpdateCustomerSchema>) {
-  try {
-    const validatedData = UpdateCustomerSchema.parse(payload);
+    const validatedData = CreateLocationSchema.parse(payload);
     
     await requireAuth();
     await requireTenant();
     await requirePermission('CUSTOMER', 'UPDATE');
     
-    const result = await customerService.updateCustomer(validatedData);
+    const result = await locationService.createLocation(validatedData);
     return { success: true, data: result };
   } catch (error: any) {
     return { success: false, error: error.message };
   }
 }
 
-export async function getCustomersAction() {
+export async function updateLocationAction(payload: z.infer<typeof UpdateLocationSchema>) {
   try {
+    const validatedData = UpdateLocationSchema.parse(payload);
+    
     await requireAuth();
     await requireTenant();
-    await requirePermission('CUSTOMER', 'READ');
+    await requirePermission('CUSTOMER', 'UPDATE');
     
-    const result = await customerService.getCustomers();
+    const result = await locationService.updateLocation(validatedData as any);
     return { success: true, data: result };
   } catch (error: any) {
     return { success: false, error: error.message };
   }
 }
 
-export async function getCustomerByIdAction(id: string) {
+export async function getLocationsAction() {
   try {
     await requireAuth();
     await requireTenant();
     await requirePermission('CUSTOMER', 'READ');
     
-    const result = await customerService.getCustomerById(id);
+    const result = await locationService.getLocations();
+    return { success: true, data: result };
+  } catch (error: any) {
+    return { success: false, error: error.message };
+  }
+}
+
+export async function deleteLocationAction(id: string) {
+  try {
+    await requireAuth();
+    await requireTenant();
+    await requirePermission('CUSTOMER', 'UPDATE');
+    
+    const result = await locationService.deleteLocation(id);
     return { success: true, data: result };
   } catch (error: any) {
     return { success: false, error: error.message };

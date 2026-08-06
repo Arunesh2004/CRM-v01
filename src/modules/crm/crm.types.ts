@@ -44,3 +44,18 @@ export type CreateTimelineEntryInput = {
   entityType: EntityType;
   entityId: string;
 };
+
+export type CreateLocationInput = {
+  name: string;
+  customerId: string;
+  address?: string;
+  city?: string;
+  state?: string;
+  zip?: string;
+  country?: string;
+  coordinates?: string;
+};
+
+export type UpdateLocationInput = Partial<CreateLocationInput> & {
+  id: string;
+};

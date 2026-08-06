@@ -56,6 +56,21 @@ export async function getCustomers() {
   });
 }
 
+export async function getCustomerById(id: string) {
+  await requireAuth();
+  const tenantId = await requireTenant();
+  await requirePermission('CUSTOMER', 'READ');
+
+  const prisma = withTenant(tenantId);
+  return await prisma.customer.findFirst({
+    where: { id, tenantId, deletedAt: null },
+    include: {
+      locations: true,
+      contacts: true
+    }
+  });
+}
+
 export async function updateCustomer(input: UpdateCustomerInput) {
   const user = await requireAuth();
   const tenantId = await requireTenant();
