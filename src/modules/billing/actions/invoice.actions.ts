@@ -31,3 +31,12 @@ export async function updateInvoiceStatusAction(payload: z.infer<typeof UpdateIn
     return { success: false, error: error.message || 'Internal error' };
   }
 }
+
+export async function getInvoicesAction() {
+  try {
+    const result = await invoiceService.getInvoices();
+    return { success: true, data: result };
+  } catch (error: any) {
+    return { success: false, error: error.message || 'Internal error' };
+  }
+}

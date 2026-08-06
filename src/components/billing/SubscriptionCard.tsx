@@ -1,39 +1,60 @@
 'use client';
-import { updateSubscriptionStatusAction } from '@/modules/billing/actions/subscription.actions';
+import { useState } from 'react';
+import { simulateCheckoutAction } from '@/modules/billing/actions/subscription.actions';
+import { useRouter } from 'next/navigation';
 
-export default function SubscriptionCard({ subscription }: { subscription: any }) {
-  if (!subscription) {
-    return <div className="p-6 border rounded-lg bg-white text-slate-500">No active subscription found.</div>;
-  }
+export function SubscriptionCard({ subscription, plans }: { subscription: any, plans: any[] }) {
+  const [loading, setLoading] = useState(false);
+  const router = useRouter();
 
-  const handleCancel = async () => {
-    if (confirm('Are you sure you want to cancel?')) {
-      const res = await updateSubscriptionStatusAction({ subscriptionId: subscription.id, status: 'CANCELLED' });
-      if (res.success) window.location.reload();
-      else alert(`Error: ${res.error}`);
+  const handleUpgrade = async (planId: string) => {
+    setLoading(true);
+    const res = await simulateCheckoutAction(planId);
+    if (res.success) {
+      alert('Checkout completed (Demo Mock)! Plan upgraded.');
+      router.refresh();
+    } else {
+      alert('Error upgrading plan.');
     }
+    setLoading(false);
   };
 
+  const currentPlan = subscription?.plan;
+
   return (
-    <div className="border border-slate-200 p-6 rounded-lg bg-white shadow-sm">
-      <div className="flex justify-between items-start">
+    <div className="bg-white shadow rounded-lg p-6 mb-6">
+      <h2 className="text-xl font-bold mb-4">Current Subscription</h2>
+      {currentPlan ? (
         <div>
-          <h3 className="text-lg font-bold text-slate-800">Current Subscription</h3>
-          <p className="text-sm text-slate-500 mt-1">Status: <span className="font-semibold text-slate-700">{subscription.status}</span></p>
+          <p className="text-lg font-semibold">{currentPlan.name} Plan</p>
+          <p className="text-gray-500 mb-2">Status: <span className="font-bold text-green-600">{subscription.status}</span></p>
+          <p className="text-sm text-gray-400 mb-4">Renews on: {new Date(subscription.renewalDate).toLocaleDateString()}</p>
         </div>
-        {subscription.status !== 'CANCELLED' && (
-          <button onClick={handleCancel} className="text-xs text-red-600 hover:underline">Cancel</button>
-        )}
-      </div>
-      <div className="mt-4 text-sm text-slate-600 grid grid-cols-2 gap-4">
-        <div>
-          <p className="font-medium text-slate-900">Start Date</p>
-          <p>{new Date(subscription.startDate).toLocaleDateString()}</p>
-        </div>
-        <div>
-          <p className="font-medium text-slate-900">Renewal Date</p>
-          <p>{new Date(subscription.renewalDate).toLocaleDateString()}</p>
-        </div>
+      ) : (
+        <p className="text-gray-500 mb-4">No active subscription.</p>
+      )}
+
+      <h3 className="font-semibold mb-3 mt-6 border-t pt-4">Available Plans</h3>
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+        {plans.map(p => (
+          <div key={p.id} className={`border rounded p-4 flex flex-col ${currentPlan?.id === p.id ? 'border-blue-500 bg-blue-50' : ''}`}>
+            <h4 className="font-bold">{p.name}</h4>
+            <p className="text-2xl font-black my-2">${Number(p.price)}</p>
+            <p className="text-sm text-gray-600 flex-grow">{p.billingCycle}</p>
+            {currentPlan?.id !== p.id && (
+              <button
+                onClick={() => handleUpgrade(p.id)}
+                disabled={loading}
+                className="mt-4 bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded w-full"
+              >
+                {loading ? 'Processing...' : 'Upgrade'}
+              </button>
+            )}
+            {currentPlan?.id === p.id && (
+              <span className="mt-4 text-center font-bold text-blue-600 py-2 w-full inline-block">Current Plan</span>
+            )}
+          </div>
+        ))}
       </div>
     </div>
   );

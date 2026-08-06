@@ -1,45 +1,44 @@
 'use client';
 
-export default function InvoiceTable({ invoices }: { invoices: any[] }) {
+export function InvoiceTable({ invoices }: { invoices: any[] }) {
   if (!invoices || invoices.length === 0) {
-    return <div className="text-sm text-slate-500 p-4 border rounded-md">No invoices found.</div>;
+    return (
+      <div className="bg-white shadow rounded-lg p-6 mb-6">
+        <h2 className="text-xl font-bold mb-4">Billing History</h2>
+        <p className="text-gray-500">No invoices found.</p>
+      </div>
+    );
   }
 
-  const handleDownload = (id: string) => {
-    // Usually triggers an action to generate a pre-signed URL or PDF stream.
-    alert(`Downloading invoice ${id}...`);
-  };
-
   return (
-    <div className="bg-white border rounded-lg overflow-hidden shadow-sm">
-      <table className="w-full text-left text-sm">
-        <thead className="bg-slate-50 border-b">
-          <tr>
-            <th className="p-4 font-medium text-slate-600">Invoice Number</th>
-            <th className="p-4 font-medium text-slate-600">Amount</th>
-            <th className="p-4 font-medium text-slate-600">Status</th>
-            <th className="p-4 font-medium text-slate-600">Date</th>
-            <th className="p-4 font-medium text-slate-600">Action</th>
-          </tr>
-        </thead>
-        <tbody className="divide-y divide-slate-100">
-          {invoices.map((inv) => (
-            <tr key={inv.id} className="hover:bg-slate-50">
-              <td className="p-4 font-medium text-slate-800">{inv.invoiceNumber}</td>
-              <td className="p-4 text-slate-600">${inv.finalAmount}</td>
-              <td className="p-4">
-                <span className={`px-2 py-1 text-xs rounded-full ${inv.status === 'PAID' ? 'bg-green-100 text-green-700' : 'bg-slate-100 text-slate-700'}`}>
-                  {inv.status}
-                </span>
-              </td>
-              <td className="p-4 text-slate-500">{new Date(inv.issuedAt).toLocaleDateString()}</td>
-              <td className="p-4">
-                <button onClick={() => handleDownload(inv.id)} className="text-blue-600 hover:underline">Download</button>
-              </td>
+    <div className="bg-white shadow rounded-lg p-6 mb-6">
+      <h2 className="text-xl font-bold mb-4">Billing History</h2>
+      <div className="overflow-x-auto">
+        <table className="w-full text-left">
+          <thead className="bg-gray-50">
+            <tr className="border-b">
+              <th className="py-2 px-4">Invoice #</th>
+              <th className="py-2 px-4">Date</th>
+              <th className="py-2 px-4">Amount</th>
+              <th className="py-2 px-4">Status</th>
             </tr>
-          ))}
-        </tbody>
-      </table>
+          </thead>
+          <tbody>
+            {invoices.map((inv) => (
+              <tr key={inv.id} className="border-b hover:bg-gray-50">
+                <td className="py-2 px-4 font-medium">{inv.invoiceNumber}</td>
+                <td className="py-2 px-4 text-sm text-gray-500">{new Date(inv.issuedAt).toLocaleDateString()}</td>
+                <td className="py-2 px-4 font-bold">${Number(inv.finalAmount)}</td>
+                <td className="py-2 px-4">
+                  <span className={`px-2 py-1 rounded text-xs font-bold ${inv.status === 'PAID' ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-800'}`}>
+                    {inv.status}
+                  </span>
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
     </div>
   );
 }

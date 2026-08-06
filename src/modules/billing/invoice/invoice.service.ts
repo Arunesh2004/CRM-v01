@@ -82,3 +82,14 @@ export async function updateInvoiceStatus(input: UpdateInvoiceStatusInput) {
     return updated;
   });
 }
+
+export async function getInvoices() {
+  await requireAuth();
+  const tenantId = await requireTenant();
+  
+  const prisma = withTenant(tenantId);
+  return await prisma.invoice.findMany({
+    where: { tenantId },
+    orderBy: { createdAt: 'desc' }
+  });
+}
