@@ -66,7 +66,7 @@ export async function getLocations() {
 
   const prisma = withTenant(tenantId);
   return await prisma.location.findMany({
-    where: { deletedAt: null },
+    where: { tenantId, deletedAt: null },
     include: { customer: { select: { name: true } } }
   });
 }

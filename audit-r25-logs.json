@@ -1,0 +1,40 @@
+[
+  {
+    "feature": "Provisioning",
+    "command": "ensureUserProvisioned()",
+    "response": {
+      "id": "94839bd4-50e1-4171-9628-cb43c62356c2",
+      "clerkId": "r25_user",
+      "email": "r25@test.com",
+      "tenantId": "3de62670-50e0-418c-b3db-23432fe4ba61",
+      "status": "INVITED",
+      "createdAt": "2026-08-06T13:02:17.518Z",
+      "updatedAt": "2026-08-06T13:02:17.518Z"
+    },
+    "stack": ""
+  },
+  {
+    "feature": "AI Assistant",
+    "command": "askAssistant()",
+    "response": "You have a total of 0 incidents. Currently, 0 are open and 0 are critical. 0 have been resolved.",
+    "stack": ""
+  },
+  {
+    "feature": "Incident CRUD",
+    "command": "createIncident()",
+    "response": null,
+    "stack": "PrismaClientValidationError: \nInvalid `tx.incident.create()` invocation in\nC:\\Users\\Administrator\\.gemini\\antigravity-ide\\scratch\\AI-Security-CRM-SaaS\\src\\modules\\incident\\incident.service.ts:16:40\n\n  13 const prisma = withTenant(tenantId);\n  14 \n  15 const incident = await prisma.$transaction(async (tx) => {\n→ 16   const incident = await tx.incident.create({\n         data: {\n           tenantId: \"3de62670-50e0-418c-b3db-23432fe4ba61\",\n           locationId: \"dummy\",\n           cameraId: undefined,\n           aiEventId: undefined,\n           title: \"Test Incident\",\n           description: undefined,\n           severity: \"HIGH\",\n       +   tenant: {\n       +     create: TenantCreateWithoutIncidentsInput | TenantUncheckedCreateWithoutIncidentsInput,\n       +     connectOrCreate: TenantCreateOrConnectWithoutIncidentsInput,\n       +     connect: TenantWhereUniqueInput\n       +   }\n         }\n       })\n\nArgument `tenant` is missing.\n    at throwValidationException (C:\\Users\\Administrator\\.gemini\\antigravity-ide\\scratch\\AI-Security-CRM-SaaS\\node_modules\\@prisma\\client\\src\\runtime\\core\\errorRendering\\throwValidationException.ts:45:9)\n    at ei.handleRequestError (C:\\Users\\Administrator\\.gemini\\antigravity-ide\\scratch\\AI-Security-CRM-SaaS\\node_modules\\@prisma\\client\\src\\runtime\\RequestHandler.ts:202:7)\n    at ei.handleAndLogRequestError (C:\\Users\\Administrator\\.gemini\\antigravity-ide\\scratch\\AI-Security-CRM-SaaS\\node_modules\\@prisma\\client\\src\\runtime\\RequestHandler.ts:174:12)\n    at ei.request (C:\\Users\\Administrator\\.gemini\\antigravity-ide\\scratch\\AI-Security-CRM-SaaS\\node_modules\\@prisma\\client\\src\\runtime\\RequestHandler.ts:143:12)\n    at async a (C:\\Users\\Administrator\\.gemini\\antigravity-ide\\scratch\\AI-Security-CRM-SaaS\\node_modules\\@prisma\\client\\src\\runtime\\getPrismaClient.ts:833:24)\n    at async <anonymous> (C:\\Users\\Administrator\\.gemini\\antigravity-ide\\scratch\\AI-Security-CRM-SaaS\\src\\modules\\incident\\incident.service.ts:16:22)\n    at async Proxy._transactionWithCallback (C:\\Users\\Administrator\\.gemini\\antigravity-ide\\scratch\\AI-Security-CRM-SaaS\\node_modules\\@prisma\\client\\src\\runtime\\getPrismaClient.ts:722:18)\n    at async createIncident (C:\\Users\\Administrator\\.gemini\\antigravity-ide\\scratch\\AI-Security-CRM-SaaS\\src\\modules\\incident\\incident.service.ts:15:20)\n    at async run (C:\\Users\\Administrator\\.gemini\\antigravity-ide\\scratch\\AI-Security-CRM-SaaS\\scripts\\audit-r25.ts:30:22)"
+  },
+  {
+    "feature": "Reporting Metrics",
+    "command": "getSecurityMetrics()",
+    "response": {
+      "total": 0,
+      "open": 0,
+      "investigating": 0,
+      "resolved": 0,
+      "critical": 0
+    },
+    "stack": ""
+  }
+]

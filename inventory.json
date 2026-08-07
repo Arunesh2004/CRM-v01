@@ -1,0 +1,244 @@
+{
+  "src\\modules\\ai\\actions\\assistant.actions.ts": [
+    "askAssistantAction"
+  ],
+  "src\\modules\\ai\\assistant.service.ts": [
+    "askAssistant"
+  ],
+  "src\\modules\\ai\\tools\\ai.tools.ts": [
+    "secureTools"
+  ],
+  "src\\modules\\auth\\services\\provisioning.service.ts": [
+    "ensureUserProvisioned"
+  ],
+  "src\\modules\\billing\\actions\\invoice.actions.ts": [
+    "createInvoiceAction",
+    "updateInvoiceStatusAction",
+    "getInvoicesAction"
+  ],
+  "src\\modules\\billing\\actions\\payment.actions.ts": [
+    "createPaymentAction",
+    "handlePaymentSuccessAction"
+  ],
+  "src\\modules\\billing\\actions\\subscription.actions.ts": [
+    "createSubscriptionAction",
+    "updateSubscriptionStatusAction",
+    "getCurrentSubscriptionAction",
+    "getPlansAction",
+    "simulateCheckoutAction"
+  ],
+  "src\\modules\\billing\\actions\\usage.actions.ts": [
+    "recordUsageAction",
+    "getUsageSummaryAction",
+    "getTenantUsageAction"
+  ],
+  "src\\modules\\billing\\entitlement\\feature-guards.ts": [
+    "requirePlanFeature",
+    "requireUsageLimit"
+  ],
+  "src\\modules\\billing\\invoice\\invoice.service.ts": [
+    "createInvoice",
+    "updateInvoiceStatus",
+    "getInvoices"
+  ],
+  "src\\modules\\billing\\payment\\payment.service.ts": [
+    "createPaymentRecord",
+    "handlePaymentSuccess"
+  ],
+  "src\\modules\\billing\\subscription\\subscription.service.ts": [
+    "getCurrentSubscription",
+    "getPlans",
+    "createCheckoutSession",
+    "processSuccessfulCheckout",
+    "createSubscription",
+    "updateSubscriptionStatus"
+  ],
+  "src\\modules\\billing\\usage\\usage.service.ts": [
+    "getTenantUsage"
+  ],
+  "src\\modules\\billing\\validators\\invoice.schema.ts": [
+    "CreateInvoiceSchema",
+    "UpdateInvoiceStatusSchema"
+  ],
+  "src\\modules\\billing\\validators\\payment.schema.ts": [
+    "CreatePaymentSchema",
+    "HandlePaymentSuccessSchema"
+  ],
+  "src\\modules\\billing\\validators\\subscription.schema.ts": [
+    "CreateSubscriptionSchema",
+    "UpdateSubscriptionStatusSchema"
+  ],
+  "src\\modules\\billing\\validators\\usage.schema.ts": [
+    "RecordUsageSchema",
+    "GetUsageSummarySchema"
+  ],
+  "src\\modules\\cctv\\actions\\camera.actions.ts": [
+    "createCameraAction",
+    "updateCameraAction",
+    "getCamerasAction",
+    "deleteCameraAction",
+    "simulateAIEventAction"
+  ],
+  "src\\modules\\cctv\\camera.service.ts": [
+    "createCamera",
+    "getCameras",
+    "getCameraById",
+    "updateCamera",
+    "deleteCamera",
+    "simulateAIEvent"
+  ],
+  "src\\modules\\cctv\\validators\\camera.schema.ts": [
+    "CreateCameraSchema",
+    "UpdateCameraSchema",
+    "SimulateAIEventSchema"
+  ],
+  "src\\modules\\communication\\actions\\call.actions.ts": [
+    "createCallAction",
+    "getCallHistoryAction"
+  ],
+  "src\\modules\\communication\\actions\\email.actions.ts": [
+    "sendEmailAction"
+  ],
+  "src\\modules\\communication\\actions\\message.actions.ts": [
+    "sendMessageAction"
+  ],
+  "src\\modules\\communication\\actions\\notification.actions.ts": [
+    "getNotificationsAction",
+    "markNotificationReadAction",
+    "getAllNotificationsAction",
+    "getNotificationsByIncidentAction"
+  ],
+  "src\\modules\\communication\\email\\email.service.ts": [
+    "sendEmail"
+  ],
+  "src\\modules\\communication\\email\\templates\\engine.ts": [
+    "renderEmailTemplate",
+    "BASIC_WELCOME_TEMPLATE"
+  ],
+  "src\\modules\\communication\\messaging\\messaging.service.ts": [
+    "sendMessage"
+  ],
+  "src\\modules\\communication\\notification\\notification.service.ts": [
+    "createNotification"
+  ],
+  "src\\modules\\communication\\notification.service.ts": [
+    "sendIncidentNotification"
+  ],
+  "src\\modules\\communication\\telephony\\telephony.service.ts": [
+    "createCall"
+  ],
+  "src\\modules\\communication\\validators\\call.schema.ts": [
+    "CreateCallSchema"
+  ],
+  "src\\modules\\communication\\validators\\email.schema.ts": [
+    "CreateEmailSchema"
+  ],
+  "src\\modules\\communication\\validators\\message.schema.ts": [
+    "CreateMessageSchema"
+  ],
+  "src\\modules\\communication\\validators\\notification.schema.ts": [
+    "MarkNotificationReadSchema"
+  ],
+  "src\\modules\\communication\\webhook\\webhook.service.ts": [
+    "processWebhook"
+  ],
+  "src\\modules\\crm\\actions\\customer.actions.ts": [
+    "createCustomerAction",
+    "updateCustomerAction",
+    "getCustomersAction",
+    "getCustomerByIdAction"
+  ],
+  "src\\modules\\crm\\actions\\lead.actions.ts": [
+    "createLeadAction",
+    "updateLeadAction",
+    "getLeadsAction"
+  ],
+  "src\\modules\\crm\\actions\\location.actions.ts": [
+    "createLocationAction",
+    "updateLocationAction",
+    "getLocationsAction",
+    "deleteLocationAction"
+  ],
+  "src\\modules\\crm\\actions\\task.actions.ts": [
+    "createTaskAction",
+    "updateTaskAction",
+    "getTasksAction"
+  ],
+  "src\\modules\\crm\\activity\\activity.service.ts": [
+    "createTimelineEntry"
+  ],
+  "src\\modules\\crm\\customer\\customer.service.ts": [
+    "createCustomer",
+    "getCustomers",
+    "getCustomerById",
+    "updateCustomer"
+  ],
+  "src\\modules\\crm\\lead\\lead.service.ts": [
+    "createLead",
+    "getLeads",
+    "updateLead",
+    "convertLeadToCustomer"
+  ],
+  "src\\modules\\crm\\location\\location.service.ts": [
+    "createLocation",
+    "getLocations",
+    "getLocationById",
+    "updateLocation",
+    "deleteLocation"
+  ],
+  "src\\modules\\crm\\task\\task.service.ts": [
+    "createTask",
+    "getTasks",
+    "updateTask",
+    "assignTask"
+  ],
+  "src\\modules\\crm\\validators\\customer.schema.ts": [
+    "CreateCustomerSchema",
+    "UpdateCustomerSchema"
+  ],
+  "src\\modules\\crm\\validators\\lead.schema.ts": [
+    "CreateLeadSchema",
+    "UpdateLeadSchema"
+  ],
+  "src\\modules\\crm\\validators\\location.schema.ts": [
+    "CreateLocationSchema",
+    "UpdateLocationSchema"
+  ],
+  "src\\modules\\crm\\validators\\task.schema.ts": [
+    "CreateTaskSchema",
+    "UpdateTaskSchema"
+  ],
+  "src\\modules\\incident\\actions\\incident.actions.ts": [
+    "getIncidentsAction",
+    "updateIncidentStatusAction",
+    "assignIncidentAction",
+    "resolveIncidentAction"
+  ],
+  "src\\modules\\incident\\incident.service.ts": [
+    "createIncident",
+    "getIncidents",
+    "getIncidentById",
+    "updateIncidentStatus",
+    "assignIncident",
+    "resolveIncident"
+  ],
+  "src\\modules\\incident\\validators\\incident.schema.ts": [
+    "CreateIncidentSchema",
+    "UpdateIncidentStatusSchema",
+    "AssignIncidentSchema"
+  ],
+  "src\\modules\\reporting\\actions\\reporting.actions.ts": [
+    "getDashboardMetricsAction"
+  ],
+  "src\\modules\\reporting\\export.service.ts": [
+    "getIncidentsCsv",
+    "getCustomersCsv",
+    "getCommunicationsCsv"
+  ],
+  "src\\modules\\reporting\\reporting.service.ts": [
+    "getSecurityMetrics",
+    "getCameraMetrics",
+    "getCrmMetrics",
+    "getCommunicationMetrics"
+  ]
+}

@@ -60,9 +60,16 @@ export async function sendIncidentNotification(incidentId: string, tenantId: str
   };
 
   const dispatchSMS = async () => {
-    // Note: TwilioProvider doesn't have sendSms exposed in TelephonyProvider, only makeCall/initiateCall
-    // In our Mock provider it might just mock it. Let's assume we can use makeCall for the demo or just mock it.
-    await logCommunication('SMS', 'SENT', `SMS alert dispatched`);
+    const res = await smsProvider.sendSms(tenantId, {
+      to: adminPhone,
+      text: `Security Alert: ${incident.title}`,
+    });
+    
+    if (res.success) {
+      await logCommunication('SMS', 'SENT', `SMS alert dispatched successfully`);
+    } else {
+      await logCommunication('SMS', 'FAILED', `SMS alert failed: ${res.error || 'Unknown error'}`);
+    }
   };
 
   const dispatchWhatsApp = async () => {

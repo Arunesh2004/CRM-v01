@@ -1,6 +1,7 @@
-import { auth } from '@clerk/nextjs/server';
+import { auth, clerkClient } from '@clerk/nextjs/server';
 import prisma from '@/../database/utils/prisma';
 import { Action, Resource } from '@prisma/client';
+import { ensureUserProvisioned } from '@/modules/auth/services/provisioning.service';
 
 export async function getCurrentUser() {
   let clerkId: string | null | undefined = process.env.TEST_CLERK_ID;
@@ -64,10 +65,27 @@ export async function checkPermission(resource: Resource, action: Action) {
   return false;
 }
 
+async function ensureUserProvisionedFromClerk(clerkId: string) {
+  try {
+    const client = await clerkClient();
+    const user = await client.users.getUser(clerkId);
+    await ensureUserProvisioned(user);
+  } catch (err) {
+    console.error(`Failed to fetch and provision user from Clerk (ID: ${clerkId})`, err);
+  }
+}
+
 export async function requireAuth() {
-  const user = await getCurrentUser();
+  let user = await getCurrentUser();
   if (!user) {
-    throw new Error('Unauthorized');
+    const clerkAuth = await auth();
+    if (clerkAuth.userId) {
+      await ensureUserProvisionedFromClerk(clerkAuth.userId);
+      user = await getCurrentUser();
+    }
+    if (!user) {
+      throw new Error('Unauthorized');
+    }
   }
   return user;
 }

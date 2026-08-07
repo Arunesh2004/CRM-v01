@@ -1,0 +1,94 @@
+[
+  {
+    "module": "Security",
+    "feature": "Hybrid Provisioning",
+    "status": "✅ VERIFIED",
+    "command": "ensureUserProvisioned()",
+    "response": {
+      "id": "04e9c619-7a5f-4e34-a387-0b255d0b92cd",
+      "clerkId": "audit_user_1786019849878",
+      "email": "audit@acme.com",
+      "tenantId": "47b55c6f-d6af-4b7d-b483-b2c7f83c598d",
+      "status": "INVITED",
+      "createdAt": "2026-08-06T12:37:29.972Z",
+      "updatedAt": "2026-08-06T12:37:29.972Z"
+    },
+    "rootCause": ""
+  },
+  {
+    "module": "CRM",
+    "feature": "Lead Creation",
+    "status": "✅ VERIFIED",
+    "command": "createLead()",
+    "response": {
+      "id": "1b6b8516-5036-40d4-80ce-97efdd9f12dd",
+      "tenantId": "47b55c6f-d6af-4b7d-b483-b2c7f83c598d",
+      "name": "Audit Lead",
+      "company": "Audit Corp",
+      "email": "audit@lead.com",
+      "phone": null,
+      "status": "NEW",
+      "assignedUserId": null,
+      "createdAt": "2026-08-06T12:37:30.751Z",
+      "updatedAt": "2026-08-06T12:37:30.751Z",
+      "deletedAt": null
+    },
+    "rootCause": ""
+  },
+  {
+    "module": "Communication",
+    "feature": "External Calling",
+    "status": "❌ FAILED",
+    "command": "createCall()",
+    "response": "PrismaClientKnownRequestError: \nInvalid `tx.callParticipant.create()` invocation in\nC:\\Users\\Administrator\\.gemini\\antigravity-ide\\scratch\\AI-Security-CRM-SaaS\\src\\modules\\communication\\telephony\\telephony.service.ts:32:30\n\n  29   }\n  30 });\n  31 \n→ 32 await tx.callParticipant.create(\nForeign key constraint violated on the constraint: `CallParticipant_contactId_fkey`\n    at ei.handleRequestError (C:\\Users\\Administrator\\.gemini\\antigravity-ide\\scratch\\AI-Security-CRM-SaaS\\node_modules\\@prisma\\client\\src\\runtime\\RequestHandler.ts:228:13)\n    at ei.handleAndLogRequestError (C:\\Users\\Administrator\\.gemini\\antigravity-ide\\scratch\\AI-Security-CRM-SaaS\\node_modules\\@prisma\\client\\src\\runtime\\RequestHandler.ts:174:12)\n    at ei.request (C:\\Users\\Administrator\\.gemini\\antigravity-ide\\scratch\\AI-Security-CRM-SaaS\\node_modules\\@prisma\\client\\src\\runtime\\RequestHandler.ts:143:12)\n    at async a (C:\\Users\\Administrator\\.gemini\\antigravity-ide\\scratch\\AI-Security-CRM-SaaS\\node_modules\\@prisma\\client\\src\\runtime\\getPrismaClient.ts:833:24)\n    at async <anonymous> (C:\\Users\\Administrator\\.gemini\\antigravity-ide\\scratch\\AI-Security-CRM-SaaS\\src\\modules\\communication\\telephony\\telephony.service.ts:32:5)\n    at async Proxy._transactionWithCallback (C:\\Users\\Administrator\\.gemini\\antigravity-ide\\scratch\\AI-Security-CRM-SaaS\\node_modules\\@prisma\\client\\src\\runtime\\getPrismaClient.ts:722:18)\n    at async createCall (C:\\Users\\Administrator\\.gemini\\antigravity-ide\\scratch\\AI-Security-CRM-SaaS\\src\\modules\\communication\\telephony\\telephony.service.ts:21:10)\n    at async run (C:\\Users\\Administrator\\.gemini\\antigravity-ide\\scratch\\AI-Security-CRM-SaaS\\scripts\\comprehensive-audit.ts:49:18)",
+    "rootCause": "Runtime Error"
+  },
+  {
+    "module": "Communication",
+    "feature": "AI Call Summary",
+    "status": "❌ FAILED",
+    "command": "generateCallSummary()",
+    "response": "TypeError: generateCallSummary is not a function\n    at run (C:\\Users\\Administrator\\.gemini\\antigravity-ide\\scratch\\AI-Security-CRM-SaaS\\scripts\\comprehensive-audit.ts:57:27)",
+    "rootCause": "Backend missing"
+  },
+  {
+    "module": "CCTV",
+    "feature": "Camera Registration",
+    "status": "⚠️ PARTIALLY VERIFIED",
+    "command": "createCamera()",
+    "response": "Error: Location not found\n    at <anonymous> (C:\\Users\\Administrator\\.gemini\\antigravity-ide\\scratch\\AI-Security-CRM-SaaS\\src\\modules\\cctv\\camera.service.ts:17:26)\n    at async Proxy._transactionWithCallback (C:\\Users\\Administrator\\.gemini\\antigravity-ide\\scratch\\AI-Security-CRM-SaaS\\node_modules\\@prisma\\client\\src\\runtime\\getPrismaClient.ts:722:18)\n    at async createCamera (C:\\Users\\Administrator\\.gemini\\antigravity-ide\\scratch\\AI-Security-CRM-SaaS\\src\\modules\\cctv\\camera.service.ts:14:10)\n    at async run (C:\\Users\\Administrator\\.gemini\\antigravity-ide\\scratch\\AI-Security-CRM-SaaS\\scripts\\comprehensive-audit.ts:66:17)",
+    "rootCause": "Database constraint works, but RTSP backend missing"
+  },
+  {
+    "module": "CCTV",
+    "feature": "Stream Playback",
+    "status": "❌ FAILED",
+    "command": "streamRTSP()",
+    "response": "TypeError: streamRTSP is not a function\n    at run (C:\\Users\\Administrator\\.gemini\\antigravity-ide\\scratch\\AI-Security-CRM-SaaS\\scripts\\comprehensive-audit.ts:74:26)",
+    "rootCause": "Infrastructure intentionally disabled or Backend missing"
+  },
+  {
+    "module": "Billing",
+    "feature": "Subscriptions",
+    "status": "❌ FAILED",
+    "command": "createSubscription()",
+    "response": "PrismaClientValidationError: \nInvalid `prisma.plan.findUnique()` invocation in\nC:\\Users\\Administrator\\.gemini\\antigravity-ide\\scratch\\AI-Security-CRM-SaaS\\src\\modules\\billing\\subscription\\subscription.service.ts:121:34\n\n  118 const prisma = withTenant(tenantId);\n  119 \n  120 // Validate plan exists\n→ 121 const plan = await prisma.plan.findUnique({\n        where: {\n          id: undefined,\n      ?   AND?: PlanWhereInput | PlanWhereInput[],\n      ?   OR?: PlanWhereInput[],\n      ?   NOT?: PlanWhereInput | PlanWhereInput[],\n      ?   name?: StringFilter | String,\n      ?   price?: DecimalFilter | Decimal,\n      ?   billingCycle?: EnumBillingCycleFilter | BillingCycle,\n      ?   limits?: JsonFilter,\n      ?   features?: JsonFilter,\n      ?   createdAt?: DateTimeFilter | DateTime,\n      ?   updatedAt?: DateTimeFilter | DateTime,\n      ?   subscriptions?: SubscriptionListRelationFilter\n        }\n      })\n\nArgument `where` of type PlanWhereUniqueInput needs at least one of `id` arguments. Available options are marked with ?.\n    at throwValidationException (C:\\Users\\Administrator\\.gemini\\antigravity-ide\\scratch\\AI-Security-CRM-SaaS\\node_modules\\@prisma\\client\\src\\runtime\\core\\errorRendering\\throwValidationException.ts:45:9)\n    at ei.handleRequestError (C:\\Users\\Administrator\\.gemini\\antigravity-ide\\scratch\\AI-Security-CRM-SaaS\\node_modules\\@prisma\\client\\src\\runtime\\RequestHandler.ts:202:7)\n    at ei.handleAndLogRequestError (C:\\Users\\Administrator\\.gemini\\antigravity-ide\\scratch\\AI-Security-CRM-SaaS\\node_modules\\@prisma\\client\\src\\runtime\\RequestHandler.ts:174:12)\n    at ei.request (C:\\Users\\Administrator\\.gemini\\antigravity-ide\\scratch\\AI-Security-CRM-SaaS\\node_modules\\@prisma\\client\\src\\runtime\\RequestHandler.ts:143:12)\n    at async a (C:\\Users\\Administrator\\.gemini\\antigravity-ide\\scratch\\AI-Security-CRM-SaaS\\node_modules\\@prisma\\client\\src\\runtime\\getPrismaClient.ts:833:24)\n    at async createSubscription (C:\\Users\\Administrator\\.gemini\\antigravity-ide\\scratch\\AI-Security-CRM-SaaS\\src\\modules\\billing\\subscription\\subscription.service.ts:121:16)\n    at async run (C:\\Users\\Administrator\\.gemini\\antigravity-ide\\scratch\\AI-Security-CRM-SaaS\\scripts\\comprehensive-audit.ts:83:17)",
+    "rootCause": "Backend missing or Function Not Found"
+  },
+  {
+    "module": "Reporting",
+    "feature": "Dashboard Metrics",
+    "status": "❌ FAILED",
+    "command": "getDashboardMetrics()",
+    "response": "TypeError: getDashboardMetrics is not a function\n    at run (C:\\Users\\Administrator\\.gemini\\antigravity-ide\\scratch\\AI-Security-CRM-SaaS\\scripts\\comprehensive-audit.ts:92:27)",
+    "rootCause": "Backend missing or Function Not Found"
+  },
+  {
+    "module": "AI",
+    "feature": "Prompt Execution",
+    "status": "❌ FAILED",
+    "command": "processAssistantMessage()",
+    "response": "TypeError: processAssistantMessage is not a function\n    at run (C:\\Users\\Administrator\\.gemini\\antigravity-ide\\scratch\\AI-Security-CRM-SaaS\\scripts\\comprehensive-audit.ts:101:26)",
+    "rootCause": "Backend missing or Function Not Found"
+  }
+]

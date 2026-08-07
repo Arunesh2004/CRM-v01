@@ -1,6 +1,7 @@
 import { Webhook } from 'svix';
 import { NextRequest, NextResponse } from 'next/server';
-import prisma from '../../../../../database/utils/prisma';
+import prisma from '@/../database/utils/prisma';
+import { ensureUserProvisioned } from '@/modules/auth/services/provisioning.service';
 
 export async function POST(req: NextRequest) {
   const WEBHOOK_SECRET = process.env.CLERK_WEBHOOK_SECRET;
@@ -54,61 +55,8 @@ export async function POST(req: NextRequest) {
   console.log(`Webhook with and ID of ${id} and type of ${eventType}`);
   
   if (eventType === 'user.created') {
-    const { id, email_addresses, first_name, last_name, public_metadata } = evt.data;
-    const email = email_addresses[0]?.email_address;
-    
-    // Check if tenant supplied via metadata, else create a personal tenant
-    let tenantId = public_metadata?.tenantId;
-    
     try {
-      await prisma.$transaction(async (tx) => {
-        let tenant;
-        
-        if (!tenantId) {
-          // Provision a new tenant safely. Client should NEVER pass this outside of secure invitations.
-          tenant = await tx.tenant.create({
-            data: {
-              name: `${first_name || 'User'}'s Organization`
-            }
-          });
-          tenantId = tenant.id;
-        } else {
-          // Verify tenant exists
-          tenant = await tx.tenant.findUnique({ where: { id: tenantId } });
-          if (!tenant) throw new Error('Invalid tenantId provided');
-        }
-
-        // Create the Local User synced with Clerk
-        const user = await tx.user.create({
-          data: {
-            clerkId: id,
-            email: email,
-            tenantId: tenant.id
-          }
-        });
-
-        // Assign default role (e.g., TENANT_ADMIN if they created it, else MEMBER)
-        const roleName = public_metadata?.tenantId ? 'MEMBER' : 'TENANT_ADMIN';
-        
-        // Find or create role
-        let role = await tx.role.findFirst({
-          where: { name: roleName, tenantId: tenant.id }
-        });
-        
-        if (!role) {
-          role = await tx.role.create({
-            data: { name: roleName, tenantId: tenant.id }
-          });
-        }
-
-        // Assign User Role
-        await tx.userRole.create({
-          data: {
-            userId: user.id,
-            roleId: role.id
-          }
-        });
-      });
+      await ensureUserProvisioned(evt.data);
       return NextResponse.json({ success: true }, { status: 201 });
     } catch (err: any) {
       console.error('Failed to sync user:', err.message);

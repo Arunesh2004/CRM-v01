@@ -64,6 +64,21 @@ export class TwilioProvider implements TelephonyProvider {
   async getRecording(callId: string): Promise<{ success: boolean; recordingUrl?: string; error?: string }> {
     return { success: true, recordingUrl: 'mock' };
   }
+
+  async sendSms(tenantId: string, payload: { to: string, text: string }): Promise<{ success: boolean; error?: string }> {
+    try {
+      await this.client.messages.create({
+        body: payload.text,
+        from: this.defaultFrom,
+        to: payload.to
+      });
+      Logger.info('Twilio SMS sent', { tenantId, to: payload.to });
+      return { success: true };
+    } catch (err: any) {
+      Logger.error('Twilio SMS failed', err, { tenantId });
+      return { success: false, error: err.message };
+    }
+  }
 }
 
 export class MockTelephonyProvider implements TelephonyProvider {
@@ -79,5 +94,13 @@ export class MockTelephonyProvider implements TelephonyProvider {
   }
   async getRecording(callId: string): Promise<{ success: boolean; recordingUrl?: string; error?: string }> {
     return { success: true, recordingUrl: 'mock' };
+  }
+  async sendSms(tenantId: string, payload: { to: string, text: string }): Promise<{ success: boolean; error?: string }> {
+    Logger.info(`[MOCK TELEPHONY] Sending SMS to ${payload.to}: ${payload.text}`, { tenantId });
+    // Simulate some failures for robust testing or just succeed
+    if (payload.to.includes('555-0000')) {
+      return { success: false, error: 'Simulated failure' };
+    }
+    return { success: true };
   }
 }

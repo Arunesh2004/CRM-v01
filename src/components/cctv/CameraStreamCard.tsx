@@ -35,9 +35,9 @@ export function CameraStreamCard({ camera }: { camera: any }) {
       {/* Video Placeholder (Mock Stream) */}
       <div className="bg-gray-800 aspect-video flex items-center justify-center relative">
         {camera.status === 'ONLINE' ? (
-          <div className="text-gray-400 text-center">
-            <div className="text-xl font-bold mb-2">[ DEMO LIVE STREAM ]</div>
-            <div className="text-sm">RTSP Stream connection simulated</div>
+          <div className="text-amber-500 text-center border-4 border-amber-500 p-4 bg-black/80">
+            <div className="text-2xl font-bold tracking-widest mb-1">SIMULATED STREAM</div>
+            <div className="text-lg font-bold tracking-widest">DEMO DATA ONLY</div>
           </div>
         ) : (
           <div className="text-red-500 font-bold">CAMERA OFFLINE</div>

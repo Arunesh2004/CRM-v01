@@ -1,0 +1,470 @@
+{
+  "locations": [
+    {
+      "id": "764ff2e9-4639-4b52-8400-4e4b2e71eb63",
+      "tenantId": "demo-tenant-1",
+      "customerId": "948f87ea-a01b-486f-a17e-fdf63c52697e",
+      "name": "Headquarters",
+      "address": null,
+      "city": "New York",
+      "state": null,
+      "zip": null,
+      "coordinates": null,
+      "createdAt": "2026-08-06T10:06:26.170Z",
+      "updatedAt": "2026-08-06T10:06:26.170Z",
+      "deletedAt": null,
+      "tenant": {
+        "id": "demo-tenant-1",
+        "name": "Acme Security Solutions",
+        "status": "ACTIVE",
+        "createdAt": "2026-08-06T10:06:26.112Z",
+        "updatedAt": "2026-08-06T10:06:26.112Z"
+      },
+      "customer": {
+        "id": "948f87ea-a01b-486f-a17e-fdf63c52697e",
+        "tenantId": "demo-tenant-1",
+        "name": "Stark Industries",
+        "industry": "Technology",
+        "status": "ACTIVE",
+        "assignedUserId": null,
+        "createdAt": "2026-08-06T10:06:26.144Z",
+        "updatedAt": "2026-08-06T10:06:26.144Z",
+        "deletedAt": null
+      }
+    },
+    {
+      "id": "722a510a-1146-4483-ab03-a694f392541d",
+      "tenantId": "demo-tenant-1",
+      "customerId": "8bcf91d5-fd1a-44d5-b72e-880101b73fbb",
+      "name": "Gotham Branch",
+      "address": null,
+      "city": "Gotham",
+      "state": null,
+      "zip": null,
+      "coordinates": null,
+      "createdAt": "2026-08-06T10:06:26.174Z",
+      "updatedAt": "2026-08-06T10:06:26.174Z",
+      "deletedAt": null,
+      "tenant": {
+        "id": "demo-tenant-1",
+        "name": "Acme Security Solutions",
+        "status": "ACTIVE",
+        "createdAt": "2026-08-06T10:06:26.112Z",
+        "updatedAt": "2026-08-06T10:06:26.112Z"
+      },
+      "customer": {
+        "id": "8bcf91d5-fd1a-44d5-b72e-880101b73fbb",
+        "tenantId": "demo-tenant-1",
+        "name": "Wayne Enterprises",
+        "industry": "Finance",
+        "status": "ACTIVE",
+        "assignedUserId": null,
+        "createdAt": "2026-08-06T10:06:26.154Z",
+        "updatedAt": "2026-08-06T10:06:26.154Z",
+        "deletedAt": null
+      }
+    },
+    {
+      "id": "af7895f6-8490-43d7-a666-e39af36d8bc9",
+      "tenantId": "demo-tenant-1",
+      "customerId": "3d0b0157-12da-4dac-b5f0-89b290e65a09",
+      "name": "Headquarters",
+      "address": null,
+      "city": "New York",
+      "state": null,
+      "zip": null,
+      "coordinates": null,
+      "createdAt": "2026-08-06T10:17:11.213Z",
+      "updatedAt": "2026-08-06T10:17:11.213Z",
+      "deletedAt": null,
+      "tenant": {
+        "id": "demo-tenant-1",
+        "name": "Acme Security Solutions",
+        "status": "ACTIVE",
+        "createdAt": "2026-08-06T10:06:26.112Z",
+        "updatedAt": "2026-08-06T10:06:26.112Z"
+      },
+      "customer": {
+        "id": "3d0b0157-12da-4dac-b5f0-89b290e65a09",
+        "tenantId": "demo-tenant-1",
+        "name": "Stark Industries",
+        "industry": "Technology",
+        "status": "ACTIVE",
+        "assignedUserId": null,
+        "createdAt": "2026-08-06T10:17:11.186Z",
+        "updatedAt": "2026-08-06T10:17:11.186Z",
+        "deletedAt": null
+      }
+    },
+    {
+      "id": "9c696654-1a9f-449a-b4f8-c965dee57075",
+      "tenantId": "demo-tenant-1",
+      "customerId": "68c2e29b-abbc-43b4-824b-2c5685611e49",
+      "name": "Gotham Branch",
+      "address": null,
+      "city": "Gotham",
+      "state": null,
+      "zip": null,
+      "coordinates": null,
+      "createdAt": "2026-08-06T10:17:11.219Z",
+      "updatedAt": "2026-08-06T10:17:11.219Z",
+      "deletedAt": null,
+      "tenant": {
+        "id": "demo-tenant-1",
+        "name": "Acme Security Solutions",
+        "status": "ACTIVE",
+        "createdAt": "2026-08-06T10:06:26.112Z",
+        "updatedAt": "2026-08-06T10:06:26.112Z"
+      },
+      "customer": {
+        "id": "68c2e29b-abbc-43b4-824b-2c5685611e49",
+        "tenantId": "demo-tenant-1",
+        "name": "Wayne Enterprises",
+        "industry": "Finance",
+        "status": "ACTIVE",
+        "assignedUserId": null,
+        "createdAt": "2026-08-06T10:17:11.196Z",
+        "updatedAt": "2026-08-06T10:17:11.196Z",
+        "deletedAt": null
+      }
+    },
+    {
+      "id": "d7243777-d009-4459-97b7-035fb348ec06",
+      "tenantId": "demo-tenant-1",
+      "customerId": "7fae6abf-26ea-4f84-989a-079b1a929a40",
+      "name": "Headquarters",
+      "address": null,
+      "city": "New York",
+      "state": null,
+      "zip": null,
+      "coordinates": null,
+      "createdAt": "2026-08-06T11:21:15.430Z",
+      "updatedAt": "2026-08-06T11:21:15.430Z",
+      "deletedAt": null,
+      "tenant": {
+        "id": "demo-tenant-1",
+        "name": "Acme Security Solutions",
+        "status": "ACTIVE",
+        "createdAt": "2026-08-06T10:06:26.112Z",
+        "updatedAt": "2026-08-06T10:06:26.112Z"
+      },
+      "customer": {
+        "id": "7fae6abf-26ea-4f84-989a-079b1a929a40",
+        "tenantId": "demo-tenant-1",
+        "name": "Stark Industries",
+        "industry": "Technology",
+        "status": "ACTIVE",
+        "assignedUserId": null,
+        "createdAt": "2026-08-06T11:21:15.364Z",
+        "updatedAt": "2026-08-06T11:21:15.364Z",
+        "deletedAt": null
+      }
+    },
+    {
+      "id": "9ec1ed93-5c5e-4636-ae92-8d62b11e84d7",
+      "tenantId": "demo-tenant-1",
+      "customerId": "ab2eb1bb-6f47-4747-83ad-f0296654de1a",
+      "name": "Gotham Branch",
+      "address": null,
+      "city": "Gotham",
+      "state": null,
+      "zip": null,
+      "coordinates": null,
+      "createdAt": "2026-08-06T11:21:15.443Z",
+      "updatedAt": "2026-08-06T11:21:15.443Z",
+      "deletedAt": null,
+      "tenant": {
+        "id": "demo-tenant-1",
+        "name": "Acme Security Solutions",
+        "status": "ACTIVE",
+        "createdAt": "2026-08-06T10:06:26.112Z",
+        "updatedAt": "2026-08-06T10:06:26.112Z"
+      },
+      "customer": {
+        "id": "ab2eb1bb-6f47-4747-83ad-f0296654de1a",
+        "tenantId": "demo-tenant-1",
+        "name": "Wayne Enterprises",
+        "industry": "Finance",
+        "status": "ACTIVE",
+        "assignedUserId": null,
+        "createdAt": "2026-08-06T11:21:15.398Z",
+        "updatedAt": "2026-08-06T11:21:15.398Z",
+        "deletedAt": null
+      }
+    },
+    {
+      "id": "a2472d55-96ed-41a8-9bae-5357aef1f9fc",
+      "tenantId": "f14e9658-448c-4e0e-839b-7e4064dc2dc6",
+      "customerId": "0137fd28-d32a-4b3b-8022-44db781e693d",
+      "name": "Enterprise QA Location",
+      "address": "",
+      "city": "QA City",
+      "state": "",
+      "zip": null,
+      "coordinates": null,
+      "createdAt": "2026-08-06T19:39:09.663Z",
+      "updatedAt": "2026-08-06T19:39:09.663Z",
+      "deletedAt": null,
+      "tenant": {
+        "id": "f14e9658-448c-4e0e-839b-7e4064dc2dc6",
+        "name": "Arunesh's Organization",
+        "status": "PENDING",
+        "createdAt": "2026-08-06T11:30:38.894Z",
+        "updatedAt": "2026-08-06T11:30:38.894Z"
+      },
+      "customer": {
+        "id": "0137fd28-d32a-4b3b-8022-44db781e693d",
+        "tenantId": "f14e9658-448c-4e0e-839b-7e4064dc2dc6",
+        "name": "Enterprise QA Customer",
+        "industry": "QA",
+        "status": "ACTIVE",
+        "assignedUserId": null,
+        "createdAt": "2026-08-06T18:59:37.551Z",
+        "updatedAt": "2026-08-06T18:59:37.551Z",
+        "deletedAt": null
+      }
+    },
+    {
+      "id": "9c463c2f-0c08-40f3-90c5-7435b94869c1",
+      "tenantId": "f14e9658-448c-4e0e-839b-7e4064dc2dc6",
+      "customerId": "b6d0f4af-f631-41b9-9f9b-03e24f7e3238",
+      "name": "Enterprise QA Location",
+      "address": "",
+      "city": "QA City",
+      "state": "",
+      "zip": null,
+      "coordinates": null,
+      "createdAt": "2026-08-06T19:40:23.178Z",
+      "updatedAt": "2026-08-06T19:40:23.178Z",
+      "deletedAt": null,
+      "tenant": {
+        "id": "f14e9658-448c-4e0e-839b-7e4064dc2dc6",
+        "name": "Arunesh's Organization",
+        "status": "PENDING",
+        "createdAt": "2026-08-06T11:30:38.894Z",
+        "updatedAt": "2026-08-06T11:30:38.894Z"
+      },
+      "customer": {
+        "id": "b6d0f4af-f631-41b9-9f9b-03e24f7e3238",
+        "tenantId": "f14e9658-448c-4e0e-839b-7e4064dc2dc6",
+        "name": "Enterprise QA Customer",
+        "industry": "QA",
+        "status": "ACTIVE",
+        "assignedUserId": null,
+        "createdAt": "2026-08-06T18:56:52.144Z",
+        "updatedAt": "2026-08-06T18:56:52.144Z",
+        "deletedAt": null
+      }
+    }
+  ],
+  "auditLogs": [
+    {
+      "id": "473cd303-8e00-4511-857a-39e864c779f8",
+      "tenantId": "92517593-3d66-4c81-9622-7fe3dd5a97a8",
+      "actorId": "0fd647da-8144-4536-94f9-b72a6835f781",
+      "actorType": "USER",
+      "action": "LEAD_CREATED",
+      "resource": "LEAD",
+      "resourceId": "45e7e879-0342-4a07-b4f9-57b420521bbd",
+      "metadata": {
+        "name": "John Doe",
+        "company": "Test Corp"
+      },
+      "ipAddress": null,
+      "timestamp": "2026-08-06T12:06:29.909Z"
+    },
+    {
+      "id": "8269647a-4bfd-45c5-928a-b4c80338d06d",
+      "tenantId": "92517593-3d66-4c81-9622-7fe3dd5a97a8",
+      "actorId": "0fd647da-8144-4536-94f9-b72a6835f781",
+      "actorType": "USER",
+      "action": "CALL_INITIATED",
+      "resource": "COMMUNICATION",
+      "resourceId": "115949f2-f95e-4bd9-963f-4be07fb3821f",
+      "metadata": null,
+      "ipAddress": null,
+      "timestamp": "2026-08-06T12:06:30.738Z"
+    },
+    {
+      "id": "ce8452a1-4975-4569-a9eb-3df5a2fa79d5",
+      "tenantId": "47b55c6f-d6af-4b7d-b483-b2c7f83c598d",
+      "actorId": "04e9c619-7a5f-4e34-a387-0b255d0b92cd",
+      "actorType": "USER",
+      "action": "LEAD_CREATED",
+      "resource": "LEAD",
+      "resourceId": "1b6b8516-5036-40d4-80ce-97efdd9f12dd",
+      "metadata": {
+        "name": "Audit Lead",
+        "company": "Audit Corp"
+      },
+      "ipAddress": null,
+      "timestamp": "2026-08-06T12:37:30.754Z"
+    },
+    {
+      "id": "0f980d7a-839c-40bb-adf8-6aca6f983ead",
+      "tenantId": "f14e9658-448c-4e0e-839b-7e4064dc2dc6",
+      "actorId": "91b6c072-20e6-4e1c-b198-4736dee0b977",
+      "actorType": "USER",
+      "action": "LEAD_CREATED",
+      "resource": "LEAD",
+      "resourceId": "0c639c6a-c3f6-436a-9968-03516da26a46",
+      "metadata": {
+        "name": "Enterprise QA Lead",
+        "company": "Test Corp"
+      },
+      "ipAddress": null,
+      "timestamp": "2026-08-06T16:12:55.588Z"
+    },
+    {
+      "id": "4d59abbc-04c9-4f7b-838d-1a9f63f44a54",
+      "tenantId": "f14e9658-448c-4e0e-839b-7e4064dc2dc6",
+      "actorId": "91b6c072-20e6-4e1c-b198-4736dee0b977",
+      "actorType": "USER",
+      "action": "LEAD_CREATED",
+      "resource": "LEAD",
+      "resourceId": "02153f32-338c-4b91-af4b-78f70aa16159",
+      "metadata": {
+        "name": "Enterprise QA Lead",
+        "company": "Test Corp"
+      },
+      "ipAddress": null,
+      "timestamp": "2026-08-06T16:23:06.226Z"
+    },
+    {
+      "id": "34f2c47d-c219-4dcf-b5f7-a7435e34f7e8",
+      "tenantId": "f14e9658-448c-4e0e-839b-7e4064dc2dc6",
+      "actorId": "91b6c072-20e6-4e1c-b198-4736dee0b977",
+      "actorType": "USER",
+      "action": "CUSTOMER_CREATED",
+      "resource": "CUSTOMER",
+      "resourceId": "b6d0f4af-f631-41b9-9f9b-03e24f7e3238",
+      "metadata": null,
+      "ipAddress": null,
+      "timestamp": "2026-08-06T18:56:52.150Z"
+    },
+    {
+      "id": "77b6effe-1d12-4abf-990f-dd3874e71481",
+      "tenantId": "f14e9658-448c-4e0e-839b-7e4064dc2dc6",
+      "actorId": "91b6c072-20e6-4e1c-b198-4736dee0b977",
+      "actorType": "USER",
+      "action": "CUSTOMER_CREATED",
+      "resource": "CUSTOMER",
+      "resourceId": "0137fd28-d32a-4b3b-8022-44db781e693d",
+      "metadata": null,
+      "ipAddress": null,
+      "timestamp": "2026-08-06T18:59:37.553Z"
+    },
+    {
+      "id": "6a606c25-17d8-46e2-a59e-7ab66f94bf05",
+      "tenantId": "f14e9658-448c-4e0e-839b-7e4064dc2dc6",
+      "actorId": "91b6c072-20e6-4e1c-b198-4736dee0b977",
+      "actorType": "USER",
+      "action": "LOCATION_CREATED",
+      "resource": "CUSTOMER",
+      "resourceId": "0137fd28-d32a-4b3b-8022-44db781e693d",
+      "metadata": {
+        "name": "Enterprise QA Location",
+        "locationId": "a2472d55-96ed-41a8-9bae-5357aef1f9fc"
+      },
+      "ipAddress": null,
+      "timestamp": "2026-08-06T19:39:09.676Z"
+    },
+    {
+      "id": "13b7b688-65d2-4e42-b8f5-863fe94e3363",
+      "tenantId": "f14e9658-448c-4e0e-839b-7e4064dc2dc6",
+      "actorId": "91b6c072-20e6-4e1c-b198-4736dee0b977",
+      "actorType": "USER",
+      "action": "LOCATION_CREATED",
+      "resource": "CUSTOMER",
+      "resourceId": "b6d0f4af-f631-41b9-9f9b-03e24f7e3238",
+      "metadata": {
+        "name": "Enterprise QA Location",
+        "locationId": "9c463c2f-0c08-40f3-90c5-7435b94869c1"
+      },
+      "ipAddress": null,
+      "timestamp": "2026-08-06T19:40:23.188Z"
+    }
+  ],
+  "activities": [
+    {
+      "id": "70092764-6ebc-4dd1-95ae-f6a46f398f5f",
+      "tenantId": "92517593-3d66-4c81-9622-7fe3dd5a97a8",
+      "type": "SYSTEM",
+      "content": "Lead created: John Doe",
+      "actorId": "0fd647da-8144-4536-94f9-b72a6835f781",
+      "entityType": "LEAD",
+      "entityId": "45e7e879-0342-4a07-b4f9-57b420521bbd",
+      "createdAt": "2026-08-06T12:06:29.925Z"
+    },
+    {
+      "id": "3a1099ce-71e1-488d-a0f1-4d889cd23cce",
+      "tenantId": "47b55c6f-d6af-4b7d-b483-b2c7f83c598d",
+      "type": "SYSTEM",
+      "content": "Lead created: Audit Lead",
+      "actorId": "04e9c619-7a5f-4e34-a387-0b255d0b92cd",
+      "entityType": "LEAD",
+      "entityId": "1b6b8516-5036-40d4-80ce-97efdd9f12dd",
+      "createdAt": "2026-08-06T12:37:30.759Z"
+    },
+    {
+      "id": "1d305506-0eb0-477f-b986-4e054a86d881",
+      "tenantId": "f14e9658-448c-4e0e-839b-7e4064dc2dc6",
+      "type": "SYSTEM",
+      "content": "Lead created: Enterprise QA Lead",
+      "actorId": "91b6c072-20e6-4e1c-b198-4736dee0b977",
+      "entityType": "LEAD",
+      "entityId": "0c639c6a-c3f6-436a-9968-03516da26a46",
+      "createdAt": "2026-08-06T16:12:55.610Z"
+    },
+    {
+      "id": "bac952e8-c9fd-4c6d-b6d0-85465c42e9f6",
+      "tenantId": "f14e9658-448c-4e0e-839b-7e4064dc2dc6",
+      "type": "SYSTEM",
+      "content": "Lead created: Enterprise QA Lead",
+      "actorId": "91b6c072-20e6-4e1c-b198-4736dee0b977",
+      "entityType": "LEAD",
+      "entityId": "02153f32-338c-4b91-af4b-78f70aa16159",
+      "createdAt": "2026-08-06T16:23:06.233Z"
+    },
+    {
+      "id": "b54628f0-4627-4b6c-b762-96863a9bfca0",
+      "tenantId": "f14e9658-448c-4e0e-839b-7e4064dc2dc6",
+      "type": "SYSTEM",
+      "content": "Customer created: Enterprise QA Customer",
+      "actorId": "91b6c072-20e6-4e1c-b198-4736dee0b977",
+      "entityType": "CUSTOMER",
+      "entityId": "b6d0f4af-f631-41b9-9f9b-03e24f7e3238",
+      "createdAt": "2026-08-06T18:56:52.161Z"
+    },
+    {
+      "id": "99ece94e-e4ab-4e9a-af6f-737e906655ed",
+      "tenantId": "f14e9658-448c-4e0e-839b-7e4064dc2dc6",
+      "type": "SYSTEM",
+      "content": "Customer created: Enterprise QA Customer",
+      "actorId": "91b6c072-20e6-4e1c-b198-4736dee0b977",
+      "entityType": "CUSTOMER",
+      "entityId": "0137fd28-d32a-4b3b-8022-44db781e693d",
+      "createdAt": "2026-08-06T18:59:37.557Z"
+    },
+    {
+      "id": "5a05bfd1-5432-4a35-bab3-4ec29116a779",
+      "tenantId": "f14e9658-448c-4e0e-839b-7e4064dc2dc6",
+      "type": "SYSTEM",
+      "content": "Added new location: Enterprise QA Location",
+      "actorId": "91b6c072-20e6-4e1c-b198-4736dee0b977",
+      "entityType": "CUSTOMER",
+      "entityId": "0137fd28-d32a-4b3b-8022-44db781e693d",
+      "createdAt": "2026-08-06T19:39:09.684Z"
+    },
+    {
+      "id": "0008ddee-8183-4a5a-889e-9f481d222136",
+      "tenantId": "f14e9658-448c-4e0e-839b-7e4064dc2dc6",
+      "type": "SYSTEM",
+      "content": "Added new location: Enterprise QA Location",
+      "actorId": "91b6c072-20e6-4e1c-b198-4736dee0b977",
+      "entityType": "CUSTOMER",
+      "entityId": "b6d0f4af-f631-41b9-9f9b-03e24f7e3238",
+      "createdAt": "2026-08-06T19:40:23.192Z"
+    }
+  ]
+}
