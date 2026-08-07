@@ -409,12 +409,15 @@ model Lead {
 
   @@index([tenantId])
   @@index([tenantId, status])
+  @@unique([tenantId, email])
+  @@unique([tenantId, name, company])
 }
 
 model Customer {
   id             String         @id @default(uuid())
   tenantId       String
   name           String
+  normalizedName String
   industry       String?
   status         CustomerStatus @default(ACTIVE)
   assignedUserId String?
@@ -434,6 +437,7 @@ model Customer {
 
   @@index([tenantId])
   @@index([tenantId, name])
+  @@unique([tenantId, normalizedName])
 }
 
 model CustomerContact {

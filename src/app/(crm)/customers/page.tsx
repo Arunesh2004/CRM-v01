@@ -1,6 +1,8 @@
 import { Suspense } from 'react';
 import { getCustomersAction } from '@/modules/crm/actions/customer.actions';
 import { CustomerForm } from '@/components/crm/CustomerForm';
+import Link from 'next/link';
+import { CustomerActions } from '@/components/crm/CustomerActions';
 
 export default async function CustomersPage() {
   const result = await getCustomersAction();
@@ -44,7 +46,10 @@ export default async function CustomersPage() {
                       {customer.status}
                     </span>
                   </td>
-                  <td className="py-2"><button className="text-blue-600">View</button></td>
+                  <td className="py-2">
+                    <Link href={`/customers/${customer.id}`} className="text-blue-600 hover:underline">View</Link>
+                    <CustomerActions customerId={customer.id} />
+                  </td>
                 </tr>
               ))}
             </tbody>

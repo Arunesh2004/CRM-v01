@@ -9,6 +9,20 @@ export async function createLead(input: CreateLeadInput) {
 
   const prisma = withTenant(tenantId);
 
+  // BUG-CRM-LEAD-001 Duplicate Prevention
+  if (input.email) {
+    const existing = await prisma.lead.findFirst({ where: { tenantId, email: input.email } });
+    if (existing) throw new Error('A lead with this email already exists.');
+  } else {
+    const existing = await prisma.lead.findFirst({ where: { tenantId, name: input.name, company: input.company } });
+    if (existing) throw new Error('A lead with this name and company already exists.');
+  }
+  // BUG-CRM-SEC-002 Cross Tenant Lead Assignment Prevention
+  if (input.assignedUserId) {
+    const user = await prisma.user.findFirst({ where: { id: input.assignedUserId, tenantId } });
+    if (!user) throw new Error('Assigned user does not belong to this tenant.');
+  }
+
   return await prisma.$transaction(async (tx) => {
     const lead = await tx.lead.create({
       data: {
@@ -65,6 +79,12 @@ export async function updateLead(input: UpdateLeadInput) {
   await requirePermission('LEAD', 'UPDATE');
 
   const prisma = withTenant(tenantId);
+
+  // BUG-CRM-SEC-002 Cross Tenant Lead Assignment Prevention
+  if (input.assignedUserId) {
+    const user = await prisma.user.findFirst({ where: { id: input.assignedUserId, tenantId } });
+    if (!user) throw new Error('Assigned user does not belong to this tenant.');
+  }
 
   return await prisma.$transaction(async (tx) => {
     const lead = await tx.lead.findFirst({ where: { id: input.id, tenantId }});
@@ -127,9 +147,13 @@ export async function convertLeadToCustomer(leadId: string) {
     const lead = await tx.lead.findFirst({ where: { id: leadId, tenantId } });
     if (!lead) throw new Error('Lead not found');
 
+    const customerName = lead.company || lead.name;
+    const normalizedName = customerName.toLowerCase().trim().replace(/\s+/g, ' ');
+
     const customer = await tx.customer.create({
       data: {
-        name: lead.company || lead.name,
+        name: customerName,
+        normalizedName,
         assignedUserId: lead.assignedUserId,
         tenantId
       }
@@ -187,5 +211,36 @@ export async function convertLeadToCustomer(leadId: string) {
     });
 
     return customer;
+  });
+}
+
+export async function deleteLead(leadId: string) {
+  const user = await requireAuth();
+  const tenantId = await requireTenant();
+  await requirePermission('LEAD', 'DELETE');
+
+  const prisma = withTenant(tenantId);
+
+  return await prisma.$transaction(async (tx) => {
+    const lead = await tx.lead.findFirst({ where: { id: leadId, tenantId, deletedAt: null } });
+    if (!lead) throw new Error('Lead not found');
+
+    await tx.lead.update({
+      where: { id: leadId },
+      data: { deletedAt: new Date() }
+    });
+
+    await tx.auditLog.create({
+      data: {
+        tenantId,
+        actorId: user.id,
+        actorType: 'USER',
+        action: 'LEAD_DELETED',
+        resource: 'LEAD',
+        resourceId: leadId,
+      }
+    });
+
+    return { success: true };
   });
 }

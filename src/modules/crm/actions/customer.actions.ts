@@ -60,3 +60,16 @@ export async function getCustomerByIdAction(id: string) {
     return { success: false, error: error.message };
   }
 }
+
+export async function deleteCustomerAction(customerId: string) {
+  try {
+    await requireAuth();
+    await requireTenant();
+    await requirePermission('CUSTOMER', 'DELETE');
+    
+    const result = await customerService.deleteCustomer(customerId);
+    return { success: true, data: result };
+  } catch (error: any) {
+    return { success: false, error: error.message };
+  }
+}

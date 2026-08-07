@@ -37,7 +37,8 @@ async function main() {
     data: {
       tenantId: tenant.id,
       name: 'Stark Industries',
-      industry: 'Technology',
+      normalizedName: 'stark industries',
+      industry: 'Defense',
       status: 'ACTIVE'
     }
   });
@@ -46,7 +47,8 @@ async function main() {
     data: {
       tenantId: tenant.id,
       name: 'Wayne Enterprises',
-      industry: 'Finance',
+      normalizedName: 'wayne enterprises',
+      industry: 'Conglomerate',
       status: 'ACTIVE'
     }
   });
@@ -55,6 +57,7 @@ async function main() {
     data: {
       tenantId: tenant.id,
       name: 'Oscorp',
+      normalizedName: 'oscorp',
       industry: 'Biotech',
       status: 'ACTIVE'
     }

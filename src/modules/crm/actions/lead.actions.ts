@@ -48,3 +48,43 @@ export async function getLeadsAction() {
     return { success: false, error: error.message };
   }
 }
+
+export async function assignLeadAction(leadId: string, assignedUserId: string) {
+  try {
+    await requireAuth();
+    await requireTenant();
+    await requirePermission('LEAD', 'UPDATE');
+    
+    // updateLead handles assignment timeline and audit logs if assignedUserId changes
+    const result = await leadService.updateLead({ id: leadId, assignedUserId });
+    return { success: true, data: result };
+  } catch (error: any) {
+    return { success: false, error: error.message };
+  }
+}
+
+export async function convertLeadAction(leadId: string) {
+  try {
+    await requireAuth();
+    await requireTenant();
+    await requirePermission('LEAD', 'UPDATE');
+    
+    const result = await leadService.convertLeadToCustomer(leadId);
+    return { success: true, data: result };
+  } catch (error: any) {
+    return { success: false, error: error.message };
+  }
+}
+
+export async function deleteLeadAction(leadId: string) {
+  try {
+    await requireAuth();
+    await requireTenant();
+    await requirePermission('LEAD', 'DELETE');
+    
+    const result = await leadService.deleteLead(leadId);
+    return { success: true, data: result };
+  } catch (error: any) {
+    return { success: false, error: error.message };
+  }
+}

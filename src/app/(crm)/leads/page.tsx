@@ -2,12 +2,19 @@ import { Suspense } from 'react';
 import { getLeadsAction } from '@/modules/crm/actions/lead.actions';
 import { LeadForm } from '@/components/crm/LeadForm';
 import { StatusUpdater } from '@/components/crm/StatusUpdater';
+import { LeadActions } from '@/components/crm/LeadActions';
+import { withTenant } from '@/../database/utils/prisma-tenant';
+import { requireTenant } from '@/lib/auth';
 
 const STATUS_COLUMNS = ['NEW', 'CONTACTED', 'QUALIFIED', 'CONVERTED', 'LOST'];
 
 export default async function LeadsPage() {
   const result = await getLeadsAction();
   const leads = result.success ? (result.data || []) : [];
+
+  const tenantId = await requireTenant();
+  const prisma = withTenant(tenantId);
+  const users = await prisma.user.findMany({ where: { tenantId }, select: { id: true, email: true } });
 
   return (
     <div className="space-y-6 h-full flex flex-col">
@@ -43,6 +50,8 @@ export default async function LeadsPage() {
                         </div>
                         <div className="text-sm text-gray-500 truncate">{lead.name}</div>
                         {lead.email && <div className="text-xs text-gray-400 truncate">{lead.email}</div>}
+                        {lead.assignedUser?.email && <div className="text-xs text-purple-600 mt-1">Assigned: {lead.assignedUser.email}</div>}
+                        <LeadActions leadId={lead.id} users={users} />
                       </div>
                     ))}
                   </div>

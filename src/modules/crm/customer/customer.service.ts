@@ -9,10 +9,16 @@ export async function createCustomer(input: CreateCustomerInput) {
 
   const prisma = withTenant(tenantId);
 
+  // BUG-CRM-SEC-001 Case Insensitive Customer Duplicate Prevention
+  const normalizedName = input.name.toLowerCase().trim().replace(/\s+/g, ' ');
+  const existing = await prisma.customer.findFirst({ where: { tenantId, normalizedName } });
+  if (existing) throw new Error('A customer with this name already exists.');
+
   return await prisma.$transaction(async (tx) => {
     const customer = await tx.customer.create({
       data: {
         name: input.name,
+        normalizedName,
         industry: input.industry,
         assignedUserId: input.assignedUserId,
         tenantId
@@ -145,5 +151,36 @@ export async function updateCustomer(input: UpdateCustomerInput) {
     }
 
     return tx.customer.findFirst({ where: { id: input.id, tenantId }});
+  });
+}
+
+export async function deleteCustomer(customerId: string) {
+  const user = await requireAuth();
+  const tenantId = await requireTenant();
+  await requirePermission('CUSTOMER', 'DELETE');
+
+  const prisma = withTenant(tenantId);
+
+  return await prisma.$transaction(async (tx) => {
+    const customer = await tx.customer.findFirst({ where: { id: customerId, tenantId, deletedAt: null } });
+    if (!customer) throw new Error('Customer not found');
+
+    await tx.customer.update({
+      where: { id: customerId },
+      data: { deletedAt: new Date() }
+    });
+
+    await tx.auditLog.create({
+      data: {
+        tenantId,
+        actorId: user.id,
+        actorType: 'USER',
+        action: 'CUSTOMER_DELETED',
+        resource: 'CUSTOMER',
+        resourceId: customerId,
+      }
+    });
+
+    return { success: true };
   });
 }
