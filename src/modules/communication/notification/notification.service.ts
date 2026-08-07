@@ -18,6 +18,18 @@ export async function createNotification(input: CreateNotificationInput) {
   const prisma = withTenant(tenantId);
   
   return await prisma.$transaction(async (tx: any) => {
+    // Validate target user exists and belongs to current tenant
+    const targetUser = await tx.user.findFirst({
+      where: {
+        id: input.userId,
+        tenantId
+      }
+    });
+
+    if (!targetUser) {
+      throw new Error("Related entity does not belong to this tenant: User");
+    }
+
     const notification = await tx.notification.create({
       data: {
         tenantId,

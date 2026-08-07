@@ -3,7 +3,7 @@ import { WebhookVerifier } from './providers/webhook-verifier.interface';
 
 export async function checkDuplicateEvent(eventId: string, provider: string): Promise<boolean> {
   const existing = await prisma.webhookEvent.findUnique({
-    where: { eventId }
+    where: { provider_eventId: { provider, eventId } }
   });
   return !!existing;
 }
@@ -25,7 +25,7 @@ export async function receiveWebhook(input: {
       provider: input.provider,
       eventId: input.eventId,
       eventType: input.eventType,
-      payload: input.payload,
+      payloadHash: 'legacy-ignored',
       signatureVerified: input.signatureVerified,
       status: 'PENDING'
     }
@@ -52,9 +52,9 @@ export function verifyWebhook(
   return verifier.verify(payload, headers, secret);
 }
 
-export async function markProcessed(eventId: string) {
+export async function markProcessed(eventId: string, provider: string) {
   return await prisma.webhookEvent.update({
-    where: { eventId },
+    where: { provider_eventId: { provider, eventId } },
     data: {
       status: 'PROCESSED',
       processedAt: new Date()
@@ -62,9 +62,9 @@ export async function markProcessed(eventId: string) {
   });
 }
 
-export async function markFailed(eventId: string) {
+export async function markFailed(eventId: string, provider: string) {
   return await prisma.webhookEvent.update({
-    where: { eventId },
+    where: { provider_eventId: { provider, eventId } },
     data: {
       status: 'FAILED'
     }

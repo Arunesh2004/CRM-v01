@@ -61,16 +61,30 @@ export class WhatsAppProvider implements MessagingProvider {
   }
 
   async receiveWebhook(payload: any): Promise<any> { return payload; }
-  async verifyWebhook(signature: string, payload: any): Promise<boolean> { return true; }
+  async verifyWebhook(signature: string, payload: any): Promise<boolean> {
+    const appSecret = process.env.WHATSAPP_APP_SECRET;
+    if (!appSecret) return false;
+    
+    // In WhatsApp, signature is sha256=...
+    // But for this generic demo we just do a HMAC check:
+    const crypto = require('crypto');
+    const expected = crypto.createHmac('sha256', appSecret).update(JSON.stringify(payload)).digest('hex');
+    return signature === `sha256=${expected}`;
+  }
 }
 
 export class MockMessagingProvider implements MessagingProvider {
   async sendMessage(tenantId: string, payload: SendWhatsAppPayload): Promise<MessagingProviderResponse> {
+    if (payload.to === 'fail') {
+      return { success: false, error: 'Mock provider simulated failure' };
+    }
     Logger.info(`[MOCK WHATSAPP] Sending ${payload.type} to ${payload.to}`, { tenantId });
     return { success: true, messageId: `mock_wa_${Date.now()}` };
   }
   async receiveWebhook(payload: any): Promise<any> { return payload; }
-  async verifyWebhook(signature: string, payload: any): Promise<boolean> { return true; }
+  async verifyWebhook(signature: string, payload: any): Promise<boolean> { 
+    return signature === 'valid_mock_signature';
+  }
 }
 
 export class MessagingProviderFactory {

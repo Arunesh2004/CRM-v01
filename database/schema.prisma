@@ -121,6 +121,9 @@ model Tenant {
   cameraEvents      CameraEvent[]
   aiEvents          AIEvent[]
   incidents         Incident[]
+  callTranscripts   CallTranscript[]
+  aisummaries       AISummary[]
+  webhookEvents     WebhookEvent[]
 }
 
 model User {
@@ -335,6 +338,15 @@ enum NotificationType {
   SYSTEM
 }
 
+enum MessageStatus {
+  QUEUED
+  PROCESSING
+  SENT
+  DELIVERED
+  FAILED
+  CANCELLED
+}
+
 // -----------------------------------------------------------------------------
 // BILLING ENUMS
 // -----------------------------------------------------------------------------
@@ -407,10 +419,10 @@ model Lead {
   assignedUser User?  @relation(fields: [assignedUserId], references: [id], onDelete: SetNull)
   tasks        Task[]
 
-  @@index([tenantId])
-  @@index([tenantId, status])
   @@unique([tenantId, email])
   @@unique([tenantId, name, company])
+  @@index([tenantId])
+  @@index([tenantId, status])
 }
 
 model Customer {
@@ -435,9 +447,9 @@ model Customer {
   emailThreads  EmailThread[]
   conversations Conversation[]
 
+  @@unique([tenantId, normalizedName])
   @@index([tenantId])
   @@index([tenantId, name])
-  @@unique([tenantId, normalizedName])
 }
 
 model CustomerContact {
@@ -544,6 +556,8 @@ model Call {
   tenant       Tenant            @relation(fields: [tenantId], references: [id], onDelete: Cascade)
   participants CallParticipant[]
   recordings   CallRecording[]
+  transcripts  CallTranscript[]
+  summaries    AISummary[]
 
   @@index([tenantId, createdAt])
   @@index([tenantId, startedAt])
@@ -574,6 +588,7 @@ model CallRecording {
   tenantId   String
   callId     String
   storageKey String
+  storageUrl String?
   duration   Int?
   sizeBytes  Int?
   metadata   Json?
@@ -584,6 +599,35 @@ model CallRecording {
 
   @@index([tenantId, callId])
   @@index([tenantId, createdAt])
+}
+
+model CallTranscript {
+  id        String   @id @default(uuid())
+  tenantId  String
+  callId    String
+  content   String?
+  status    String   @default("PROCESSING") // PROCESSING, COMPLETED, FAILED
+  createdAt DateTime @default(now())
+
+  tenant Tenant @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  call   Call   @relation(fields: [callId], references: [id], onDelete: Cascade)
+
+  @@index([tenantId, callId])
+}
+
+model AISummary {
+  id        String   @id @default(uuid())
+  tenantId  String
+  callId    String
+  summary   String?
+  sentiment String?
+  status    String   @default("PROCESSING") // PROCESSING, COMPLETED, FAILED
+  createdAt DateTime @default(now())
+
+  tenant Tenant @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  call   Call   @relation(fields: [callId], references: [id], onDelete: Cascade)
+
+  @@index([tenantId, callId])
 }
 
 model EmailThread {
@@ -676,13 +720,15 @@ model Conversation {
 }
 
 model Message {
-  id             String   @id @default(uuid())
+  id             String        @id @default(uuid())
   tenantId       String
   conversationId String
   senderId       String?
   content        String
-  createdAt      DateTime @default(now())
-  updatedAt      DateTime @updatedAt
+  status         MessageStatus @default(QUEUED)
+  idempotencyKey String?
+  createdAt      DateTime      @default(now())
+  updatedAt      DateTime      @updatedAt
 
   tenant       Tenant              @relation(fields: [tenantId], references: [id], onDelete: Cascade)
   conversation Conversation        @relation(fields: [conversationId], references: [id], onDelete: Cascade)
@@ -690,6 +736,7 @@ model Message {
   attachments  MessageAttachment[]
   readStatuses MessageReadStatus[]
 
+  @@unique([tenantId, idempotencyKey])
   @@index([tenantId, conversationId])
   @@index([tenantId, createdAt])
 }
@@ -1026,17 +1073,21 @@ model AIEvent {
 
 model WebhookEvent {
   id                String        @id @default(uuid())
+  tenantId          String?
   provider          String
-  eventId           String        @unique
+  eventId           String
   eventType         String
-  payload           Json
+  payloadHash       String
   signatureVerified Boolean       @default(false)
   status            WebhookStatus @default(PENDING)
   processedAt       DateTime?
   createdAt         DateTime      @default(now())
 
-  @@index([provider, eventId])
+  tenant Tenant? @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+
+  @@unique([provider, eventId])
   @@index([status, createdAt])
+  @@index([tenantId, createdAt])
 }
 
 // -----------------------------------------------------------------------------
