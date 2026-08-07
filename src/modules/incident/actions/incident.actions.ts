@@ -54,3 +54,15 @@ export async function resolveIncidentAction(id: string) {
     return { success: false, error: error.message };
   }
 }
+
+export async function deleteIncidentAction(id: string) {
+  try {
+    await requireAuth();
+    await requireTenant();
+    
+    const result = await incidentService.deleteIncident(id);
+    return { success: true, data: result };
+  } catch (error: any) {
+    return { success: false, error: error.message };
+  }
+}

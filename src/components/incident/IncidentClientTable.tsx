@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { updateIncidentStatusAction, resolveIncidentAction } from '@/modules/incident/actions/incident.actions';
+import { updateIncidentStatusAction, resolveIncidentAction, deleteIncidentAction } from '@/modules/incident/actions/incident.actions';
 import { IncidentNotificationStatus } from './IncidentNotificationStatus';
 
 export function IncidentClientTable({ incidents }: { incidents: any[] }) {
@@ -19,6 +19,14 @@ export function IncidentClientTable({ incidents }: { incidents: any[] }) {
   const handleInvestigate = async (id: string) => {
     setLoadingId(id);
     await updateIncidentStatusAction({ id, status: 'INVESTIGATING' });
+    setLoadingId(null);
+    router.refresh();
+  };
+
+  const handleDelete = async (id: string) => {
+    if (!confirm('Are you sure you want to delete this incident?')) return;
+    setLoadingId(id);
+    await deleteIncidentAction(id);
     setLoadingId(null);
     router.refresh();
   };
@@ -98,6 +106,13 @@ export function IncidentClientTable({ incidents }: { incidents: any[] }) {
                     Resolve
                   </button>
                 )}
+                <button 
+                  onClick={() => handleDelete(incident.id)}
+                  disabled={loadingId === incident.id}
+                  className="bg-red-600 text-white px-3 py-1 rounded text-sm disabled:opacity-50"
+                >
+                  Delete
+                </button>
               </td>
             </tr>
           ))}

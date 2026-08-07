@@ -190,6 +190,7 @@ async function main() {
       title: 'Perimeter Breach',
       severity: 'HIGH',
       status: 'RESOLVED',
+      resolvedAt: new Date(),
       locationId: loc1.id,
       cameraId: cam1.id,
       aiEventId: ev3.id

@@ -13,6 +13,20 @@ export async function createIncident(input: CreateIncidentInput) {
   const prisma = withTenant(tenantId);
 
   const incident = await prisma.$transaction(async (tx) => {
+    // 1. Validate Location Ownership
+    const location = await tx.location.findFirst({ where: { id: input.locationId, tenantId }});
+    if (!location) throw new Error("Related entity does not belong to this tenant: Location");
+
+    // 2. Validate Camera Ownership & Consistency
+    const camera = await tx.camera.findFirst({ where: { id: input.cameraId, tenantId }});
+    if (!camera) throw new Error("Related entity does not belong to this tenant: Camera");
+    if (camera.locationId !== input.locationId) throw new Error("Relationship Consistency Error: Camera does not belong to Location");
+
+    // 3. Validate AIEvent Ownership & Consistency
+    const aiEvent = await tx.aIEvent.findFirst({ where: { id: input.aiEventId, tenantId }});
+    if (!aiEvent) throw new Error("Related entity does not belong to this tenant: AIEvent");
+    if (aiEvent.cameraId !== input.cameraId) throw new Error("Relationship Consistency Error: AIEvent does not belong to Camera");
+
     const incident = await tx.incident.create({
       data: {
         tenantId,
@@ -24,8 +38,6 @@ export async function createIncident(input: CreateIncidentInput) {
         severity: input.severity,
       }
     });
-
-    const location = await tx.location.findFirst({ where: { id: input.locationId, tenantId }});
 
     if (location) {
       await tx.activityTimeline.create({
@@ -58,6 +70,7 @@ export async function getIncidents() {
 
   const prisma = withTenant(tenantId);
   return await prisma.incident.findMany({
+    where: { tenantId, deletedAt: null },
     include: {
       location: true,
       camera: true,
@@ -74,7 +87,7 @@ export async function getIncidentById(id: string) {
 
   const prisma = withTenant(tenantId);
   return await prisma.incident.findFirst({
-    where: { id, tenantId },
+    where: { id, tenantId, deletedAt: null },
     include: {
       location: true,
       camera: true,
@@ -131,6 +144,11 @@ export async function assignIncident(input: AssignIncidentInput) {
     const incident = await tx.incident.findFirst({ where: { id: input.id, tenantId }, include: { location: true } });
     if (!incident) throw new Error('Incident not found');
 
+    if (input.assignedUserId) {
+      const user = await tx.user.findFirst({ where: { id: input.assignedUserId, tenantId } });
+      if (!user) throw new Error('Assigned user does not belong to this tenant.');
+    }
+
     const updated = await tx.incident.update({
       where: { id: input.id },
       data: { assignedUserId: input.assignedUserId }
@@ -155,4 +173,37 @@ export async function assignIncident(input: AssignIncidentInput) {
 
 export async function resolveIncident(id: string) {
   return await updateIncidentStatus({ id, status: 'RESOLVED' });
+}
+
+export async function deleteIncident(id: string) {
+  const user = await requireAuth();
+  const tenantId = await requireTenant();
+  await requirePermission('CUSTOMER', 'UPDATE');
+
+  const prisma = withTenant(tenantId);
+
+  return await prisma.$transaction(async (tx) => {
+    const incident = await tx.incident.findFirst({ where: { id, tenantId, deletedAt: null }, include: { location: true } });
+    if (!incident) throw new Error('Incident not found');
+
+    const updated = await tx.incident.update({
+      where: { id },
+      data: { deletedAt: new Date() }
+    });
+
+    if (incident.location) {
+      await tx.activityTimeline.create({
+        data: {
+          tenantId,
+          type: 'SYSTEM',
+          content: `Deleted incident: ${incident.title}`,
+          actorId: user.id,
+          entityType: 'CUSTOMER',
+          entityId: incident.location.customerId
+        }
+      });
+    }
+
+    return { success: true };
+  });
 }

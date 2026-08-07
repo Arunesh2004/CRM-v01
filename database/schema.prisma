@@ -1070,6 +1070,7 @@ model Incident {
   assignedUserId String?
   createdAt      DateTime         @default(now())
   resolvedAt     DateTime?
+  deletedAt      DateTime?
 
   tenant       Tenant   @relation(fields: [tenantId], references: [id], onDelete: Cascade)
   location     Location @relation(fields: [locationId], references: [id], onDelete: Cascade)
