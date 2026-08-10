@@ -1,7 +1,7 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
-  output: 'standalone',
+  // Removed output: 'standalone' to fix Vercel onBuildComplete hook compatibility
 };
 
 export default nextConfig;
