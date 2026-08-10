@@ -4,9 +4,11 @@ import { NextResponse } from 'next/server';
 const isPublicRoute = createRouteMatcher(['/sign-in(.*)', '/sign-up(.*)', '/api/webhooks/clerk', '/api/health']);
 
 export default clerkMiddleware(async (auth, req) => {
+  console.log('[AUTH-DIAG] middleware-enter', req.nextUrl.pathname);
   if (!isPublicRoute(req)) {
     await auth.protect();
   }
+  console.log('[AUTH-DIAG] middleware-after-clerk', req.nextUrl.pathname);
 });
 
 export const config = {

@@ -14,6 +14,7 @@ const SalesChart = dynamic(() => import('@/components/ui/SalesChart').then(mod =
 });
 
 export default async function DashboardPage() {
+  console.log('[AUTH-DIAG] dashboard-enter');
   await requireAuth();
   const tenantId = await requireTenant();
   const prisma = withTenant(tenantId);
