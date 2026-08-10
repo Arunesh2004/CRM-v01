@@ -1,0 +1,11 @@
+node_modules
+.next
+.git
+.env
+.env.*
+!.env.production
+docs
+scripts
+brain
+scratch
+*.md

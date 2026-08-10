@@ -1,8 +1,8 @@
 -- DropIndex
-DROP INDEX "WebhookEvent_eventId_key";
+-- DROP INDEX "WebhookEvent_eventId_key";
 
 -- DropIndex
-DROP INDEX "WebhookEvent_provider_eventId_idx";
+-- DROP INDEX "WebhookEvent_provider_eventId_idx";
 
 -- AlterTable
 ALTER TABLE "Message" ADD COLUMN     "idempotencyKey" TEXT;

@@ -81,8 +81,12 @@ export async function POST(req: NextRequest) {
   if (eventType === 'user.deleted') {
     const { id } = evt.data;
     try {
-      await prisma.user.delete({
-        where: { clerkId: id }
+      await prisma.user.update({
+        where: { clerkId: id },
+        data: { 
+          status: 'INACTIVE',
+          deletedAt: new Date()
+        }
       });
       return NextResponse.json({ success: true }, { status: 200 });
     } catch (err) {

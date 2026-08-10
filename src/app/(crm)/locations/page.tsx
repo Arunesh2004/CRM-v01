@@ -1,6 +1,5 @@
 import { Suspense } from 'react';
 import { getLocationsAction } from '@/modules/crm/actions/location.actions';
-import { LocationForm } from '@/components/crm/LocationForm';
 
 export default async function LocationsPage() {
   const result = await getLocationsAction();
@@ -10,7 +9,6 @@ export default async function LocationsPage() {
     <div className="space-y-6">
       <div className="flex justify-between items-center">
         <h1 className="text-2xl font-bold">Locations</h1>
-        <LocationForm />
       </div>
       
       <div className="bg-white rounded shadow p-4">

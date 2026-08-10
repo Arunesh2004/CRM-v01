@@ -1,5 +1,6 @@
 import prisma from '@/../database/utils/prisma';
 import type { User } from '@clerk/nextjs/server';
+import { FeatureAccessService } from '../../billing/feature-access.service';
 
 export async function ensureUserProvisioned(clerkUser: User | any) {
   // Normalize user data handling both Clerk SDK User object and Webhook payload
@@ -35,10 +36,10 @@ export async function ensureUserProvisioned(clerkUser: User | any) {
       let tenant;
       
       if (!tenantId) {
-        // Provision a new tenant safely.
         tenant = await tx.tenant.create({
           data: {
-            name: `${firstName || 'User'}'s Organization`
+            name: `${firstName || 'User'}'s Organization`,
+            ...(process.env.NODE_ENV === 'development' ? { status: 'ACTIVE' } : {})
           }
         });
         tenantId = tenant.id;
@@ -47,6 +48,9 @@ export async function ensureUserProvisioned(clerkUser: User | any) {
         // Verify tenant exists
         tenant = await tx.tenant.findUnique({ where: { id: tenantId } });
         if (!tenant) throw new Error('Invalid tenantId provided in metadata');
+        
+        // Enforce employee limit for the existing tenant before adding another
+        await FeatureAccessService.enforceLimit(tenantId, 'MAX_EMPLOYEES');
       }
 
       // Upsert User to handle concurrent webhooks/logins safely
@@ -60,6 +64,15 @@ export async function ensureUserProvisioned(clerkUser: User | any) {
         }
       });
       console.log(`[Provisioning] Upserted user ${upsertedUser.id}.`);
+
+      if (!tenantId) {
+        // We just created the tenant, now set the ownerId to the newly created user
+        await tx.tenant.update({
+          where: { id: tenant.id },
+          data: { ownerId: upsertedUser.id }
+        });
+        console.log(`[Provisioning] Set ownerId of tenant ${tenant.id} to user ${upsertedUser.id}.`);
+      }
 
       // Find or create role
       const roleName = publicMetadata.tenantId ? 'MEMBER' : 'TENANT_ADMIN';

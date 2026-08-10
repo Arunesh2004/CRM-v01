@@ -1,0 +1,17 @@
+{
+  "alpha-63": {
+    "usersCount": 1,
+    "custCount": 50,
+    "hash": "1055d05f1b1dc9c9d45f44342c5d7270dfd9af4486516b0e4a83ed8476d93187"
+  },
+  "beta-63": {
+    "usersCount": 1,
+    "custCount": 10,
+    "hash": "0f56929b350a5aac548b9ed6049cec9c97075aa195cd79cad15dc57332e023d9"
+  },
+  "gamma-63": {
+    "usersCount": 1,
+    "custCount": 0,
+    "hash": "c3dcd0af40d3403a3be83d1c0bba3ed0c51bd0185372592be409a5b6648ad198"
+  }
+}

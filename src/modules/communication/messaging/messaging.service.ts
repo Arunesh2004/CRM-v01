@@ -3,6 +3,7 @@ import { withTenant } from '../../../../database/utils/prisma-tenant';
 import { ProviderFactory } from '@/lib/providers/provider.factory';
 import { CreateMessageInput } from '../communication.types';
 import { getCurrentUserContext } from '@/lib/tenant-context';
+import { assertRelationOwnership } from '@/lib/security/tenant-guard';
 
 export async function sendMessage(input: CreateMessageInput & { idempotencyKey?: string }) {
   await requireAuth();
@@ -10,6 +11,8 @@ export async function sendMessage(input: CreateMessageInput & { idempotencyKey?:
   await requirePermission('COMMUNICATION', 'CREATE');
   const user = await getCurrentUserContext();
   
+  await assertRelationOwnership([{ model: 'conversation', id: input.conversationId }], tenantId);
+
   const prisma = withTenant(tenantId);
   // Concurrency-safe idempotency via DB unique constraint
   let msg: any = null;

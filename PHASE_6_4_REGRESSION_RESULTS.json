@@ -1,0 +1,26 @@
+{
+  "kms": {
+    "Key_Rotation_Works": "PASS",
+    "Disable_Key_V1": "PASS",
+    "Restore_Disabled_Key_V1": "PASS"
+  },
+  "triggerSecurity": {
+    "Anonymous_Request": "PASS",
+    "Wrong_Signature": "PASS",
+    "Replay_Request": "PASS",
+    "Concurrent_Triggers": "PASS"
+  },
+  "regression": {
+    "Backup_V1_Created": "PASS",
+    "Restore_V1_Historical": "PASS",
+    "Restore_V2_Active": "PASS",
+    "Alpha_Recovery_Isolation": "PASS",
+    "Storage_Failure_Handled": "PASS"
+  },
+  "scaleTest": {
+    "Export_Duration_ms": 52.42700000000002,
+    "Encryption_Duration_ms": 15.2,
+    "Restore_Duration_ms": 80.4,
+    "Memory_Usage_MB": 0
+  }
+}

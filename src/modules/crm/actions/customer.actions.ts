@@ -35,13 +35,15 @@ export async function updateCustomerAction(payload: z.infer<typeof UpdateCustome
   }
 }
 
-export async function getCustomersAction() {
+import { QueryParams } from '../../core/types';
+
+export async function getCustomersAction(params?: QueryParams) {
   try {
     await requireAuth();
     await requireTenant();
     await requirePermission('CUSTOMER', 'READ');
     
-    const result = await customerService.getCustomers();
+    const result = await customerService.getCustomers(params);
     return { success: true, data: result };
   } catch (error: any) {
     return { success: false, error: error.message };
@@ -68,6 +70,49 @@ export async function deleteCustomerAction(customerId: string) {
     await requirePermission('CUSTOMER', 'DELETE');
     
     const result = await customerService.deleteCustomer(customerId);
+    return { success: true, data: result };
+  } catch (error: any) {
+    return { success: false, error: error.message };
+  }
+}
+
+import { revalidatePath } from 'next/cache';
+
+export async function createContactAction(payload: any) {
+  try {
+    await requireAuth();
+    await requireTenant();
+    await requirePermission('CUSTOMER', 'UPDATE');
+    const result = await customerService.createContact(payload);
+    revalidatePath(`/customers/${payload.customerId}`);
+    return { success: true, data: result };
+  } catch (error: any) {
+    return { success: false, error: error.message };
+  }
+}
+
+export async function createLocationAction(payload: any) {
+  try {
+    await requireAuth();
+    await requireTenant();
+    await requirePermission('CUSTOMER', 'UPDATE');
+    const result = await customerService.createLocation(payload);
+    revalidatePath(`/customers/${payload.customerId}`);
+    return { success: true, data: result };
+  } catch (error: any) {
+    return { success: false, error: error.message };
+  }
+}
+
+import { getCustomerTimeline } from '../customer/customer.timeline.service';
+
+export async function getCustomerTimelineAction(params: {
+  customerId: string;
+  cursor?: string;
+  limit?: number;
+}) {
+  try {
+    const result = await getCustomerTimeline(params);
     return { success: true, data: result };
   } catch (error: any) {
     return { success: false, error: error.message };

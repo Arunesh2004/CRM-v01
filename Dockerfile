@@ -1,43 +1,51 @@
-FROM node:20-alpine AS base
+# syntax=docker/dockerfile:1
 
-# Install dependencies only when needed
+# Stage 1: Base image
+FROM node:18-alpine AS base
+WORKDIR /app
+# Install OpenSSL for Prisma
+RUN apk add --no-cache openssl libc6-compat
+
+# Stage 2: Install dependencies
 FROM base AS deps
-RUN apk add --no-cache libc6-compat
-WORKDIR /app
 COPY package.json package-lock.json ./
-COPY database/schema.prisma ./database/
-RUN npm ci
+COPY database/schema.prisma ./database/schema.prisma
+RUN npm install
 
-# Rebuild the source code only when needed
+# Stage 3: Build the application
 FROM base AS builder
-WORKDIR /app
 COPY --from=deps /app/node_modules ./node_modules
 COPY . .
-# Disable telemetry during build
+
+# Environment variables needed during build for Prisma generation
 ENV NEXT_TELEMETRY_DISABLED=1
+
+# Generate Prisma Client and build Next.js
 RUN npx prisma generate
 RUN npm run build
 
-# Production image, copy all the files and run next
+# Stage 4: Production image
 FROM base AS runner
 WORKDIR /app
-
 ENV NODE_ENV=production
 ENV NEXT_TELEMETRY_DISABLED=1
 
 RUN addgroup --system --gid 1001 nodejs
 RUN adduser --system --uid 1001 nextjs
 
+# Copy Prisma engine and generated client
+COPY --from=builder /app/node_modules/@prisma/client ./node_modules/@prisma/client
+COPY --from=builder /app/node_modules/.prisma ./node_modules/.prisma
+
+# Copy Next.js artifacts
 COPY --from=builder /app/public ./public
-# Automatically leverage output traces to reduce image size
 COPY --from=builder --chown=nextjs:nodejs /app/.next/standalone ./
 COPY --from=builder --chown=nextjs:nodejs /app/.next/static ./.next/static
-COPY --from=builder /app/database ./database
 
 USER nextjs
 
 EXPOSE 3000
 ENV PORT=3000
+ENV HOSTNAME="0.0.0.0"
 
-# server.js is created by next build from the standalone output
 CMD ["node", "server.js"]

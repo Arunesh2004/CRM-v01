@@ -1,6 +1,7 @@
 import { requireAuth, requireTenant, requirePermission } from '@/lib/auth';
 import { withTenant } from '@/../database/utils/prisma-tenant';
 import { CreateCameraInput, UpdateCameraInput, SimulateAIEventInput } from './cctv.types';
+import { assertRelationOwnership } from '@/lib/security/tenant-guard';
 
 export async function createCamera(input: CreateCameraInput) {
   const user = await requireAuth();
@@ -9,12 +10,14 @@ export async function createCamera(input: CreateCameraInput) {
   // Let's use CUSTOMER permission for simplicity matching the CRM
   await requirePermission('CUSTOMER', 'UPDATE');
 
+  await assertRelationOwnership([{ model: 'location', id: input.locationId }], tenantId);
+
   const prisma = withTenant(tenantId);
 
   return await prisma.$transaction(async (tx) => {
-    // Verify location exists in tenant
+    // Fetch location for logging
     const location = await tx.location.findFirst({ where: { id: input.locationId, tenantId }});
-    if (!location) throw new Error('Location not found');
+    if (!location) throw new Error("Location not found");
 
     const camera = await tx.camera.create({
       data: {
@@ -82,6 +85,10 @@ export async function updateCamera(input: UpdateCameraInput) {
   const user = await requireAuth();
   const tenantId = await requireTenant();
   await requirePermission('CUSTOMER', 'UPDATE');
+
+  if (input.locationId) {
+    await assertRelationOwnership([{ model: 'location', id: input.locationId }], tenantId);
+  }
 
   const prisma = withTenant(tenantId);
 

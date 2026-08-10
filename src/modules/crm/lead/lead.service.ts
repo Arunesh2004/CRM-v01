@@ -1,6 +1,7 @@
 import { requireAuth, requireTenant, requirePermission } from '@/lib/auth';
 import { withTenant } from '@/../database/utils/prisma-tenant';
 import { CreateLeadInput, UpdateLeadInput } from '../crm.types';
+import { EventBus } from '../../core/events/event-bus';
 
 export async function createLead(input: CreateLeadInput) {
   const user = await requireAuth();
@@ -62,15 +63,51 @@ export async function createLead(input: CreateLeadInput) {
   });
 }
 
-export async function getLeads() {
+import { QueryParams, PaginatedResponse } from '../../core/types';
+
+export async function getLeads(params?: QueryParams): Promise<PaginatedResponse<any>> {
   await requireAuth();
   const tenantId = await requireTenant();
   await requirePermission('LEAD', 'READ');
 
   const prisma = withTenant(tenantId);
-  return await prisma.lead.findMany({
-    where: { deletedAt: null }
+  const limit = params?.limit || 50;
+  
+  const where: any = { deletedAt: null };
+  
+  if (params?.search) {
+    where.OR = [
+      { name: { contains: params.search, mode: 'insensitive' } },
+      { company: { contains: params.search, mode: 'insensitive' } },
+      { email: { contains: params.search, mode: 'insensitive' } }
+    ];
+  }
+  
+  if (params?.filters) {
+    if (params.filters.status) where.status = params.filters.status;
+    if (params.filters.assignedUserId) where.assignedUserId = params.filters.assignedUserId;
+  }
+
+  const leads = await prisma.lead.findMany({
+    where,
+    take: limit + 1,
+    ...(params?.cursor ? { cursor: { id: params.cursor }, skip: 1 } : {}),
+    orderBy: {
+      [params?.sortBy || 'createdAt']: params?.sortOrder || 'desc'
+    }
   });
+
+  const hasMore = leads.length > limit;
+  const data = hasMore ? leads.slice(0, -1) : leads;
+  const nextCursor = hasMore ? data[data.length - 1].id : null;
+
+  return {
+    data,
+    pagination: {
+      nextCursor,
+      hasMore
+    }
+  };
 }
 
 export async function updateLead(input: UpdateLeadInput) {
@@ -86,13 +123,18 @@ export async function updateLead(input: UpdateLeadInput) {
     if (!user) throw new Error('Assigned user does not belong to this tenant.');
   }
 
-  return await prisma.$transaction(async (tx) => {
+  const result = await prisma.$transaction(async (tx) => {
     const lead = await tx.lead.findFirst({ where: { id: input.id, tenantId }});
     if (!lead) throw new Error('Lead not found');
     
     let assignmentChanged = false;
     if (input.assignedUserId && input.assignedUserId !== lead.assignedUserId) {
       assignmentChanged = true;
+    }
+
+    let statusChanged = false;
+    if (input.status && input.status !== lead.status) {
+      statusChanged = true;
     }
 
     const updated = await tx.lead.updateMany({
@@ -131,8 +173,46 @@ export async function updateLead(input: UpdateLeadInput) {
       });
     }
 
-    return tx.lead.findFirst({ where: { id: input.id, tenantId }});
+    if (statusChanged) {
+      await tx.activityTimeline.create({
+        data: {
+          tenantId,
+          type: 'SYSTEM',
+          content: `Lead status changed from ${lead.status} to ${input.status}`,
+          actorId: user.id,
+          entityType: 'LEAD',
+          entityId: input.id
+        }
+      });
+      
+      // Attempt to find user to notify (if assigned)
+      if (lead.assignedUserId || input.assignedUserId) {
+        await tx.notification.create({
+          data: {
+            tenantId,
+            userId: input.assignedUserId || lead.assignedUserId!,
+            type: 'SYSTEM',
+            title: 'Lead Status Updated',
+            body: `Lead ${lead.company || lead.name} was moved to ${input.status}`,
+            actionUrl: `/leads`
+          }
+        });
+      }
+    }
+
+    const updatedLead = await tx.lead.findFirst({ where: { id: input.id, tenantId }, include: { assignedUser: { select: { id: true, email: true } } }});
+    return { lead: updatedLead, assignmentChanged };
   });
+
+  if (result.assignmentChanged && input.assignedUserId) {
+    EventBus.emit('lead.assigned', { 
+      tenantId, 
+      leadId: input.id, 
+      assigneeId: input.assignedUserId 
+    });
+  }
+
+  return result.lead;
 }
 
 export async function convertLeadToCustomer(leadId: string) {

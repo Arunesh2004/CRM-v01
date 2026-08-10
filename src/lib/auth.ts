@@ -95,6 +95,9 @@ export async function requireTenant() {
   if (!tenant) {
     throw new Error('Tenant Context Missing');
   }
+  if (tenant.status !== 'ACTIVE') {
+    throw new Error('Forbidden: Tenant is not ACTIVE');
+  }
   return tenant.id;
 }
 

@@ -3,6 +3,9 @@
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { createCustomerAction } from '@/modules/crm/actions/customer.actions';
+import { toast } from 'sonner';
+import { Button } from '../ui/button';
+import { Loader2 } from 'lucide-react';
 
 export function CustomerForm() {
   const [isOpen, setIsOpen] = useState(false);
@@ -26,20 +29,19 @@ export function CustomerForm() {
     setIsLoading(false);
     if (res.success) {
       setIsOpen(false);
+      toast.success('Customer created successfully');
       router.refresh();
     } else {
       setError(res.error || 'Failed to create customer');
+      toast.error(res.error || 'Failed to create customer');
     }
   }
 
   return (
     <>
-      <button 
-        onClick={() => setIsOpen(true)}
-        className="bg-blue-600 text-white px-4 py-2 rounded"
-      >
+      <Button onClick={() => setIsOpen(true)}>
         Add Customer
-      </button>
+      </Button>
 
       {isOpen && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
@@ -59,20 +61,20 @@ export function CustomerForm() {
               </div>
 
               <div className="flex justify-end space-x-2 pt-4">
-                <button 
+                <Button 
                   type="button" 
+                  variant="outline"
                   onClick={() => setIsOpen(false)}
-                  className="px-4 py-2 bg-gray-200 rounded"
                 >
                   Cancel
-                </button>
-                <button 
+                </Button>
+                <Button 
                   type="submit" 
                   disabled={isLoading}
-                  className="px-4 py-2 bg-blue-600 text-white rounded disabled:bg-blue-400"
                 >
+                  {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
                   {isLoading ? 'Saving...' : 'Save Customer'}
-                </button>
+                </Button>
               </div>
             </form>
           </div>

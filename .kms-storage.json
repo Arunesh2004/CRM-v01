@@ -1,0 +1,13 @@
+{
+  "activeVersion": "v2",
+  "keys": {
+    "v1": {
+      "keyHex": "0c6205f528968341d7820b92d57fec927a885a7ab38e0d788705d8d6b45ec504",
+      "status": "DISABLED"
+    },
+    "v2": {
+      "keyHex": "e06faecf6376442c9d5206e34a70f72e007baf43e4a93dc8d92c9326bb9919f4",
+      "status": "ACTIVE"
+    }
+  }
+}

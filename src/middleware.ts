@@ -4,17 +4,6 @@ import { NextResponse } from 'next/server';
 const isPublicRoute = createRouteMatcher(['/sign-in(.*)', '/sign-up(.*)', '/api/webhooks/clerk', '/api/health']);
 
 export default clerkMiddleware(async (auth, req) => {
-  const missingKeys = !process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY || !process.env.CLERK_SECRET_KEY;
-  
-  if (missingKeys) {
-    if (process.env.NODE_ENV === 'production') {
-      return new NextResponse('Configuration Error: Missing authentication keys', { status: 500 });
-    }
-    // We do not call auth.protect() if keys are missing to prevent a raw crash.
-    // The layout.tsx will catch this and display the SetupScreen.
-    return;
-  }
-
   if (!isPublicRoute(req)) {
     await auth.protect();
   }

@@ -2,6 +2,8 @@ import { requireAuth, requireTenant, requirePermission } from '@/lib/auth';
 import { withTenant } from '@/../database/utils/prisma-tenant';
 import { CreateIncidentInput, UpdateIncidentStatusInput, AssignIncidentInput } from './incident.types';
 
+import { assertRelationOwnership } from '@/lib/security/tenant-guard';
+
 export async function createIncident(input: CreateIncidentInput) {
   const user = await requireAuth();
   const tenantId = await requireTenant();
@@ -10,22 +12,24 @@ export async function createIncident(input: CreateIncidentInput) {
   // Let's use CUSTOMER for now.
   await requirePermission('CUSTOMER', 'UPDATE');
 
+  await assertRelationOwnership([
+    { model: 'location', id: input.locationId },
+    { model: 'camera', id: input.cameraId },
+    { model: 'aIEvent', id: input.aiEventId }
+  ], tenantId);
+
   const prisma = withTenant(tenantId);
 
   const incident = await prisma.$transaction(async (tx) => {
-    // 1. Validate Location Ownership
-    const location = await tx.location.findFirst({ where: { id: input.locationId, tenantId }});
-    if (!location) throw new Error("Related entity does not belong to this tenant: Location");
-
-    // 2. Validate Camera Ownership & Consistency
+    // 2. Validate Camera Consistency
     const camera = await tx.camera.findFirst({ where: { id: input.cameraId, tenantId }});
-    if (!camera) throw new Error("Related entity does not belong to this tenant: Camera");
-    if (camera.locationId !== input.locationId) throw new Error("Relationship Consistency Error: Camera does not belong to Location");
+    if (camera && camera.locationId !== input.locationId) throw new Error("Relationship Consistency Error: Camera does not belong to Location");
 
-    // 3. Validate AIEvent Ownership & Consistency
+    // 3. Validate AIEvent Consistency
     const aiEvent = await tx.aIEvent.findFirst({ where: { id: input.aiEventId, tenantId }});
-    if (!aiEvent) throw new Error("Related entity does not belong to this tenant: AIEvent");
-    if (aiEvent.cameraId !== input.cameraId) throw new Error("Relationship Consistency Error: AIEvent does not belong to Camera");
+    if (aiEvent && aiEvent.cameraId !== input.cameraId) throw new Error("Relationship Consistency Error: AIEvent does not belong to Camera");
+
+    const location = await tx.location.findFirst({ where: { id: input.locationId, tenantId }});
 
     const incident = await tx.incident.create({
       data: {
@@ -145,8 +149,7 @@ export async function assignIncident(input: AssignIncidentInput) {
     if (!incident) throw new Error('Incident not found');
 
     if (input.assignedUserId) {
-      const user = await tx.user.findFirst({ where: { id: input.assignedUserId, tenantId } });
-      if (!user) throw new Error('Assigned user does not belong to this tenant.');
+      await assertRelationOwnership([{ model: 'user', id: input.assignedUserId }], tenantId);
     }
 
     const updated = await tx.incident.update({

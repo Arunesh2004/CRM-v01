@@ -1,6 +1,7 @@
 import { requireAuth, requireTenant, requirePermission } from '@/lib/auth';
 import { withTenant } from '../../../../database/utils/prisma-tenant';
 import { getCurrentUserContext } from '@/lib/tenant-context';
+import { assertRelationOwnership } from '@/lib/security/tenant-guard';
 
 export interface CreateNotificationInput {
   userId: string;
@@ -15,20 +16,11 @@ export async function createNotification(input: CreateNotificationInput) {
   await requirePermission('COMMUNICATION', 'CREATE');
   const user = await getCurrentUserContext();
   
+  await assertRelationOwnership([{ model: 'user', id: input.userId }], tenantId);
+
   const prisma = withTenant(tenantId);
   
   return await prisma.$transaction(async (tx: any) => {
-    // Validate target user exists and belongs to current tenant
-    const targetUser = await tx.user.findFirst({
-      where: {
-        id: input.userId,
-        tenantId
-      }
-    });
-
-    if (!targetUser) {
-      throw new Error("Related entity does not belong to this tenant: User");
-    }
 
     const notification = await tx.notification.create({
       data: {

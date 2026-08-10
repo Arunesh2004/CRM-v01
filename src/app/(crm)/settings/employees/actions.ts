@@ -1,0 +1,42 @@
+'use server';
+
+import { inviteEmployee, removeEmployee, updateEmployeeRole } from '@/modules/users/user.service';
+import { revalidatePath } from 'next/cache';
+
+export async function inviteEmployeeAction(formData: FormData) {
+  try {
+    const email = formData.get('email') as string;
+    const roleName = formData.get('roleName') as string || 'MEMBER';
+    
+    if (!email) throw new Error("Email is required");
+
+    await inviteEmployee(email, roleName);
+    revalidatePath('/settings/employees');
+    return { success: true };
+  } catch (error: any) {
+    return { error: error.message || 'Failed to invite employee' };
+  }
+}
+
+export async function removeEmployeeAction(userId: string) {
+  try {
+    await removeEmployee(userId);
+    revalidatePath('/settings/employees');
+    return { success: true };
+  } catch (error: any) {
+    return { error: error.message || 'Failed to remove employee' };
+  }
+}
+
+export async function updateEmployeeRoleAction(userId: string, formData: FormData) {
+  try {
+    const roleName = formData.get('roleName') as string;
+    if (!roleName) throw new Error("Role is required");
+    
+    await updateEmployeeRole(userId, roleName);
+    revalidatePath('/settings/employees');
+    return { success: true };
+  } catch (error: any) {
+    return { error: error.message || 'Failed to update role' };
+  }
+}

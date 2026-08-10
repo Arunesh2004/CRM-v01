@@ -14,7 +14,15 @@ datasource db {
 enum TenantStatus {
   ACTIVE
   SUSPENDED
+  DELETION_REQUESTED
+  DELETED
   PENDING
+}
+
+enum RpoPolicy {
+  BASIC
+  BUSINESS
+  ENTERPRISE
 }
 
 enum UserStatus {
@@ -34,6 +42,9 @@ enum IntegrationProvider {
   WHATSAPP
   EMAIL
   TELEPHONY
+  STORAGE
+  INTERNAL_CHAT
+  VIDEO
 }
 
 enum Resource {
@@ -74,11 +85,17 @@ enum Action {
 // -----------------------------------------------------------------------------
 
 model Tenant {
-  id        String       @id @default(uuid())
-  name      String
-  status    TenantStatus @default(PENDING)
-  createdAt DateTime     @default(now())
-  updatedAt DateTime     @updatedAt
+  id             String       @id @default(uuid())
+  name           String
+  ownerId        String?      @unique
+  owner          User?        @relation("TenantOwner", fields: [ownerId], references: [id])
+  status         TenantStatus @default(PENDING)
+  createdAt      DateTime     @default(now())
+  updatedAt      DateTime     @updatedAt
+  deletedAt      DateTime?
+  deletedById    String?
+  deletionReason String?
+  rpoPolicy      RpoPolicy    @default(BASIC)
 
   users              User[]
   roles              Role[]
@@ -96,11 +113,16 @@ model Tenant {
   calls                   Call[]
   callParticipants        CallParticipant[]
   callRecordings          CallRecording[]
+  meetings                Meeting[]
+  meetingParticipants     MeetingParticipant[]
+  demoStorageFiles        DemoStorage[]
   emailThreads            EmailThread[]
   emailMessages           EmailMessage[]
   emailAttachments        EmailAttachment[]
   conversations           Conversation[]
+  conversationMembers     ConversationMember[]
   messages                Message[]
+  messageMentions         MessageMention[]
   messageAttachments      MessageAttachment[]
   messageReadStatuses     MessageReadStatus[]
   notifications           Notification[]
@@ -124,6 +146,15 @@ model Tenant {
   callTranscripts   CallTranscript[]
   aisummaries       AISummary[]
   webhookEvents     WebhookEvent[]
+
+  // DR Lock
+  isRestoreLocked Boolean      @default(false)
+  crmComments     CRMComment[]
+  pipelines       Pipeline[]
+  pipelineStages  PipelineStage[]
+  deals           Deal[]
+  dealStageHistories DealStageHistory[]
+  eventOutboxes   EventOutbox[]
 }
 
 model User {
@@ -135,21 +166,30 @@ model User {
   createdAt DateTime   @default(now())
   updatedAt DateTime   @updatedAt
 
-  tenant            Tenant             @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  tenant            Tenant             @relation(fields: [tenantId], references: [id])
+  ownedTenant       Tenant?            @relation("TenantOwner")
   userRoles         UserRole[]
   deviceSessions    DeviceSession[]
   assignedLeads     Lead[]
   assignedCustomers Customer[]
   assignedTasks     Task[]
   activities        ActivityTimeline[]
+  deals             Deal[]             @relation("DealAssignedUser")
+  createdDeals      Deal[]             @relation("DealCreatedUser")
 
   // Communication
   callParticipants       CallParticipant[]
+  conversationMembers    ConversationMember[]
   sentMessages           Message[]
+  messageMentions        MessageMention[]
   messageReadStatuses    MessageReadStatus[]
   notifications          Notification[]
   notificationPreference NotificationPreference?
   incidents              Incident[]
+  deletedAt              DateTime?
+  crmComments            CRMComment[]
+  dealStageHistories     DealStageHistory[]
+  meetingParticipants    MeetingParticipant[]
 
   @@index([tenantId, id])
   @@index([tenantId, createdAt])
@@ -179,9 +219,10 @@ model Role {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  tenant      Tenant           @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  tenant      Tenant           @relation(fields: [tenantId], references: [id])
   userRoles   UserRole[]
   permissions RolePermission[]
+  deletedAt   DateTime?
 
   @@index([tenantId, id])
 }
@@ -246,10 +287,15 @@ model TenantIntegration {
   tenantId       String
   provider       IntegrationProvider
   encryptedToken String
+  capabilities   Json?
+  status         String              @default("ACTIVE") // ACTIVE, EXPIRED, FAILED
+  lastCheckedAt  DateTime?
+  lastError      String?
+  expiresAt      DateTime?
   createdAt      DateTime            @default(now())
   updatedAt      DateTime            @updatedAt
 
-  tenant Tenant @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  tenant Tenant @relation(fields: [tenantId], references: [id])
 
   @@unique([tenantId, provider])
   @@index([tenantId])
@@ -279,6 +325,13 @@ enum TaskStatus {
   COMPLETED
 }
 
+enum TaskPriority {
+  LOW
+  MEDIUM
+  HIGH
+  URGENT
+}
+
 enum TimelineType {
   NOTE
   EMAIL
@@ -292,6 +345,16 @@ enum EntityType {
   TASK
   LOCATION
   CONTACT
+  DEAL
+  PROJECT
+  TICKET
+  INCIDENT
+}
+
+enum DealStatus {
+  OPEN
+  WON
+  LOST
 }
 
 // -----------------------------------------------------------------------------
@@ -328,8 +391,22 @@ enum EmailDeliveryStatus {
 }
 
 enum ConversationType {
-  INTERNAL
+  INTERNAL_DIRECT
+  INTERNAL_GROUP
+  INTERNAL_CHANNEL
+  CUSTOMER_CHAT
   WHATSAPP
+}
+
+enum ConversationMemberRole {
+  ADMIN
+  MEMBER
+}
+
+enum MessageType {
+  TEXT
+  FILE
+  SYSTEM
 }
 
 enum NotificationType {
@@ -345,6 +422,13 @@ enum MessageStatus {
   DELIVERED
   FAILED
   CANCELLED
+}
+
+enum OutboxStatus {
+  PENDING
+  PROCESSING
+  PROCESSED
+  FAILED
 }
 
 // -----------------------------------------------------------------------------
@@ -415,9 +499,10 @@ model Lead {
   updatedAt      DateTime   @updatedAt
   deletedAt      DateTime?
 
-  tenant       Tenant @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  tenant       Tenant @relation(fields: [tenantId], references: [id])
   assignedUser User?  @relation(fields: [assignedUserId], references: [id], onDelete: SetNull)
   tasks        Task[]
+  deals        Deal[]
 
   @@unique([tenantId, email])
   @@unique([tenantId, name, company])
@@ -437,11 +522,12 @@ model Customer {
   updatedAt      DateTime       @updatedAt
   deletedAt      DateTime?
 
-  tenant       Tenant            @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  tenant       Tenant            @relation(fields: [tenantId], references: [id])
   assignedUser User?             @relation(fields: [assignedUserId], references: [id], onDelete: SetNull)
   contacts     CustomerContact[]
   locations    Location[]
   tasks        Task[]
+  deals        Deal[]
 
   // Communication
   emailThreads  EmailThread[]
@@ -465,11 +551,12 @@ model CustomerContact {
   updatedAt  DateTime  @updatedAt
   deletedAt  DateTime?
 
-  tenant   Tenant   @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  tenant   Tenant   @relation(fields: [tenantId], references: [id])
   customer Customer @relation(fields: [customerId], references: [id], onDelete: Cascade)
 
   // Communication
-  callParticipants CallParticipant[]
+  callParticipants    CallParticipant[]
+  meetingParticipants MeetingParticipant[]
 
   @@index([tenantId, customerId])
 }
@@ -488,7 +575,7 @@ model Location {
   updatedAt   DateTime  @updatedAt
   deletedAt   DateTime?
 
-  tenant    Tenant     @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  tenant    Tenant     @relation(fields: [tenantId], references: [id])
   customer  Customer   @relation(fields: [customerId], references: [id], onDelete: Cascade)
   cameras   Camera[]
   incidents Incident[]
@@ -497,27 +584,53 @@ model Location {
 }
 
 model Task {
-  id             String     @id @default(uuid())
+  id             String       @id @default(uuid())
   tenantId       String
   title          String
   description    String?
   dueDate        DateTime?
-  status         TaskStatus @default(PENDING)
+  status         TaskStatus   @default(PENDING)
+  priority       TaskPriority @default(MEDIUM)
   assignedUserId String?
   leadId         String?
   customerId     String?
-  createdAt      DateTime   @default(now())
-  updatedAt      DateTime   @updatedAt
+  dealId         String?
+  createdAt      DateTime     @default(now())
+  updatedAt      DateTime     @updatedAt
   deletedAt      DateTime?
 
-  tenant       Tenant    @relation(fields: [tenantId], references: [id], onDelete: Cascade)
-  assignedUser User?     @relation(fields: [assignedUserId], references: [id], onDelete: SetNull)
-  lead         Lead?     @relation(fields: [leadId], references: [id], onDelete: SetNull)
-  customer     Customer? @relation(fields: [customerId], references: [id], onDelete: SetNull)
+  tenant       Tenant        @relation(fields: [tenantId], references: [id])
+  assignedUser User?         @relation(fields: [assignedUserId], references: [id], onDelete: SetNull)
+  lead         Lead?         @relation(fields: [leadId], references: [id], onDelete: SetNull)
+  customer     Customer?     @relation(fields: [customerId], references: [id], onDelete: SetNull)
+  deal         Deal?         @relation(fields: [dealId], references: [id], onDelete: SetNull)
 
   @@index([tenantId, assignedUserId, status])
   @@index([tenantId, leadId])
   @@index([tenantId, customerId])
+  @@index([tenantId, dueDate])
+  @@index([tenantId, priority])
+}
+
+model CRMComment {
+  id         String     @id @default(uuid())
+  tenantId   String
+  userId     String
+  content    String
+  parentId   String?
+  entityType EntityType
+  entityId   String
+  createdAt  DateTime   @default(now())
+  updatedAt  DateTime   @updatedAt
+  deletedAt  DateTime?
+
+  tenant     Tenant       @relation(fields: [tenantId], references: [id])
+  user       User         @relation(fields: [userId], references: [id], onDelete: Restrict)
+  parent     CRMComment?  @relation("Thread", fields: [parentId], references: [id], onDelete: SetNull)
+  replies    CRMComment[] @relation("Thread")
+
+  @@index([tenantId, entityType, entityId])
+  @@index([parentId])
 }
 
 model ActivityTimeline {
@@ -530,7 +643,7 @@ model ActivityTimeline {
   entityId   String
   createdAt  DateTime     @default(now())
 
-  tenant Tenant @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  tenant Tenant @relation(fields: [tenantId], references: [id])
   actor  User   @relation(fields: [actorId], references: [id], onDelete: Restrict)
 
   @@index([tenantId, entityType, entityId])
@@ -553,11 +666,12 @@ model Call {
   createdAt       DateTime      @default(now())
   updatedAt       DateTime      @updatedAt
 
-  tenant       Tenant            @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  tenant       Tenant            @relation(fields: [tenantId], references: [id])
   participants CallParticipant[]
   recordings   CallRecording[]
   transcripts  CallTranscript[]
   summaries    AISummary[]
+  deletedAt    DateTime?
 
   @@index([tenantId, createdAt])
   @@index([tenantId, startedAt])
@@ -573,7 +687,7 @@ model CallParticipant {
   phoneNumber String
   createdAt   DateTime @default(now())
 
-  tenant  Tenant           @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  tenant  Tenant           @relation(fields: [tenantId], references: [id])
   call    Call             @relation(fields: [callId], references: [id], onDelete: Cascade)
   user    User?            @relation(fields: [userId], references: [id], onDelete: SetNull)
   contact CustomerContact? @relation(fields: [contactId], references: [id], onDelete: SetNull)
@@ -594,8 +708,9 @@ model CallRecording {
   metadata   Json?
   createdAt  DateTime @default(now())
 
-  tenant Tenant @relation(fields: [tenantId], references: [id], onDelete: Cascade)
-  call   Call   @relation(fields: [callId], references: [id], onDelete: Cascade)
+  tenant    Tenant    @relation(fields: [tenantId], references: [id])
+  call      Call      @relation(fields: [callId], references: [id], onDelete: Cascade)
+  deletedAt DateTime?
 
   @@index([tenantId, callId])
   @@index([tenantId, createdAt])
@@ -609,8 +724,9 @@ model CallTranscript {
   status    String   @default("PROCESSING") // PROCESSING, COMPLETED, FAILED
   createdAt DateTime @default(now())
 
-  tenant Tenant @relation(fields: [tenantId], references: [id], onDelete: Cascade)
-  call   Call   @relation(fields: [callId], references: [id], onDelete: Cascade)
+  tenant    Tenant    @relation(fields: [tenantId], references: [id])
+  call      Call      @relation(fields: [callId], references: [id], onDelete: Cascade)
+  deletedAt DateTime?
 
   @@index([tenantId, callId])
 }
@@ -624,10 +740,71 @@ model AISummary {
   status    String   @default("PROCESSING") // PROCESSING, COMPLETED, FAILED
   createdAt DateTime @default(now())
 
-  tenant Tenant @relation(fields: [tenantId], references: [id], onDelete: Cascade)
-  call   Call   @relation(fields: [callId], references: [id], onDelete: Cascade)
+  tenant    Tenant    @relation(fields: [tenantId], references: [id])
+  call      Call      @relation(fields: [callId], references: [id], onDelete: Cascade)
+  deletedAt DateTime?
 
   @@index([tenantId, callId])
+}
+
+// -----------------------------------------------------------------------------
+// VIDEO MEETING MODELS
+// -----------------------------------------------------------------------------
+
+model Meeting {
+  id              String        @id @default(uuid())
+  tenantId        String
+  providerId      String?
+  status          String        @default("SCHEDULED") // SCHEDULED, IN_PROGRESS, COMPLETED, CANCELLED
+  startedAt       DateTime?
+  endedAt         DateTime?
+  recordingUrl    String?
+  createdAt       DateTime      @default(now())
+  updatedAt       DateTime      @updatedAt
+
+  tenant       Tenant               @relation(fields: [tenantId], references: [id])
+  participants MeetingParticipant[]
+  deletedAt    DateTime?
+
+  @@index([tenantId, createdAt])
+  @@index([tenantId, startedAt])
+}
+
+model MeetingParticipant {
+  id          String   @id @default(uuid())
+  tenantId    String
+  meetingId   String
+  userId      String?
+  contactId   String?
+  role        String   @default("ATTENDEE") // HOST, ATTENDEE
+  joinedAt    DateTime?
+  leftAt      DateTime?
+  createdAt   DateTime @default(now())
+
+  tenant  Tenant           @relation(fields: [tenantId], references: [id])
+  meeting Meeting          @relation(fields: [meetingId], references: [id], onDelete: Cascade)
+  user    User?            @relation(fields: [userId], references: [id], onDelete: SetNull)
+  contact CustomerContact? @relation(fields: [contactId], references: [id], onDelete: SetNull)
+
+  @@index([tenantId, meetingId])
+  @@index([tenantId, userId])
+}
+
+// -----------------------------------------------------------------------------
+// STORAGE MODELS
+// -----------------------------------------------------------------------------
+
+model DemoStorage {
+  id          String   @id @default(uuid())
+  tenantId    String
+  fileName    String
+  mimeType    String
+  base64Data  String
+  createdAt   DateTime @default(now())
+
+  tenant  Tenant @relation(fields: [tenantId], references: [id])
+
+  @@index([tenantId])
 }
 
 model EmailThread {
@@ -639,7 +816,7 @@ model EmailThread {
   createdAt        DateTime @default(now())
   updatedAt        DateTime @updatedAt
 
-  tenant   Tenant         @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  tenant   Tenant         @relation(fields: [tenantId], references: [id])
   customer Customer?      @relation(fields: [customerId], references: [id], onDelete: SetNull)
   messages EmailMessage[]
 
@@ -678,7 +855,7 @@ model EmailMessage {
   createdAt   DateTime  @default(now())
   updatedAt   DateTime  @updatedAt
 
-  tenant      Tenant            @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  tenant      Tenant            @relation(fields: [tenantId], references: [id])
   thread      EmailThread       @relation(fields: [threadId], references: [id], onDelete: Cascade)
   attachments EmailAttachment[]
 
@@ -696,7 +873,7 @@ model EmailAttachment {
   metadata   Json?
   createdAt  DateTime @default(now())
 
-  tenant  Tenant       @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  tenant  Tenant       @relation(fields: [tenantId], references: [id])
   message EmailMessage @relation(fields: [messageId], references: [id], onDelete: Cascade)
 
   @@index([tenantId, messageId])
@@ -708,15 +885,35 @@ model Conversation {
   type       ConversationType
   name       String?
   customerId String?
+  createdBy  String?
   createdAt  DateTime         @default(now())
   updatedAt  DateTime         @updatedAt
 
-  tenant   Tenant    @relation(fields: [tenantId], references: [id], onDelete: Cascade)
-  customer Customer? @relation(fields: [customerId], references: [id], onDelete: SetNull)
-  messages Message[]
+  tenant    Tenant               @relation(fields: [tenantId], references: [id])
+  customer  Customer?            @relation(fields: [customerId], references: [id], onDelete: SetNull)
+  messages  Message[]
+  members   ConversationMember[]
+  deletedAt DateTime?
 
   @@index([tenantId, createdAt])
   @@index([tenantId, customerId])
+}
+
+model ConversationMember {
+  id             String                 @id @default(uuid())
+  tenantId       String
+  conversationId String
+  userId         String
+  role           ConversationMemberRole @default(MEMBER)
+  joinedAt       DateTime               @default(now())
+
+  tenant       Tenant       @relation(fields: [tenantId], references: [id])
+  conversation Conversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+  user         User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([conversationId, userId])
+  @@index([tenantId, conversationId])
+  @@index([tenantId, userId])
 }
 
 model Message {
@@ -725,20 +922,39 @@ model Message {
   conversationId String
   senderId       String?
   content        String
+  messageType    MessageType   @default(TEXT)
   status         MessageStatus @default(QUEUED)
   idempotencyKey String?
+  editedAt       DateTime?
+  deletedAt      DateTime?
   createdAt      DateTime      @default(now())
   updatedAt      DateTime      @updatedAt
 
-  tenant       Tenant              @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  tenant       Tenant              @relation(fields: [tenantId], references: [id])
   conversation Conversation        @relation(fields: [conversationId], references: [id], onDelete: Cascade)
   sender       User?               @relation(fields: [senderId], references: [id], onDelete: SetNull)
   attachments  MessageAttachment[]
   readStatuses MessageReadStatus[]
+  mentions     MessageMention[]
 
   @@unique([tenantId, idempotencyKey])
   @@index([tenantId, conversationId])
   @@index([tenantId, createdAt])
+}
+
+model MessageMention {
+  id        String   @id @default(uuid())
+  tenantId  String
+  messageId String
+  userId    String
+  createdAt DateTime @default(now())
+
+  tenant  Tenant  @relation(fields: [tenantId], references: [id])
+  message Message @relation(fields: [messageId], references: [id], onDelete: Cascade)
+  user    User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([tenantId, messageId])
+  @@index([tenantId, userId])
 }
 
 model MessageAttachment {
@@ -750,7 +966,7 @@ model MessageAttachment {
   metadata   Json?
   createdAt  DateTime @default(now())
 
-  tenant  Tenant  @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  tenant  Tenant  @relation(fields: [tenantId], references: [id])
   message Message @relation(fields: [messageId], references: [id], onDelete: Cascade)
 
   @@index([tenantId, messageId])
@@ -763,7 +979,7 @@ model MessageReadStatus {
   userId    String
   readAt    DateTime @default(now())
 
-  tenant  Tenant  @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  tenant  Tenant  @relation(fields: [tenantId], references: [id])
   message Message @relation(fields: [messageId], references: [id], onDelete: Cascade)
   user    User    @relation(fields: [userId], references: [id], onDelete: Cascade)
 
@@ -800,7 +1016,7 @@ model NotificationPreference {
   createdAt    DateTime @default(now())
   updatedAt    DateTime @updatedAt
 
-  tenant Tenant @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  tenant Tenant @relation(fields: [tenantId], references: [id])
   user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@index([tenantId, userId])
@@ -836,9 +1052,10 @@ model Subscription {
   createdAt      DateTime           @default(now())
   updatedAt      DateTime           @updatedAt
 
-  tenant   Tenant    @relation(fields: [tenantId], references: [id], onDelete: Cascade)
-  plan     Plan      @relation(fields: [planId], references: [id], onDelete: Restrict)
-  invoices Invoice[]
+  tenant    Tenant    @relation(fields: [tenantId], references: [id])
+  plan      Plan      @relation(fields: [planId], references: [id], onDelete: Restrict)
+  invoices  Invoice[]
+  deletedAt DateTime?
 
   @@index([tenantId, status])
   @@index([tenantId, planId])
@@ -860,9 +1077,10 @@ model Invoice {
   createdAt      DateTime      @default(now())
   updatedAt      DateTime      @updatedAt
 
-  tenant       Tenant       @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  tenant       Tenant       @relation(fields: [tenantId], references: [id])
   subscription Subscription @relation(fields: [subscriptionId], references: [id], onDelete: Restrict)
   payments     Payment[]
+  deletedAt    DateTime?
 
   @@index([tenantId, status])
   @@index([tenantId, subscriptionId])
@@ -881,8 +1099,9 @@ model Payment {
   createdAt         DateTime        @default(now())
   updatedAt         DateTime        @updatedAt
 
-  tenant  Tenant  @relation(fields: [tenantId], references: [id], onDelete: Cascade)
-  invoice Invoice @relation(fields: [invoiceId], references: [id], onDelete: Restrict)
+  tenant    Tenant    @relation(fields: [tenantId], references: [id])
+  invoice   Invoice   @relation(fields: [invoiceId], references: [id], onDelete: Restrict)
+  deletedAt DateTime?
 
   @@index([tenantId, invoiceId])
   @@index([tenantId, status])
@@ -896,7 +1115,7 @@ model PaymentCustomer {
   createdAt          DateTime        @default(now())
   updatedAt          DateTime        @updatedAt
 
-  tenant Tenant @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  tenant Tenant @relation(fields: [tenantId], references: [id])
 
   @@unique([tenantId, provider])
 }
@@ -909,7 +1128,7 @@ model UsageEvent {
   metadata  Json?
   createdAt DateTime  @default(now())
 
-  tenant Tenant @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  tenant Tenant @relation(fields: [tenantId], references: [id])
 
   @@index([tenantId, type, createdAt])
 }
@@ -971,7 +1190,7 @@ model Camera {
   createdAt     DateTime       @default(now())
   updatedAt     DateTime       @updatedAt
 
-  tenant   Tenant    @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  tenant   Tenant    @relation(fields: [tenantId], references: [id])
   location Location? @relation(fields: [locationId], references: [id], onDelete: SetNull)
 
   credential CameraCredential?
@@ -980,6 +1199,7 @@ model Camera {
   events     CameraEvent[]
   aiEvents   AIEvent[]
   incidents  Incident[]
+  deletedAt  DateTime?
 
   @@index([tenantId, locationId])
   @@index([tenantId, status])
@@ -994,7 +1214,7 @@ model CameraCredential {
   createdAt         DateTime @default(now())
   updatedAt         DateTime @updatedAt
 
-  tenant Tenant @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  tenant Tenant @relation(fields: [tenantId], references: [id])
   camera Camera @relation(fields: [cameraId], references: [id], onDelete: Cascade)
 
   @@index([tenantId, cameraId])
@@ -1010,7 +1230,7 @@ model CameraStream {
   createdAt DateTime     @default(now())
   updatedAt DateTime     @updatedAt
 
-  tenant Tenant @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  tenant Tenant @relation(fields: [tenantId], references: [id])
   camera Camera @relation(fields: [cameraId], references: [id], onDelete: Cascade)
 
   @@index([tenantId, status])
@@ -1027,7 +1247,7 @@ model Recording {
   sizeBytes  Int?
   createdAt  DateTime        @default(now())
 
-  tenant Tenant @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  tenant Tenant @relation(fields: [tenantId], references: [id])
   camera Camera @relation(fields: [cameraId], references: [id], onDelete: Cascade)
 
   @@index([tenantId, cameraId, startTime])
@@ -1043,7 +1263,7 @@ model CameraEvent {
   metadata  Json?
   timestamp DateTime        @default(now())
 
-  tenant Tenant @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  tenant Tenant @relation(fields: [tenantId], references: [id])
   camera Camera @relation(fields: [cameraId], references: [id], onDelete: Cascade)
 
   @@index([tenantId, cameraId, timestamp])
@@ -1060,9 +1280,10 @@ model AIEvent {
   metadata       Json?
   timestamp      DateTime @default(now())
 
-  tenant   Tenant    @relation(fields: [tenantId], references: [id], onDelete: Cascade)
-  camera   Camera    @relation(fields: [cameraId], references: [id], onDelete: Cascade)
-  incident Incident?
+  tenant    Tenant    @relation(fields: [tenantId], references: [id])
+  camera    Camera    @relation(fields: [cameraId], references: [id], onDelete: Cascade)
+  incident  Incident?
+  deletedAt DateTime?
 
   @@index([tenantId, cameraId, timestamp])
 }
@@ -1083,7 +1304,7 @@ model WebhookEvent {
   processedAt       DateTime?
   createdAt         DateTime      @default(now())
 
-  tenant Tenant? @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  tenant Tenant? @relation(fields: [tenantId], references: [id])
 
   @@unique([provider, eventId])
   @@index([status, createdAt])
@@ -1123,7 +1344,7 @@ model Incident {
   resolvedAt     DateTime?
   deletedAt      DateTime?
 
-  tenant       Tenant   @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  tenant       Tenant   @relation(fields: [tenantId], references: [id])
   location     Location @relation(fields: [locationId], references: [id], onDelete: Cascade)
   camera       Camera   @relation(fields: [cameraId], references: [id], onDelete: Cascade)
   aiEvent      AIEvent  @relation(fields: [aiEventId], references: [id], onDelete: Cascade)
@@ -1131,4 +1352,232 @@ model Incident {
 
   @@index([tenantId, status])
   @@index([tenantId, severity])
+}
+
+// -----------------------------------------------------------------------------
+// RECOVERY ENGINE
+// -----------------------------------------------------------------------------
+
+enum RecoveryStatus {
+  REQUESTED
+  VALIDATING
+  APPROVED
+  IN_PROGRESS
+  COMPLETED
+  FAILED
+  CANCELLED
+  EXPIRED
+}
+
+enum RecoverySnapshotStatus {
+  ACTIVE
+  DELETE_PENDING
+  DELETED
+}
+
+enum RecoveryMode {
+  RECOVERY
+  CLONE
+  DRY_RUN
+}
+
+model RecoveryJob {
+  id              String         @id @default(uuid())
+  tenantId        String
+  requestedBy     String
+  status          RecoveryStatus @default(REQUESTED)
+  mode            RecoveryMode   @default(RECOVERY)
+  startedAt       DateTime?
+  completedAt     DateTime?
+  checksum        String?
+  archiveLocation String?
+  snapshotId      String?
+  approvedBy      String?
+  errorMessage    String?
+  createdAt       DateTime       @default(now())
+  updatedAt       DateTime       @updatedAt
+
+  // We intentionally do not strongly relate this to Tenant to avoid cascade deletion loops,
+  // since this job tracks the lifecycle of the tenant itself.
+
+  @@index([tenantId, status])
+  @@index([createdAt])
+}
+
+model RecoverySnapshot {
+  id                   String                 @id @default(uuid())
+  tenantId             String
+  version              Int                    @default(1)
+  schemaVersion        String
+  applicationVersion   String?
+  prismaVersion        String?
+  backupFormatVersion  String?
+  encryptionAlgorithm  String?
+  encryptionKeyVersion String?
+  kmsKeyId             String?
+  kmsKeyVersion        String?
+  encryptedDEK         String?
+  status               RecoverySnapshotStatus @default(ACTIVE)
+  checksum             String
+  sizeBytes            Int?
+  createdAt            DateTime               @default(now())
+
+  @@index([tenantId, createdAt])
+}
+
+model RecoveryAuditLog {
+  id        String   @id @default(uuid())
+  tenantId  String
+  jobId     String
+  action    String // EXPORT_STARTED, RESTORE_STARTED, ROLLBACK, FAILURE, SUCCESS
+  actorId   String
+  metadata  Json?
+  timestamp DateTime @default(now())
+
+  @@index([tenantId, timestamp])
+  @@index([jobId])
+}
+
+model RestoreCheckpoint {
+  id            String    @id @default(uuid())
+  tenantId      String
+  recoveryJobId String
+  phase         String
+  model         String
+  chunkIndex    Int
+  chunkId       String    @unique
+  status        String // PENDING, COMPLETED, FAILED
+  attempt       Int       @default(0)
+  startedAt     DateTime  @default(now())
+  completedAt   DateTime?
+  errorMessage  String?
+  checksum      String?
+
+  @@unique([recoveryJobId, phase, model, chunkIndex])
+  @@index([recoveryJobId, status])
+}
+
+// -----------------------------------------------------------------------------
+// SALES PIPELINE (PHASE R.14.4)
+// -----------------------------------------------------------------------------
+
+model Pipeline {
+  id          String   @id @default(uuid())
+  tenantId    String
+  name        String
+  description String?
+  isDefault   Boolean  @default(false)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  tenant Tenant          @relation(fields: [tenantId], references: [id])
+  stages PipelineStage[]
+  deals  Deal[]
+
+  @@index([tenantId])
+}
+
+model PipelineStage {
+  id           String   @id @default(uuid())
+  tenantId     String
+  pipelineId   String
+  name         String
+  order        Int
+  probability  Int      @default(0) // 0 to 100
+  color        String?
+  isClosedWon  Boolean  @default(false)
+  isClosedLost Boolean  @default(false)
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  tenant   Tenant   @relation(fields: [tenantId], references: [id])
+  pipeline Pipeline @relation(fields: [pipelineId], references: [id], onDelete: Cascade)
+  deals    Deal[]
+  historyFrom DealStageHistory[] @relation("HistoryFromStage")
+  historyTo DealStageHistory[] @relation("HistoryToStage")
+
+  @@index([tenantId, pipelineId])
+  @@index([pipelineId, order])
+}
+
+model Deal {
+  id                String     @id @default(uuid())
+  tenantId          String
+  title             String
+  description       String?
+  source            String?
+  value             Float      @default(0)
+  currency          String     @default("USD")
+  probability       Int?
+  expectedCloseDate DateTime?
+  actualCloseDate   DateTime?
+  status            DealStatus @default(OPEN)
+  lostReason        String?
+  lostCompetitor    String?
+  lostNotes         String?
+  lostAt            DateTime?
+  version           Int        @default(1)
+
+  pipelineId        String
+  stageId           String
+  customerId        String?
+  leadId            String?
+  assignedUserId    String
+  createdById       String
+
+  createdAt         DateTime   @default(now())
+  updatedAt         DateTime   @updatedAt
+  deletedAt         DateTime?
+
+  tenant       Tenant          @relation(fields: [tenantId], references: [id])
+  pipeline     Pipeline        @relation(fields: [pipelineId], references: [id], onDelete: Restrict)
+  stage        PipelineStage   @relation(fields: [stageId], references: [id], onDelete: Restrict)
+  customer     Customer?       @relation(fields: [customerId], references: [id], onDelete: SetNull)
+  lead         Lead?           @relation(fields: [leadId], references: [id], onDelete: SetNull)
+  assignedUser User            @relation("DealAssignedUser", fields: [assignedUserId], references: [id])
+  createdUser  User            @relation("DealCreatedUser", fields: [createdById], references: [id])
+  stageHistory DealStageHistory[]
+  tasks        Task[]
+
+  @@index([tenantId, status])
+  @@index([tenantId, stageId])
+  @@index([tenantId, assignedUserId])
+}
+
+model DealStageHistory {
+  id          String   @id @default(uuid())
+  tenantId    String
+  dealId      String
+  fromStageId String?
+  toStageId   String
+  changedById String
+  createdAt   DateTime @default(now())
+
+  tenant      Tenant        @relation(fields: [tenantId], references: [id])
+  deal        Deal          @relation(fields: [dealId], references: [id], onDelete: Cascade)
+  fromStage   PipelineStage? @relation("HistoryFromStage", fields: [fromStageId], references: [id], onDelete: SetNull)
+  toStage     PipelineStage @relation("HistoryToStage", fields: [toStageId], references: [id], onDelete: Cascade)
+  changedBy   User          @relation(fields: [changedById], references: [id])
+
+  @@index([tenantId, dealId])
+  @@index([tenantId, createdAt])
+}
+
+model EventOutbox {
+  id          String       @id @default(uuid())
+  eventId     String       @unique
+  tenantId    String
+  eventType   String
+  payload     Json
+  status      OutboxStatus @default(PENDING)
+  retryCount  Int          @default(0)
+  lastError   String?
+  nextRetryAt DateTime     @default(now())
+  createdAt   DateTime     @default(now())
+  processedAt DateTime?
+
+  tenant Tenant @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+
+  @@index([tenantId, status, nextRetryAt])
+  @@index([eventId])
 }

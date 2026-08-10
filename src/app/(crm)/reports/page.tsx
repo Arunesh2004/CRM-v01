@@ -1,11 +1,9 @@
 import { Suspense } from 'react';
 import { getDashboardMetricsAction } from '@/modules/reporting/actions/reporting.actions';
-import { SecurityMetricsCard } from '@/components/reporting/SecurityMetricsCard';
-import { CameraMetricsCard } from '@/components/reporting/CameraMetricsCard';
-import { CrmMetricsCard } from '@/components/reporting/CrmMetricsCard';
-import { CommunicationMetricsCard } from '@/components/reporting/CommunicationMetricsCard';
-import { ExportControls } from '@/components/reporting/ExportControls';
 import { DateFilter } from '@/components/reporting/DateFilter';
+import { DashboardClientView } from '@/components/reporting/DashboardClientView';
+import { EmptyState } from '@/components/ui/EmptyState';
+import { LayoutDashboard } from 'lucide-react';
 
 export default async function ReportsPage({ searchParams }: { searchParams: { start?: string, end?: string } }) {
   const startDate = searchParams.start ? new Date(searchParams.start) : undefined;
@@ -16,31 +14,30 @@ export default async function ReportsPage({ searchParams }: { searchParams: { st
 
   return (
     <div className="space-y-6">
-      <div className="flex justify-between items-center bg-white p-4 rounded shadow">
-        <h1 className="text-2xl font-bold text-gray-800">Reporting & Analytics</h1>
-        <div className="flex space-x-4">
+      <div className="flex flex-col sm:flex-row justify-between sm:items-center gap-4">
+        <div>
+          <h1 className="text-2xl font-bold tracking-tight text-primary">Intelligence & Analytics</h1>
+          <p className="text-sm text-muted-foreground mt-1">Enterprise Command Center</p>
+        </div>
+        <div className="flex items-center gap-2">
+          {/* Note: DateFilter is visually preserved but only works if fully implemented in server action. */}
           <DateFilter currentStart={searchParams.start} currentEnd={searchParams.end} />
-          <ExportControls startDate={searchParams.start} endDate={searchParams.end} />
+          {/* Export Controls disabled/removed to prevent fake UI unless fully implemented */}
         </div>
       </div>
 
       {!metrics ? (
-        <div className="text-red-500 bg-white p-4 shadow rounded">Failed to load metrics</div>
-      ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          <Suspense fallback={<div>Loading...</div>}>
-            <SecurityMetricsCard data={metrics.security} />
-          </Suspense>
-          <Suspense fallback={<div>Loading...</div>}>
-            <CameraMetricsCard data={metrics.camera} />
-          </Suspense>
-          <Suspense fallback={<div>Loading...</div>}>
-            <CrmMetricsCard data={metrics.crm} />
-          </Suspense>
-          <Suspense fallback={<div>Loading...</div>}>
-            <CommunicationMetricsCard data={metrics.communication} />
-          </Suspense>
+        <div className="h-[50vh] flex items-center justify-center">
+          <EmptyState 
+            title="Analytics Unavailable" 
+            description="Failed to load dashboard metrics. Please check server connections."
+            icon={<LayoutDashboard className="w-16 h-16 opacity-30 text-destructive" />}
+          />
         </div>
+      ) : (
+        <Suspense fallback={<div className="h-[50vh] flex items-center justify-center animate-pulse text-muted-foreground">Loading Analytics Engine...</div>}>
+          <DashboardClientView metrics={metrics} />
+        </Suspense>
       )}
     </div>
   );

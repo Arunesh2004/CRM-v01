@@ -1,4 +1,4 @@
-import { LeadStatus, CustomerStatus, TaskStatus, TimelineType, EntityType } from '@prisma/client';
+import { LeadStatus, CustomerStatus, TaskStatus, TaskPriority, TimelineType, EntityType } from '@prisma/client';
 
 export type CreateLeadInput = {
   name: string;
@@ -28,6 +28,7 @@ export type CreateTaskInput = {
   title: string;
   description?: string;
   dueDate?: Date;
+  priority?: TaskPriority;
   assignedUserId?: string;
   leadId?: string;
   customerId?: string;
@@ -58,4 +59,19 @@ export type CreateLocationInput = {
 
 export type UpdateLocationInput = Partial<CreateLocationInput> & {
   id: string;
+};
+
+export type UnifiedTimelineType = 'TASK' | 'EMAIL' | 'CALL' | 'MESSAGE' | 'NOTE' | 'SYSTEM';
+
+export type UnifiedTimelineItem = {
+  id: string;
+  type: UnifiedTimelineType;
+  title: string;
+  description: string;
+  actor: {
+    name: string;
+    email?: string;
+  };
+  timestamp: string; // ISO string
+  metadata?: any;
 };

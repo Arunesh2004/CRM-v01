@@ -36,13 +36,15 @@ export async function updateLeadAction(payload: z.infer<typeof UpdateLeadSchema>
   }
 }
 
-export async function getLeadsAction() {
+import { QueryParams } from '../../core/types';
+
+export async function getLeadsAction(params?: QueryParams) {
   try {
     await requireAuth();
     await requireTenant();
     await requirePermission('LEAD', 'READ');
     
-    const result = await leadService.getLeads();
+    const result = await leadService.getLeads(params);
     return { success: true, data: result };
   } catch (error: any) {
     return { success: false, error: error.message };
