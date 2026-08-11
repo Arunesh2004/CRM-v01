@@ -45,8 +45,9 @@ export const withTenant = (tenantId: string) => {
           }
 
           if (['findUnique', 'findUniqueOrThrow'].includes(operation)) {
-             (args as any).where = { ...(args as any).where, tenantId };
-             return (prisma[model as Uncapitalize<typeof model>] as any)[operation === 'findUnique' ? 'findFirst' : 'findFirstOrThrow'](args);
+             const newArgs = JSON.parse(JSON.stringify(args));
+             newArgs.where = { ...newArgs.where, tenantId };
+             return (prisma[model as Uncapitalize<typeof model>] as any)[operation === 'findUnique' ? 'findFirst' : 'findFirstOrThrow'](newArgs);
           }
 
           if (['update', 'delete'].includes(operation)) {

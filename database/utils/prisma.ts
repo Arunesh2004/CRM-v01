@@ -20,21 +20,13 @@ const prismaClientSingleton = () => {
       $allModels: {
         async $allOperations({ model, operation, args, query }) {
           if (softDeleteModels.includes(model as string)) {
-            // Check if it's a read query
-            if (['findMany', 'findFirst', 'findUnique', 'count', 'aggregate'].includes(operation)) {
-              
-              // Ensure args is an object
+             // We do NOT intercept findUnique here because it breaks the extension chain
+             // for dynamic extensions like withTenant.
+             // withTenant handles converting findUnique to findFirst.
+             if (['findMany', 'findFirst', 'findFirstOrThrow', 'count', 'aggregate'].includes(operation)) {
               let mutableArgs = (args as any) || {};
               if (!mutableArgs.where) mutableArgs.where = {};
-
-              // Apply automatic soft delete filter
               mutableArgs.where.deletedAt = null;
-
-              // If it's findUnique and we added deletedAt, we must convert to findFirst
-              // because deletedAt is not part of the unique index.
-              if (operation === 'findUnique') {
-                return (basePrismaClient as any)[model as string].findFirst(mutableArgs);
-              }
               return query(mutableArgs);
             }
           }
