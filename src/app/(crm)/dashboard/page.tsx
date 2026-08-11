@@ -19,22 +19,31 @@ export default async function DashboardPage() {
   const tenantId = await requireTenant();
   const prisma = withTenant(tenantId);
 
-  // Preserve identical backend logic
-  const customerCount = await prisma.customer.count({ where: { tenantId, deletedAt: null } });
-  const activeLeadsCount = await prisma.lead.count({ where: { tenantId, status: { notIn: ['LOST', 'CONVERTED'] } } });
-  const pendingTasksCount = await prisma.task.count({ where: { tenantId, status: 'PENDING' } });
-  
-  const callCount = await prisma.call.count({ where: { tenantId } });
-  const messageCount = await prisma.message.count({ where: { tenantId } });
-  const emailCount = await prisma.emailMessage.count({ where: { tenantId } });
-  const incidentCount = await prisma.incident.count({ where: { tenantId } });
-  
-  const recentActivities = await prisma.activityTimeline.findMany({
-    where: { tenantId },
-    orderBy: { createdAt: 'desc' },
-    take: 5,
-    include: { actor: true }
-  });
+  // Parallelize independent dashboard queries
+  const [
+    customerCount,
+    activeLeadsCount,
+    pendingTasksCount,
+    callCount,
+    messageCount,
+    emailCount,
+    incidentCount,
+    recentActivities
+  ] = await Promise.all([
+    prisma.customer.count({ where: { tenantId, deletedAt: null } }),
+    prisma.lead.count({ where: { tenantId, status: { notIn: ['LOST', 'CONVERTED'] } } }),
+    prisma.task.count({ where: { tenantId, status: 'PENDING' } }),
+    prisma.call.count({ where: { tenantId } }),
+    prisma.message.count({ where: { tenantId } }),
+    prisma.emailMessage.count({ where: { tenantId } }),
+    prisma.incident.count({ where: { tenantId } }),
+    prisma.activityTimeline.findMany({
+      where: { tenantId },
+      orderBy: { createdAt: 'desc' },
+      take: 5,
+      include: { actor: true }
+    })
+  ]);
 
   const analyticsData = await getDashboardAnalytics(tenantId, 6);
 

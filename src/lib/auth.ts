@@ -3,7 +3,9 @@ import prisma from '@/../database/utils/prisma';
 import { Action, Resource } from '@prisma/client';
 import { ensureUserProvisioned } from '@/modules/auth/services/provisioning.service';
 
-export async function getCurrentUser() {
+import { cache } from 'react';
+
+export const getCurrentUser = cache(async function getCurrentUser() {
   console.log('[AUTH-DIAG] getCurrentUser execution started');
   let clerkId: string | null | undefined = process.env.TEST_CLERK_ID;
   if (!clerkId) {
@@ -46,7 +48,7 @@ export async function getCurrentUser() {
     console.error('[AUTH-DIAG] prisma-user-lookup ERROR:', err);
     throw err;
   }
-}
+});
 
 export async function getCurrentTenant() {
   const user = await getCurrentUser();

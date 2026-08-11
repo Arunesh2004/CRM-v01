@@ -104,25 +104,27 @@ export async function getCustomerById(id: string) {
 
   const prisma = withTenant(tenantId);
   
-  const customer = await prisma.customer.findFirst({
-    where: { id, tenantId, deletedAt: null },
-    include: {
-      locations: { where: { deletedAt: null } },
-      contacts: { where: { deletedAt: null } },
-      tasks: { where: { deletedAt: null }, orderBy: { createdAt: 'desc' } },
-      emailThreads: { orderBy: { createdAt: 'desc' } },
-      conversations: { orderBy: { createdAt: 'desc' }, include: { messages: true } },
-      assignedUser: { select: { id: true, email: true } }
-    }
-  });
+  const [customer, activities] = await Promise.all([
+    prisma.customer.findFirst({
+      where: { id, tenantId, deletedAt: null },
+      include: {
+        locations: { where: { deletedAt: null }, take: 100 },
+        contacts: { where: { deletedAt: null }, take: 100 },
+        tasks: { where: { deletedAt: null }, orderBy: { createdAt: 'desc' }, take: 20 },
+        emailThreads: { orderBy: { createdAt: 'desc' }, take: 20 },
+        conversations: { orderBy: { createdAt: 'desc' }, include: { messages: { take: 20, orderBy: { createdAt: 'desc' } } }, take: 20 },
+        assignedUser: { select: { id: true, email: true } }
+      }
+    }),
+    prisma.activityTimeline.findMany({
+      where: { tenantId, entityType: 'CUSTOMER', entityId: id },
+      orderBy: { createdAt: 'desc' },
+      take: 20,
+      include: { actor: { select: { id: true, email: true } } }
+    })
+  ]);
 
   if (!customer) return null;
-
-  const activities = await prisma.activityTimeline.findMany({
-    where: { tenantId, entityType: 'CUSTOMER', entityId: id },
-    orderBy: { createdAt: 'desc' },
-    include: { actor: { select: { id: true, email: true } } }
-  });
 
   // Attempt to find related leads by company or exact name
   const relatedLeads = await prisma.lead.findMany({

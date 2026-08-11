@@ -14,21 +14,23 @@ export default async function LeadDetailsPage({ params }: { params: { id: string
   await requirePermission('LEAD', 'READ');
 
   const prisma = withTenant(tenantId);
-  const lead = await prisma.lead.findFirst({
-    where: { id: params.id, tenantId, deletedAt: null },
-    include: {
-      assignedUser: { select: { email: true } },
-      tasks: { orderBy: { createdAt: 'desc' }, where: { deletedAt: null } },
-    }
-  });
+  const [lead, activities] = await Promise.all([
+    prisma.lead.findFirst({
+      where: { id: params.id, tenantId, deletedAt: null },
+      include: {
+        assignedUser: { select: { email: true } },
+        tasks: { orderBy: { createdAt: 'desc' }, where: { deletedAt: null }, take: 20 },
+      }
+    }),
+    prisma.activityTimeline.findMany({
+      where: { tenantId, entityType: 'LEAD', entityId: params.id },
+      orderBy: { createdAt: 'desc' },
+      take: 20,
+      include: { actor: { select: { email: true } } }
+    })
+  ]);
 
   if (!lead) return notFound();
-
-  const activities = await prisma.activityTimeline.findMany({
-    where: { tenantId, entityType: 'LEAD', entityId: lead.id },
-    orderBy: { createdAt: 'desc' },
-    include: { actor: { select: { email: true } } }
-  });
 
   return (
     <div className="space-y-6 animate-in fade-in duration-500 pb-10">
