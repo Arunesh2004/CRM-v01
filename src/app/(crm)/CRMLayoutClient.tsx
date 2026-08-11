@@ -1,14 +1,14 @@
-'use client';
+"use client";
 
-import { ReactNode, useState } from 'react';
-import { Toaster } from 'sonner';
-import Link from 'next/link';
-import { usePathname } from 'next/navigation';
-import { cn } from '@/lib/utils';
-import { 
-  LayoutDashboard, 
-  Users, 
-  Target, 
+import { ReactNode, useState } from "react";
+import { Toaster } from "sonner";
+import Link from "next/link";
+import { usePathname } from "next/navigation";
+import { cn } from "@/lib/utils";
+import {
+  LayoutDashboard,
+  Users,
+  Target,
   CheckSquare,
   Menu,
   Search,
@@ -20,30 +20,38 @@ import {
   ChevronRight,
   LogOut,
   MessageSquare,
-  Phone
-} from 'lucide-react';
-import { Button } from '@/components/ui/button';
-import NotificationBell from './NotificationBell';
-import { CommandPalette } from '@/components/ui/CommandPalette';
-import { UserButton, useUser } from '@clerk/nextjs';
-import { QuickAddMenu } from '@/components/ui/QuickAddMenu';
+  Phone,
+} from "lucide-react";
+import { Button } from "@/components/ui/button";
+import NotificationBell from "./NotificationBell";
+import { CommandPalette } from "@/components/ui/CommandPalette";
+import { UserButton, useUser } from "@clerk/nextjs";
+import { QuickAddMenu } from "@/components/ui/QuickAddMenu";
 
 const navigation = [
-  { name: 'Dashboard', href: '/dashboard', icon: LayoutDashboard },
-  { name: 'Customers', href: '/customers', icon: Users },
-  { name: 'Leads', href: '/leads', icon: Target },
-  { name: 'Tasks', href: '/tasks', icon: CheckSquare },
-  { name: 'Chat', href: '/chat', icon: MessageSquare },
-  { name: 'Communications', href: '/communications', icon: Phone },
+  { name: "Dashboard", href: "/dashboard", icon: LayoutDashboard },
+  { name: "Customers", href: "/customers", icon: Users },
+  { name: "Leads", href: "/leads", icon: Target },
+  { name: "Tasks", href: "/tasks", icon: CheckSquare },
+  { name: "Chat", href: "/chat", icon: MessageSquare },
+  { name: "Communications", href: "/communications", icon: Phone },
 ];
 
 interface CRMLayoutClientProps {
   children: ReactNode;
   tenantName: string;
   userRole: string;
+  initialNotifications?: any[];
+  initialNotificationCount?: number;
 }
 
-export default function CRMLayoutClient({ children, tenantName, userRole }: CRMLayoutClientProps) {
+export default function CRMLayoutClient({
+  children,
+  tenantName,
+  userRole,
+  initialNotifications = [],
+  initialNotificationCount = 0,
+}: CRMLayoutClientProps) {
   const pathname = usePathname();
   const { user } = useUser();
   const [collapsed, setCollapsed] = useState(false);
@@ -54,18 +62,20 @@ export default function CRMLayoutClient({ children, tenantName, userRole }: CRML
       <Toaster position="top-right" richColors />
       {/* Mobile Backdrop */}
       {mobileMenuOpen && (
-        <div 
+        <div
           className="fixed inset-0 z-40 bg-black/50 md:hidden"
           onClick={() => setMobileMenuOpen(false)}
         />
       )}
 
       {/* Sidebar */}
-      <aside 
+      <aside
         className={cn(
           "fixed inset-y-0 left-0 z-50 flex flex-col bg-primary text-primary-foreground transition-all duration-300 md:relative",
           collapsed ? "w-20" : "w-64",
-          mobileMenuOpen ? "translate-x-0" : "-translate-x-full md:translate-x-0"
+          mobileMenuOpen
+            ? "translate-x-0"
+            : "-translate-x-full md:translate-x-0",
         )}
       >
         <div className="flex items-center justify-between p-4 h-16 border-b border-primary-foreground/10">
@@ -73,13 +83,21 @@ export default function CRMLayoutClient({ children, tenantName, userRole }: CRML
             <div className="flex items-center justify-center w-8 h-8 rounded bg-accent text-primary font-bold shrink-0">
               <Building2 className="w-5 h-5" />
             </div>
-            {!collapsed && <span className="font-bold text-lg whitespace-nowrap truncate">{tenantName}</span>}
+            {!collapsed && (
+              <span className="font-bold text-lg whitespace-nowrap truncate">
+                {tenantName}
+              </span>
+            )}
           </div>
-          <button 
+          <button
             onClick={() => setCollapsed(!collapsed)}
             className="hidden md:flex p-1 rounded hover:bg-primary-foreground/10"
           >
-            {collapsed ? <ChevronRight className="w-5 h-5" /> : <ChevronLeft className="w-5 h-5" />}
+            {collapsed ? (
+              <ChevronRight className="w-5 h-5" />
+            ) : (
+              <ChevronLeft className="w-5 h-5" />
+            )}
           </button>
         </div>
 
@@ -92,14 +110,19 @@ export default function CRMLayoutClient({ children, tenantName, userRole }: CRML
                 href={item.href}
                 className={cn(
                   "flex items-center gap-3 px-3 py-2 rounded-md transition-colors whitespace-nowrap",
-                  isActive 
-                    ? "bg-accent text-primary font-medium shadow-sm" 
-                    : "text-primary-foreground/70 hover:bg-primary-foreground/10 hover:text-primary-foreground"
+                  isActive
+                    ? "bg-accent text-primary font-medium shadow-sm"
+                    : "text-primary-foreground/70 hover:bg-primary-foreground/10 hover:text-primary-foreground",
                 )}
                 title={collapsed ? item.name : undefined}
                 onClick={() => setMobileMenuOpen(false)}
               >
-                <item.icon className={cn("w-5 h-5 shrink-0", isActive ? "text-primary" : "")} />
+                <item.icon
+                  className={cn(
+                    "w-5 h-5 shrink-0",
+                    isActive ? "text-primary" : "",
+                  )}
+                />
                 {!collapsed && <span>{item.name}</span>}
               </Link>
             );
@@ -127,7 +150,7 @@ export default function CRMLayoutClient({ children, tenantName, userRole }: CRML
         {/* Header */}
         <header className="h-16 flex items-center justify-between px-4 lg:px-8 border-b bg-card">
           <div className="flex items-center gap-4 flex-1">
-            <button 
+            <button
               className="md:hidden p-2 -ml-2 rounded-md hover:bg-muted"
               onClick={() => setMobileMenuOpen(true)}
             >
@@ -137,15 +160,24 @@ export default function CRMLayoutClient({ children, tenantName, userRole }: CRML
               <CommandPalette />
             </div>
           </div>
-          
+
           <div className="flex items-center gap-3 lg:gap-5">
             <QuickAddMenu />
-            <NotificationBell />
+            <NotificationBell
+              initialNotifications={initialNotifications}
+              initialNotificationCount={initialNotificationCount}
+            />
             <div className="w-px h-6 bg-border hidden sm:block" />
             <div className="flex items-center gap-3 cursor-pointer p-1.5 rounded-md hover:bg-muted">
               <div className="hidden sm:block text-right">
-                <div className="text-sm font-medium leading-none">{user?.fullName || user?.primaryEmailAddress?.emailAddress || 'User'}</div>
-                <div className="text-xs text-muted-foreground mt-1 capitalize">{userRole.toLowerCase().replace('_', ' ')}</div>
+                <div className="text-sm font-medium leading-none">
+                  {user?.fullName ||
+                    user?.primaryEmailAddress?.emailAddress ||
+                    "User"}
+                </div>
+                <div className="text-xs text-muted-foreground mt-1 capitalize">
+                  {userRole.toLowerCase().replace("_", " ")}
+                </div>
               </div>
               <UserButton />
             </div>
@@ -154,9 +186,7 @@ export default function CRMLayoutClient({ children, tenantName, userRole }: CRML
 
         {/* Scrollable Content */}
         <div className="flex-1 overflow-auto p-4 lg:p-8 bg-background">
-          <div className="max-w-7xl mx-auto space-y-6">
-            {children}
-          </div>
+          <div className="max-w-7xl mx-auto space-y-6">{children}</div>
         </div>
       </main>
     </div>
