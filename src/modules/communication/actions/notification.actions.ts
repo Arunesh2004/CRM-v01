@@ -14,7 +14,7 @@ export async function getNotificationsAction() {
     
     const prisma = withTenant(tenantId);
     const notifications = await prisma.notification.findMany({
-      where: { userId: user.id },
+      where: { userId: user.id, tenantId },
       orderBy: { createdAt: 'desc' }
     });
     return { success: true, data: notifications };
@@ -33,7 +33,7 @@ export async function markNotificationReadAction(payload: z.infer<typeof MarkNot
 
     const prisma = withTenant(tenantId);
     await prisma.notification.update({
-      where: { id: validatedData.notificationId, userId: user.id },
+      where: { id: validatedData.notificationId, userId: user.id, tenantId },
       data: { isRead: true }
     });
 
@@ -52,6 +52,7 @@ export async function getAllNotificationsAction() {
     
     const prisma = withTenant(tenantId);
     const notifications = await prisma.notification.findMany({
+      where: { tenantId },
       orderBy: { createdAt: 'desc' },
       take: 100,
       include: {
@@ -73,7 +74,7 @@ export async function getNotificationsByIncidentAction(incidentId: string) {
     const prisma = withTenant(tenantId);
     
     const notifications = await prisma.notification.findMany({
-      where: { actionUrl: incidentId },
+      where: { actionUrl: incidentId, tenantId },
       orderBy: { createdAt: 'desc' },
     });
 

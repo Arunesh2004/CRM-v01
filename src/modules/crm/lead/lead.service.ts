@@ -73,7 +73,7 @@ export async function getLeads(params?: QueryParams): Promise<PaginatedResponse<
   const prisma = withTenant(tenantId);
   const limit = params?.limit || 50;
   
-  const where: any = { deletedAt: null };
+  const where: any = { deletedAt: null, tenantId };
   
   if (params?.search) {
     where.OR = [

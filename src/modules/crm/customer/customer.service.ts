@@ -64,7 +64,7 @@ export async function getCustomers(params?: QueryParams): Promise<PaginatedRespo
   const prisma = withTenant(tenantId);
   const limit = params?.limit || 50;
   
-  const where: any = { deletedAt: null };
+  const where: any = { deletedAt: null, tenantId };
   
   if (params?.search) {
     where.name = { contains: params.search, mode: 'insensitive' };

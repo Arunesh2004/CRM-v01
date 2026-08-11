@@ -11,7 +11,7 @@ export async function createCallAction(payload: z.infer<typeof CreateCallSchema>
     await requireAuth();
     await requireTenant();
     await requirePermission('COMMUNICATION', 'CREATE');
-    
+
     const result = await telephonyService.createCall(validatedData);
     return { success: true, data: result };
   } catch (error: any) {
@@ -19,17 +19,29 @@ export async function createCallAction(payload: z.infer<typeof CreateCallSchema>
   }
 }
 
-export async function getCallHistoryAction() {
+export async function getCallHistoryAction(cursor?: string, limit = 50) {
   try {
     await requireAuth();
     const tenantId = await requireTenant();
     await requirePermission('COMMUNICATION', 'READ');
-    
+
     const prisma = withTenant(tenantId);
+    const take = Math.min(limit, 100) + 1;
+
     const calls = await prisma.call.findMany({
+      where: { tenantId },
+      take,
+      ...(cursor ? { cursor: { id: cursor }, skip: 1 } : {}),
       orderBy: { createdAt: 'desc' }
     });
-    return { success: true, data: calls };
+
+    let nextCursor: string | null = null;
+    if (calls.length > Math.min(limit, 100)) {
+      const nextItem = calls.pop();
+      nextCursor = nextItem?.id || null;
+    }
+
+    return { success: true, data: calls, pagination: { nextCursor, hasMore: nextCursor !== null } };
   } catch (error: any) {
     return { success: false, error: error.message };
   }

@@ -7,13 +7,21 @@ export const withTenant = (tenantId: string) => {
       $allModels: {
         async $allOperations({ model, operation, args, query }) {
           const tenantScopedModels = [
-            'User',
-            'Role',
-            'DeviceSession',
-            'AuditLog',
-            'TenantIntegration'
+            'User', 'DeviceSession', 'Role', 'AuditLog', 'TenantIntegration',
+            'Lead', 'Customer', 'CustomerContact', 'Location', 'Task',
+            'CRMComment', 'ActivityTimeline', 'Call', 'CallParticipant',
+            'CallRecording', 'CallTranscript', 'AISummary', 'Meeting',
+            'MeetingParticipant', 'DemoStorage', 'EmailThread', 'EmailMessage',
+            'EmailAttachment', 'Conversation', 'ConversationMember', 'Message',
+            'MessageMention', 'MessageAttachment', 'MessageReadStatus',
+            'Notification', 'NotificationPreference', 'Subscription', 'Invoice',
+            'Payment', 'PaymentCustomer', 'UsageEvent', 'Camera', 'CameraCredential',
+            'CameraStream', 'Recording', 'CameraEvent', 'AIEvent', 'WebhookEvent',
+            'Incident', 'RecoveryJob', 'RecoverySnapshot', 'RecoveryAuditLog',
+            'RestoreCheckpoint', 'Pipeline', 'PipelineStage', 'Deal',
+            'DealStageHistory', 'EventOutbox'
           ];
-          
+
           if (!tenantScopedModels.includes(model)) {
             return query(args);
           }
