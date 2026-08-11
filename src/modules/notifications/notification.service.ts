@@ -42,4 +42,30 @@ export class NotificationService {
 
     return notification;
   }
+
+  static async getNotifications(params?: { userId?: string, limit?: number }) {
+    const { requireAuth, requireTenant, requirePermission } = await import('@/lib/auth');
+    const { withTenant } = await import('@/../database/utils/prisma-tenant');
+    
+    const user = await requireAuth();
+    const tenantId = await requireTenant();
+
+    if (params?.userId && params.userId !== user.id) {
+      await requirePermission('USER', 'READ');
+    }
+
+    const prismaTenant = withTenant(tenantId);
+    const limit = params?.limit || 20;
+
+    const where: any = { tenantId };
+    if (params?.userId) {
+      where.userId = params.userId;
+    }
+
+    return await prismaTenant.notification.findMany({
+      where,
+      take: limit,
+      orderBy: { createdAt: 'desc' }
+    });
+  }
 }

@@ -2,7 +2,7 @@ import { AIProvider, AITool } from './ai-provider.interface';
 import { Logger } from '../../logger/logger';
 
 export class MockAIProvider implements AIProvider {
-  async generateResponse(prompt: string, tools: AITool[]): Promise<string> {
+  async generateResponse(prompt: string, tools: AITool[], systemInstruction?: string): Promise<string> {
     Logger.info('[MOCK AI] Received prompt:', { prompt });
     const p = prompt.toLowerCase();
     
@@ -13,31 +13,31 @@ export class MockAIProvider implements AIProvider {
     if (p.includes('incident') || p.includes('security')) {
       const tool = tools.find(t => t.name === 'getIncidentSummary');
       if (tool) {
-        executedData = await tool.execute();
+        executedData = await tool.execute({});
         contextName = 'security';
       }
     } else if (p.includes('customer') || p.includes('lead')) {
       const tool = tools.find(t => t.name === 'getCustomerSummary');
       if (tool) {
-        executedData = await tool.execute();
+        executedData = await tool.execute({});
         contextName = 'crm';
       }
     } else if (p.includes('camera') || p.includes('video')) {
       const tool = tools.find(t => t.name === 'getCameraStatus');
       if (tool) {
-        executedData = await tool.execute();
+        executedData = await tool.execute({});
         contextName = 'cameras';
       }
     } else if (p.includes('communication') || p.includes('email') || p.includes('sms')) {
       const tool = tools.find(t => t.name === 'getCommunicationSummary');
       if (tool) {
-        executedData = await tool.execute();
+        executedData = await tool.execute({});
         contextName = 'communication';
       }
     } else if (p.includes('billing') || p.includes('plan') || p.includes('subscription')) {
       const tool = tools.find(t => t.name === 'getBillingSummary');
       if (tool) {
-        executedData = await tool.execute();
+        executedData = await tool.execute({});
         contextName = 'billing';
       }
     }

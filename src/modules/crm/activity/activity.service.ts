@@ -21,3 +21,26 @@ export async function createTimelineEntry(input: CreateTimelineEntryInput) {
     }
   });
 }
+
+export async function getActivities(params?: { actorId?: string, limit?: number }) {
+  const user = await requireAuth();
+  const tenantId = await requireTenant();
+
+  if (params?.actorId && params.actorId !== user.id) {
+    await requirePermission('USER', 'READ');
+  }
+
+  const prisma = withTenant(tenantId);
+  const limit = params?.limit || 20;
+
+  const where: any = { tenantId };
+  if (params?.actorId) {
+    where.actorId = params.actorId;
+  }
+
+  return await prisma.activityTimeline.findMany({
+    where,
+    take: limit,
+    orderBy: { createdAt: 'desc' }
+  });
+}

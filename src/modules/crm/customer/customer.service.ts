@@ -73,6 +73,7 @@ export async function getCustomers(params?: QueryParams): Promise<PaginatedRespo
   if (params?.filters) {
     if (params.filters.industry) where.industry = params.filters.industry;
     if (params.filters.status) where.status = params.filters.status;
+    if (params.filters.assignedUserId) where.assignedUserId = params.filters.assignedUserId;
   }
 
   const customers = await prisma.customer.findMany({

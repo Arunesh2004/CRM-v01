@@ -4,18 +4,24 @@ import { clerkClient } from '@clerk/nextjs/server';
 import { FeatureAccessService } from '../billing/feature-access.service';
 import { EventBus } from '../core/events/event-bus';
 
-export async function getEmployees() {
+export async function getEmployees(search?: string) {
   await requireAuth();
   const tenantId = await requireTenant();
   
   // Only owners/admins should manage employees, but members can view them (read permission)
   await requirePermission('USER', 'READ');
 
+  const where: any = { 
+    tenantId, 
+    clerkId: { not: { startsWith: 'SYSTEM_' } }
+  };
+
+  if (search) {
+    where.email = { contains: search, mode: 'insensitive' };
+  }
+
   return await prisma.user.findMany({
-    where: { 
-      tenantId, 
-      clerkId: { not: { startsWith: 'SYSTEM_' } }
-    },
+    where,
     include: {
       userRoles: {
         include: { role: true }
