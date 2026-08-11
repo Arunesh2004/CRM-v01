@@ -34,12 +34,13 @@ export async function ensureUserProvisioned(clerkUser: User | any) {
   try {
     const user = await prisma.$transaction(async (tx) => {
       let tenant;
+      const isNewTenant = !tenantId;
       
-      if (!tenantId) {
+      if (isNewTenant) {
         tenant = await tx.tenant.create({
           data: {
             name: `${firstName || 'User'}'s Organization`,
-            ...(process.env.NODE_ENV === 'development' ? { status: 'ACTIVE' } : {})
+            status: 'ACTIVE'
           }
         });
         tenantId = tenant.id;
@@ -50,7 +51,7 @@ export async function ensureUserProvisioned(clerkUser: User | any) {
         if (!tenant) throw new Error('Invalid tenantId provided in metadata');
         
         // Enforce employee limit for the existing tenant before adding another
-        await FeatureAccessService.enforceLimit(tenantId, 'MAX_EMPLOYEES');
+        await FeatureAccessService.enforceLimit(tenantId as string, 'MAX_EMPLOYEES');
       }
 
       // Upsert User to handle concurrent webhooks/logins safely
@@ -65,7 +66,7 @@ export async function ensureUserProvisioned(clerkUser: User | any) {
       });
       console.log(`[Provisioning] Upserted user ${upsertedUser.id}.`);
 
-      if (!tenantId) {
+      if (isNewTenant) {
         // We just created the tenant, now set the ownerId to the newly created user
         await tx.tenant.update({
           where: { id: tenant.id },
