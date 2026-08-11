@@ -2,10 +2,16 @@ import { AIProvider, AITool } from './ai-provider.interface';
 import { Logger } from '../../logger/logger';
 
 export class MockAIProvider implements AIProvider {
-  async generateResponse(prompt: string, tools: AITool[], systemInstruction?: string): Promise<string> {
-    Logger.info('[MOCK AI] Received prompt:', { prompt });
+  async generateResponse(
+    prompt: string,
+    tools: AITool[],
+    systemInstruction?: string,
+    requestId?: string,
+    history?: {role: 'user'|'assistant', content: string}[]
+  ): Promise<string> {
+    Logger.info(`[MOCK AI] Generation requested for prompt: "${prompt}"`, { tools: tools.length });
     const p = prompt.toLowerCase();
-    
+
     // Very naive NLP for demo purposes
     let executedData = null;
     let contextName = '';

@@ -10,6 +10,7 @@ import { getEmployees } from '../../users/user.service';
 
 import { requireAuth } from '@/lib/auth';
 import { AITool } from '@/lib/providers/ai/ai-provider.interface';
+import { resolveDateRange } from '@/lib/utils/date-resolver';
 
 // Notice these tools NEVER accept a tenantId or userId from the model.
 // They simply wrap existing services which intrinsically resolve context from requireTenant() and requireAuth().
@@ -24,16 +25,21 @@ export const secureTools: AITool[] = [
       type: 'OBJECT',
       properties: {
         limit: { type: 'INTEGER', description: 'Maximum number of tasks to return. Default is 10, max is 50.' },
-        status: { type: 'STRING', description: 'Filter by status, e.g., PENDING, IN_PROGRESS, COMPLETED' }
+        status: { type: 'STRING', description: 'Filter by status, e.g., PENDING, IN_PROGRESS, COMPLETED' },
+        timeframe: { type: 'STRING', description: 'A semantic timeframe for dueDate (e.g., "today", "yesterday", "tomorrow", "this_week", "last_week", "this_month", "last_month"). Do not generate ISO dates.' }
       }
     },
     execute: async (args: any) => {
       const user = await requireAuth();
       const limit = Math.min(args.limit || 10, 50);
-      
+
+      const bounds = resolveDateRange(args.timeframe);
+
       const response = await getTasks({
         limit,
-        filters: { assignedUserId: user.id, ...(args.status && { status: args.status }) }
+        filters: { assignedUserId: user.id, ...(args.status && { status: args.status }) },
+        ...(bounds?.startDate && { dueDateStart: bounds.startDate }),
+        ...(bounds?.endDate && { dueDateEnd: bounds.endDate })
       });
       return {
         totalReturned: response.data.length,
@@ -58,16 +64,21 @@ export const secureTools: AITool[] = [
       type: 'OBJECT',
       properties: {
         limit: { type: 'INTEGER', description: 'Maximum number to return. Max 50.' },
-        status: { type: 'STRING', description: 'Filter by status, e.g., NEW, CONTACTED, QUALIFIED' }
+        status: { type: 'STRING', description: 'Filter by status, e.g., NEW, CONTACTED, QUALIFIED' },
+        timeframe: { type: 'STRING', description: 'A semantic timeframe for lead creation date (e.g., "today", "yesterday", "this_week", "last_week", "this_month", "last_month"). Do not generate ISO dates.' }
       }
     },
     execute: async (args: any) => {
       const user = await requireAuth();
       const limit = Math.min(args.limit || 10, 50);
-      
+
+      const bounds = resolveDateRange(args.timeframe);
+
       const response = await getLeads({
         limit,
-        filters: { assignedUserId: user.id, ...(args.status && { status: args.status }) }
+        filters: { assignedUserId: user.id, ...(args.status && { status: args.status }) },
+        ...(bounds?.startDate && { createdAtStart: bounds.startDate }),
+        ...(bounds?.endDate && { createdAtEnd: bounds.endDate })
       });
       return {
         totalReturned: response.data.length,
@@ -92,16 +103,21 @@ export const secureTools: AITool[] = [
       type: 'OBJECT',
       properties: {
         limit: { type: 'INTEGER', description: 'Max number to return. Max 50.' },
-        status: { type: 'STRING', description: 'Filter by status, e.g., ACTIVE' }
+        status: { type: 'STRING', description: 'Filter by status, e.g., ACTIVE' },
+        timeframe: { type: 'STRING', description: 'A semantic timeframe for customer creation date (e.g., "today", "yesterday", "this_week", "last_week", "this_month", "last_month"). Do not generate ISO dates.' }
       }
     },
     execute: async (args: any) => {
       const user = await requireAuth();
       const limit = Math.min(args.limit || 10, 50);
-      
+
+      const bounds = resolveDateRange(args.timeframe);
+
       const response = await getCustomers({
         limit,
-        filters: { assignedUserId: user.id, ...(args.status && { status: args.status }) }
+        filters: { assignedUserId: user.id, ...(args.status && { status: args.status }) },
+        ...(bounds?.startDate && { createdAtStart: bounds.startDate }),
+        ...(bounds?.endDate && { createdAtEnd: bounds.endDate })
       });
       return {
         totalReturned: response.data.length,
@@ -123,14 +139,23 @@ export const secureTools: AITool[] = [
     parameters: {
       type: 'OBJECT',
       properties: {
-        limit: { type: 'INTEGER', description: 'Max number to return. Max 50.' }
+        limit: { type: 'INTEGER', description: 'Max number to return. Max 50.' },
+        timeframe: { type: 'STRING', description: 'A semantic timeframe for activity date (e.g., "today", "yesterday", "this_week", "last_week", "this_month", "last_month"). Do not generate ISO dates.' }
       }
     },
     execute: async (args: any) => {
       const user = await requireAuth();
       const limit = Math.min(args.limit || 10, 50);
-      
-      const activities = await getActivities({ actorId: user.id, limit });
+
+      const bounds = resolveDateRange(args.timeframe);
+
+      const activities = await getActivities({
+        actorId: user.id,
+        limit,
+        ...(bounds?.startDate && { createdAtStart: bounds.startDate }),
+        ...(bounds?.endDate && { createdAtEnd: bounds.endDate })
+      });
+
       return {
         totalReturned: activities.length,
         activities: activities.map(a => ({
@@ -154,7 +179,7 @@ export const secureTools: AITool[] = [
     execute: async (args: any) => {
       const user = await requireAuth();
       const limit = Math.min(args.limit || 10, 50);
-      
+
       const notifications = await NotificationService.getNotifications({ userId: user.id, limit });
       return {
         totalReturned: notifications.length,
@@ -182,22 +207,22 @@ export const secureTools: AITool[] = [
       if (!args.nameOrEmail) {
         return { error: 'You must provide a nameOrEmail to search for.' };
       }
-      
+
       const employees = await getEmployees(args.nameOrEmail);
-      
+
       if (employees.length === 0) {
         return { error: `No employees found matching "${args.nameOrEmail}".` };
       }
-      
+
       if (employees.length > 1) {
-        return { 
+        return {
           error: `Ambiguity Error: I found ${employees.length} employees matching "${args.nameOrEmail}". Please specify which one you mean.`,
           matches: employees.map(e => e.email)
         };
       }
-      
+
       const employee = employees[0];
-      
+
       let taskSummary: any = { error: 'Not authorized to view tasks' };
       try {
         const tasks = await getTasks({ limit: 100, filters: { assignedUserId: employee.id } });
@@ -274,12 +299,12 @@ export const secureTools: AITool[] = [
     execute: async () => {
       const sub = await getCurrentSubscription();
       const usage = await getTenantUsage();
-      
+
       let usagePercentage = 0;
       if (usage && usage.cameras.limit > 0) {
         usagePercentage = (usage.cameras.used / usage.cameras.limit) * 100;
       }
-      
+
       return {
         planName: sub?.plan?.name || 'Unknown',
         status: sub?.status || 'Unknown',

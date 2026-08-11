@@ -56,7 +56,7 @@ export async function createCustomer(input: CreateCustomerInput) {
 
 import { QueryParams, PaginatedResponse } from '../../core/types';
 
-export async function getCustomers(params?: QueryParams): Promise<PaginatedResponse<any>> {
+export async function getCustomers(params?: QueryParams & { createdAtStart?: Date; createdAtEnd?: Date; }): Promise<PaginatedResponse<any>> {
   await requireAuth();
   const tenantId = await requireTenant();
   await requirePermission('CUSTOMER', 'READ');
@@ -74,6 +74,12 @@ export async function getCustomers(params?: QueryParams): Promise<PaginatedRespo
     if (params.filters.industry) where.industry = params.filters.industry;
     if (params.filters.status) where.status = params.filters.status;
     if (params.filters.assignedUserId) where.assignedUserId = params.filters.assignedUserId;
+  }
+
+  if (params?.createdAtStart || params?.createdAtEnd) {
+    where.createdAt = {};
+    if (params.createdAtStart) where.createdAt.gte = params.createdAtStart;
+    if (params.createdAtEnd) where.createdAt.lte = params.createdAtEnd;
   }
 
   const customers = await prisma.customer.findMany({

@@ -5,11 +5,11 @@ import { CreateTimelineEntryInput } from '../crm.types';
 export async function createTimelineEntry(input: CreateTimelineEntryInput) {
   const user = await requireAuth();
   const tenantId = await requireTenant();
-  
+
   await requirePermission('SYSTEM', 'READ'); // Base internal permission
 
   const prisma = withTenant(tenantId);
-  
+
   return await prisma.activityTimeline.create({
     data: {
       type: input.type,
@@ -22,7 +22,7 @@ export async function createTimelineEntry(input: CreateTimelineEntryInput) {
   });
 }
 
-export async function getActivities(params?: { actorId?: string, limit?: number }) {
+export async function getActivities(params?: { actorId?: string, limit?: number, createdAtStart?: Date, createdAtEnd?: Date }) {
   const user = await requireAuth();
   const tenantId = await requireTenant();
 
@@ -36,6 +36,12 @@ export async function getActivities(params?: { actorId?: string, limit?: number 
   const where: any = { tenantId };
   if (params?.actorId) {
     where.actorId = params.actorId;
+  }
+
+  if (params?.createdAtStart || params?.createdAtEnd) {
+    where.createdAt = {};
+    if (params.createdAtStart) where.createdAt.gte = params.createdAtStart;
+    if (params.createdAtEnd) where.createdAt.lte = params.createdAtEnd;
   }
 
   return await prisma.activityTimeline.findMany({

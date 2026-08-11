@@ -6,7 +6,13 @@ export interface AIProvider {
    * along the way. The AI Provider should NOT be responsible for tenant context;
    * it just executes the function signatures given.
    */
-  generateResponse(prompt: string, tools: AITool[], systemInstruction?: string): Promise<string>;
+  generateResponse(
+    prompt: string,
+    tools: AITool[],
+    systemInstruction?: string,
+    requestId?: string,
+    history?: {role: 'user'|'assistant', content: string}[]
+  ): Promise<string>;
 }
 
 export interface AITool {

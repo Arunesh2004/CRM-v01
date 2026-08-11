@@ -65,7 +65,7 @@ export async function createLead(input: CreateLeadInput) {
 
 import { QueryParams, PaginatedResponse } from '../../core/types';
 
-export async function getLeads(params?: QueryParams): Promise<PaginatedResponse<any>> {
+export async function getLeads(params?: QueryParams & { createdAtStart?: Date; createdAtEnd?: Date; }): Promise<PaginatedResponse<any>> {
   await requireAuth();
   const tenantId = await requireTenant();
   await requirePermission('LEAD', 'READ');
@@ -86,6 +86,12 @@ export async function getLeads(params?: QueryParams): Promise<PaginatedResponse<
   if (params?.filters) {
     if (params.filters.status) where.status = params.filters.status;
     if (params.filters.assignedUserId) where.assignedUserId = params.filters.assignedUserId;
+  }
+
+  if (params?.createdAtStart || params?.createdAtEnd) {
+    where.createdAt = {};
+    if (params.createdAtStart) where.createdAt.gte = params.createdAtStart;
+    if (params.createdAtEnd) where.createdAt.lte = params.createdAtEnd;
   }
 
   const leads = await prisma.lead.findMany({
