@@ -2,8 +2,8 @@ import * as reportingService from '../../reporting/reporting.service';
 import { getCurrentSubscription } from '../../billing/subscription/subscription.service';
 import { getTenantUsage } from '../../billing/usage/usage.service';
 import { getTasks } from '../../crm/task/task.service';
-import { getLeads } from '../../crm/lead/lead.service';
-import { getCustomers } from '../../crm/customer/customer.service';
+import { getLeads, getLeadById } from '../../crm/lead/lead.service';
+import { getCustomers, getCustomerById } from '../../crm/customer/customer.service';
 import { getActivities } from '../../crm/activity/activity.service';
 import { NotificationService } from '../../notifications/notification.service';
 import { getEmployees } from '../../users/user.service';
@@ -310,6 +310,295 @@ export const secureTools: AITool[] = [
         status: sub?.status || 'Unknown',
         usagePercentage: usagePercentage.toFixed(1)
       };
+    }
+  },
+  {
+    name: 'searchCustomers',
+    description: 'Search for customers by name or company name across the CRM.',
+    requiredResource: 'CUSTOMER',
+    requiredAction: 'READ',
+    parameters: {
+      type: 'OBJECT',
+      properties: {
+        query: { type: 'STRING', description: 'Search term for customer name, company, or email.' },
+        limit: { type: 'INTEGER', description: 'Maximum results, default and max 10.' }
+      }
+    },
+    execute: async (args: any) => {
+      const query = typeof args.query === 'string' ? args.query.slice(0, 200) : '';
+      if (!query.trim()) return { ok: false, error: 'Empty query' };
+
+      const limit = Math.min(args.limit || 10, 10);
+      const res = await getCustomers({ search: query, limit });
+
+      if (!res.data.length) {
+        return { ok: false, error: 'NOT_FOUND' };
+      }
+
+      const candidates = res.data.map(c => ({
+        id: c.id,
+        name: c.name,
+        industry: c.industry,
+        status: c.status
+      }));
+
+      // If multiple candidates, we advise the LLM to ask user, although we still return success with the list
+      return {
+        ok: true,
+        note: candidates.length > 1 ? 'AMBIGUOUS_ENTITY - You must ask the user to clarify which entity they mean. Do not guess.' : undefined,
+        candidates
+      };
+    }
+  },
+  {
+    name: 'getCustomerDetails',
+    description: 'Get deep-dive details for a specific customer by ID.',
+    requiredResource: 'CUSTOMER',
+    requiredAction: 'READ',
+    parameters: {
+      type: 'OBJECT',
+      properties: {
+        customerId: { type: 'STRING', description: 'The unique ID of the customer.' }
+      }
+    },
+    execute: async (args: any) => {
+      if (!args.customerId) return { ok: false, error: 'Missing customerId' };
+      const details = await getCustomerById(args.customerId);
+      if (!details) return { ok: false, error: 'ENTITY_NOT_FOUND' };
+
+      // Bound the payload returned to Gemini to avoid blowing up the context window
+      return {
+        ok: true,
+        data: {
+          id: details.id,
+          name: details.name,
+          industry: details.industry,
+          status: details.status,
+          createdAt: details.createdAt,
+          assignedUser: details.assignedUser,
+          counts: details._count,
+          contacts: details.contacts.slice(0, 10).map(c => ({ name: c.firstName + ' ' + c.lastName, email: c.email, phone: c.phone, isPrimary: c.isPrimary })),
+          locations: details.locations.slice(0, 5).map(l => ({ name: l.name, city: l.city, state: l.state })),
+          recentTasks: details.tasks.slice(0, 10).map(t => ({ id: t.id, title: t.title, status: t.status, priority: t.priority })),
+          relatedLeads: details.relatedLeads.slice(0, 10).map(l => ({ id: l.id, name: l.name, company: l.company, status: l.status })),
+          recentActivities: details.activities.slice(0, 10).map(a => ({ type: a.type, content: a.content, createdAt: a.createdAt })),
+          recentCommunications: [
+            ...details.emailThreads.slice(0, 5).map(e => ({ type: 'EMAIL', subject: e.subject, createdAt: e.createdAt })),
+            ...details.conversations.slice(0, 5).map(c => ({ type: 'CONVERSATION', channel: c.type, messagesCount: c.messages.length }))
+          ]
+        }
+      };
+    }
+  },
+  {
+    name: 'searchLeads',
+    description: 'Search for leads by name, company, or email across the CRM.',
+    requiredResource: 'LEAD',
+    requiredAction: 'READ',
+    parameters: {
+      type: 'OBJECT',
+      properties: {
+        query: { type: 'STRING', description: 'Search term for lead name, company, or email.' },
+        limit: { type: 'INTEGER', description: 'Maximum results, default and max 10.' }
+      }
+    },
+    execute: async (args: any) => {
+      const query = typeof args.query === 'string' ? args.query.slice(0, 200) : '';
+      if (!query.trim()) return { ok: false, error: 'Empty query' };
+
+      const limit = Math.min(args.limit || 10, 10);
+      const res = await getLeads({ search: query, limit });
+
+      if (!res.data.length) {
+        return { ok: false, error: 'NOT_FOUND' };
+      }
+
+      const candidates = res.data.map(l => ({
+        id: l.id,
+        name: l.name,
+        company: l.company,
+        email: l.email,
+        status: l.status
+      }));
+
+      return {
+        ok: true,
+        note: candidates.length > 1 ? 'AMBIGUOUS_ENTITY - You must ask the user to clarify which entity they mean. Do not guess.' : undefined,
+        candidates
+      };
+    }
+  },
+  {
+    name: 'getLeadDetails',
+    description: 'Get deep-dive details for a specific lead by ID.',
+    requiredResource: 'LEAD',
+    requiredAction: 'READ',
+    parameters: {
+      type: 'OBJECT',
+      properties: {
+        leadId: { type: 'STRING', description: 'The unique ID of the lead.' }
+      }
+    },
+    execute: async (args: any) => {
+      if (!args.leadId) return { ok: false, error: 'Missing leadId' };
+      const details = await getLeadById(args.leadId);
+      if (!details) return { ok: false, error: 'ENTITY_NOT_FOUND' };
+
+      return {
+        ok: true,
+        data: {
+          id: details.id,
+          name: details.name,
+          company: details.company,
+          email: details.email,
+          phone: details.phone,
+          status: details.status,
+          createdAt: details.createdAt,
+          assignedUser: details.assignedUser,
+          counts: details._count,
+          relatedCustomer: details.relatedCustomer,
+          recentTasks: details.tasks.slice(0, 10).map(t => ({ id: t.id, title: t.title, status: t.status, priority: t.priority })),
+          recentDeals: details.deals.slice(0, 5).map(d => ({ id: d.id, title: d.title, value: d.value, stageId: d.stageId, status: d.status })),
+          recentActivities: details.activities.slice(0, 10).map(a => ({ type: a.type, content: a.content, createdAt: a.createdAt }))
+        }
+      };
+    }
+  },
+  {
+    name: 'getLeadConversionMetrics',
+    description: 'Get aggregate metrics on lead conversion and pipeline status distribution.',
+    requiredResource: 'LEAD',
+    requiredAction: 'READ',
+    parameters: {
+      type: 'OBJECT',
+      properties: {
+        timeframe: { type: 'STRING', description: 'A semantic timeframe (e.g., "today", "this_week", "this_month", "this_quarter"). Do not generate ISO dates.' }
+      }
+    },
+    execute: async (args: any) => {
+      const bounds = resolveDateRange(args.timeframe);
+      const data = await reportingService.getLeadConversionMetrics(bounds?.startDate, bounds?.endDate);
+      return { ok: true, data };
+    }
+  },
+  {
+    name: 'getOverdueTaskDistribution',
+    description: 'Get a distribution of overdue tasks grouped by assigned employee.',
+    requiredResource: 'TASK',
+    requiredAction: 'READ',
+    parameters: {
+      type: 'OBJECT',
+      properties: {}
+    },
+    execute: async () => {
+      const data = await reportingService.getOverdueTaskDistribution();
+      return { ok: true, data };
+    }
+  },
+  {
+    name: 'getMyAggregateMetrics',
+    description: 'Get personal aggregate metrics for the currently authenticated user (open leads, tasks, overdue tasks).',
+    requiredResource: 'SYSTEM', // Baseline functionality safe for all users
+    requiredAction: 'READ',
+    parameters: {
+      type: 'OBJECT',
+      properties: {
+        timeframe: { type: 'STRING', description: 'A semantic timeframe. Do not generate ISO dates.' }
+      }
+    },
+    execute: async (args: any) => {
+      const bounds = resolveDateRange(args.timeframe);
+      const data = await reportingService.getMyAggregateMetrics(bounds?.startDate, bounds?.endDate);
+      return { ok: true, data };
+    }
+  },
+  {
+    name: 'searchTasks',
+    description: 'Search for tasks by various filters, including customer, lead, user, or status.',
+    requiredResource: 'TASK',
+    requiredAction: 'READ',
+    parameters: {
+      type: 'OBJECT',
+      properties: {
+        customerId: { type: 'STRING', description: 'Filter by customer ID' },
+        leadId: { type: 'STRING', description: 'Filter by lead ID' },
+        assignedUserId: { type: 'STRING', description: 'Filter by assigned employee ID' },
+        status: { type: 'STRING', description: 'Filter by status (PENDING, IN_PROGRESS, COMPLETED)' },
+        priority: { type: 'STRING', description: 'Filter by priority (LOW, MEDIUM, HIGH, URGENT)' },
+        limit: { type: 'INTEGER', description: 'Maximum results, default and max 50' }
+      }
+    },
+    execute: async (args: any) => {
+      const limit = Math.min(args.limit || 50, 50);
+
+      const filters: any = {};
+      if (args.status) filters.status = args.status;
+      if (args.assignedUserId) filters.assignedUserId = args.assignedUserId;
+
+      const res = await getTasks({
+        limit,
+        filters,
+        customerId: args.customerId,
+        leadId: args.leadId,
+        priority: args.priority
+      });
+
+      if (!res.data.length) {
+        return { ok: false, error: 'NOT_FOUND' };
+      }
+
+      const tasks = res.data.map(t => ({
+        id: t.id,
+        title: t.title,
+        status: t.status,
+        priority: t.priority,
+        dueDate: t.dueDate,
+        assignedUserId: t.assignedUser?.id,
+        customerId: t.customer?.id,
+        leadId: t.lead?.id
+      }));
+
+      return { ok: true, data: tasks };
+    }
+  },
+  {
+    name: 'searchActivities',
+    description: 'Search for recent activities related to a specific entity or actor.',
+    requiredResource: 'SYSTEM', // Baseline internal permission
+    requiredAction: 'READ',
+    parameters: {
+      type: 'OBJECT',
+      properties: {
+        entityType: { type: 'STRING', description: 'Filter by entity type (CUSTOMER, LEAD, TASK, etc.)' },
+        entityId: { type: 'STRING', description: 'Filter by entity ID' },
+        actorId: { type: 'STRING', description: 'Filter by actor/employee ID' },
+        limit: { type: 'INTEGER', description: 'Maximum results, default and max 50' }
+      }
+    },
+    execute: async (args: any) => {
+      const limit = Math.min(args.limit || 50, 50);
+      const data = await getActivities({
+        actorId: args.actorId,
+        entityType: args.entityType,
+        entityId: args.entityId,
+        limit
+      });
+
+      if (!data.length) {
+        return { ok: false, error: 'NOT_FOUND' };
+      }
+
+      const activities = data.map(a => ({
+        id: a.id,
+        type: a.type,
+        content: a.content,
+        entityType: a.entityType,
+        entityId: a.entityId,
+        actorId: a.actorId,
+        createdAt: a.createdAt
+      }));
+
+      return { ok: true, data: activities };
     }
   }
 ];

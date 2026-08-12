@@ -72,9 +72,9 @@ export async function getLeads(params?: QueryParams & { createdAtStart?: Date; c
 
   const prisma = withTenant(tenantId);
   const limit = params?.limit || 50;
-  
+
   const where: any = { deletedAt: null, tenantId };
-  
+
   if (params?.search) {
     where.OR = [
       { name: { contains: params.search, mode: 'insensitive' } },
@@ -82,7 +82,7 @@ export async function getLeads(params?: QueryParams & { createdAtStart?: Date; c
       { email: { contains: params.search, mode: 'insensitive' } }
     ];
   }
-  
+
   if (params?.filters) {
     if (params.filters.status) where.status = params.filters.status;
     if (params.filters.assignedUserId) where.assignedUserId = params.filters.assignedUserId;
@@ -94,12 +94,17 @@ export async function getLeads(params?: QueryParams & { createdAtStart?: Date; c
     if (params.createdAtEnd) where.createdAt.lte = params.createdAtEnd;
   }
 
+  // Allowlist sortBy to prevent dynamic key injection.
+  const LEAD_SORT_FIELDS = new Set(['createdAt', 'updatedAt', 'name', 'company', 'status']);
+  const safeSortBy = LEAD_SORT_FIELDS.has(params?.sortBy || '') ? params!.sortBy! : 'createdAt';
+  const safeSortOrder = params?.sortOrder === 'asc' ? 'asc' : 'desc';
+
   const leads = await prisma.lead.findMany({
     where,
     take: limit + 1,
     ...(params?.cursor ? { cursor: { id: params.cursor }, skip: 1 } : {}),
     orderBy: {
-      [params?.sortBy || 'createdAt']: params?.sortOrder || 'desc'
+      [safeSortBy]: safeSortOrder
     }
   });
 
@@ -114,6 +119,57 @@ export async function getLeads(params?: QueryParams & { createdAtStart?: Date; c
       hasMore
     }
   };
+}
+
+export async function getLeadById(id: string) {
+  await requireAuth();
+  const tenantId = await requireTenant();
+  await requirePermission('LEAD', 'READ');
+
+  const prisma = withTenant(tenantId);
+
+  const [lead, activities] = await Promise.all([
+    prisma.lead.findFirst({
+      where: { id, tenantId, deletedAt: null },
+      include: {
+        tasks: { where: { deletedAt: null }, orderBy: { createdAt: 'desc' }, take: 20 },
+        deals: { where: { deletedAt: null }, orderBy: { createdAt: 'desc' }, take: 20 },
+        assignedUser: { select: { id: true, email: true } },
+        _count: {
+          select: {
+            tasks: { where: { status: { not: 'COMPLETED' }, deletedAt: null } }
+          }
+        }
+      }
+    }),
+    prisma.activityTimeline.findMany({
+      where: { tenantId, entityType: 'LEAD', entityId: id },
+      orderBy: { createdAt: 'desc' },
+      take: 20,
+      include: { actor: { select: { id: true, email: true } } }
+    })
+  ]);
+
+  if (!lead) return null;
+
+  // Attempt to find a related customer by matching company name or email
+  let relatedCustomer = null;
+  if (lead.company || lead.email) {
+    const orConditions: any[] = [];
+    if (lead.company) orConditions.push({ name: lead.company });
+    if (lead.email) {
+      orConditions.push({ contacts: { some: { email: lead.email, deletedAt: null } } });
+    }
+
+    if (orConditions.length > 0) {
+      relatedCustomer = await prisma.customer.findFirst({
+        where: { tenantId, deletedAt: null, OR: orConditions },
+        select: { id: true, name: true, status: true, industry: true }
+      });
+    }
+  }
+
+  return { ...lead, activities, relatedCustomer };
 }
 
 export async function updateLead(input: UpdateLeadInput) {
@@ -132,7 +188,7 @@ export async function updateLead(input: UpdateLeadInput) {
   const result = await prisma.$transaction(async (tx) => {
     const lead = await tx.lead.findFirst({ where: { id: input.id, tenantId }});
     if (!lead) throw new Error('Lead not found');
-    
+
     let assignmentChanged = false;
     if (input.assignedUserId && input.assignedUserId !== lead.assignedUserId) {
       assignmentChanged = true;
@@ -190,7 +246,7 @@ export async function updateLead(input: UpdateLeadInput) {
           entityId: input.id
         }
       });
-      
+
       // Attempt to find user to notify (if assigned)
       if (lead.assignedUserId || input.assignedUserId) {
         await tx.notification.create({
@@ -211,10 +267,10 @@ export async function updateLead(input: UpdateLeadInput) {
   });
 
   if (result.assignmentChanged && input.assignedUserId) {
-    EventBus.emit('lead.assigned', { 
-      tenantId, 
-      leadId: input.id, 
-      assigneeId: input.assignedUserId 
+    EventBus.emit('lead.assigned', {
+      tenantId,
+      leadId: input.id,
+      assigneeId: input.assignedUserId
     });
   }
 

@@ -1,4 +1,4 @@
-import { requireAuth, requireTenant } from '@/lib/auth';
+import { requireAuth, requireTenant, requirePermission } from '@/lib/auth';
 import { withTenant } from '../../../database/utils/prisma-tenant';
 
 export async function getSecurityMetrics(startDate?: Date, endDate?: Date) {
@@ -58,9 +58,13 @@ export async function getCommunicationMetrics(startDate?: Date, endDate?: Date) 
 
   const dateFilter = startDate && endDate ? { createdAt: { gte: startDate, lte: endDate } } : {};
 
+  // Cap at 1000 rows to prevent memory exhaustion on large tenants.
+  // getCommunicationSummary is AI-reachable; an unbounded load is a DoS vector.
   const notifications = await prisma.notification.findMany({
     where: { tenantId, ...dateFilter },
-    select: { type: true, title: true }
+    select: { type: true, title: true },
+    take: 1000,
+    orderBy: { createdAt: 'desc' },
   });
 
   let total = notifications.length;
@@ -99,9 +103,102 @@ export async function getBillingMetrics(startDate?: Date, endDate?: Date) {
     where: { tenantId, status: 'PAID', ...dateFilter },
     select: { amount: true }
   });
-  
+
   const mrr = paidInvoices.reduce((sum, inv) => sum + Number(inv.amount), 0);
   const arr = mrr * 12;
 
   return { subscriptions, invoices, mrr, arr };
+}
+
+export async function getLeadConversionMetrics(startDate?: Date, endDate?: Date) {
+  await requireAuth();
+  const tenantId = await requireTenant();
+  await requirePermission('LEAD', 'READ');
+  const prisma = withTenant(tenantId);
+
+  const dateFilter = startDate && endDate ? { createdAt: { gte: startDate, lte: endDate } } : {};
+
+  const byStage = await prisma.lead.groupBy({
+    by: ['status'],
+    _count: true,
+    where: { tenantId, ...dateFilter }
+  });
+
+  let total = 0;
+  let converted = 0;
+
+  const stageResults = byStage.map(s => {
+    total += s._count;
+    if (s.status === 'CONVERTED') {
+      converted = s._count;
+    }
+    return { stage: s.status, count: s._count };
+  });
+
+  const conversionRate = total > 0 ? (converted / total) * 100 : 0;
+
+  return { total, byStage: stageResults, converted, conversionRate: Number(conversionRate.toFixed(1)) };
+}
+
+export async function getOverdueTaskDistribution() {
+  await requireAuth();
+  const tenantId = await requireTenant();
+  await requirePermission('TASK', 'READ');
+  const prisma = withTenant(tenantId);
+
+  const byEmployee = await prisma.task.groupBy({
+    by: ['assignedUserId'],
+    _count: true,
+    where: {
+      tenantId,
+      status: { not: 'COMPLETED' },
+      dueDate: { lt: new Date() }
+    }
+  });
+
+  const userIds = byEmployee.map(b => b.assignedUserId).filter(Boolean) as string[];
+
+  // Resolve employee names
+  const users = await prisma.user.findMany({
+    where: { tenantId, id: { in: userIds } },
+    select: { id: true, email: true },
+    take: 50
+  });
+
+  const userMap = new Map(users.map(u => [u.id, u.email]));
+
+  let totalOverdue = 0;
+  const employeeResults = byEmployee
+    .filter(b => b.assignedUserId && userMap.has(b.assignedUserId))
+    .map(b => {
+      totalOverdue += b._count;
+      return {
+        userId: b.assignedUserId,
+        employeeName: userMap.get(b.assignedUserId as string),
+        overdueCount: b._count
+      };
+    })
+    .slice(0, 50);
+
+  return { totalOverdue, byEmployee: employeeResults };
+}
+
+export async function getMyAggregateMetrics(startDate?: Date, endDate?: Date) {
+  const user = await requireAuth();
+  const tenantId = await requireTenant();
+  const prisma = withTenant(tenantId);
+
+  const dateFilter = startDate && endDate ? { createdAt: { gte: startDate, lte: endDate } } : {};
+
+  const [myOpenLeadsCount, myTasksCount, myOverdueTasksCount] = await Promise.all([
+    prisma.lead.count({ where: { tenantId, assignedUserId: user.id, status: { not: 'CONVERTED' }, ...dateFilter } }),
+    prisma.task.count({ where: { tenantId, assignedUserId: user.id, ...dateFilter } }),
+    prisma.task.count({ where: { tenantId, assignedUserId: user.id, status: { not: 'COMPLETED' }, dueDate: { lt: new Date() }, ...dateFilter } })
+  ]);
+
+  return {
+    myOpenLeads: myOpenLeadsCount,
+    myTasks: myTasksCount,
+    myOverdueTasks: myOverdueTasksCount
+  };
 }

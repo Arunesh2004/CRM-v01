@@ -1,4 +1,5 @@
 import prisma from '@/../database/utils/prisma';
+import { withTenant } from '@/../database/utils/prisma-tenant';
 import { requireAuth, requireTenant, requirePermission } from '@/lib/auth';
 import { clerkClient } from '@clerk/nextjs/server';
 import { FeatureAccessService } from '../billing/feature-access.service';
@@ -10,6 +11,8 @@ export async function getEmployees(search?: string) {
   
   // Only owners/admins should manage employees, but members can view them (read permission)
   await requirePermission('USER', 'READ');
+
+  const prisma = withTenant(tenantId);
 
   const where: any = { 
     tenantId, 

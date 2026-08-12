@@ -88,12 +88,18 @@ export async function getTasks(params?: QueryParams & {
     if (params.dueDateEnd) where.dueDate.lte = params.dueDateEnd;
   }
 
+  // Allowlist sortBy to prevent dynamic key injection; Prisma rejects unknown keys
+  // with a runtime error (not SQL injection), but the error message could leak schema details.
+  const TASK_SORT_FIELDS = new Set(['createdAt', 'updatedAt', 'dueDate', 'priority', 'title', 'status']);
+  const safeSortBy = TASK_SORT_FIELDS.has(params?.sortBy || '') ? params!.sortBy! : 'createdAt';
+  const safeSortOrder = params?.sortOrder === 'asc' ? 'asc' : 'desc';
+
   const tasks = await prisma.task.findMany({
     where,
     take: limit + 1,
     ...(params?.cursor ? { cursor: { id: params.cursor }, skip: 1 } : {}),
     orderBy: {
-      [params?.sortBy || 'createdAt']: params?.sortOrder || 'desc'
+      [safeSortBy]: safeSortOrder
     },
     include: {
       assignedUser: { select: { id: true, email: true } },

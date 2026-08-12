@@ -22,7 +22,7 @@ export async function createTimelineEntry(input: CreateTimelineEntryInput) {
   });
 }
 
-export async function getActivities(params?: { actorId?: string, limit?: number, createdAtStart?: Date, createdAtEnd?: Date }) {
+export async function getActivities(params?: { actorId?: string, entityType?: string, entityId?: string, limit?: number, createdAtStart?: Date, createdAtEnd?: Date }) {
   const user = await requireAuth();
   const tenantId = await requireTenant();
 
@@ -38,6 +38,14 @@ export async function getActivities(params?: { actorId?: string, limit?: number,
     where.actorId = params.actorId;
   }
 
+  if (params?.entityType) {
+    where.entityType = params.entityType;
+  }
+
+  if (params?.entityId) {
+    where.entityId = params.entityId;
+  }
+
   if (params?.createdAtStart || params?.createdAtEnd) {
     where.createdAt = {};
     if (params.createdAtStart) where.createdAt.gte = params.createdAtStart;
@@ -47,6 +55,7 @@ export async function getActivities(params?: { actorId?: string, limit?: number,
   return await prisma.activityTimeline.findMany({
     where,
     take: limit,
-    orderBy: { createdAt: 'desc' }
+    orderBy: { createdAt: 'desc' },
+    include: { actor: { select: { id: true, email: true } } }
   });
 }

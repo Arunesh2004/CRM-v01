@@ -82,12 +82,17 @@ export async function getCustomers(params?: QueryParams & { createdAtStart?: Dat
     if (params.createdAtEnd) where.createdAt.lte = params.createdAtEnd;
   }
 
+  // Allowlist sortBy to prevent dynamic key injection.
+  const CUSTOMER_SORT_FIELDS = new Set(['createdAt', 'updatedAt', 'name', 'industry', 'status']);
+  const safeSortBy = CUSTOMER_SORT_FIELDS.has(params?.sortBy || '') ? params!.sortBy! : 'createdAt';
+  const safeSortOrder = params?.sortOrder === 'asc' ? 'asc' : 'desc';
+
   const customers = await prisma.customer.findMany({
     where,
     take: limit + 1,
     ...(params?.cursor ? { cursor: { id: params.cursor }, skip: 1 } : {}),
     orderBy: {
-      [params?.sortBy || 'createdAt']: params?.sortOrder || 'desc'
+      [safeSortBy]: safeSortOrder
     }
   });
 
@@ -120,7 +125,14 @@ export async function getCustomerById(id: string) {
         tasks: { where: { deletedAt: null }, orderBy: { createdAt: 'desc' }, take: 20 },
         emailThreads: { orderBy: { createdAt: 'desc' }, take: 20 },
         conversations: { orderBy: { createdAt: 'desc' }, include: { messages: { take: 20, orderBy: { createdAt: 'desc' } } }, take: 20 },
-        assignedUser: { select: { id: true, email: true } }
+        assignedUser: { select: { id: true, email: true } },
+        _count: {
+          select: {
+            tasks: { where: { status: { not: 'COMPLETED' }, deletedAt: null } },
+            contacts: { where: { deletedAt: null } },
+            locations: { where: { deletedAt: null } }
+          }
+        }
       }
     }),
     prisma.activityTimeline.findMany({
@@ -135,7 +147,8 @@ export async function getCustomerById(id: string) {
 
   // Attempt to find related leads by company or exact name
   const relatedLeads = await prisma.lead.findMany({
-    where: { tenantId, deletedAt: null, OR: [{ company: customer.name }, { email: { in: customer.contacts.map(c => c.email).filter(Boolean) as string[] } }] }
+    where: { tenantId, deletedAt: null, OR: [{ company: customer.name }, { email: { in: customer.contacts.map(c => c.email).filter(Boolean) as string[] } }] },
+    take: 10
   });
 
   return { ...customer, activities, relatedLeads };
