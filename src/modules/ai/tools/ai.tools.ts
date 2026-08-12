@@ -170,6 +170,8 @@ export const secureTools: AITool[] = [
   {
     name: 'getMyNotifications',
     description: 'Get the recent notifications for the currently authenticated user.',
+    requiredResource: 'SYSTEM',
+    requiredAction: 'READ',
     parameters: {
       type: 'OBJECT',
       properties: {

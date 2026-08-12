@@ -23,7 +23,7 @@ import Link from "next/link";
 import { SalesChartClientWrapper as SalesChart } from "@/components/ui/SalesChartClientWrapper";
 
 export default async function DashboardPage() {
-  console.log("[AUTH-DIAG] dashboard-enter");
+
   await requireAuth();
   const tenantId = await requireTenant();
   const prisma = withTenant(tenantId);
