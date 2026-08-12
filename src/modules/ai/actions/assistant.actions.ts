@@ -103,10 +103,14 @@ export async function askAssistantAction(prompt: string, conversationId?: string
 
     return { success: true, data: response, conversationId: activeConversationId };
   } catch (error: any) {
-    let msg = error.message || 'Assistant failed to respond.';
-    if (msg === 'RATE_LIMITED') {
+    // Log the actual detailed error for internal tracking
+    Logger.error('AI Request Failed', error, { event: 'AI_REQUEST_FAILED', tenantId, userId });
+
+    let msg = 'AI Assistant is temporarily unavailable. Please try again.';
+    if (error?.message === 'RATE_LIMITED') {
       msg = 'You have exceeded the allowed number of requests. Please try again later.';
     }
+    
     return { success: false, error: msg };
   } finally {
     // Release lock
