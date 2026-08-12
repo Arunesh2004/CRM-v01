@@ -1,50 +1,77 @@
 import { Logger } from '../logger/logger';
+import { getRedisClient } from '../redis/redis.client';
+import { AIConfig } from '../config/ai.config';
 
 export interface RateLimitResult {
   allowed: boolean;
   remaining: number;
 }
 
-export interface RedisClientLike {
-  multi(): any;
-  incr(key: string): Promise<number>;
-  expire(key: string, seconds: number): Promise<number>;
-  ttl(key: string): Promise<number>;
-}
-
 export class DistributedRateLimiter {
-  constructor(private redis: RedisClientLike) {}
-
   /**
    * Generates a Redis key safely namespaced to prevent tenant bleed.
    */
-  private generateKey(tenantId: string, resource: string, action: string, ip?: string): string {
-    const scope = ip ? `ip:${ip}` : `tenant:${tenantId}`;
+  private static generateKey(tenantId: string, resource: string, action: string, ip?: string, userId?: string): string {
+    const scope = ip ? `ip:${ip}` : (userId ? `user:${userId}` : `tenant:${tenantId}`);
     return `ratelimit:${scope}:${resource}:${action}`;
   }
 
-  async checkLimit(tenantId: string, resource: string, action: string, limit: number, windowSeconds: number, ip?: string): Promise<RateLimitResult> {
-    const key = this.generateKey(tenantId, resource, action, ip);
+  static async checkLimit(tenantId: string, resource: string, action: string, limit: number, windowSeconds: number, ip?: string, userId?: string): Promise<RateLimitResult> {
+    const key = this.generateKey(tenantId, resource, action, ip, userId);
     
     try {
-      // Simulate distributed atomic INCR + EXPIRE
-      const current = await this.redis.incr(key);
-      if (current === 1) {
-        await this.redis.expire(key, windowSeconds);
-      }
+      const redis = getRedisClient();
+
+      // Atomic INCR + EXPIRE via Lua
+      // If it's the first hit (count == 1), set expiration
+      const luaScript = `
+        local current = redis.call("INCR", KEYS[1])
+        if tonumber(current) == 1 then
+            redis.call("EXPIRE", KEYS[1], ARGV[1])
+        end
+        return current
+      `;
+
+      const currentRaw = await redis.eval(luaScript, 1, key, windowSeconds);
+      const current = Number(currentRaw);
 
       const allowed = current <= limit;
       const remaining = Math.max(0, limit - current);
       
       if (!allowed) {
-        Logger.warn(`Rate limit exceeded for ${key}`, { tenantId, resource, action, ip, correlationId: `rl_${Date.now()}` });
+        Logger.warn(`Rate limit exceeded for ${key}`, { tenantId, resource, action, ip, userId, correlationId: `rl_${Date.now()}` });
       }
 
       return { allowed, remaining };
     } catch (err: any) {
-      Logger.error('Distributed rate limiter failed, falling back to permissive', err, { category: 'network' });
-      // Fail open to avoid dropping traffic if Redis is down, but log the failure
-      return { allowed: true, remaining: 1 };
+      Logger.error('Redis Rate Limiter Failed', err instanceof Error ? err : new Error(String(err?.message ?? 'unknown')), { event: 'REDIS_FAILURE', fallback: true });
+      return MemoryRateLimitFallback.checkLimit(key, AIConfig.FALLBACK_REQUESTS_PER_MINUTE, windowSeconds);
     }
+  }
+}
+
+// ----------------------------------------------------------------------------
+// EMERGENCY FALLBACK (Instance-Local ONLY)
+// Active when Redis is completely down to preserve minimal availability.
+// ----------------------------------------------------------------------------
+class MemoryRateLimitFallback {
+  private static hits = new Map<string, { count: number; expiresAt: number }>();
+
+  static checkLimit(key: string, fallbackLimit: number, windowSeconds: number): RateLimitResult {
+    const now = Date.now();
+    const record = this.hits.get(key);
+
+    if (!record || record.expiresAt < now) {
+      this.hits.set(key, { count: 1, expiresAt: now + (windowSeconds * 1000) });
+      return { allowed: true, remaining: fallbackLimit - 1 };
+    }
+
+    if (record.count >= fallbackLimit) {
+      return { allowed: false, remaining: 0 };
+    }
+
+    record.count += 1;
+    this.hits.set(key, record);
+    return { allowed: true, remaining: fallbackLimit - record.count };
   }
 }

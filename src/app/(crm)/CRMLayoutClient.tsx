@@ -27,6 +27,7 @@ import NotificationBell from "./NotificationBell";
 import { CommandPalette } from "@/components/ui/CommandPalette";
 import { UserButton, useUser } from "@clerk/nextjs";
 import { QuickAddMenu } from "@/components/ui/QuickAddMenu";
+import { AssistantPopup } from "@/components/ai/AssistantPopup";
 
 const navigation = [
   { name: "Dashboard", href: "/dashboard", icon: LayoutDashboard },
@@ -189,6 +190,8 @@ export default function CRMLayoutClient({
           <div className="max-w-7xl mx-auto space-y-6">{children}</div>
         </div>
       </main>
+
+      <AssistantPopup />
     </div>
   );
 }

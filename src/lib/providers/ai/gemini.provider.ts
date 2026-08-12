@@ -13,7 +13,7 @@ export class GeminiProvider implements AIProvider {
       throw new Error('GEMINI_API_KEY is not defined');
     }
     this.ai = new GoogleGenAI({ apiKey });
-    this.modelName = process.env.AI_MODEL || 'gemini-2.5-flash';
+    this.modelName = process.env.AI_MODEL || 'gemini-3.5-flash';
   }
 
   async generateResponse(prompt: string, tools: AITool[], systemInstruction?: string, requestId?: string, history?: {role: 'user'|'assistant', content: string}[]): Promise<AIResponse> {
@@ -33,7 +33,7 @@ export class GeminiProvider implements AIProvider {
       return result;
     } catch (err: any) {
       const msg = err.message || '';
-      Logger.error(`[GEMINI] Provider error [${requestId || 'unknown'}]:`, err);
+      Logger.error('AI Provider Failure', err instanceof Error ? err : new Error(String(err?.message ?? 'unknown')), { event: 'AI_PROVIDER_FAILURE', requestId });
 
       // Map known budget/error conditions to user-safe text + terminationReason.
       // Partial telemetry is forwarded so the audit log captures what ran before failure.
@@ -82,15 +82,55 @@ export class GeminiProvider implements AIProvider {
     return Promise.race([promise, timeout]).finally(() => clearTimeout(timer));
   }
 
+  private async sendMessageWithRetry(chat: any, payload: any, startTime: number, requestId?: string): Promise<any> {
+    let attempt = 0;
+    while (true) {
+      try {
+        return await chat.sendMessage(payload);
+      } catch (err: any) {
+        attempt++;
+        const msg = err?.message || '';
+        const status = err?.status || err?.response?.status;
+
+        const isTransient =
+          msg.includes('429') ||
+          msg.includes('500') ||
+          msg.includes('502') ||
+          msg.includes('503') ||
+          msg.includes('504') ||
+          msg.includes('fetch failed') ||
+          msg.includes('network') ||
+          status === 429 ||
+          status >= 500;
+
+        if (!isTransient || attempt > AIConfig.GEMINI_MAX_RETRIES) {
+          throw err;
+        }
+
+        const elapsed = Date.now() - startTime;
+        const remaining = AIConfig.MAX_EXECUTION_MS - elapsed;
+
+        let backoff = Math.min(AIConfig.GEMINI_MAX_BACKOFF_MS, AIConfig.GEMINI_INITIAL_BACKOFF_MS * Math.pow(2, attempt - 1));
+        backoff += Math.floor(Math.random() * 200);
+
+        if (backoff >= remaining) {
+          throw new Error('AI Request Timed Out'); // Abort retry if it breaches absolute deadline
+        }
+
+        Logger.warn('AI Retry', { event: 'AI_RETRY', requestId, attempt, maxAttempts: AIConfig.GEMINI_MAX_RETRIES, delayMs: backoff, errorCategory: msg });
+        await new Promise(resolve => setTimeout(resolve, backoff));
+      }
+    }
+  }
+
   private async runGenerationLoop(
     prompt: string,
     tools: AITool[],
     systemInstruction?: string,
     requestId?: string,
     history?: {role: 'user'|'assistant', content: string}[],
-    // Shared mutable telemetry object — updated in-place so partial data
-    // is available even if the loop throws (e.g. on timeout).
-    telemetry?: Pick<AIResponse, 'toolsRequested' | 'toolsExecuted' | 'rounds' | 'totalToolCalls'>
+    telemetry?: Pick<AIResponse, 'toolsRequested' | 'toolsExecuted' | 'rounds' | 'totalToolCalls'>,
+    startTime: number = Date.now()
   ): Promise<AIResponse> {
     const t = telemetry ?? { toolsRequested: [], toolsExecuted: [], rounds: 0, totalToolCalls: 0 };
 
@@ -120,7 +160,6 @@ export class GeminiProvider implements AIProvider {
       history: geminiHistory
     });
 
-    // Estimate context cost of history
     const historyBytes = history ? history.reduce((acc, curr) => acc + curr.content.length, 0) : 0;
     let totalContextBytes = prompt.length + historyBytes;
 
@@ -128,33 +167,32 @@ export class GeminiProvider implements AIProvider {
       throw new Error('CONTEXT_LIMIT');
     }
 
-    let response = await chat.sendMessage({ message: prompt });
+    let response = await this.sendMessageWithRetry(chat, { message: prompt }, startTime, requestId);
 
     while (t.rounds < AIConfig.MAX_TOOL_ROUNDS) {
       if (response.functionCalls && response.functionCalls.length > 0) {
-        // Record tool NAMES requested this round (never args — privacy).
-        const requestedNames = response.functionCalls.map(fc => fc.name || '').filter(Boolean);
+        const requestedNames = response.functionCalls.map((fc: any) => fc.name || '').filter(Boolean);
         t.toolsRequested.push(...requestedNames);
 
         t.totalToolCalls += response.functionCalls.length;
         if (t.totalToolCalls > AIConfig.MAX_TOTAL_TOOL_CALLS) {
+          Logger.warn('AI Tool Limit Reached', { event: 'AI_TOOL_LIMIT_REACHED', requestId, limitType: 'MAX_TOTAL_TOOL_CALLS', observedCount: t.totalToolCalls, configuredLimit: AIConfig.MAX_TOTAL_TOOL_CALLS });
           throw new Error('TOOL_LIMIT');
         }
 
         const functionResponses: {name: string, response: any}[] = [];
 
-        // Chunk for parallel execution limits
         const chunks: (typeof response.functionCalls)[] = [];
         for (let i = 0; i < response.functionCalls.length; i += AIConfig.MAX_PARALLEL_TOOL_CALLS) {
           chunks.push(response.functionCalls.slice(i, i + AIConfig.MAX_PARALLEL_TOOL_CALLS));
         }
 
         for (const chunk of chunks) {
-          const chunkResponses = await Promise.all(chunk.map(async (call) => {
+          const chunkResponses = await Promise.all(chunk.map(async (call: any) => {
             const toolName = call.name || '';
             const args = call.args || {};
 
-            Logger.info(`[GEMINI] Model requested tool: ${toolName}`, { requestId });
+            Logger.info('AI Tool Started', { event: 'AI_TOOL_STARTED', requestId, toolName });
 
             const tool = tools.find(t => t.name === toolName);
             let result;
@@ -163,9 +201,10 @@ export class GeminiProvider implements AIProvider {
               result = { error: `Tool ${toolName} not found or not authorized.` };
             } else {
               try {
+                const toolStartTime = Date.now();
                 const toolResult = await tool.execute(args);
+                const toolDuration = Date.now() - toolStartTime;
 
-                // Safe JSON serialization and truncation to valid structure
                 let resultStr = '';
                 try {
                   resultStr = JSON.stringify(toolResult);
@@ -181,15 +220,12 @@ export class GeminiProvider implements AIProvider {
                     suggestion: "Please narrow the query."
                   };
                 } else {
-                  // Record execution success (name only — never result payload).
                   t.toolsExecuted.push(toolName);
                   result = toolResult;
+                  Logger.info('AI Tool Completed', { event: 'AI_TOOL_COMPLETED', requestId, toolName, durationMs: toolDuration });
                 }
               } catch (err: any) {
-                Logger.warn(`[GEMINI] Tool ${toolName} failed:`, { error: err.message, requestId });
-                // Sanitize error messages before returning to the AI model.
-                // Raw Prisma/service errors may contain schema names, field lists, or
-                // internal details that should NEVER appear in the AI context window.
+                Logger.error('AI Tool Failed', err instanceof Error ? err : new Error(String(err?.message ?? 'unknown')), { event: 'AI_TOOL_FAILED', requestId, toolName });
                 const rawMsg: string = err?.message || '';
                 let safeError: string;
                 if (rawMsg.includes('Unauthorized') || rawMsg.includes('Forbidden') || rawMsg.includes('Access Denied')) {
@@ -215,8 +251,7 @@ export class GeminiProvider implements AIProvider {
           throw new Error('CONTEXT_LIMIT');
         }
 
-        // Send function responses back
-        response = await chat.sendMessage({ message: functionResponses } as any);
+        response = await this.sendMessageWithRetry(chat, { message: functionResponses } as any, startTime, requestId);
         t.rounds++;
       } else {
         totalContextBytes += (response.text || '').length;

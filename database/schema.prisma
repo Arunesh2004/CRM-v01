@@ -3,8 +3,9 @@ generator client {
 }
 
 datasource db {
-  provider = "postgresql"
-  url      = env("DATABASE_URL")
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
 }
 
 // -----------------------------------------------------------------------------
@@ -155,6 +156,8 @@ model Tenant {
   deals           Deal[]
   dealStageHistories DealStageHistory[]
   eventOutboxes   EventOutbox[]
+  aiConversations        AIConversation[]
+  aiConversationMessages AIConversationMessage[]
 }
 
 model User {
@@ -190,6 +193,7 @@ model User {
   crmComments            CRMComment[]
   dealStageHistories     DealStageHistory[]
   meetingParticipants    MeetingParticipant[]
+  aiConversations        AIConversation[]
 
   @@index([tenantId, id])
   @@index([tenantId, createdAt])
@@ -1580,4 +1584,53 @@ model EventOutbox {
 
   @@index([tenantId, status, nextRetryAt])
   @@index([eventId])
+}
+
+// -----------------------------------------------------------------------------
+// AI & CRM (PHASE AI)
+// -----------------------------------------------------------------------------
+
+enum AIRole {
+  USER
+  ASSISTANT
+}
+
+enum AIConversationStatus {
+  ACTIVE
+  ARCHIVED
+}
+
+model AIConversation {
+  id         String               @id @default(uuid())
+  tenantId   String
+  userId     String
+  title      String?
+  status     AIConversationStatus @default(ACTIVE)
+  createdAt  DateTime             @default(now())
+  updatedAt  DateTime             @updatedAt
+  deletedAt  DateTime?
+  archivedAt DateTime?
+
+  tenant   Tenant                  @relation(fields: [tenantId], references: [id])
+  user     User                    @relation(fields: [userId], references: [id])
+  messages AIConversationMessage[]
+
+  @@index([tenantId, userId])
+  @@index([tenantId, createdAt])
+  @@index([tenantId, status, updatedAt])
+  @@index([tenantId, status, archivedAt])
+}
+
+model AIConversationMessage {
+  id             String   @id @default(uuid())
+  conversationId String
+  tenantId       String
+  role           AIRole
+  content        String
+  createdAt      DateTime @default(now())
+
+  conversation AIConversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+  tenant       Tenant         @relation(fields: [tenantId], references: [id])
+
+  @@index([tenantId, conversationId, createdAt])
 }

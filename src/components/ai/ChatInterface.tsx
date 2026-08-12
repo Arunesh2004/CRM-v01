@@ -4,23 +4,24 @@ import { askAssistantAction } from '@/modules/ai/actions/assistant.actions';
 
 export function ChatInterface() {
   const [history, setHistory] = useState<{ role: 'user' | 'assistant', content: string }[]>([]);
+  const [conversationId, setConversationId] = useState<string | undefined>(undefined);
   const [prompt, setPrompt] = useState('');
   const [loading, setLoading] = useState(false);
 
   const handleSend = async (q: string) => {
     if (!q.trim()) return;
 
-    // We send the existing history, but we append the new message to local state immediately
-    const sentHistory = [...history];
+    // We send the conversationId, but append the new message to local state immediately
     const newHistory = [...history, { role: 'user' as const, content: q }];
 
     setHistory(newHistory);
     setPrompt('');
     setLoading(true);
 
-    const res = await askAssistantAction(q, sentHistory);
+    const res = await askAssistantAction(q, conversationId);
 
     if (res.success) {
+      if (res.conversationId) setConversationId(res.conversationId);
       setHistory([...newHistory, { role: 'assistant', content: res.data || 'Empty response' }]);
     } else {
       setHistory([...newHistory, { role: 'assistant', content: 'Error: ' + res.error }]);
@@ -64,17 +65,32 @@ export function ChatInterface() {
       </div>
 
       <div className="p-4 border-t bg-gray-50">
-        <div className="flex flex-wrap gap-2 mb-3">
-          {suggestions.map((s, i) => (
+        <div className="flex justify-between items-center mb-3">
+          <div className="flex flex-wrap gap-2">
+            {suggestions.map((s, i) => (
+              <button
+                key={i}
+                onClick={() => handleSend(s)}
+                disabled={loading}
+                className="text-xs bg-white border border-gray-300 hover:bg-gray-100 px-2 py-1 rounded-full text-gray-600"
+              >
+                {s}
+              </button>
+            ))}
+          </div>
+          {history.length > 0 && (
             <button
-              key={i}
-              onClick={() => handleSend(s)}
+              type="button"
+              onClick={() => {
+                setHistory([]);
+                setConversationId(undefined);
+              }}
               disabled={loading}
-              className="text-xs bg-white border border-gray-300 hover:bg-gray-100 px-2 py-1 rounded-full text-gray-600"
+              className="text-xs bg-red-50 text-red-600 hover:bg-red-100 hover:text-red-700 px-3 py-1 rounded-full border border-red-200"
             >
-              {s}
+              Clear Chat
             </button>
-          ))}
+          )}
         </div>
 
         <form

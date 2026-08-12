@@ -5,33 +5,7 @@ import { requireAuth, requireTenant, checkPermission } from '@/lib/auth';
 import { Logger } from '@/lib/logger/logger';
 import { DistributedRateLimiter } from '@/lib/rate-limit/rate-limiter';
 import prisma from '@/../database/utils/prisma';
-
-// Note: If actual Redis client is configured in production, pass it to DistributedRateLimiter.
-// For now, we simulate a simple fallback in memory that is scoped to the current Vercel isolate.
-
-const memoryStore = new Map<string, { count: number, expiresAt: number }>();
-class MemoryFallbackRedis {
-  async multi() { return this; }
-  async incr(key: string): Promise<number> {
-    const now = Date.now();
-    const item = memoryStore.get(key) || { count: 0, expiresAt: now + 60000 };
-    if (now > item.expiresAt) {
-      item.count = 0;
-      item.expiresAt = now + 60000;
-    }
-    item.count++;
-    memoryStore.set(key, item);
-    return item.count;
-  }
-  async expire(key: string, seconds: number): Promise<number> {
-    const item = memoryStore.get(key);
-    if (item) item.expiresAt = Date.now() + (seconds * 1000);
-    return 1;
-  }
-  async ttl(key: string): Promise<number> { return 60; }
-}
-
-const rateLimiter = new DistributedRateLimiter(new MemoryFallbackRedis() as any);
+import { AIConfig } from '@/lib/config/ai.config';
 
 // ---------------------------------------------------------------------------
 // AI Error classification
@@ -150,17 +124,21 @@ export async function askAssistant(
   let errorCategory: AIErrorCategory | null = null;
   let rateLimited = false;
   const timer = Logger.time('askAssistant');
-  const model = process.env.AI_MODEL || 'gemini-2.5-flash';
+  const model = process.env.AI_MODEL || 'gemini-3.5-flash';
 
   try {
     // 1. Mandatory Context Checks
     user = await requireAuth();
     tenantId = await requireTenant();
 
-    // 2. Rate Limiting (Local fallback - Note: Only protects current server instance)
-    const limitResult = await rateLimiter.checkLimit(tenantId, 'AI_ASSISTANT', 'QUERY', 20, 60);
-    if (!limitResult.allowed) {
-      Logger.warn(`[ASSISTANT] Rate limit exceeded`, { requestId, tenantId: '[REDACTED]' });
+    // 2. Rate Limiting (Distributed)
+    // Check Tenant Global Limit
+    const tenantLimit = await DistributedRateLimiter.checkLimit(tenantId as string, 'AI_ASSISTANT', 'QUERY', AIConfig.TENANT_REQUESTS_PER_MINUTE, 60);
+    // Check User Global Limit
+    const userLimit = await DistributedRateLimiter.checkLimit(tenantId as string, 'AI_ASSISTANT', 'QUERY', AIConfig.USER_REQUESTS_PER_MINUTE, 60, undefined, user.id ?? undefined);
+
+    if (!tenantLimit.allowed || !userLimit.allowed) {
+      Logger.warn('AI Rate Limited', { event: 'AI_RATE_LIMITED', requestId, tenantId: tenantId ?? undefined, userId: user.id ?? undefined });
       rateLimited = true;
       errorCategory = 'RATE_LIMITED';
       throw new Error('RATE_LIMITED');
@@ -212,12 +190,13 @@ ENTITY RESOLUTION & ANTI-HALLUCINATION RULES:
     return aiResponse.text;
 
   } catch (err: any) {
-    Logger.error(`[ASSISTANT] Orchestration failed [${requestId}]:`, err instanceof Error ? err : new Error(String(err?.message ?? 'unknown')));
-
     // Classify error categorically (no stack traces or message text stored).
     if (!errorCategory) {
       errorCategory = classifyError(err);
     }
+
+    const errEvent = errorCategory === 'RATE_LIMITED' ? 'AI_RATE_LIMITED' : errorCategory === 'TIMEOUT' ? 'AI_TIMEOUT' : 'AI_REQUEST_FAILED';
+    Logger.error('AI Request Failed', err instanceof Error ? err : new Error(String(err?.message ?? 'unknown')), { event: errEvent, requestId, errorCategory, tenantId: tenantId ?? undefined });
 
     if (err.message === 'RATE_LIMITED') {
       throw err;
@@ -231,6 +210,11 @@ ENTITY RESOLUTION & ANTI-HALLUCINATION RULES:
     if (!auditFired && user && tenantId) {
       auditFired = true;
       const durationMs = timer();
+
+      if (!errorCategory) {
+        Logger.info('AI Request Completed', { event: 'AI_REQUEST_COMPLETED', requestId, tenantId, userId: user.id, durationMs, model, toolsExecuted: aiResponse?.toolsExecuted?.length ?? 0 });
+      }
+
       logAiAudit({
         tenantId,
         actorId: user.id,
