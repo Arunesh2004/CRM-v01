@@ -170,8 +170,8 @@ export async function updateCustomer(input: UpdateCustomerInput) {
       assignmentChanged = true;
     }
 
-    await tx.customer.updateMany({
-      where: { id: input.id, tenantId },
+    const updated = await tx.customer.updateMany({
+      where: { id: input.id, tenantId, updatedAt: customer.updatedAt },
       data: {
         name: input.name,
         industry: input.industry,
@@ -179,6 +179,10 @@ export async function updateCustomer(input: UpdateCustomerInput) {
         assignedUserId: input.assignedUserId,
       }
     });
+
+    if (updated.count === 0) {
+      throw new Error('CONCURRENCY_CONFLICT: The customer was modified by another user. Please refresh and try again.');
+    }
 
     await tx.auditLog.create({
       data: {

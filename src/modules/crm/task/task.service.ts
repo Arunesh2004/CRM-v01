@@ -165,8 +165,12 @@ export async function updateTask(input: UpdateTaskInput) {
     const task = await tx.task.findFirst({ where: { id: input.id, tenantId }});
     if (!task) throw new Error('Task not found');
     
-    await tx.task.updateMany({
-      where: { id: input.id, tenantId },
+    const updateResult = await tx.task.updateMany({
+      where: { 
+        id: input.id, 
+        tenantId,
+        updatedAt: task.updatedAt // Optimistic Concurrency Control
+      },
       data: {
         title: input.title,
         description: input.description,
@@ -176,6 +180,11 @@ export async function updateTask(input: UpdateTaskInput) {
         assignedUserId: input.assignedUserId
       }
     });
+
+    if (updateResult.count === 0) {
+      throw new Error('CONCURRENCY_CONFLICT: The task was modified by another user. Please refresh and try again.');
+    }
+
     
     if (input.status && input.status !== task.status) {
       await tx.activityTimeline.create({

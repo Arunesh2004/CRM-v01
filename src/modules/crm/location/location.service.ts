@@ -94,8 +94,8 @@ export async function updateLocation(input: UpdateLocationInput) {
     const location = await tx.location.findFirst({ where: { id: input.id, tenantId }});
     if (!location) throw new Error('Location not found');
 
-    await tx.location.updateMany({
-      where: { id: input.id, tenantId },
+    const updated = await tx.location.updateMany({
+      where: { id: input.id, tenantId, updatedAt: location.updatedAt },
       data: {
         name: input.name,
         address: input.address,
@@ -105,6 +105,10 @@ export async function updateLocation(input: UpdateLocationInput) {
         coordinates: input.coordinates,
       }
     });
+
+    if (updated.count === 0) {
+      throw new Error('CONCURRENCY_CONFLICT: The location was modified by another user. Please refresh and try again.');
+    }
 
     await tx.auditLog.create({
       data: {
@@ -144,10 +148,14 @@ export async function deleteLocation(id: string) {
     const location = await tx.location.findFirst({ where: { id, tenantId }});
     if (!location) throw new Error('Location not found');
 
-    await tx.location.updateMany({
-      where: { id, tenantId },
+    const updated = await tx.location.updateMany({
+      where: { id, tenantId, updatedAt: location.updatedAt },
       data: { deletedAt: new Date() }
     });
+
+    if (updated.count === 0) {
+      throw new Error('CONCURRENCY_CONFLICT: The location was modified by another user. Please refresh and try again.');
+    }
 
     await tx.auditLog.create({
       data: {

@@ -200,7 +200,7 @@ export async function updateLead(input: UpdateLeadInput) {
     }
 
     const updated = await tx.lead.updateMany({
-      where: { id: input.id, tenantId },
+      where: { id: input.id, tenantId, updatedAt: lead.updatedAt },
       data: {
         name: input.name,
         company: input.company,
@@ -210,6 +210,10 @@ export async function updateLead(input: UpdateLeadInput) {
         assignedUserId: input.assignedUserId,
       }
     });
+
+    if (updated.count === 0) {
+      throw new Error('CONCURRENCY_CONFLICT: The lead was modified by another user. Please refresh and try again.');
+    }
 
     if (assignmentChanged) {
       await tx.auditLog.create({
@@ -301,10 +305,14 @@ export async function convertLeadToCustomer(leadId: string) {
       }
     });
 
-    await tx.lead.updateMany({
-      where: { id: leadId, tenantId },
+    const updateResult = await tx.lead.updateMany({
+      where: { id: leadId, tenantId, updatedAt: lead.updatedAt },
       data: { status: 'CONVERTED' }
     });
+
+    if (updateResult.count === 0) {
+      throw new Error('CONCURRENCY_CONFLICT: The lead was modified by another user. Please refresh and try again.');
+    }
 
     await tx.auditLog.create({
       data: {
