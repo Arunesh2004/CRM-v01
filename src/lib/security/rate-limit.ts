@@ -36,8 +36,7 @@ export class MemoryRateLimiter implements RateLimiter {
 
 /**
  * PRODUCTION ABSTRACTION: Redis Rate Limiter.
- * Requires `REDIS_URL` in environment variables.
- * Ready for implementation in Phase 9 or when Redis is provisioned.
+ * Uses Lua script to atomically increment and expire.
  */
 export class RedisRateLimiter implements RateLimiter {
   async check(identifier: string, limit = 10, windowMs = 60000): Promise<boolean> {
@@ -45,12 +44,27 @@ export class RedisRateLimiter implements RateLimiter {
       console.warn("Redis URL missing, falling back to permissive mode (ALLOW ALL).");
       return true;
     }
-    // Implementation placeholder:
-    // const redis = new Redis(process.env.REDIS_URL);
-    // const current = await redis.incr(identifier);
-    // if (current === 1) await redis.pexpire(identifier, windowMs);
-    // return current <= limit;
-    return true;
+    
+    try {
+      // Inline import to avoid circular dependencies or early init issues
+      const { getRedisClient } = require('../redis/redis.client');
+      const redis = getRedisClient();
+      
+      const luaScript = `
+        local current = redis.call("INCR", KEYS[1])
+        if tonumber(current) == 1 then
+            redis.call("PEXPIRE", KEYS[1], ARGV[1])
+        end
+        return current
+      `;
+      
+      const currentRaw = await redis.eval(luaScript, 1, \`ratelimit:v2:\${identifier}\`, windowMs);
+      return Number(currentRaw) <= limit;
+    } catch (e) {
+      console.error("Redis Rate Limiter Error:", e);
+      // Fail open if Redis is down, or implement memory fallback here
+      return true;
+    }
   }
 }
 
