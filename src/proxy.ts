@@ -35,7 +35,7 @@ function isLoadTestRequest(req: Request): boolean {
   return true;
 }
 
-export default clerkMiddleware(async (auth, req) => {
+export const proxy = clerkMiddleware(async (auth, req) => {
   // Allow the load-test request to bypass Clerk protection on staging only.
   // The actual token verification and user resolution happen in getCurrentUser().
   if (isLoadTestRequest(req)) {

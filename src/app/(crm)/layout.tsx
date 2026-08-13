@@ -3,6 +3,8 @@ import { requireAuth } from "@/lib/auth";
 import CRMLayoutClient from "./CRMLayoutClient";
 import { getUnreadNotificationsAction } from "./notifications/actions";
 
+export const dynamic = 'force-dynamic';
+
 export default async function CRMLayout({ children }: { children: ReactNode }) {
   const user = await requireAuth();
 
