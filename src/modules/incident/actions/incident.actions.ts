@@ -1,5 +1,5 @@
-import { sanitizeClientError } from '@/lib/errors/client-safe-error';
 'use server'
+import { sanitizeClientError } from '@/lib/errors/client-safe-error';
 
 import { requireAuth, requireTenant, requirePermission } from '@/lib/auth';
 import { UpdateIncidentStatusSchema, AssignIncidentSchema } from '../validators/incident.schema';
