@@ -155,28 +155,33 @@ export async function updateSubscriptionStatus(input: UpdateSubscriptionStatusIn
   const user = await getCurrentUserContext();
   
   const prisma = withTenant(tenantId);
-  const sub = await prisma.subscription.findUnique({ where: { id: input.subscriptionId } });
-  
-  if (!sub) throw new Error('Subscription not found');
-
-  // Allowed transitions
-  const transitions: Record<string, string[]> = {
-    'TRIAL': ['ACTIVE'],
-    'ACTIVE': ['PAST_DUE', 'CANCELLED'],
-    'PAST_DUE': ['ACTIVE', 'SUSPENDED'],
-    'SUSPENDED': ['ACTIVE']
-  };
-
-  const allowed = transitions[sub.status] || [];
-  if (!allowed.includes(input.status)) {
-    throw new Error(`Invalid subscription transition from ${sub.status} to ${input.status}`);
-  }
 
   return await prisma.$transaction(async (tx: any) => {
-    const updated = await tx.subscription.update({
-      where: { id: input.subscriptionId },
+    const sub = await tx.subscription.findUnique({ where: { id: input.subscriptionId } });
+    
+    if (!sub) throw new Error('Subscription not found');
+
+    // Allowed transitions
+    const transitions: Record<string, string[]> = {
+      'TRIAL': ['ACTIVE'],
+      'ACTIVE': ['PAST_DUE', 'CANCELLED'],
+      'PAST_DUE': ['ACTIVE', 'SUSPENDED'],
+      'SUSPENDED': ['ACTIVE']
+    };
+
+    const allowed = transitions[sub.status] || [];
+    if (!allowed.includes(input.status)) {
+      throw new Error(`Invalid subscription transition from ${sub.status} to ${input.status}`);
+    }
+
+    const updated = await tx.subscription.updateMany({
+      where: { id: input.subscriptionId, updatedAt: sub.updatedAt },
       data: { status: input.status, cancelledAt: input.status === 'CANCELLED' ? new Date() : undefined }
     });
+
+    if (updated.count === 0) {
+      throw new Error('CONCURRENCY_CONFLICT: The subscription was modified by another request.');
+    }
 
     await tx.auditLog.create({
       data: {
@@ -185,10 +190,10 @@ export async function updateSubscriptionStatus(input: UpdateSubscriptionStatusIn
         actorType: 'USER',
         action: `SUBSCRIPTION_STATUS_UPDATED_${input.status}`,
         resource: 'SUBSCRIPTION',
-        resourceId: updated.id
+        resourceId: input.subscriptionId
       }
     });
 
-    return updated;
+    return tx.subscription.findUnique({ where: { id: input.subscriptionId } });
   });
 }
