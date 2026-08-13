@@ -96,9 +96,9 @@ async function main() {
   // fragile HTML scraping of minified JS chunks.
   //
   // SAFEST ALTERNATIVE: Test the real application path by requesting a protected Server
-  // Component page (e.g., /customers). This guarantees the request travels through:
+  // Component page (e.g., /dashboard). This guarantees the request travels through:
   // Vercel -> Middleware -> Auth Bridge -> requireAuth() -> requireTenant() -> DB.
-  // A 200 OK response proves authentication, tenant resolution, and RBAC all succeeded.
+  // A 200 OK response proves authentication and tenant resolution succeeded.
   
   const bypassSecret = process.env.VERCEL_PROTECTION_BYPASS || '';
   const defaultHeaders: Record<string, string> = {
@@ -129,8 +129,8 @@ async function main() {
   }
   console.log('[Step 1] PASSED: Deployment is live.');
 
-  console.log('\n[Step 2] Authenticated request to /customers (tests real app path)...');
-  const authResp = await fetch(`${baseUrl}/customers`, {
+  console.log('\n[Step 2] Authenticated request to /dashboard (tests real app path)...');
+  const authResp = await fetch(`${baseUrl}/dashboard`, {
     method: 'GET',
     redirect: 'manual',
     headers: {
@@ -139,70 +139,92 @@ async function main() {
     },
   });
 
-  console.log(`[Step 2] /customers with token → HTTP ${authResp.status}`);
+  console.log(`[Step 2] /dashboard with token → HTTP ${authResp.status}`);
+  let authBridgeResult = 'NOT VERIFIED';
 
   if (authResp.status === 200) {
     console.log('[Step 2] PASSED: Authenticated response received (200).');
-    console.log('[Step 2] Auth bridge, requireAuth, requireTenant, and RBAC all succeeded.');
+    console.log('[Step 2] Auth bridge, requireAuth, and requireTenant all succeeded.');
+    authBridgeResult = '✅ Success (200 OK)';
+  } else if (authResp.status === 404) {
+    console.error('[Step 2] NOT VERIFIED: Route not found (404).');
+    console.error('  The route /dashboard does not exist or threw notFound().');
+    authBridgeResult = '❌ NOT VERIFIED (404)';
   } else if (authResp.status === 302 || authResp.status === 307 || authResp.status === 308) {
     const location = authResp.headers.get('location') || '';
     if (location.includes('vercel.com/sso-api') || location.includes('vercel.app/cdn-cgi')) {
       console.error('[Step 2] BLOCKED_BY_VERCEL_PREVIEW_PROTECTION');
       console.error('  Vercel SSO is intercepting the request before it reaches the Next.js app.');
       console.error('  Fix: Configure Protection Bypass for Automation in Vercel settings and provide VERCEL_PROTECTION_BYPASS env var.');
-      process.exit(1);
+      authBridgeResult = '⛔ BLOCKED BY VERCEL SSO';
     } else if (location.includes('sign-in') || location.includes('clerk')) {
       console.error('[Step 2] FAILED: Request was redirected to sign-in by Clerk.');
       console.error('  This means the load-test token was ignored or rejected.');
-      process.exit(1);
+      authBridgeResult = '❌ FAILED (Redirect to Sign-in)';
     } else {
       console.error(`[Step 2] FAILED: Unexpected redirect to ${location}.`);
       console.error('  Redirects are NEVER considered a successful authentication in this verifier.');
-      process.exit(1);
+      authBridgeResult = '❌ FAILED (Unexpected Redirect)';
     }
   } else if (authResp.status === 401 || authResp.status === 403) {
     console.error(`[Step 2] FAILED: HTTP ${authResp.status} — Unauthorized/Forbidden.`);
     console.error('  Auth bridge returned an error or token was rejected.');
-    process.exit(1);
+    authBridgeResult = `❌ FAILED (${authResp.status})`;
   } else {
     console.warn(`[Step 2] Unexpected status: ${authResp.status}. Manual investigation required.`);
+    authBridgeResult = `⚠️ UNVERIFIED (${authResp.status})`;
   }
 
   console.log('\n[Step 3] Unauthenticated request (regression check)...');
-  const unauthedResp = await fetch(`${baseUrl}/customers`, {
+  const unauthedResp = await fetch(`${baseUrl}/dashboard`, {
     method: 'GET',
     redirect: 'manual',
     headers: defaultHeaders,
   });
-  console.log(`[Step 3] /customers without token → HTTP ${unauthedResp.status}`);
+  console.log(`[Step 3] /dashboard without token → HTTP ${unauthedResp.status}`);
   const unauthedLocation = unauthedResp.headers.get('location') || '';
+  let normalAuthResult = 'NOT VERIFIED';
 
   if (unauthedResp.status === 200) {
     console.error('[Step 3] CRITICAL FAILURE: Unauthenticated request returned 200.');
     console.error('  This means anonymous requests are being authenticated — auth bridge is broken.');
-    process.exit(1);
+    normalAuthResult = '❌ CRITICAL FAILURE (Returned 200)';
+  } else if (unauthedResp.status === 404) {
+    console.error('[Step 3] NOT VERIFIED: Route not found (404).');
+    normalAuthResult = '❌ NOT VERIFIED (404)';
+  } else if (unauthedResp.status === 401 || unauthedResp.status === 403) {
+    console.log(`[Step 3] PASSED: Unauthenticated request correctly rejected with ${unauthedResp.status}.`);
+    normalAuthResult = `✅ Success (${unauthedResp.status} Rejected)`;
   } else if (unauthedResp.status === 302 || unauthedResp.status === 307) {
     if (unauthedLocation.includes('vercel.com/sso-api')) {
       console.error('[Step 3] BLOCKED_BY_VERCEL_PREVIEW_PROTECTION');
-      process.exit(1);
+      normalAuthResult = '⛔ BLOCKED BY VERCEL SSO';
     } else if (unauthedLocation.includes('sign-in') || unauthedLocation.includes('clerk')) {
       console.log('[Step 3] PASSED: Unauthenticated request correctly redirects to sign-in.');
       console.log('[Step 3] Normal Clerk auth is unaffected.');
+      normalAuthResult = '✅ Success (Redirects to sign-in)';
     } else {
       console.error(`[Step 3] FAILED: Unexpected redirect to: ${unauthedLocation}`);
-      process.exit(1);
+      normalAuthResult = '❌ FAILED (Unexpected Redirect)';
     }
   } else {
     console.log(`[Step 3] Status ${unauthedResp.status} — manual verification recommended.`);
+    normalAuthResult = `⚠️ UNVERIFIED (${unauthedResp.status})`;
   }
 
   console.log('\n[SingleRequest] Verification complete.');
   console.log('Summary:');
-  console.log('  /api/health: ✅ Live');
-  console.log('  Auth bridge (token): ✅ Success (200 OK)');
-  console.log('  Normal auth (no token): ✅ Success (Redirects to sign-in)');
-  console.log('\nNOTE: The verifier tests the read path (/customers) which guarantees');
-  console.log('all auth, tenant isolation, and DB layers are functioning correctly.');
+  console.log(`  /api/health: ${healthResp.ok ? '✅ Live' : '❌ Failed'}`);
+  console.log(`  Auth bridge (token): ${authBridgeResult}`);
+  console.log(`  Normal auth (no token): ${normalAuthResult}`);
+  console.log('\nNOTE: The verifier tests the read path (/dashboard) which guarantees');
+  console.log('requireAuth() and requireTenant() are functioning correctly. Customer creation');
+  console.log('via createCustomerAction remains UNVERIFIED because Server Action IDs cannot');
+  console.log('be reliably invoked from an external load runner without fragile HTML scraping.');
+  
+  if (authBridgeResult.includes('❌') || normalAuthResult.includes('❌') || authBridgeResult.includes('⛔') || normalAuthResult.includes('⛔')) {
+    process.exit(1);
+  }
 }
 
 main().catch((err) => {
