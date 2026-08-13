@@ -39,8 +39,13 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
-logs/  
-*.log 
+logs/
+*.log
 
 # clerk configuration (can include secrets)
 /.clerk/
+
+# Phase 26 load-test generated files (NEVER commit these)
+.phase26-audit-users.json
+.env.load-test
+load-test/tokens.json
