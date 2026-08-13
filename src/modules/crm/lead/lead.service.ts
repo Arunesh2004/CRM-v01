@@ -375,9 +375,22 @@ export async function deleteLead(leadId: string) {
     const lead = await tx.lead.findFirst({ where: { id: leadId, tenantId, deletedAt: null } });
     if (!lead) throw new Error('Lead not found');
 
+    const now = new Date();
     await tx.lead.update({
       where: { id: leadId },
-      data: { deletedAt: new Date() }
+      data: { deletedAt: now }
+    });
+    await tx.task.updateMany({
+      where: { leadId, deletedAt: null },
+      data: { deletedAt: now }
+    });
+    await tx.deal.updateMany({
+      where: { leadId, deletedAt: null },
+      data: { deletedAt: now }
+    });
+    await tx.cRMComment.updateMany({
+      where: { entityType: 'LEAD', entityId: leadId, deletedAt: null },
+      data: { deletedAt: now }
     });
 
     await tx.auditLog.create({

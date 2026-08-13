@@ -246,9 +246,30 @@ export async function deleteCustomer(customerId: string) {
     const customer = await tx.customer.findFirst({ where: { id: customerId, tenantId, deletedAt: null } });
     if (!customer) throw new Error('Customer not found');
 
+    const now = new Date();
     await tx.customer.update({
       where: { id: customerId },
-      data: { deletedAt: new Date() }
+      data: { deletedAt: now }
+    });
+    await tx.customerContact.updateMany({
+      where: { customerId, deletedAt: null },
+      data: { deletedAt: now }
+    });
+    await tx.task.updateMany({
+      where: { customerId, deletedAt: null },
+      data: { deletedAt: now }
+    });
+    await tx.location.updateMany({
+      where: { customerId, deletedAt: null },
+      data: { deletedAt: now }
+    });
+    await tx.deal.updateMany({
+      where: { customerId, deletedAt: null },
+      data: { deletedAt: now }
+    });
+    await tx.cRMComment.updateMany({
+      where: { entityType: 'CUSTOMER', entityId: customerId, deletedAt: null },
+      data: { deletedAt: now }
     });
 
     await tx.auditLog.create({
