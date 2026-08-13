@@ -95,8 +95,8 @@ async function main() {
   // build and environment, a load runner cannot reliably hardcode or extract it without
   // fragile HTML scraping of minified JS chunks.
   //
-  // SAFEST ALTERNATIVE: Test the real application path by requesting a protected Server
-  // Component page (e.g., /dashboard). This guarantees the request travels through:
+  // SAFEST ALTERNATIVE: Test the real application path by requesting a protected API route
+  // (e.g., /api/export?type=customers). This guarantees the request travels through:
   // Vercel -> Middleware -> Auth Bridge -> requireAuth() -> requireTenant() -> DB.
   // A 200 OK response proves authentication and tenant resolution succeeded.
   
@@ -129,8 +129,8 @@ async function main() {
   }
   console.log('[Step 1] PASSED: Deployment is live.');
 
-  console.log('\n[Step 2] Authenticated request to /dashboard (tests real app path)...');
-  const authResp = await fetch(`${baseUrl}/dashboard`, {
+  console.log('\n[Step 2] Authenticated request to /api/export?type=customers (tests real app path)...');
+  const authResp = await fetch(`${baseUrl}/api/export?type=customers`, {
     method: 'GET',
     redirect: 'manual',
     headers: {
@@ -139,7 +139,7 @@ async function main() {
     },
   });
 
-  console.log(`[Step 2] /dashboard with token → HTTP ${authResp.status}`);
+  console.log(`[Step 2] /api/export with token → HTTP ${authResp.status}`);
   let authBridgeResult = 'NOT VERIFIED';
 
   if (authResp.status === 200) {
@@ -148,7 +148,7 @@ async function main() {
     authBridgeResult = '✅ Success (200 OK)';
   } else if (authResp.status === 404) {
     console.error('[Step 2] NOT VERIFIED: Route not found (404).');
-    console.error('  The route /dashboard does not exist or threw notFound().');
+    console.error('  The route /api/export does not exist or threw notFound().');
     authBridgeResult = '❌ NOT VERIFIED (404)';
   } else if (authResp.status === 302 || authResp.status === 307 || authResp.status === 308) {
     const location = authResp.headers.get('location') || '';
@@ -176,12 +176,12 @@ async function main() {
   }
 
   console.log('\n[Step 3] Unauthenticated request (regression check)...');
-  const unauthedResp = await fetch(`${baseUrl}/dashboard`, {
+  const unauthedResp = await fetch(`${baseUrl}/api/export?type=customers`, {
     method: 'GET',
     redirect: 'manual',
     headers: defaultHeaders,
   });
-  console.log(`[Step 3] /dashboard without token → HTTP ${unauthedResp.status}`);
+  console.log(`[Step 3] /api/export without token → HTTP ${unauthedResp.status}`);
   const unauthedLocation = unauthedResp.headers.get('location') || '';
   let normalAuthResult = 'NOT VERIFIED';
 
@@ -217,7 +217,7 @@ async function main() {
   console.log(`  /api/health: ${healthResp.ok ? '✅ Live' : '❌ Failed'}`);
   console.log(`  Auth bridge (token): ${authBridgeResult}`);
   console.log(`  Normal auth (no token): ${normalAuthResult}`);
-  console.log('\nNOTE: The verifier tests the read path (/dashboard) which guarantees');
+  console.log('\nNOTE: The verifier tests the read path (/api/export) which guarantees');
   console.log('requireAuth() and requireTenant() are functioning correctly. Customer creation');
   console.log('via createCustomerAction remains UNVERIFIED because Server Action IDs cannot');
   console.log('be reliably invoked from an external load runner without fragile HTML scraping.');
