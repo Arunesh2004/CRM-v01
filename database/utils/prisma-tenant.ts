@@ -19,7 +19,7 @@ export const withTenant = (tenantId: string) => {
             'CameraStream', 'Recording', 'CameraEvent', 'AIEvent', 'WebhookEvent',
             'Incident', 'RecoveryJob', 'RecoverySnapshot', 'RecoveryAuditLog',
             'RestoreCheckpoint', 'Pipeline', 'PipelineStage', 'Deal',
-            'DealStageHistory', 'EventOutbox'
+            'DealStageHistory', 'EventOutbox', 'AIConversation', 'AIConversationMessage'
           ];
 
           if (!tenantScopedModels.includes(model)) {
