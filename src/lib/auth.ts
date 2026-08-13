@@ -10,13 +10,7 @@ import { cache } from 'react';
 
 const logger = new Logger();
 
-/** The common DB include needed for full user context. */
-const USER_INCLUDE = {
-  tenant: true,
-  userRoles: {
-    include: { role: { include: { permissions: { include: { permission: true } } } } }
-  }
-} as const;
+// The common DB include needed for full user context is inlined below to preserve Prisma type inference.
 
 /**
  * STAGING-ONLY LOAD-TEST IDENTITY BRIDGE
@@ -32,7 +26,7 @@ const USER_INCLUDE = {
  * Tenant is ALWAYS resolved from the database; never from token claims.
  * Returns null on any verification failure (falls through to normal Clerk auth).
  */
-async function tryLoadTestIdentity(): Promise<any | null> {
+async function tryLoadTestIdentity() {
   // Triple-gate: all conditions must pass or we immediately return null
   if (process.env.NODE_ENV === 'production') return null;
   if (process.env.CRM_LOAD_TEST_AUTH_ENABLED !== 'true') return null;
@@ -57,9 +51,9 @@ async function tryLoadTestIdentity(): Promise<any | null> {
     });
     if (typeof raw === 'string') return null;
     decoded = raw;
-  } catch (err: any) {
+  } catch (err: unknown) {
     // Do NOT log the token. Log only the verification failure type.
-    logger.error('Load-test token verification failed', undefined, { reason: err?.name });
+    logger.error('Load-test token verification failed', undefined, { reason: (err as { name?: string })?.name });
     return null;
   }
 
@@ -73,7 +67,12 @@ async function tryLoadTestIdentity(): Promise<any | null> {
   // Resolve the user from DB — tenant comes from DB, never from token
   const user = await prisma.user.findUnique({
     where: { id: userId },
-    include: USER_INCLUDE,
+    include: {
+      tenant: true,
+      userRoles: {
+        include: { role: { include: { permissions: { include: { permission: true } } } } }
+      }
+    }
   });
 
   if (!user) return null;
@@ -97,7 +96,12 @@ export const getCurrentUser = cache(async function getCurrentUser() {
   if (process.env.TEST_USER_ID) {
     return await prisma.user.findUnique({
       where: { id: process.env.TEST_USER_ID },
-      include: USER_INCLUDE,
+      include: {
+        tenant: true,
+        userRoles: {
+          include: { role: { include: { permissions: { include: { permission: true } } } } }
+        }
+      }
     });
   }
 
@@ -110,7 +114,12 @@ export const getCurrentUser = cache(async function getCurrentUser() {
 
   const user = await prisma.user.findUnique({
     where: { clerkId },
-    include: USER_INCLUDE,
+    include: {
+      tenant: true,
+      userRoles: {
+        include: { role: { include: { permissions: { include: { permission: true } } } } }
+      }
+    }
   });
 
   return user;
@@ -149,8 +158,8 @@ async function ensureUserProvisionedFromClerk(clerkId: string) {
     const client = await clerkClient();
     const user = await client.users.getUser(clerkId);
     await ensureUserProvisioned(user);
-  } catch (err: any) {
-    logger.error('Failed to fetch and provision user from Clerk', undefined, { clerkId, name: err?.name });
+  } catch (err: unknown) {
+    logger.error('Failed to fetch and provision user from Clerk', undefined, { clerkId, name: (err as { name?: string })?.name });
   }
 }
 
