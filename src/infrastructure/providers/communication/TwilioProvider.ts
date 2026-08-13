@@ -30,7 +30,10 @@ export class TwilioProvider implements PhoneProvider {
     // const client = twilio(this.accountSid, this.authToken);
     // await client.messages.create({ body: payload.body, from: this.fromNumber, to: payload.toPhoneNumber });
     
-    console.log(`[TwilioProvider] Sending SMS to ${payload.toPhoneNumber} via Twilio API...`);
+    const maskedPhone = payload.toPhoneNumber.length >= 4 
+      ? payload.toPhoneNumber.substring(0, 3) + '****' + payload.toPhoneNumber.substring(payload.toPhoneNumber.length - 4)
+      : '****';
+    console.log(`[TwilioProvider] Sending SMS to ${maskedPhone} via Twilio API...`);
     
     return {
       id: `twilio_sms_${Date.now()}_${Math.random().toString(36).substring(7)}`,
@@ -40,7 +43,10 @@ export class TwilioProvider implements PhoneProvider {
   }
 
   async initiateCall(context: ProviderContext, payload: CallPayload): Promise<CommunicationResponse> {
-    console.log(`[TwilioProvider] Initiating call to ${payload.toPhoneNumber} via Twilio API...`);
+    const maskedPhone = payload.toPhoneNumber.length >= 4 
+      ? payload.toPhoneNumber.substring(0, 3) + '****' + payload.toPhoneNumber.substring(payload.toPhoneNumber.length - 4)
+      : '****';
+    console.log(`[TwilioProvider] Initiating call to ${maskedPhone} via Twilio API...`);
     
     return {
       id: `twilio_call_${Date.now()}_${Math.random().toString(36).substring(7)}`,

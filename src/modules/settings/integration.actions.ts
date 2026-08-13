@@ -1,4 +1,6 @@
 'use server';
+import { sanitizeClientError } from '@/lib/errors/client-safe-error';
+
 
 import { requireTenant, requirePermission } from '@/lib/auth';
 import { withTenant } from '../../../database/utils/prisma-tenant';
@@ -31,7 +33,7 @@ export async function getTenantIntegrationsAction() {
 
     return { success: true, data: integrations };
   } catch (error: any) {
-    return { success: false, error: error.message };
+    return { success: false, error: sanitizeClientError(error) };
   }
 }
 
@@ -75,7 +77,7 @@ export async function testIntegrationConnectionAction(providerType: IntegrationP
     revalidatePath('/settings/integrations');
     return { success: true };
   } catch (error: any) {
-    return { success: false, error: error.message };
+    return { success: false, error: sanitizeClientError(error) };
   }
 }
 
@@ -129,7 +131,7 @@ export async function updateIntegrationCredentialsAction(providerType: Integrati
     revalidatePath('/settings/integrations');
     return { success: true };
   } catch (error: any) {
-    return { success: false, error: error.message };
+    return { success: false, error: sanitizeClientError(error) };
   }
 }
 
@@ -167,6 +169,6 @@ export async function deleteIntegrationAction(providerType: IntegrationProvider)
     revalidatePath('/settings/integrations');
     return { success: true };
   } catch (error: any) {
-    return { success: false, error: error.message };
+    return { success: false, error: sanitizeClientError(error) };
   }
 }

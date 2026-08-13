@@ -1,4 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { requireAuth, requireTenant, requirePermission } from '@/lib/auth';
+import { exportTenant } from '@/modules/recovery/export.engine';
+import { sanitizeClientError } from '@/lib/errors/client-safe-error';
 import { getIncidentsCsv, getCustomersCsv, getCommunicationsCsv } from '@/modules/reporting/export.service';
 
 export async function GET(req: NextRequest) {
@@ -35,6 +38,6 @@ export async function GET(req: NextRequest) {
       }
     });
   } catch (error: any) {
-    return NextResponse.json({ error: error.message }, { status: 500 });
+    return NextResponse.json({ error: sanitizeClientError(error) }, { status: 500 });
   }
 }

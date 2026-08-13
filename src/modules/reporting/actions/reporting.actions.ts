@@ -1,4 +1,6 @@
 'use server';
+import { sanitizeClientError } from '@/lib/errors/client-safe-error';
+
 
 import * as reportingService from '../reporting.service';
 
@@ -17,6 +19,6 @@ export async function getDashboardMetricsAction(startDate?: Date, endDate?: Date
       data: { security, camera, crm, communication, billing } 
     };
   } catch (error: any) {
-    return { success: false, error: error.message || 'Internal error' };
+    return { success: false, error: sanitizeClientError(error) };
   }
 }

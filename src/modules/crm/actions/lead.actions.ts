@@ -1,3 +1,4 @@
+import { sanitizeClientError } from '@/lib/errors/client-safe-error';
 'use server'
 
 import { requireAuth, requireTenant, requirePermission } from '@/lib/auth';
@@ -17,7 +18,7 @@ export async function createLeadAction(payload: z.infer<typeof CreateLeadSchema>
     const result = await leadService.createLead(validatedData);
     return { success: true, data: result };
   } catch (error: any) {
-    return { success: false, error: error.message };
+    return { success: false, error: sanitizeClientError(error) };
   }
 }
 
@@ -32,7 +33,7 @@ export async function updateLeadAction(payload: z.infer<typeof UpdateLeadSchema>
     const result = await leadService.updateLead(validatedData);
     return { success: true, data: result };
   } catch (error: any) {
-    return { success: false, error: error.message };
+    return { success: false, error: sanitizeClientError(error) };
   }
 }
 
@@ -47,7 +48,7 @@ export async function getLeadsAction(params?: QueryParams) {
     const result = await leadService.getLeads(params);
     return { success: true, data: result };
   } catch (error: any) {
-    return { success: false, error: error.message };
+    return { success: false, error: sanitizeClientError(error) };
   }
 }
 
@@ -61,7 +62,7 @@ export async function assignLeadAction(leadId: string, assignedUserId: string) {
     const result = await leadService.updateLead({ id: leadId, assignedUserId });
     return { success: true, data: result };
   } catch (error: any) {
-    return { success: false, error: error.message };
+    return { success: false, error: sanitizeClientError(error) };
   }
 }
 
@@ -74,7 +75,7 @@ export async function convertLeadAction(leadId: string) {
     const result = await leadService.convertLeadToCustomer(leadId);
     return { success: true, data: result };
   } catch (error: any) {
-    return { success: false, error: error.message };
+    return { success: false, error: sanitizeClientError(error) };
   }
 }
 
@@ -87,6 +88,6 @@ export async function deleteLeadAction(leadId: string) {
     const result = await leadService.deleteLead(leadId);
     return { success: true, data: result };
   } catch (error: any) {
-    return { success: false, error: error.message };
+    return { success: false, error: sanitizeClientError(error) };
   }
 }

@@ -1,4 +1,6 @@
 'use server';
+import { sanitizeClientError } from '@/lib/errors/client-safe-error';
+
 import { z } from 'zod';
 import { CreateInvoiceSchema, UpdateInvoiceStatusSchema } from '../validators/invoice.schema';
 import * as invoiceService from '../invoice/invoice.service';
@@ -14,7 +16,7 @@ export async function createInvoiceAction(payload: z.infer<typeof CreateInvoiceS
     const result = await invoiceService.createInvoice(validatedData);
     return { success: true, data: result };
   } catch (error: any) {
-    return { success: false, error: error.message || 'Internal error' };
+    return { success: false, error: sanitizeClientError(error) };
   }
 }
 
@@ -28,7 +30,7 @@ export async function updateInvoiceStatusAction(payload: z.infer<typeof UpdateIn
     const result = await invoiceService.updateInvoiceStatus(validatedData);
     return { success: true, data: result };
   } catch (error: any) {
-    return { success: false, error: error.message || 'Internal error' };
+    return { success: false, error: sanitizeClientError(error) };
   }
 }
 
@@ -37,6 +39,6 @@ export async function getInvoicesAction() {
     const result = await invoiceService.getInvoices();
     return { success: true, data: result };
   } catch (error: any) {
-    return { success: false, error: error.message || 'Internal error' };
+    return { success: false, error: sanitizeClientError(error) };
   }
 }

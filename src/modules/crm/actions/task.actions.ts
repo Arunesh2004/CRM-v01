@@ -1,3 +1,4 @@
+import { sanitizeClientError } from '@/lib/errors/client-safe-error';
 'use server'
 
 import { requireAuth, requireTenant, requirePermission } from '@/lib/auth';
@@ -16,7 +17,7 @@ export async function createTaskAction(payload: z.infer<typeof CreateTaskSchema>
     const result = await taskService.createTask(validatedData);
     return { success: true, data: result };
   } catch (error: any) {
-    return { success: false, error: error.message };
+    return { success: false, error: sanitizeClientError(error) };
   }
 }
 
@@ -29,7 +30,7 @@ export async function updateTaskAction(payload: z.infer<typeof UpdateTaskSchema>
     const result = await taskService.updateTask(validatedData);
     return { success: true, data: result };
   } catch (error: any) {
-    return { success: false, error: error.message };
+    return { success: false, error: sanitizeClientError(error) };
   }
 }
 
@@ -48,7 +49,7 @@ export async function getTasksAction(params?: QueryParams & {
     const result = await taskService.getTasks(params);
     return { success: true, data: result };
   } catch (error: any) {
-    return { success: false, error: error.message };
+    return { success: false, error: sanitizeClientError(error) };
   }
 }
 
@@ -57,7 +58,7 @@ export async function getTaskByIdAction(taskId: string) {
     const result = await taskService.getTaskById(taskId);
     return { success: true, data: result };
   } catch (error: any) {
-    return { success: false, error: error.message };
+    return { success: false, error: sanitizeClientError(error) };
   }
 }
 
@@ -66,7 +67,7 @@ export async function createTaskCommentAction(taskId: string, content: string) {
     const result = await createCRMComment('TASK', taskId, content);
     return { success: true, data: result };
   } catch (error: any) {
-    return { success: false, error: error.message };
+    return { success: false, error: sanitizeClientError(error) };
   }
 }
 
@@ -75,7 +76,7 @@ export async function deleteTaskCommentAction(commentId: string) {
     const result = await deleteCRMComment(commentId);
     return { success: true, data: result };
   } catch (error: any) {
-    return { success: false, error: error.message };
+    return { success: false, error: sanitizeClientError(error) };
   }
 }
 
@@ -84,6 +85,6 @@ export async function getTaskWorkloadMetricsAction() {
     const result = await taskService.getTaskWorkloadMetrics();
     return { success: true, data: result };
   } catch (error: any) {
-    return { success: false, error: error.message };
+    return { success: false, error: sanitizeClientError(error) };
   }
 }

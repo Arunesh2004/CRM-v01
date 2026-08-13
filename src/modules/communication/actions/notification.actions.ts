@@ -1,4 +1,6 @@
 'use server';
+import { sanitizeClientError } from '@/lib/errors/client-safe-error';
+
 import { z } from 'zod';
 import { MarkNotificationReadSchema } from '../validators/notification.schema';
 import { requireAuth, requireTenant, requirePermission } from '@/lib/auth';
@@ -19,7 +21,7 @@ export async function getNotificationsAction() {
     });
     return { success: true, data: notifications };
   } catch (error: any) {
-    return { success: false, error: error.message };
+    return { success: false, error: sanitizeClientError(error) };
   }
 }
 
@@ -39,7 +41,7 @@ export async function markNotificationReadAction(payload: z.infer<typeof MarkNot
 
     return { success: true };
   } catch (error: any) {
-    return { success: false, error: error.message };
+    return { success: false, error: sanitizeClientError(error) };
   }
 }
 
@@ -61,7 +63,7 @@ export async function getAllNotificationsAction() {
     });
     return { success: true, data: notifications };
   } catch (error: any) {
-    return { success: false, error: error.message };
+    return { success: false, error: sanitizeClientError(error) };
   }
 }
 
@@ -80,6 +82,6 @@ export async function getNotificationsByIncidentAction(incidentId: string) {
 
     return { success: true, data: notifications };
   } catch (error: any) {
-    return { success: false, error: error.message };
+    return { success: false, error: sanitizeClientError(error) };
   }
 }

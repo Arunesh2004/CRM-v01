@@ -26,7 +26,9 @@ export class ResendProvider implements EmailProvider {
     // await resend.emails.send({...});
     
     // For this simulation, we act as if it succeeded if the key exists.
-    console.log(`[ResendProvider] Sending email to ${payload.to} via Resend API...`);
+    const [user, domain] = payload.to.split('@');
+    const maskedEmail = user ? `${user.charAt(0)}***@${domain || 'unknown'}` : '***';
+    console.log(`[ResendProvider] Sending email to ${maskedEmail} via Resend API...`);
     
     return {
       messageId: `resend_${Date.now()}_${Math.random().toString(36).substring(7)}`,

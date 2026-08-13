@@ -1,3 +1,4 @@
+import { sanitizeClientError } from '@/lib/errors/client-safe-error';
 'use server'
 
 import { requireAuth, requireTenant, requirePermission } from '@/lib/auth';
@@ -13,7 +14,7 @@ export async function getIncidentsAction() {
     const result = await incidentService.getIncidents();
     return { success: true, data: result };
   } catch (error: any) {
-    return { success: false, error: error.message };
+    return { success: false, error: sanitizeClientError(error) };
   }
 }
 
@@ -26,7 +27,7 @@ export async function updateIncidentStatusAction(payload: z.infer<typeof UpdateI
     const result = await incidentService.updateIncidentStatus(validatedData);
     return { success: true, data: result };
   } catch (error: any) {
-    return { success: false, error: error.message };
+    return { success: false, error: sanitizeClientError(error) };
   }
 }
 
@@ -39,7 +40,7 @@ export async function assignIncidentAction(payload: z.infer<typeof AssignInciden
     const result = await incidentService.assignIncident(validatedData);
     return { success: true, data: result };
   } catch (error: any) {
-    return { success: false, error: error.message };
+    return { success: false, error: sanitizeClientError(error) };
   }
 }
 
@@ -51,7 +52,7 @@ export async function resolveIncidentAction(id: string) {
     const result = await incidentService.resolveIncident(id);
     return { success: true, data: result };
   } catch (error: any) {
-    return { success: false, error: error.message };
+    return { success: false, error: sanitizeClientError(error) };
   }
 }
 
@@ -63,6 +64,6 @@ export async function deleteIncidentAction(id: string) {
     const result = await incidentService.deleteIncident(id);
     return { success: true, data: result };
   } catch (error: any) {
-    return { success: false, error: error.message };
+    return { success: false, error: sanitizeClientError(error) };
   }
 }

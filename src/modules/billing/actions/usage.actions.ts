@@ -1,4 +1,6 @@
 'use server';
+import { sanitizeClientError } from '@/lib/errors/client-safe-error';
+
 import { z } from 'zod';
 import { RecordUsageSchema, GetUsageSummarySchema } from '../validators/usage.schema';
 import * as usageService from '../usage/usage.service';
@@ -17,7 +19,7 @@ export async function recordUsageAction(payload: z.infer<typeof RecordUsageSchem
     // I will let it be.
     return { success: true };
   } catch (error: any) {
-    return { success: false, error: error.message || 'Internal error' };
+    return { success: false, error: sanitizeClientError(error) };
   }
 }
 
@@ -31,7 +33,7 @@ export async function getUsageSummaryAction(payload: z.infer<typeof GetUsageSumm
     // same, let's keep it empty or return success
     return { success: true };
   } catch (error: any) {
-    return { success: false, error: error.message || 'Internal error' };
+    return { success: false, error: sanitizeClientError(error) };
   }
 }
 
@@ -44,6 +46,6 @@ export async function getTenantUsageAction() {
     const result = await usageService.getTenantUsage();
     return { success: true, data: result };
   } catch (error: any) {
-    return { success: false, error: error.message || 'Internal error' };
+    return { success: false, error: sanitizeClientError(error) };
   }
 }

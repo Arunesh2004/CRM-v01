@@ -1,4 +1,6 @@
 'use server';
+import { sanitizeClientError } from '@/lib/errors/client-safe-error';
+
 
 import { BillingService } from '../billing.service';
 
@@ -7,6 +9,6 @@ export async function createCheckoutSessionAction(planId: string) {
     const result = await BillingService.createCheckoutSession(planId);
     return { success: true, url: result.url };
   } catch (error: any) {
-    return { success: false, error: error.message };
+    return { success: false, error: sanitizeClientError(error) };
   }
 }

@@ -1,4 +1,6 @@
 'use server';
+import { sanitizeClientError } from '@/lib/errors/client-safe-error';
+
 import { z } from 'zod';
 import { CreateEmailSchema } from '../validators/email.schema';
 import * as emailService from '../email/email.service';
@@ -20,6 +22,6 @@ export async function sendEmailAction(payload: z.infer<typeof CreateEmailSchema>
     const result = await emailService.sendEmail(validatedData);
     return { success: true, data: result };
   } catch (error: any) {
-    return { success: false, error: error.message };
+    return { success: false, error: sanitizeClientError(error) };
   }
 }

@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import { processOutbox } from '@/modules/core/events/outbox.service';
+import { sanitizeClientError } from '@/lib/errors/client-safe-error';
 
 function verifyCronSecret(req: Request): boolean {
   const authHeader = req.headers.get('Authorization');
@@ -28,7 +29,7 @@ export async function GET(req: Request) {
     const result = await processOutbox();
     return NextResponse.json(result);
   } catch (error: any) {
-    return NextResponse.json({ success: false, error: error.message }, { status: 500 });
+    return NextResponse.json({ success: false, error: sanitizeClientError(error) }, { status: 500 });
   }
 }
 
@@ -40,6 +41,6 @@ export async function POST(req: Request) {
     const result = await processOutbox();
     return NextResponse.json(result);
   } catch (error: any) {
-    return NextResponse.json({ success: false, error: error.message }, { status: 500 });
+    return NextResponse.json({ success: false, error: sanitizeClientError(error) }, { status: 500 });
   }
 }

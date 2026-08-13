@@ -1,3 +1,4 @@
+import { sanitizeClientError } from '@/lib/errors/client-safe-error';
 'use server'
 
 import { requireAuth, requireTenant, requirePermission } from '@/lib/auth';
@@ -16,7 +17,7 @@ export async function createCustomerAction(payload: z.infer<typeof CreateCustome
     const result = await customerService.createCustomer(validatedData);
     return { success: true, data: result };
   } catch (error: any) {
-    return { success: false, error: error.message };
+    return { success: false, error: sanitizeClientError(error) };
   }
 }
 
@@ -31,7 +32,7 @@ export async function updateCustomerAction(payload: z.infer<typeof UpdateCustome
     const result = await customerService.updateCustomer(validatedData);
     return { success: true, data: result };
   } catch (error: any) {
-    return { success: false, error: error.message };
+    return { success: false, error: sanitizeClientError(error) };
   }
 }
 
@@ -46,7 +47,7 @@ export async function getCustomersAction(params?: QueryParams) {
     const result = await customerService.getCustomers(params);
     return { success: true, data: result };
   } catch (error: any) {
-    return { success: false, error: error.message };
+    return { success: false, error: sanitizeClientError(error) };
   }
 }
 
@@ -59,7 +60,7 @@ export async function getCustomerByIdAction(id: string) {
     const result = await customerService.getCustomerById(id);
     return { success: true, data: result };
   } catch (error: any) {
-    return { success: false, error: error.message };
+    return { success: false, error: sanitizeClientError(error) };
   }
 }
 
@@ -72,7 +73,7 @@ export async function deleteCustomerAction(customerId: string) {
     const result = await customerService.deleteCustomer(customerId);
     return { success: true, data: result };
   } catch (error: any) {
-    return { success: false, error: error.message };
+    return { success: false, error: sanitizeClientError(error) };
   }
 }
 
@@ -87,7 +88,7 @@ export async function createContactAction(payload: any) {
     revalidatePath(`/customers/${payload.customerId}`);
     return { success: true, data: result };
   } catch (error: any) {
-    return { success: false, error: error.message };
+    return { success: false, error: sanitizeClientError(error) };
   }
 }
 
@@ -100,7 +101,7 @@ export async function createLocationAction(payload: any) {
     revalidatePath(`/customers/${payload.customerId}`);
     return { success: true, data: result };
   } catch (error: any) {
-    return { success: false, error: error.message };
+    return { success: false, error: sanitizeClientError(error) };
   }
 }
 
@@ -115,6 +116,6 @@ export async function getCustomerTimelineAction(params: {
     const result = await getCustomerTimeline(params);
     return { success: true, data: result };
   } catch (error: any) {
-    return { success: false, error: error.message };
+    return { success: false, error: sanitizeClientError(error) };
   }
 }

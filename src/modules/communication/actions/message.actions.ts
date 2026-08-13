@@ -1,4 +1,6 @@
 'use server';
+import { sanitizeClientError } from '@/lib/errors/client-safe-error';
+
 import { z } from 'zod';
 import { CreateMessageSchema } from '../validators/message.schema';
 import * as messagingService from '../messaging/messaging.service';
@@ -16,6 +18,6 @@ export async function sendMessageAction(payload: z.infer<typeof CreateMessageSch
     const result = await messagingService.sendMessage(validatedData);
     return { success: true, data: result };
   } catch (error: any) {
-    return { success: false, error: error.message };
+    return { success: false, error: sanitizeClientError(error) };
   }
 }

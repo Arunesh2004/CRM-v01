@@ -1,4 +1,6 @@
 'use server';
+import { sanitizeClientError } from '@/lib/errors/client-safe-error';
+
 
 import { ConversationService } from '../conversation.service';
 import { MessageService } from '../message.service';
@@ -10,7 +12,7 @@ export async function getUserConversationsAction(cursor?: string, limit = 50) {
     const data = await ConversationService.getUserConversations(cursor, limit);
     return { success: true, data };
   } catch (error: any) {
-    return { success: false, error: error.message };
+    return { success: false, error: sanitizeClientError(error) };
   }
 }
 
@@ -20,7 +22,7 @@ export async function createDirectConversationAction(targetUserId: string) {
     revalidatePath('/chat');
     return { success: true, data };
   } catch (error: any) {
-    return { success: false, error: error.message };
+    return { success: false, error: sanitizeClientError(error) };
   }
 }
 
@@ -29,7 +31,7 @@ export async function getMessagesAction(conversationId: string, cursor?: string)
     const data = await MessageService.getMessages(conversationId, cursor);
     return { success: true, data };
   } catch (error: any) {
-    return { success: false, error: error.message };
+    return { success: false, error: sanitizeClientError(error) };
   }
 }
 
@@ -39,6 +41,6 @@ export async function sendMessageAction(conversationId: string, content: string,
     revalidatePath(`/chat`);
     return { success: true, data };
   } catch (error: any) {
-    return { success: false, error: error.message };
+    return { success: false, error: sanitizeClientError(error) };
   }
 }

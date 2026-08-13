@@ -7,7 +7,15 @@ import { cache } from 'react';
 
 export const getCurrentUser = cache(async function getCurrentUser() {
   if (process.env.TEST_USER_ID) {
-    return { id: process.env.TEST_USER_ID, email: 'test@example.com', tenantId: process.env.TEST_TENANT_ID, userRoles: [] } as any;
+    return await prisma.user.findUnique({
+      where: { id: process.env.TEST_USER_ID },
+      include: {
+        tenant: true,
+        userRoles: {
+          include: { role: { include: { permissions: { include: { permission: true } } } } }
+        }
+      }
+    });
   }
 
   const clerkAuth = await auth();
@@ -79,9 +87,6 @@ async function ensureUserProvisionedFromClerk(clerkId: string) {
 }
 
 export async function requireAuth() {
-  if (process.env.TEST_USER_ID) {
-    return { id: process.env.TEST_USER_ID, email: 'test@example.com' } as any;
-  }
   let user = await getCurrentUser();
   if (!user) {
     const clerkAuth = await auth();
@@ -111,7 +116,7 @@ export async function requireTenant() {
 }
 
 export async function requirePermission(resource: Resource, action: Action) {
-  if (process.env.TEST_USER_ID) return true;
+  // removed test bypass
   const hasPermission = await checkPermission(resource, action);
   if (!hasPermission) {
     throw new Error(`Forbidden: Requires ${action} on ${resource}`);

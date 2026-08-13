@@ -1,3 +1,4 @@
+import { sanitizeClientError } from '@/lib/errors/client-safe-error';
 'use server'
 
 import { requireAuth, requireTenant, requirePermission } from '@/lib/auth';
@@ -14,7 +15,7 @@ export async function createCameraAction(payload: z.infer<typeof CreateCameraSch
     const result = await cameraService.createCamera(validatedData);
     return { success: true, data: result };
   } catch (error: any) {
-    return { success: false, error: error.message };
+    return { success: false, error: sanitizeClientError(error) };
   }
 }
 
@@ -27,7 +28,7 @@ export async function updateCameraAction(payload: z.infer<typeof UpdateCameraSch
     const result = await cameraService.updateCamera(validatedData as any);
     return { success: true, data: result };
   } catch (error: any) {
-    return { success: false, error: error.message };
+    return { success: false, error: sanitizeClientError(error) };
   }
 }
 
@@ -39,7 +40,7 @@ export async function getCamerasAction() {
     const result = await cameraService.getCameras();
     return { success: true, data: result };
   } catch (error: any) {
-    return { success: false, error: error.message };
+    return { success: false, error: sanitizeClientError(error) };
   }
 }
 
@@ -51,7 +52,7 @@ export async function deleteCameraAction(id: string) {
     const result = await cameraService.deleteCamera(id);
     return { success: true, data: result };
   } catch (error: any) {
-    return { success: false, error: error.message };
+    return { success: false, error: sanitizeClientError(error) };
   }
 }
 
@@ -64,6 +65,6 @@ export async function simulateAIEventAction(payload: z.infer<typeof SimulateAIEv
     const result = await cameraService.simulateAIEvent(validatedData);
     return { success: true, data: result };
   } catch (error: any) {
-    return { success: false, error: error.message };
+    return { success: false, error: sanitizeClientError(error) };
   }
 }

@@ -58,10 +58,11 @@ export class RedisRateLimiter implements RateLimiter {
         return current
       `;
       
-      const currentRaw = await redis.eval(luaScript, 1, \`ratelimit:v2:\${identifier}\`, windowMs);
+      const currentRaw = await redis.eval(luaScript, 1, `ratelimit:v2:${identifier}`, windowMs);
       return Number(currentRaw) <= limit;
-    } catch (e) {
-      console.error("Redis Rate Limiter Error:", e);
+    } catch (e: any) {
+      const safeMsg = e?.message?.replace(/redis:\/\/[^@]+@/, 'redis://***@');
+      console.error("Redis Rate Limiter Error:", safeMsg);
       // Fail open if Redis is down, or implement memory fallback here
       return true;
     }

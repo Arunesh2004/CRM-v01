@@ -1,4 +1,6 @@
 'use server';
+import { sanitizeClientError } from '@/lib/errors/client-safe-error';
+
 import { z } from 'zod';
 import { CreatePaymentSchema, HandlePaymentSuccessSchema } from '../validators/payment.schema';
 import * as paymentService from '../payment/payment.service';
@@ -14,7 +16,7 @@ export async function createPaymentAction(payload: z.infer<typeof CreatePaymentS
     const result = await paymentService.createPaymentRecord(validatedData);
     return { success: true, data: result };
   } catch (error: any) {
-    return { success: false, error: error.message || 'Internal error' };
+    return { success: false, error: sanitizeClientError(error) };
   }
 }
 
@@ -29,6 +31,6 @@ export async function handlePaymentSuccessAction(payload: z.infer<typeof HandleP
     const result = await paymentService.handlePaymentSuccess(validatedData.transactionId);
     return { success: true, data: result };
   } catch (error: any) {
-    return { success: false, error: error.message || 'Internal error' };
+    return { success: false, error: sanitizeClientError(error) };
   }
 }

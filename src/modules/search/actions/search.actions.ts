@@ -1,4 +1,6 @@
 'use server';
+import { sanitizeClientError } from '@/lib/errors/client-safe-error';
+
 
 import { requireAuth, requireTenant } from '@/lib/auth';
 import { globalSearch } from '../search.service';
@@ -15,6 +17,6 @@ export async function searchAction(query: string) {
     const results = await globalSearch(tenantId, query.trim());
     return { success: true, data: results };
   } catch (error: any) {
-    return { success: false, error: error.message || 'Search failed' };
+    return { success: false, error: sanitizeClientError(error) };
   }
 }

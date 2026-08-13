@@ -1,4 +1,6 @@
 'use server';
+import { sanitizeClientError } from '@/lib/errors/client-safe-error';
+
 import { z } from 'zod';
 import { CreateCallSchema } from '../validators/call.schema';
 import * as telephonyService from '../telephony/telephony.service';
@@ -15,7 +17,7 @@ export async function createCallAction(payload: z.infer<typeof CreateCallSchema>
     const result = await telephonyService.createCall(validatedData);
     return { success: true, data: result };
   } catch (error: any) {
-    return { success: false, error: error.message };
+    return { success: false, error: sanitizeClientError(error) };
   }
 }
 
@@ -43,6 +45,6 @@ export async function getCallHistoryAction(cursor?: string, limit = 50) {
 
     return { success: true, data: calls, pagination: { nextCursor, hasMore: nextCursor !== null } };
   } catch (error: any) {
-    return { success: false, error: error.message };
+    return { success: false, error: sanitizeClientError(error) };
   }
 }

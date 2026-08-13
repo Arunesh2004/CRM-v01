@@ -1,3 +1,4 @@
+import { sanitizeClientError } from '@/lib/errors/client-safe-error';
 'use server'
 
 import { requireAuth, requireTenant, requirePermission } from '@/lib/auth';
@@ -16,7 +17,7 @@ export async function createLocationAction(payload: z.infer<typeof CreateLocatio
     const result = await locationService.createLocation(validatedData);
     return { success: true, data: result };
   } catch (error: any) {
-    return { success: false, error: error.message };
+    return { success: false, error: sanitizeClientError(error) };
   }
 }
 
@@ -31,7 +32,7 @@ export async function updateLocationAction(payload: z.infer<typeof UpdateLocatio
     const result = await locationService.updateLocation(validatedData as any);
     return { success: true, data: result };
   } catch (error: any) {
-    return { success: false, error: error.message };
+    return { success: false, error: sanitizeClientError(error) };
   }
 }
 
@@ -44,7 +45,7 @@ export async function getLocationsAction() {
     const result = await locationService.getLocations();
     return { success: true, data: result };
   } catch (error: any) {
-    return { success: false, error: error.message };
+    return { success: false, error: sanitizeClientError(error) };
   }
 }
 
@@ -57,6 +58,6 @@ export async function deleteLocationAction(id: string) {
     const result = await locationService.deleteLocation(id);
     return { success: true, data: result };
   } catch (error: any) {
-    return { success: false, error: error.message };
+    return { success: false, error: sanitizeClientError(error) };
   }
 }
