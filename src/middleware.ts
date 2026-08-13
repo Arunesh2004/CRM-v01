@@ -18,12 +18,19 @@ const isPublicRoute = createRouteMatcher(['/sign-in(.*)', '/sign-up(.*)', '/api/
  * Full cryptographic verification happens in getCurrentUser() in auth.ts (Node.js runtime).
  * This gate only allows the request to reach the Server Action for token verification.
  */
-function isLoadTestRequest(req: Request): boolean {
-  // Gate condition 1: Fail closed on production (hardcoded, cannot be overridden by env)
-  if (process.env.NODE_ENV === 'production') return false;
+function isLoadTestAuthEnabled(): boolean {
+  // Gate condition 1: Only allow on Vercel Preview (blocks production and unknown envs)
+  if (process.env.VERCEL_ENV !== 'preview') return false;
   // Gate condition 2: Must have an explicit opt-in env var
   if (process.env.CRM_LOAD_TEST_AUTH_ENABLED !== 'true') return false;
-  // Gate condition 3: Must carry the dedicated header (presence check only; content verified later)
+  // Gate condition 3: Must have the cryptographic secret configured
+  if (!process.env.LOAD_TEST_SECRET) return false;
+  return true;
+}
+
+function isLoadTestRequest(req: Request): boolean {
+  if (!isLoadTestAuthEnabled()) return false;
+  // Gate condition 4: Must carry the dedicated header (presence check only; content verified later)
   if (!req.headers.get('x-load-test-token')) return false;
   return true;
 }

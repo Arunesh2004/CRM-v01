@@ -26,12 +26,17 @@ const logger = new Logger();
  * Tenant is ALWAYS resolved from the database; never from token claims.
  * Returns null on any verification failure (falls through to normal Clerk auth).
  */
+function isLoadTestAuthEnabled(): boolean {
+  if (process.env.VERCEL_ENV !== 'preview') return false;
+  if (process.env.CRM_LOAD_TEST_AUTH_ENABLED !== 'true') return false;
+  if (!process.env.LOAD_TEST_SECRET) return false;
+  return true;
+}
+
 async function tryLoadTestIdentity() {
   // Triple-gate: all conditions must pass or we immediately return null
-  if (process.env.NODE_ENV === 'production') return null;
-  if (process.env.CRM_LOAD_TEST_AUTH_ENABLED !== 'true') return null;
-  const secret = process.env.LOAD_TEST_SECRET;
-  if (!secret) return null;
+  if (!isLoadTestAuthEnabled()) return null;
+  const secret = process.env.LOAD_TEST_SECRET as string;
 
   let token: string | null = null;
   try {
