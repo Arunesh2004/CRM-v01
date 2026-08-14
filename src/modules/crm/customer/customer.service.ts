@@ -16,14 +16,13 @@ export async function createCustomer(input: CreateCustomerInput) {
   const startParallel = performance.now();
   const normalizedName = input.name.toLowerCase().trim().replace(/\s+/g, ' ');
 
-  const [, , existing] = await Promise.all([
-    requirePermissionFast(identity.id, 'CUSTOMER', 'CREATE'),
-    FeatureAccessService.enforceCustomerLimitFast(tenantId),
-    import('@/../database/utils/prisma').then(m => m.default.customer.findFirst({
-      where: { tenantId, normalizedName, deletedAt: null },
-      select: { id: true }
-    }))
-  ]);
+  await requirePermissionFast(identity.id, 'CUSTOMER', 'CREATE');
+  await FeatureAccessService.enforceCustomerLimitFast(tenantId);
+  const prismaModule = await import('@/../database/utils/prisma');
+  const existing = await prismaModule.default.customer.findFirst({
+    where: { tenantId, normalizedName, deletedAt: null },
+    select: { id: true }
+  });
 
   if (existing) throw new Error('A customer with this name already exists.');
 
