@@ -3,6 +3,9 @@ import prisma from '@/../database/utils/prisma';
 import { ProviderFactory } from '@/infrastructure/provider.factory';
 import { EmailProvider } from '@/infrastructure/email/email.interface';
 import { getCurrentUser } from '@/lib/auth';
+import { Logger } from '@/lib/observability/logger';
+
+const logger = new Logger();
 
 export class EmailService {
   static async sendCustomerEmail(to: string, subject: string, bodyHtml: string, bodyText?: string, customerId?: string) {
@@ -84,8 +87,8 @@ export class EmailService {
       }
 
       return { messageId: providerMessageId, status: 'SENT' };
-    } catch (error) {
-      console.error("[EmailService] Failed to send email", error);
+    } catch (error: any) {
+      logger.error('Failed to send email', undefined, { tenantId, providerErrorName: error?.name });
       throw error;
     }
   }

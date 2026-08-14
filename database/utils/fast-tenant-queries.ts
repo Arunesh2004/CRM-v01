@@ -100,8 +100,13 @@ export async function createTenantCustomerFast(
         entityId: customer.id
       }
     });
-    console.log(`[PHASE_26E_MEASUREMENT] Timeline insert duration: ${(performance.now() - startTimeline).toFixed(2)}ms`);
-
-    return customer;
+    const timings = {
+      dupCheck: (startTx - startDup).toFixed(2),
+      txAcquire: (startInsert - startTx).toFixed(2),
+      customerInsert: (startAudit - startInsert).toFixed(2),
+      auditInsert: (startTimeline - startAudit).toFixed(2),
+      timelineInsert: (performance.now() - startTimeline).toFixed(2)
+    };
+    return { customer, timings };
   });
 }

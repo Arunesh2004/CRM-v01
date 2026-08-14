@@ -2,10 +2,14 @@
   "crons": [
     {
       "path": "/api/cron/process-outbox",
-      "schedule": "0 0 * * *"
+      "schedule": "0 * * * *"
     },
     {
       "path": "/api/cron/ai-retention",
+      "schedule": "0 0 * * *"
+    },
+    {
+      "path": "/api/cron/cleanup-outbox",
       "schedule": "0 0 * * *"
     }
   ]

@@ -3,6 +3,9 @@ import prisma from '@/../database/utils/prisma';
 import { ProviderFactory } from '@/infrastructure/provider.factory';
 import { CallProvider } from '@/infrastructure/calling/call.interface';
 import { getCurrentUser } from '@/lib/auth';
+import { Logger } from '@/lib/observability/logger';
+
+const logger = new Logger();
 
 export class CallService {
   static async initiateCustomerCall(toPhoneNumber: string, customerId?: string) {
@@ -75,8 +78,8 @@ export class CallService {
       }
 
       return { id: providerCallId, status: 'COMPLETED' };
-    } catch (error) {
-      console.error("[CallService] Failed to initiate call", error);
+    } catch (error: any) {
+      logger.error('Failed to initiate call', undefined, { tenantId, providerErrorName: error?.name });
       await prisma.call.update({
         where: { id: callRecord.id },
         data: { status: 'FAILED' }

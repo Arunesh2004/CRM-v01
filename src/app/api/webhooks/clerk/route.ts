@@ -1,7 +1,12 @@
 import { Webhook } from 'svix';
 import { NextRequest, NextResponse } from 'next/server';
+import { headers } from 'next/headers';
+import { WebhookEvent } from '@clerk/nextjs/server';
 import prisma from '@/../database/utils/prisma';
+import { Logger } from '@/lib/observability/logger';
 import { ensureUserProvisioned } from '@/modules/auth/services/provisioning.service';
+
+const logger = new Logger();
 
 export async function POST(req: NextRequest) {
   const WEBHOOK_SECRET = process.env.CLERK_WEBHOOK_SECRET;
@@ -42,8 +47,8 @@ export async function POST(req: NextRequest) {
         'svix-signature': svix_signature,
       });
     }
-  } catch (err) {
-    console.error('Error verifying webhook:', err);
+  } catch (err: any) {
+    logger.error('Error verifying Clerk webhook signature', undefined, { name: err?.name });
     return new NextResponse('Error occured', {
       status: 400,
     });
@@ -59,7 +64,7 @@ export async function POST(req: NextRequest) {
       await ensureUserProvisioned(evt.data);
       return NextResponse.json({ success: true }, { status: 201 });
     } catch (err: any) {
-      console.error('Failed to sync user:', err.message);
+      logger.error('Failed to sync user from Clerk webhook', undefined, { name: err?.name });
       return NextResponse.json({ error: 'Failed to sync user' }, { status: 500 });
     }
   }

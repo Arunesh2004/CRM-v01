@@ -23,10 +23,22 @@ export async function createCustomer(input: CreateCustomerInput) {
   
   const startWrite = performance.now();
   const result = await createTenantCustomerFast(tenantId, identity.id, input);
-  console.log(`[PHASE_26E_MEASUREMENT] Fast tenant write duration: ${(performance.now() - startWrite).toFixed(2)}ms`);
-  console.log(`[PHASE_26E_MEASUREMENT] Total service duration: ${(performance.now() - startTotal).toFixed(2)}ms`);
   
-  return result;
+  const serviceTimings = {
+    authLookup: (startPerm - startAuth).toFixed(2),
+    permLookup: (startBill - startPerm).toFixed(2),
+    billingCheck: (startWrite - startBill).toFixed(2),
+    fastTenantWrite: (performance.now() - startWrite).toFixed(2),
+    totalService: (performance.now() - startTotal).toFixed(2)
+  };
+  
+  return { 
+    ...result.customer, 
+    _debugTimings: { 
+      ...serviceTimings, 
+      ...result.timings 
+    } 
+  };
 }
 
 import { QueryParams, PaginatedResponse } from '../../core/types';

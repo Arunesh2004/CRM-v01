@@ -1,4 +1,7 @@
 import { NextResponse } from 'next/server';
+import { Logger } from '@/lib/observability/logger';
+
+const logger = new Logger();
 
 export async function POST(req: Request) {
   // Real implementation requires verifying the Twilio request signature
@@ -16,7 +19,7 @@ export async function POST(req: Request) {
     
     return NextResponse.json({ received: true });
   } catch (err: any) {
-    console.error('[Twilio Webhook] Error:', err);
+    logger.error('Twilio Webhook Error', undefined, { name: err?.name });
     return NextResponse.json({ error: 'Webhook Error' }, { status: 400 });
   }
 }

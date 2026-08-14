@@ -1,5 +1,8 @@
 import { NextResponse } from 'next/server';
 import prisma from '@/../database/utils/prisma';
+import { Logger } from '@/lib/observability/logger';
+
+const logger = new Logger();
 
 export async function POST(req: Request) {
   const body = await req.text();
@@ -33,7 +36,7 @@ export async function POST(req: Request) {
 
     return NextResponse.json({ received: true });
   } catch (err: any) {
-    console.error('[Stripe Webhook] Error:', err);
+    logger.error('Stripe Webhook Error', undefined, { name: err?.name });
     return NextResponse.json({ error: 'Webhook Error' }, { status: 400 });
   }
 }

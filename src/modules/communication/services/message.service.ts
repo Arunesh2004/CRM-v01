@@ -3,6 +3,9 @@ import prisma from '@/../database/utils/prisma';
 import { ProviderFactory } from '@/infrastructure/provider.factory';
 import { ChatProvider } from '@/infrastructure/chat/chat.interface';
 import { getCurrentUser } from '@/lib/auth';
+import { Logger } from '@/lib/observability/logger';
+
+const logger = new Logger();
 
 export class MessageService {
   static async sendCustomerSMS(toPhoneNumber: string, body: string) {
@@ -52,8 +55,8 @@ export class MessageService {
       });
 
       return { success: true };
-    } catch (error) {
-      console.error("[MessageService] Failed to send SMS", error);
+    } catch (error: any) {
+      logger.error('Failed to send SMS', undefined, { tenantId, providerErrorName: error?.name });
       throw error;
     }
   }

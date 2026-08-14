@@ -26,10 +26,12 @@ export class GeminiProvider implements AIProvider {
     };
 
     try {
-      const result = await this.executeWithTimeout(
-        this.runGenerationLoop(prompt, tools, systemInstruction, requestId, history, partialTelemetry),
-        AIConfig.MAX_EXECUTION_MS
-      );
+      const abortController = new AbortController();
+      const timer = setTimeout(() => abortController.abort(new Error('AI Request Timed Out')), AIConfig.MAX_EXECUTION_MS);
+
+      const result = await this.runGenerationLoop(
+        prompt, tools, systemInstruction, requestId, history, partialTelemetry, Date.now(), abortController.signal
+      ).finally(() => clearTimeout(timer));
       return result;
     } catch (err: any) {
       const msg = err.message || '';
@@ -74,18 +76,17 @@ export class GeminiProvider implements AIProvider {
     }
   }
 
-  private async executeWithTimeout<T>(promise: Promise<T>, ms: number): Promise<T> {
-    let timer: NodeJS.Timeout;
-    const timeout = new Promise<never>((_, reject) => {
-      timer = setTimeout(() => reject(new Error('AI Request Timed Out')), ms);
-    });
-    return Promise.race([promise, timeout]).finally(() => clearTimeout(timer));
-  }
 
-  private async sendMessageWithRetry(chat: any, payload: any, startTime: number, requestId?: string): Promise<any> {
+
+  private async sendMessageWithRetry(chat: any, payload: any, startTime: number, requestId?: string, signal?: AbortSignal): Promise<any> {
     let attempt = 0;
     while (true) {
+      if (signal?.aborted) throw signal.reason || new Error('AI Request Timed Out');
+
       try {
+        if (signal) {
+          payload.config = { ...payload.config, abortSignal: signal };
+        }
         return await chat.sendMessage(payload);
       } catch (err: any) {
         attempt++;
@@ -130,7 +131,8 @@ export class GeminiProvider implements AIProvider {
     requestId?: string,
     history?: {role: 'user'|'assistant', content: string}[],
     telemetry?: Pick<AIResponse, 'toolsRequested' | 'toolsExecuted' | 'rounds' | 'totalToolCalls'>,
-    startTime: number = Date.now()
+    startTime: number = Date.now(),
+    signal?: AbortSignal
   ): Promise<AIResponse> {
     const t = telemetry ?? { toolsRequested: [], toolsExecuted: [], rounds: 0, totalToolCalls: 0 };
 
@@ -167,7 +169,7 @@ export class GeminiProvider implements AIProvider {
       throw new Error('CONTEXT_LIMIT');
     }
 
-    let response = await this.sendMessageWithRetry(chat, { message: prompt }, startTime, requestId);
+    let response = await this.sendMessageWithRetry(chat, { message: prompt }, startTime, requestId, signal);
 
     while (t.rounds < AIConfig.MAX_TOOL_ROUNDS) {
       if (response.functionCalls && response.functionCalls.length > 0) {
@@ -251,7 +253,7 @@ export class GeminiProvider implements AIProvider {
           throw new Error('CONTEXT_LIMIT');
         }
 
-        response = await this.sendMessageWithRetry(chat, { message: functionResponses } as any, startTime, requestId);
+        response = await this.sendMessageWithRetry(chat, { message: functionResponses } as any, startTime, requestId, signal);
         t.rounds++;
       } else {
         totalContextBytes += (response.text || '').length;
