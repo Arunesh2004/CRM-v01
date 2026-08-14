@@ -1,57 +1,16 @@
-import { requireAuth, requireTenant, requirePermission } from '@/lib/auth';
+import { requireAuth, requireTenant, requirePermission, requireAuthIdentity, requirePermissionFast, requireTenantFromIdentity } from '@/lib/auth';
 import { withTenant } from '@/../database/utils/prisma-tenant';
 import { CreateCustomerInput, UpdateCustomerInput } from '../crm.types';
 import { FeatureAccessService } from '../../billing/feature-access.service';
+import { createTenantCustomerFast } from '@/../database/utils/fast-tenant-queries';
 
 export async function createCustomer(input: CreateCustomerInput) {
-  const user = await requireAuth();
-  const tenantId = await requireTenant();
-  await requirePermission('CUSTOMER', 'CREATE');
-
-  await FeatureAccessService.enforceLimit(tenantId, 'MAX_CUSTOMERS');
-
-  const prisma = withTenant(tenantId);
-
-  // BUG-CRM-SEC-001 Case Insensitive Customer Duplicate Prevention
-  const normalizedName = input.name.toLowerCase().trim().replace(/\s+/g, ' ');
-  const existing = await prisma.customer.findFirst({ where: { tenantId, normalizedName } });
-  if (existing) throw new Error('A customer with this name already exists.');
-
-  return await prisma.$transaction(async (tx) => {
-    const customer = await tx.customer.create({
-      data: {
-        name: input.name,
-        normalizedName,
-        industry: input.industry,
-        assignedUserId: input.assignedUserId,
-        tenantId
-      }
-    });
-
-    await tx.auditLog.create({
-      data: {
-        tenantId,
-        actorId: user.id,
-        actorType: 'USER',
-        action: 'CUSTOMER_CREATED',
-        resource: 'CUSTOMER',
-        resourceId: customer.id,
-      }
-    });
-
-    await tx.activityTimeline.create({
-      data: {
-        tenantId,
-        type: 'SYSTEM',
-        content: `Customer created: ${customer.name}`,
-        actorId: user.id,
-        entityType: 'CUSTOMER',
-        entityId: customer.id
-      }
-    });
-
-    return customer;
-  });
+  // FAST-PATH OPTIMIZATION (PHASE 26E)
+  const identity = await requireAuthIdentity();
+  const tenantId = await requireTenantFromIdentity(identity);
+  await requirePermissionFast(identity.id, 'CUSTOMER', 'CREATE');
+  await FeatureAccessService.enforceCustomerLimitFast(tenantId);
+  return await createTenantCustomerFast(tenantId, identity.id, input);
 }
 
 import { QueryParams, PaginatedResponse } from '../../core/types';

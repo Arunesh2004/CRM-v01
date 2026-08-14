@@ -48,4 +48,28 @@ export class FeatureAccessService {
       }
     }
   }
+
+  static async enforceCustomerLimitFast(tenantId: string): Promise<void> {
+    const subscription = await prisma.subscription.findFirst({
+      where: { tenantId, status: { in: ['ACTIVE', 'TRIAL'] } },
+      select: { plan: { select: { limits: true } } }
+    });
+
+    if (!subscription) throw new Error("No active subscription found for tenant.");
+
+    // Retrieve limit configurations from plan limits
+    const limits = (subscription.plan as Record<string, unknown>)?.limits as Record<string, number> || {};
+    const maxCustomers = limits.maxCustomers || 100;
+    
+    // -1 signifies unlimited
+    if (maxCustomers === -1) {
+      return;
+    }
+
+    // Bypass withTenant proxy by using raw prisma count, since we are explicitly enforcing tenantId
+    const currentCustomers = await prisma.customer.count({ where: { tenantId, deletedAt: null } });
+    if (currentCustomers >= maxCustomers) {
+      throw new Error(`Limit reached: Your plan allows a maximum of ${maxCustomers} customers.`);
+    }
+  }
 }

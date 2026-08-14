@@ -210,6 +210,42 @@ export async function requirePermission(resource: Resource, action: Action) {
 // PHASE 26E: LIGHTWEIGHT IDENTITY RESOLUTION FOR HIGH-THROUGHPUT READ PATHS
 // ============================================================================
 
+export async function checkPermissionFast(userId: string, resource: Resource, action: Action): Promise<boolean> {
+  // Query only what we need to determine if the user has the permission or is an admin.
+  // Equivalent logic: User must have a role named TENANT_ADMIN/GLOBAL_ADMIN OR a role with the specific resource/action.
+  const userRoles = await prisma.userRole.findMany({
+    where: { userId },
+    include: {
+      role: {
+        include: {
+          permissions: {
+            include: { permission: true }
+          }
+        }
+      }
+    }
+  });
+
+  for (const userRole of userRoles) {
+    if (userRole.role.name === 'TENANT_ADMIN' || userRole.role.name === 'GLOBAL_ADMIN') {
+      return true;
+    }
+    const hasPermission = userRole.role.permissions.some(
+      (rp) => rp.permission.resource === resource && rp.permission.action === action
+    );
+    if (hasPermission) return true;
+  }
+  return false;
+}
+
+export async function requirePermissionFast(userId: string, resource: Resource, action: Action) {
+  const hasPermission = await checkPermissionFast(userId, resource, action);
+  if (!hasPermission) {
+    throw new Error(`Forbidden: Requires ${action} on ${resource}`);
+  }
+  return true;
+}
+
 async function tryLoadTestIdentityLight() {
   if (!isLoadTestAuthEnabled()) return null;
   const secret = process.env.LOAD_TEST_SECRET as string;
