@@ -1,5 +1,6 @@
-import { requireAuth, requireTenant } from '@/lib/auth';
+import { requireAuth, requireTenant, requireAuthIdentity, requireTenantFromIdentity } from '@/lib/auth';
 import { withTenant } from '../../../database/utils/prisma-tenant';
+import { getTenantCustomersForExport } from '../../../database/utils/fast-tenant-queries';
 
 export async function getIncidentsCsv(startDate?: Date, endDate?: Date): Promise<string> {
   await requireAuth();
@@ -23,16 +24,10 @@ export async function getIncidentsCsv(startDate?: Date, endDate?: Date): Promise
 }
 
 export async function getCustomersCsv(startDate?: Date, endDate?: Date): Promise<string> {
-  await requireAuth();
-  const tenantId = await requireTenant();
-  const prisma = withTenant(tenantId);
+  const user = await requireAuthIdentity();
+  const tenantId = requireTenantFromIdentity(user);
 
-  const dateFilter = startDate && endDate ? { createdAt: { gte: startDate, lte: endDate } } : {};
-
-  const customers = await prisma.customer.findMany({
-    where: { tenantId, ...dateFilter },
-    orderBy: { createdAt: 'desc' }
-  });
+  const customers = await getTenantCustomersForExport(tenantId, startDate, endDate);
 
   const header = ['ID,Name,Industry,Status,CreatedAt\n'];
   const rows = customers.map(c => 

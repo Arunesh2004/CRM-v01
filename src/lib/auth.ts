@@ -206,3 +206,106 @@ export async function requirePermission(resource: Resource, action: Action) {
   return true;
 }
 
+// ============================================================================
+// PHASE 26E: LIGHTWEIGHT IDENTITY RESOLUTION FOR HIGH-THROUGHPUT READ PATHS
+// ============================================================================
+
+async function tryLoadTestIdentityLight() {
+  if (!isLoadTestAuthEnabled()) return null;
+  const secret = process.env.LOAD_TEST_SECRET as string;
+
+  let token: string | null = null;
+  try {
+    const reqHeaders = await headers();
+    token = reqHeaders.get('x-load-test-token');
+  } catch {
+    return null;
+  }
+  if (!token) return null;
+
+  let decoded: jwt.JwtPayload;
+  try {
+    const raw = jwt.verify(token, secret, {
+      audience: 'crm-staging-load-test',
+      issuer: 'crm-phase26-runner',
+      algorithms: ['HS256'],
+    });
+    if (typeof raw === 'string') return null;
+    decoded = raw;
+  } catch (err: unknown) {
+    logger.error('Load-test token verification failed', undefined, { reason: (err as { name?: string })?.name });
+    return null;
+  }
+
+  if (decoded['purpose'] !== 'crm-phase26-load-test') return null;
+
+  const userId = decoded['sub'];
+  if (!userId || typeof userId !== 'string') return null;
+
+  // SHALLOW LOOKUP: No roles, no permissions, no related tenant object.
+  const user = await prisma.user.findUnique({
+    where: { id: userId },
+    select: { id: true, tenantId: true, email: true }
+  });
+
+  if (!user) return null;
+
+  if (!user.email.startsWith('audit-load-') && !user.email.includes('AUDIT_LOAD')) {
+    logger.error('Load-test token rejected: non-audit user attempted load-test auth', undefined, { userId: '[REDACTED]' });
+    return null;
+  }
+
+  return user;
+}
+
+export const getCurrentUserIdentity = cache(async function getCurrentUserIdentity() {
+  const loadTestUser = await tryLoadTestIdentityLight();
+  if (loadTestUser) return loadTestUser;
+
+  if (process.env.TEST_USER_ID) {
+    return await prisma.user.findUnique({
+      where: { id: process.env.TEST_USER_ID },
+      select: { id: true, tenantId: true, email: true }
+    });
+  }
+
+  const clerkAuth = await auth();
+  const clerkId = clerkAuth.userId;
+
+  if (!clerkId) {
+    return null;
+  }
+
+  const user = await prisma.user.findUnique({
+    where: { clerkId },
+    select: { id: true, tenantId: true, email: true }
+  });
+
+  return user;
+});
+
+export async function requireAuthIdentity() {
+  let user = await getCurrentUserIdentity();
+  if (!user) {
+    const clerkAuth = await auth();
+    if (clerkAuth.userId) {
+      await ensureUserProvisionedFromClerk(clerkAuth.userId);
+      user = await getCurrentUserIdentity();
+    }
+    if (!user) {
+      throw new Error('Unauthorized');
+    }
+  }
+  return user;
+}
+
+export function requireTenantFromIdentity(user: { tenantId: string | null }) {
+  if (process.env.TEST_TENANT_ID) {
+    return process.env.TEST_TENANT_ID;
+  }
+  if (!user || !user.tenantId) {
+    throw new Error('Tenant Context Missing');
+  }
+  return user.tenantId;
+}
+
