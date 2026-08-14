@@ -13,21 +13,28 @@ export async function createCustomer(input: CreateCustomerInput) {
   const tenantId = await requireTenantFromIdentity(identity);
   console.log(`[PHASE_26E_MEASUREMENT] Auth lookup duration: ${(performance.now() - startAuth).toFixed(2)}ms`);
   
-  const startPerm = performance.now();
-  await requirePermissionFast(identity.id, 'CUSTOMER', 'CREATE');
-  console.log(`[PHASE_26E_MEASUREMENT] Permission lookup duration: ${(performance.now() - startPerm).toFixed(2)}ms`);
-  
-  const startBill = performance.now();
-  await FeatureAccessService.enforceCustomerLimitFast(tenantId);
-  console.log(`[PHASE_26E_MEASUREMENT] Billing check duration: ${(performance.now() - startBill).toFixed(2)}ms`);
+  const startParallel = performance.now();
+  const normalizedName = input.name.toLowerCase().trim().replace(/\s+/g, ' ');
+
+  const [, , existing] = await Promise.all([
+    requirePermissionFast(identity.id, 'CUSTOMER', 'CREATE'),
+    FeatureAccessService.enforceCustomerLimitFast(tenantId),
+    import('@/../database/utils/prisma').then(m => m.default.customer.findFirst({
+      where: { tenantId, normalizedName, deletedAt: null },
+      select: { id: true }
+    }))
+  ]);
+
+  if (existing) throw new Error('A customer with this name already exists.');
+
+  console.log(`[PHASE_26E_MEASUREMENT] Parallel checks duration: ${(performance.now() - startParallel).toFixed(2)}ms`);
   
   const startWrite = performance.now();
   const result = await createTenantCustomerFast(tenantId, identity.id, input);
   
   const serviceTimings = {
-    authLookup: (startPerm - startAuth).toFixed(2),
-    permLookup: (startBill - startPerm).toFixed(2),
-    billingCheck: (startWrite - startBill).toFixed(2),
+    authLookup: (startParallel - startAuth).toFixed(2),
+    parallelChecks: (startWrite - startParallel).toFixed(2),
     fastTenantWrite: (performance.now() - startWrite).toFixed(2),
     totalService: (performance.now() - startTotal).toFixed(2)
   };

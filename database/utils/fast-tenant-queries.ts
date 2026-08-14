@@ -52,14 +52,6 @@ export async function createTenantCustomerFast(
 
   const normalizedName = customerData.name.toLowerCase().trim().replace(/\s+/g, ' ');
 
-  const startDup = performance.now();
-  const existing = await prisma.customer.findFirst({ 
-    where: { tenantId: trustedTenantId, normalizedName, deletedAt: null } 
-  });
-  console.log(`[PHASE_26E_MEASUREMENT] Duplicate check duration: ${(performance.now() - startDup).toFixed(2)}ms`);
-  
-  if (existing) throw new Error('A customer with this name already exists.');
-
   const startTx = performance.now();
   return await prisma.$transaction(async (tx) => {
     console.log(`[PHASE_26E_MEASUREMENT] Transaction acquired after: ${(performance.now() - startTx).toFixed(2)}ms`);
@@ -101,7 +93,6 @@ export async function createTenantCustomerFast(
       }
     });
     const timings = {
-      dupCheck: (startTx - startDup).toFixed(2),
       txAcquire: (startInsert - startTx).toFixed(2),
       customerInsert: (startAudit - startInsert).toFixed(2),
       auditInsert: (startTimeline - startAudit).toFixed(2),
