@@ -52,31 +52,34 @@ export async function createTenantCustomerFast(
 
   const normalizedName = customerData.name.toLowerCase().trim().replace(/\s+/g, ' ');
 
-  // The duplicate check is performed using raw Prisma, mechanically scoping to trustedTenantId.
-  // In existing code, it is outside the transaction. We can keep it outside or inside, but 
-  // keeping it consistent with existing customer.service.ts which did it outside the tx.
-  // Wait, existing did it before `$transaction`. 
+  const startDup = performance.now();
   const existing = await prisma.customer.findFirst({ 
     where: { tenantId: trustedTenantId, normalizedName, deletedAt: null } 
   });
+  console.log(`[PHASE_26E_MEASUREMENT] Duplicate check duration: ${(performance.now() - startDup).toFixed(2)}ms`);
+  
   if (existing) throw new Error('A customer with this name already exists.');
 
+  const startTx = performance.now();
   return await prisma.$transaction(async (tx) => {
-    // 1. Create Customer
+    console.log(`[PHASE_26E_MEASUREMENT] Transaction acquired after: ${(performance.now() - startTx).toFixed(2)}ms`);
+    
+    const startInsert = performance.now();
     const customer = await tx.customer.create({
       data: {
         name: customerData.name,
         normalizedName,
         industry: customerData.industry,
         assignedUserId: customerData.assignedUserId,
-        tenantId: trustedTenantId, // MECHANICALLY FORCED
+        tenantId: trustedTenantId,
       }
     });
+    console.log(`[PHASE_26E_MEASUREMENT] Customer insert duration: ${(performance.now() - startInsert).toFixed(2)}ms`);
 
-    // 2. Create Audit Log
+    const startAudit = performance.now();
     await tx.auditLog.create({
       data: {
-        tenantId: trustedTenantId, // MECHANICALLY FORCED
+        tenantId: trustedTenantId,
         actorId,
         actorType: 'USER',
         action: 'CUSTOMER_CREATED',
@@ -84,11 +87,12 @@ export async function createTenantCustomerFast(
         resourceId: customer.id,
       }
     });
+    console.log(`[PHASE_26E_MEASUREMENT] Audit insert duration: ${(performance.now() - startAudit).toFixed(2)}ms`);
 
-    // 3. Create Activity Timeline
+    const startTimeline = performance.now();
     await tx.activityTimeline.create({
       data: {
-        tenantId: trustedTenantId, // MECHANICALLY FORCED
+        tenantId: trustedTenantId,
         type: 'SYSTEM',
         content: `Customer created: ${customer.name}`,
         actorId,
@@ -96,6 +100,7 @@ export async function createTenantCustomerFast(
         entityId: customer.id
       }
     });
+    console.log(`[PHASE_26E_MEASUREMENT] Timeline insert duration: ${(performance.now() - startTimeline).toFixed(2)}ms`);
 
     return customer;
   });

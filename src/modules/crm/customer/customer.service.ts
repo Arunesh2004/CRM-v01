@@ -5,12 +5,28 @@ import { FeatureAccessService } from '../../billing/feature-access.service';
 import { createTenantCustomerFast } from '@/../database/utils/fast-tenant-queries';
 
 export async function createCustomer(input: CreateCustomerInput) {
-  // FAST-PATH OPTIMIZATION (PHASE 26E)
+  const startTotal = performance.now();
+  console.log(`[PHASE_26E_MEASUREMENT] Starting createCustomer...`);
+  
+  const startAuth = performance.now();
   const identity = await requireAuthIdentity();
   const tenantId = await requireTenantFromIdentity(identity);
+  console.log(`[PHASE_26E_MEASUREMENT] Auth lookup duration: ${(performance.now() - startAuth).toFixed(2)}ms`);
+  
+  const startPerm = performance.now();
   await requirePermissionFast(identity.id, 'CUSTOMER', 'CREATE');
+  console.log(`[PHASE_26E_MEASUREMENT] Permission lookup duration: ${(performance.now() - startPerm).toFixed(2)}ms`);
+  
+  const startBill = performance.now();
   await FeatureAccessService.enforceCustomerLimitFast(tenantId);
-  return await createTenantCustomerFast(tenantId, identity.id, input);
+  console.log(`[PHASE_26E_MEASUREMENT] Billing check duration: ${(performance.now() - startBill).toFixed(2)}ms`);
+  
+  const startWrite = performance.now();
+  const result = await createTenantCustomerFast(tenantId, identity.id, input);
+  console.log(`[PHASE_26E_MEASUREMENT] Fast tenant write duration: ${(performance.now() - startWrite).toFixed(2)}ms`);
+  console.log(`[PHASE_26E_MEASUREMENT] Total service duration: ${(performance.now() - startTotal).toFixed(2)}ms`);
+  
+  return result;
 }
 
 import { QueryParams, PaginatedResponse } from '../../core/types';
