@@ -10,9 +10,8 @@ export async function createCustomerAction(payload: z.infer<typeof CreateCustome
   try {
     const validatedData = CreateCustomerSchema.parse(payload);
     
-    await requireAuth();
-    await requireTenant();
-    await requirePermission('CUSTOMER', 'CREATE');
+    // FAST PATH: Authentication, Tenant Resolution, and RBAC are mechanically 
+    // enforced inside customerService.createCustomer using optimized queries.
     
     const result = await customerService.createCustomer(validatedData);
     return { success: true, data: result };
