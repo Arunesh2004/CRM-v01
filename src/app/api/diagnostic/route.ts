@@ -19,6 +19,7 @@ export async function POST(request: Request) {
       // We will rely on Next.js/Clerk middleware parsing the Authorization Bearer token.
     }
 
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const results: any = {};
 
     if (action === 'baseline') {
@@ -88,6 +89,7 @@ export async function POST(request: Request) {
     }
 
     return NextResponse.json(results);
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   } catch (err: any) {
     return NextResponse.json({ error: err.message }, { status: 500 });
   }
