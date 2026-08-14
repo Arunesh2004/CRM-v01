@@ -12,5 +12,6 @@
       "path": "/api/cron/cleanup-outbox",
       "schedule": "0 0 * * *"
     }
-  ]
+  ],
+  "regions": ["sin1"]
 }
