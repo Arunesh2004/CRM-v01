@@ -1,11 +1,13 @@
 import { NextResponse } from 'next/server';
 import { PrismaClient } from '@prisma/client';
 
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 export async function GET(request: Request) {
   if (process.env.NODE_ENV === 'production') {
     return NextResponse.json({ error: 'Not allowed in production' }, { status: 403 });
   }
 
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const results: any = {};
   
   try {
@@ -67,7 +69,7 @@ export async function GET(request: Request) {
     
     await prismaDirect.$disconnect();
 
-  } catch (error: any) {
+  } catch (error: any) { // eslint-disable-line @typescript-eslint/no-explicit-any
     results.error = error.message;
   }
 

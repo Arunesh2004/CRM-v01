@@ -50,6 +50,7 @@ export async function createCustomer(input: CreateCustomerInput) {
 
 import { QueryParams, PaginatedResponse } from '../../core/types';
 
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 export async function getCustomers(params?: QueryParams & { createdAtStart?: Date; createdAtEnd?: Date; }): Promise<PaginatedResponse<any>> {
   await requireAuth();
   const tenantId = await requireTenant();
@@ -58,6 +59,7 @@ export async function getCustomers(params?: QueryParams & { createdAtStart?: Dat
   const prisma = withTenant(tenantId);
   const limit = params?.limit || 50;
   
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const where: any = { deletedAt: null, tenantId };
   
   if (params?.search) {
@@ -281,6 +283,7 @@ export async function deleteCustomer(customerId: string) {
   });
 }
 
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 export async function createContact(input: any) {
   const user = await requireAuth();
   const tenantId = await requireTenant();
@@ -322,6 +325,7 @@ export async function createContact(input: any) {
   });
 }
 
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 export async function createLocation(input: any) {
   const user = await requireAuth();
   const tenantId = await requireTenant();
