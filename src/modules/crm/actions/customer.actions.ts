@@ -7,6 +7,7 @@ import * as customerService from '../customer/customer.service';
 import { z } from 'zod';
 
 export async function createCustomerAction(payload: z.infer<typeof CreateCustomerSchema>) {
+  const sStart = performance.now();
   try {
     const validatedData = CreateCustomerSchema.parse(payload);
     
@@ -14,9 +15,11 @@ export async function createCustomerAction(payload: z.infer<typeof CreateCustome
     // enforced inside customerService.createCustomer using optimized queries.
     
     const result = await customerService.createCustomer(validatedData);
-    return { success: true, data: result };
+    const tActionTotal = performance.now() - sStart;
+    return { success: true, data: result, _debugActionTotal: tActionTotal };
   } catch (error: any) {
-    return { success: false, error: sanitizeClientError(error) };
+    const tActionTotal = performance.now() - sStart;
+    return { success: false, error: sanitizeClientError(error), _debugActionTotal: tActionTotal };
   }
 }
 
