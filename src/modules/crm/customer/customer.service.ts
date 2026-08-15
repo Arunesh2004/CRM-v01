@@ -6,43 +6,50 @@ import { createTenantCustomerFast } from '@/../database/utils/fast-tenant-querie
 
 export async function createCustomer(input: CreateCustomerInput) {
   const startTotal = performance.now();
-  console.log(`[PHASE_26E_MEASUREMENT] Starting createCustomer...`);
   
   const startAuth = performance.now();
   const identity = await requireAuthIdentity();
-  const tenantId = await requireTenantFromIdentity(identity);
-  console.log(`[PHASE_26E_MEASUREMENT] Auth lookup duration: ${(performance.now() - startAuth).toFixed(2)}ms`);
+  const authMs = performance.now() - startAuth;
   
-  const startParallel = performance.now();
-  const normalizedName = input.name.toLowerCase().trim().replace(/\s+/g, ' ');
-
+  const startTenant = performance.now();
+  const tenantId = await requireTenantFromIdentity(identity);
+  const tenantMs = performance.now() - startTenant;
+  
+  const startPerm = performance.now();
   await requirePermissionFast(identity.id, 'CUSTOMER', 'CREATE');
+  const permissionMs = performance.now() - startPerm;
+  
+  const startSub = performance.now();
   await FeatureAccessService.enforceCustomerLimitFast(tenantId);
+  const subscriptionMs = performance.now() - startSub;
+  
+  const startDup = performance.now();
+  const normalizedName = input.name.toLowerCase().trim().replace(/\s+/g, ' ');
   const prismaModule = await import('@/../database/utils/prisma');
   const existing = await prismaModule.default.customer.findFirst({
     where: { tenantId, normalizedName, deletedAt: null },
     select: { id: true }
   });
+  const duplicateCheckMs = performance.now() - startDup;
 
   if (existing) throw new Error('A customer with this name already exists.');
 
-  console.log(`[PHASE_26E_MEASUREMENT] Parallel checks duration: ${(performance.now() - startParallel).toFixed(2)}ms`);
-  
-  const startWrite = performance.now();
+  const startFastWrite = performance.now();
   const result = await createTenantCustomerFast(tenantId, identity.id, input);
+  const fastWriteTotalMs = performance.now() - startFastWrite;
   
-  const serviceTimings = {
-    authLookup: (startParallel - startAuth).toFixed(2),
-    parallelChecks: (startWrite - startParallel).toFixed(2),
-    fastTenantWrite: (performance.now() - startWrite).toFixed(2),
-    totalService: (performance.now() - startTotal).toFixed(2)
-  };
+  const totalMs = performance.now() - startTotal;
   
   return { 
     ...result.customer, 
     _debugTimings: { 
-      ...serviceTimings, 
-      ...result.timings 
+      authMs,
+      tenantMs,
+      permissionMs,
+      subscriptionMs,
+      duplicateCheckMs,
+      ...result.timings,
+      totalMs
     } 
   };
 }

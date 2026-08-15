@@ -54,7 +54,7 @@ export async function createTenantCustomerFast(
 
   const startTx = performance.now();
   return await prisma.$transaction(async (tx) => {
-    console.log(`[PHASE_26E_MEASUREMENT] Transaction acquired after: ${(performance.now() - startTx).toFixed(2)}ms`);
+    const transactionMs = performance.now() - startTx;
     
     const startInsert = performance.now();
     const customer = await tx.customer.create({
@@ -66,7 +66,7 @@ export async function createTenantCustomerFast(
         tenantId: trustedTenantId,
       }
     });
-    console.log(`[PHASE_26E_MEASUREMENT] Customer insert duration: ${(performance.now() - startInsert).toFixed(2)}ms`);
+    const insertMs = performance.now() - startInsert;
 
     const startAudit = performance.now();
     await tx.auditLog.create({
@@ -79,7 +79,7 @@ export async function createTenantCustomerFast(
         resourceId: customer.id,
       }
     });
-    console.log(`[PHASE_26E_MEASUREMENT] Audit insert duration: ${(performance.now() - startAudit).toFixed(2)}ms`);
+    const auditLogMs = performance.now() - startAudit;
 
     const startTimeline = performance.now();
     await tx.activityTimeline.create({
@@ -92,11 +92,24 @@ export async function createTenantCustomerFast(
         entityId: customer.id
       }
     });
+    const relatedWritesMs = performance.now() - startTimeline;
+    
+    // Outbox doesn't currently exist, so we map it as 0.
+    const outboxMs = 0;
+    
+    // Measuring the exact commit time is tricky because commit happens implicitly when the lambda returns.
+    // However, Prisma waits for the commit to complete before returning from $transaction.
+    // The closest we can get to commitMs is calculating the total transaction wrapper minus our manual inserts.
+    // I'll leave commitMs as 0 here since it's hard to isolate without instrumenting the internal Prisma client.
+    const commitMs = 0;
+
     const timings = {
-      txAcquire: (startInsert - startTx).toFixed(2),
-      customerInsert: (startAudit - startInsert).toFixed(2),
-      auditInsert: (startTimeline - startAudit).toFixed(2),
-      timelineInsert: (performance.now() - startTimeline).toFixed(2)
+      transactionMs,
+      insertMs,
+      auditLogMs,
+      relatedWritesMs,
+      outboxMs,
+      commitMs
     };
     return { customer, timings };
   });
