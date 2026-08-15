@@ -1,5 +1,5 @@
 import { getDashboardMetricsAction } from '@/modules/reporting/actions/reporting.actions';
-import { BarChart3, Activity, Users, Phone, ShieldAlert, CreditCard } from 'lucide-react';
+import { BarChart3, Activity, Users, Phone, ShieldAlert } from 'lucide-react';
 import { Card, KpiCard } from '@/components/ui/Card';
 
 function AnalyticsKpiCard({ title, value, trend, icon: Icon }: { title: string, value: string | number, trend?: string, icon: any }) {
@@ -115,28 +115,7 @@ export default async function AnalyticsDashboardPage() {
           </div>
           <h2 className="text-lg font-display font-semibold text-white">System & Operations</h2>
         </div>
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          <div className="glass-panel p-6">
-            <h3 className="font-display font-semibold text-white mb-5 flex items-center gap-2">
-              <CreditCard className="w-4 h-4 text-violet-400" />
-              Financial Metrics
-            </h3>
-            <div className="space-y-4">
-              <div className="flex justify-between items-center pb-3 border-b border-white/[.04]">
-                <span className="text-sm text-[#8891B0]">Monthly Recurring Revenue (MRR)</span>
-                <span className="font-mono font-bold text-white">${data?.billing?.mrr ?? '0.00'}</span>
-              </div>
-              <div className="flex justify-between items-center pb-3 border-b border-white/[.04]">
-                <span className="text-sm text-[#8891B0]">Annual Recurring Revenue (ARR)</span>
-                <span className="font-mono font-bold text-white">${data?.billing?.arr ?? '0.00'}</span>
-              </div>
-              <div className="flex justify-between items-center">
-                <span className="text-sm text-[#8891B0]">Active Subscriptions</span>
-                <span className="text-sm font-medium text-white">{data?.billing?.subscriptions ?? 0}</span>
-              </div>
-            </div>
-          </div>
-          
+        <div className="grid grid-cols-1 gap-6">
           <div className="glass-panel p-6">
             <h3 className="font-display font-semibold text-white mb-5 flex items-center gap-2">
               <ShieldAlert className="w-4 h-4 text-rose-400" />

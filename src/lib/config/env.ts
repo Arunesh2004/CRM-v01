@@ -30,12 +30,7 @@ export function validateEnvironment(): void {
     }
   }
 
-  // Payment constraints
-  if (isProduction) {
-    if ((!process.env.STRIPE_SECRET_KEY || !process.env.STRIPE_WEBHOOK_SECRET) && (!process.env.RAZORPAY_KEY_ID || !process.env.RAZORPAY_KEY_SECRET)) {
-      throw new Error(`CRITICAL STARTUP FAILURE: At least one Payment Provider (Stripe or Razorpay) credentials missing in production`);
-    }
-  }
+
 
   // Prevent secrets from leaking via NEXT_PUBLIC_
   const allEnvKeys = Object.keys(process.env);
@@ -69,6 +64,4 @@ export const ENV = {
   get awsAccessKeyId() { return process.env.AWS_ACCESS_KEY_ID; },
   get awsSecretAccessKey() { return process.env.AWS_SECRET_ACCESS_KEY; },
   
-  // Billing
-  get stripeSecretKey() { return process.env.STRIPE_SECRET_KEY; },
 };

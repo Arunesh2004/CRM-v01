@@ -1,6 +1,5 @@
 import * as reportingService from '../../reporting/reporting.service';
-import { getCurrentSubscription } from '../../billing/subscription/subscription.service';
-import { getTenantUsage } from '../../billing/usage/usage.service';
+
 import { getTasks } from '../../crm/task/task.service';
 import { getLeads, getLeadById } from '../../crm/lead/lead.service';
 import { getCustomers, getCustomerById } from '../../crm/customer/customer.service';
@@ -290,28 +289,6 @@ export const secureTools: AITool[] = [
     parameters: { type: 'OBJECT', properties: {} },
     execute: async () => {
       return await reportingService.getCommunicationMetrics();
-    }
-  },
-  {
-    name: 'getBillingSummary',
-    description: 'Get current subscription plan and usage percentage.',
-    requiredResource: 'BILLING',
-    requiredAction: 'READ',
-    parameters: { type: 'OBJECT', properties: {} },
-    execute: async () => {
-      const sub = await getCurrentSubscription();
-      const usage = await getTenantUsage();
-
-      let usagePercentage = 0;
-      if (usage && usage.cameras.limit > 0) {
-        usagePercentage = (usage.cameras.used / usage.cameras.limit) * 100;
-      }
-
-      return {
-        planName: sub?.plan?.name || 'Unknown',
-        status: sub?.status || 'Unknown',
-        usagePercentage: usagePercentage.toFixed(1)
-      };
     }
   },
   {

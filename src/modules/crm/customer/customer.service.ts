@@ -1,7 +1,7 @@
 import { requireAuth, requireTenant, requirePermission, requireAuthIdentity, requirePermissionFast, requireTenantFromIdentity } from '@/lib/auth';
 import { withTenant } from '@/../database/utils/prisma-tenant';
 import { CreateCustomerInput, UpdateCustomerInput } from '../crm.types';
-import { FeatureAccessService } from '../../billing/feature-access.service';
+
 import { createTenantCustomerFast } from '@/../database/utils/fast-tenant-queries';
 
 export async function createCustomer(input: CreateCustomerInput) {
@@ -17,7 +17,7 @@ export async function createCustomer(input: CreateCustomerInput) {
   const normalizedName = input.name.toLowerCase().trim().replace(/\s+/g, ' ');
 
   await requirePermissionFast(identity.id, 'CUSTOMER', 'CREATE');
-  await FeatureAccessService.enforceCustomerLimitFast(tenantId);
+
   const prismaModule = await import('@/../database/utils/prisma');
   const existing = await prismaModule.default.customer.findFirst({
     where: { tenantId, normalizedName, deletedAt: null },

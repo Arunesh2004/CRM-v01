@@ -5,8 +5,7 @@ export async function requestTenantDeletion(tenantId: string, reason: string) {
   const user = await requireAuth();
 
   const tenant = await prisma.tenant.findUnique({
-    where: { id: tenantId },
-    include: { subscriptions: true }
+    where: { id: tenantId }
   });
 
   if (!tenant) {
@@ -17,12 +16,7 @@ export async function requestTenantDeletion(tenantId: string, reason: string) {
     throw new Error('Forbidden: Only the Tenant Owner can request deletion');
   }
 
-  // Check subscriptions and cancel if active (stub for future billing engine)
-  const activeSubscription = tenant.subscriptions.find(s => s.status === 'ACTIVE');
-  if (activeSubscription) {
-    // In Phase 6 Billing, this would call stripe.subscriptions.cancel(activeSubscription.stripeId)
-    console.log('Canceling active subscription for tenant:', tenantId);
-  }
+
 
   const updatedTenant = await prisma.tenant.update({
     where: { id: tenantId },

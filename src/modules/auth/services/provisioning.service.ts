@@ -1,6 +1,6 @@
 import prisma from '@/../database/utils/prisma';
 import type { User } from '@clerk/nextjs/server';
-import { FeatureAccessService } from '../../billing/feature-access.service';
+
 
 export async function ensureUserProvisioned(clerkUser: User | any) {
   // Normalize user data handling both Clerk SDK User object and Webhook payload
@@ -50,8 +50,7 @@ export async function ensureUserProvisioned(clerkUser: User | any) {
         tenant = await tx.tenant.findUnique({ where: { id: tenantId } });
         if (!tenant) throw new Error('Invalid tenantId provided in metadata');
         
-        // Enforce employee limit for the existing tenant before adding another
-        await FeatureAccessService.enforceLimit(tenantId as string, 'MAX_EMPLOYEES');
+
       }
 
       // Upsert User to handle concurrent webhooks/logins safely

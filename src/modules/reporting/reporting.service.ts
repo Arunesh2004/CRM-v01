@@ -87,28 +87,6 @@ export async function getCommunicationMetrics(startDate?: Date, endDate?: Date) 
   return { total, email, sms, whatsapp, calls, successRate: successRate.toFixed(1) };
 }
 
-export async function getBillingMetrics(startDate?: Date, endDate?: Date) {
-  await requireAuth();
-  const tenantId = await requireTenant();
-  const prisma = withTenant(tenantId);
-
-  const dateFilter = startDate && endDate ? { createdAt: { gte: startDate, lte: endDate } } : {};
-
-  const [subscriptions, invoices] = await Promise.all([
-    prisma.subscription.count({ where: { tenantId, ...dateFilter } }),
-    prisma.invoice.count({ where: { tenantId, ...dateFilter } })
-  ]);
-
-  const paidInvoices = await prisma.invoice.findMany({
-    where: { tenantId, status: 'PAID', ...dateFilter },
-    select: { amount: true }
-  });
-
-  const mrr = paidInvoices.reduce((sum, inv) => sum + Number(inv.amount), 0);
-  const arr = mrr * 12;
-
-  return { subscriptions, invoices, mrr, arr };
-}
 
 export async function getLeadConversionMetrics(startDate?: Date, endDate?: Date) {
   await requireAuth();

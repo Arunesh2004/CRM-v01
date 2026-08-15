@@ -50,14 +50,6 @@ export class MockAIProvider implements AIProvider {
         toolsExecuted.push('getCommunicationSummary');
         contextName = 'communication';
       }
-    } else if (p.includes('billing') || p.includes('plan') || p.includes('subscription')) {
-      const tool = tools.find(t => t.name === 'getBillingSummary');
-      if (tool) {
-        toolsRequested.push('getBillingSummary');
-        executedData = await tool.execute({});
-        toolsExecuted.push('getBillingSummary');
-        contextName = 'billing';
-      }
     }
 
     const baseTelemetry = {

@@ -39,27 +39,7 @@ export async function POST(request: Request) {
       await p.$disconnect();
     }
     
-    if (action === 'subscription') {
-      const tenantId = body.tenantId;
-      if (!tenantId) return NextResponse.json({ error: 'tenantId required' }, { status: 400 });
-      
-      const p = new PrismaClient({ log: [] });
-      
-      const t0 = performance.now();
-      await p.subscription.findFirst({
-        where: { tenantId, status: { in: ['ACTIVE', 'TRIAL'] } }
-      });
-      results.subOnly = performance.now() - t0;
-      
-      const t1 = performance.now();
-      await p.subscription.findFirst({
-        where: { tenantId, status: { in: ['ACTIVE', 'TRIAL'] } },
-        select: { plan: { select: { limits: true } } }
-      });
-      results.subPlan = performance.now() - t1;
-      
-      await p.$disconnect();
-    }
+
     
     if (action === 'write') {
       const startTotal = performance.now();

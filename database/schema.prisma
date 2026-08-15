@@ -53,15 +53,11 @@ enum Resource {
   CUSTOMER
   CAMERA
   USER
-  BILLING
   SYSTEM
   LEAD
   TASK
   LOCATION
   COMMUNICATION
-  SUBSCRIPTION
-  INVOICE
-  PAYMENT
   STREAM
   RECORDING
   AI_EVENT
@@ -128,13 +124,6 @@ model Tenant {
   messageReadStatuses     MessageReadStatus[]
   notifications           Notification[]
   notificationPreferences NotificationPreference[]
-
-  // Billing
-  subscriptions    Subscription[]
-  invoices         Invoice[]
-  payments         Payment[]
-  usageEvents      UsageEvent[]
-  paymentCustomers PaymentCustomer[]
 
   // CCTV
   cameras           Camera[]
@@ -435,56 +424,6 @@ enum OutboxStatus {
   FAILED
 }
 
-// -----------------------------------------------------------------------------
-// BILLING ENUMS
-// -----------------------------------------------------------------------------
-
-enum BillingCycle {
-  MONTHLY
-  YEARLY
-}
-
-enum SubscriptionStatus {
-  TRIAL
-  ACTIVE
-  PAST_DUE
-  SUSPENDED
-  CANCELLED
-}
-
-enum InvoiceStatus {
-  DRAFT
-  OPEN
-  PAID
-  VOID
-  UNCOLLECTIBLE
-}
-
-enum PaymentStatus {
-  PENDING
-  SUCCESS
-  FAILED
-  REFUNDED
-}
-
-enum PaymentProvider {
-  RAZORPAY
-  STRIPE
-  PAYPAL
-}
-
-enum UsageType {
-  USER
-  CAMERA
-  STORAGE
-  AI_REQUEST
-  COMMUNICATION
-  EMAIL_SENT
-  EMAIL_RECEIVED
-  EMAIL_STORAGE
-  VOICE_MINUTES
-  RECORDING_STORAGE
-}
 
 // -----------------------------------------------------------------------------
 // CRM MODELS
@@ -1027,117 +966,7 @@ model NotificationPreference {
 }
 
 // -----------------------------------------------------------------------------
-// BILLING MODELS
-// -----------------------------------------------------------------------------
 
-model Plan {
-  id           String       @id @default(uuid())
-  name         String
-  price        Decimal
-  billingCycle BillingCycle
-  limits       Json
-  features     Json
-  createdAt    DateTime     @default(now())
-  updatedAt    DateTime     @updatedAt
-
-  subscriptions Subscription[]
-}
-
-model Subscription {
-  id             String             @id @default(uuid())
-  tenantId       String
-  planId         String
-  status         SubscriptionStatus @default(TRIAL)
-  startDate      DateTime
-  endDate        DateTime
-  renewalDate    DateTime
-  gracePeriodEnd DateTime?
-  cancelledAt    DateTime?
-  createdAt      DateTime           @default(now())
-  updatedAt      DateTime           @updatedAt
-
-  tenant    Tenant    @relation(fields: [tenantId], references: [id])
-  plan      Plan      @relation(fields: [planId], references: [id], onDelete: Restrict)
-  invoices  Invoice[]
-  deletedAt DateTime?
-
-  @@index([tenantId, status])
-  @@index([tenantId, planId])
-}
-
-model Invoice {
-  id             String        @id @default(uuid())
-  tenantId       String
-  subscriptionId String
-  invoiceNumber  String        @unique
-  amount         Decimal
-  currency       String        @default("USD")
-  taxAmount      Decimal       @default(0)
-  discountAmount Decimal       @default(0)
-  finalAmount    Decimal
-  status         InvoiceStatus @default(DRAFT)
-  issuedAt       DateTime?
-  paidAt         DateTime?
-  createdAt      DateTime      @default(now())
-  updatedAt      DateTime      @updatedAt
-
-  tenant       Tenant       @relation(fields: [tenantId], references: [id])
-  subscription Subscription @relation(fields: [subscriptionId], references: [id], onDelete: Restrict)
-  payments     Payment[]
-  deletedAt    DateTime?
-
-  @@index([tenantId, status])
-  @@index([tenantId, subscriptionId])
-}
-
-model Payment {
-  id                String          @id @default(uuid())
-  tenantId          String
-  invoiceId         String
-  provider          PaymentProvider
-  transactionId     String          @unique
-  providerPaymentId String?
-  providerResponse  Json?
-  status            PaymentStatus   @default(PENDING)
-  failureReason     String?
-  createdAt         DateTime        @default(now())
-  updatedAt         DateTime        @updatedAt
-
-  tenant    Tenant    @relation(fields: [tenantId], references: [id])
-  invoice   Invoice   @relation(fields: [invoiceId], references: [id], onDelete: Restrict)
-  deletedAt DateTime?
-
-  @@index([tenantId, invoiceId])
-  @@index([tenantId, status])
-}
-
-model PaymentCustomer {
-  id                 String          @id @default(uuid())
-  tenantId           String
-  provider           PaymentProvider
-  providerCustomerId String
-  createdAt          DateTime        @default(now())
-  updatedAt          DateTime        @updatedAt
-
-  tenant Tenant @relation(fields: [tenantId], references: [id])
-
-  @@unique([tenantId, provider])
-}
-
-model UsageEvent {
-  id        String    @id @default(uuid())
-  tenantId  String
-  type      UsageType
-  quantity  Int
-  metadata  Json?
-  createdAt DateTime  @default(now())
-
-  tenant Tenant @relation(fields: [tenantId], references: [id])
-
-  @@index([tenantId, type, createdAt])
-}
-
-// -----------------------------------------------------------------------------
 // CCTV ENUMS
 // -----------------------------------------------------------------------------
 
