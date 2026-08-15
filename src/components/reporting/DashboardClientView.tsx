@@ -59,61 +59,66 @@ export function DashboardClientView({ metrics }: { metrics: any }) {
       
       {/* EXECUTIVE SUMMARY KPIs */}
       <div className="grid grid-cols-2 lg:grid-cols-5 gap-4">
-        <Card className="bg-primary text-primary-foreground border-primary shadow-md">
+        <Card className="border-l-4 border-l-violet-500 relative overflow-hidden group">
+          <div className="absolute inset-0 bg-gradient-to-br from-[#7C5CFC]/5 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
           <CardContent className="p-4 flex items-center justify-between">
             <div>
-              <p className="text-xs font-medium text-primary-foreground/70 uppercase tracking-wider">Total ARR</p>
-              <h3 className="text-2xl font-bold mt-1">{formatINR(billing.arr)}</h3>
+              <p className="text-[10px] font-semibold text-[#8891B0] uppercase tracking-wider">Total ARR</p>
+              <h3 className="text-2xl font-display font-bold mt-1 text-white">{formatINR(billing.arr)}</h3>
             </div>
-            <div className="w-10 h-10 rounded-full bg-white/10 flex items-center justify-center">
+            <div className="w-10 h-10 rounded-xl bg-violet-500/10 border border-violet-500/20 flex items-center justify-center">
               <IndianRupee className="w-5 h-5 text-accent" />
             </div>
           </CardContent>
         </Card>
 
-        <Card className="shadow-sm">
-          <CardContent className="p-4 flex items-center justify-between">
+        <Card className="group relative overflow-hidden">
+          <div className="absolute inset-0 bg-gradient-to-br from-cyan-500/5 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
+          <CardContent className="p-4 flex items-center justify-between relative z-10">
             <div>
-              <p className="text-xs font-medium text-muted-foreground uppercase tracking-wider">Total Customers</p>
-              <h3 className="text-2xl font-bold text-foreground mt-1">{crm.customers}</h3>
+              <p className="text-[10px] font-semibold text-[#8891B0] uppercase tracking-wider">Total Customers</p>
+              <h3 className="text-2xl font-display font-bold text-white mt-1">{crm.customers}</h3>
             </div>
-            <div className="w-10 h-10 rounded-full bg-blue-500/10 flex items-center justify-center text-blue-600">
+            <div className="w-10 h-10 rounded-xl bg-cyan-500/10 border border-cyan-500/20 flex items-center justify-center text-cyan-400">
               <Users className="w-5 h-5" />
             </div>
           </CardContent>
         </Card>
 
-        <Card className="shadow-sm">
-          <CardContent className="p-4 flex items-center justify-between">
+        <Card className="group relative overflow-hidden">
+          <div className="absolute inset-0 bg-gradient-to-br from-amber-500/5 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
+          <CardContent className="p-4 flex items-center justify-between relative z-10">
             <div>
-              <p className="text-xs font-medium text-muted-foreground uppercase tracking-wider">Lead Pipeline</p>
-              <h3 className="text-2xl font-bold text-foreground mt-1">{crm.leads}</h3>
+              <p className="text-[10px] font-semibold text-[#8891B0] uppercase tracking-wider">Lead Pipeline</p>
+              <h3 className="text-2xl font-display font-bold text-white mt-1">{crm.leads}</h3>
             </div>
-            <div className="w-10 h-10 rounded-full bg-amber-500/10 flex items-center justify-center text-amber-600">
+            <div className="w-10 h-10 rounded-xl bg-amber-500/10 border border-amber-500/20 flex items-center justify-center text-amber-400">
               <Target className="w-5 h-5" />
             </div>
           </CardContent>
         </Card>
 
-        <Card className="shadow-sm">
-          <CardContent className="p-4 flex items-center justify-between">
+        <Card className="group relative overflow-hidden">
+          <div className="absolute inset-0 bg-gradient-to-br from-rose-500/5 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
+          <CardContent className="p-4 flex items-center justify-between relative z-10">
             <div>
-              <p className="text-xs font-medium text-muted-foreground uppercase tracking-wider">Active Alerts</p>
-              <h3 className="text-2xl font-bold text-foreground mt-1">{security.open + security.investigating}</h3>
+              <p className="text-[10px] font-semibold text-[#8891B0] uppercase tracking-wider">Active Alerts</p>
+              <h3 className="text-2xl font-display font-bold text-white mt-1">{security.open + security.investigating}</h3>
             </div>
-            <div className="w-10 h-10 rounded-full bg-red-500/10 flex items-center justify-center text-red-600">
+            <div className="w-10 h-10 rounded-xl bg-rose-500/10 border border-rose-500/20 flex items-center justify-center text-rose-400">
               <ShieldAlert className="w-5 h-5" />
             </div>
           </CardContent>
         </Card>
 
-        <Card className="shadow-sm">
-          <CardContent className="p-4 flex items-center justify-between">
+        <Card className="group relative overflow-hidden">
+          <div className="absolute inset-0 bg-gradient-to-br from-emerald-500/5 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
+          <CardContent className="p-4 flex items-center justify-between relative z-10">
             <div>
-              <p className="text-xs font-medium text-muted-foreground uppercase tracking-wider">CCTV Health</p>
-              <h3 className="text-2xl font-bold text-foreground mt-1">{camera.total > 0 ? Math.round((camera.active / camera.total) * 100) : 0}%</h3>
+              <p className="text-[10px] font-semibold text-[#8891B0] uppercase tracking-wider">CCTV Health</p>
+              <h3 className="text-2xl font-display font-bold text-white mt-1">{camera.total > 0 ? Math.round((camera.active / camera.total) * 100) : 0}%</h3>
             </div>
-            <div className="w-10 h-10 rounded-full bg-green-500/10 flex items-center justify-center text-green-600">
+            <div className="w-10 h-10 rounded-xl bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center text-emerald-400">
               <Video className="w-5 h-5" />
             </div>
           </CardContent>
@@ -270,22 +275,22 @@ export function DashboardClientView({ metrics }: { metrics: any }) {
             <CardContent className="p-6 flex flex-col justify-center items-center">
               <div className="flex gap-8 w-full justify-around mt-4">
                 <div className="text-center">
-                  <div className="w-16 h-16 rounded-full bg-slate-100 flex items-center justify-center mx-auto mb-3">
-                    <span className="text-2xl font-bold text-slate-700">{camera.total}</span>
+                  <div className="w-16 h-16 rounded-2xl bg-white/5 border border-white/[.08] flex items-center justify-center mx-auto mb-3">
+                    <span className="text-2xl font-display font-bold text-white">{camera.total}</span>
                   </div>
-                  <p className="text-sm font-medium text-muted-foreground">Total Cameras</p>
+                  <p className="text-xs font-semibold text-[#8891B0] uppercase tracking-wider">Total Cameras</p>
                 </div>
                 <div className="text-center">
-                  <div className="w-16 h-16 rounded-full bg-green-50 flex items-center justify-center mx-auto mb-3">
-                    <span className="text-2xl font-bold text-green-600">{camera.active}</span>
+                  <div className="w-16 h-16 rounded-2xl bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center mx-auto mb-3">
+                    <span className="text-2xl font-display font-bold text-emerald-400">{camera.active}</span>
                   </div>
-                  <p className="text-sm font-medium text-muted-foreground">Online</p>
+                  <p className="text-xs font-semibold text-[#8891B0] uppercase tracking-wider">Online</p>
                 </div>
                 <div className="text-center">
-                  <div className="w-16 h-16 rounded-full bg-red-50 flex items-center justify-center mx-auto mb-3">
-                    <span className="text-2xl font-bold text-red-600">{camera.offline}</span>
+                  <div className="w-16 h-16 rounded-2xl bg-rose-500/10 border border-rose-500/20 flex items-center justify-center mx-auto mb-3">
+                    <span className="text-2xl font-display font-bold text-rose-400">{camera.offline}</span>
                   </div>
-                  <p className="text-sm font-medium text-muted-foreground">Offline</p>
+                  <p className="text-xs font-semibold text-[#8891B0] uppercase tracking-wider">Offline</p>
                 </div>
               </div>
             </CardContent>

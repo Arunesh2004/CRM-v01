@@ -19,12 +19,12 @@ export default async function ChatPage() {
       </div>
 
       {/* Desktop view: Empty state placeholder */}
-      <div className="hidden md:flex flex-1 flex-col items-center justify-center text-muted-foreground bg-muted/20 h-full">
-        <div className="w-16 h-16 rounded-full bg-primary/10 flex items-center justify-center mb-4">
-          <MessageSquare className="w-8 h-8 text-primary/60" />
+      <div className="hidden md:flex flex-1 flex-col items-center justify-center text-[#8891B0] bg-[#06080F]/30 backdrop-blur-sm h-full border-l border-white/[.04]">
+        <div className="w-20 h-20 rounded-full bg-white/5 border border-white/[.08] flex items-center justify-center mb-6 shadow-2xl">
+          <MessageSquare className="w-8 h-8 text-violet-400 opacity-80" />
         </div>
-        <h3 className="font-semibold text-lg text-foreground">Your Messages</h3>
-        <p className="text-sm">Select a conversation from the sidebar to start chatting.</p>
+        <h3 className="font-display font-bold text-2xl text-white mb-2">Secure Comms</h3>
+        <p className="text-sm">Select a conversation from the sidebar to establish a secure link.</p>
       </div>
     </>
   );

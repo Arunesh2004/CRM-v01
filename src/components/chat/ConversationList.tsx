@@ -30,22 +30,22 @@ export function ConversationList({
   });
 
   return (
-    <div className="w-full h-full flex flex-col bg-muted/10 border-r">
-      <div className="p-4 border-b flex flex-col gap-3 bg-card shrink-0 shadow-sm z-10">
+    <div className="w-full h-full flex flex-col bg-[#06080F]/50 border-r border-white/[.04]">
+      <div className="p-4 border-b border-white/[.04] flex flex-col gap-3 bg-white/[.02] shrink-0 z-10">
         <div className="flex justify-between items-center">
-          <h2 className="font-semibold tracking-tight text-lg">Chats</h2>
-          <Button variant="ghost" size="icon" className="h-8 w-8 hover:bg-primary/10 hover:text-primary">
+          <h2 className="font-display font-bold text-lg text-white">Secure Comms</h2>
+          <Button variant="ghost" size="icon" className="h-8 w-8 hover:bg-violet-500/20 text-white hover:text-violet-400">
             <Plus className="h-4 w-4" />
           </Button>
         </div>
         <div className="relative">
-          <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
+          <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-[#8891B0]" />
           <input
             type="text"
-            placeholder="Search conversations..."
+            placeholder="Search comms..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            className="w-full pl-9 pr-3 py-2 bg-muted/50 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary/50 transition-shadow"
+            className="w-full pl-9 pr-3 py-2 bg-[#0D1326]/40 border border-white/[.08] rounded-lg text-white text-sm focus:outline-none focus:border-violet-500/50 focus:ring-1 focus:ring-violet-500/50 transition-all placeholder:text-white/20"
           />
         </div>
       </div>
@@ -71,21 +71,21 @@ export function ConversationList({
               key={conv.id}
               onClick={() => onSelect(conv.id)}
               className={cn(
-                "w-full flex items-center gap-3 p-3 text-left rounded-lg transition-all border border-transparent",
-                isActive ? "bg-primary/5 border-primary/20 shadow-sm" : "hover:bg-accent hover:border-border/50"
+                "w-full flex items-center gap-3 p-3 text-left rounded-lg transition-all border",
+                isActive ? "bg-violet-500/10 border-violet-500/30 shadow-[0_0_15px_rgba(124,92,252,0.1)]" : "border-transparent hover:bg-white/[.02] hover:border-white/[.04]"
               )}
             >
               <div className={cn(
-                "w-11 h-11 rounded-full flex items-center justify-center shrink-0 transition-colors",
-                isActive ? "bg-primary text-primary-foreground shadow-sm" : "bg-primary/10 text-primary"
+                "w-11 h-11 rounded-full flex items-center justify-center shrink-0 transition-colors border",
+                isActive ? "bg-violet-500/20 text-violet-400 border-violet-500/30" : "bg-white/5 text-[#8891B0] border-white/[.08]"
               )}>
                 <Icon className="w-5 h-5" />
               </div>
               <div className="flex-1 min-w-0">
                 <div className="flex justify-between items-baseline mb-0.5">
-                  <p className="text-sm font-semibold truncate text-foreground/90">{name}</p>
+                  <p className={cn("text-sm font-semibold truncate transition-colors", isActive ? "text-violet-400" : "text-white/90")}>{name}</p>
                   {lastMessage && (
-                    <span className="text-[10px] text-muted-foreground whitespace-nowrap ml-2 font-medium">
+                    <span className="text-[10px] uppercase tracking-wider text-[#8891B0] whitespace-nowrap ml-2 font-medium">
                       {formatDistanceToNow(new Date(lastMessage.createdAt), { addSuffix: false }).replace('about', '').replace('minutes', 'm').replace('hours', 'h').replace('days', 'd')}
                     </span>
                   )}
@@ -93,7 +93,7 @@ export function ConversationList({
                 <div className="flex justify-between items-center gap-2">
                   <p className={cn(
                     "text-xs truncate",
-                    unreadCount > 0 ? "text-foreground font-medium" : "text-muted-foreground"
+                    unreadCount > 0 ? "text-white font-medium" : "text-[#8891B0]"
                   )}>
                     {lastMessage ? (
                       lastMessage.senderId === currentUserId ? `You: ${lastMessage.content}` : lastMessage.content
@@ -102,7 +102,7 @@ export function ConversationList({
                     )}
                   </p>
                   {unreadCount > 0 && (
-                    <span className="w-5 h-5 rounded-full bg-primary text-primary-foreground text-[10px] font-bold flex items-center justify-center shrink-0 shadow-sm">
+                    <span className="w-5 h-5 rounded-full bg-rose-500 text-white text-[10px] font-bold flex items-center justify-center shrink-0 shadow-[0_0_10px_rgba(244,63,94,0.5)]">
                       {unreadCount > 99 ? '99+' : unreadCount}
                     </span>
                   )}
@@ -112,8 +112,8 @@ export function ConversationList({
           );
         })}
         {filteredConversations.length === 0 && (
-          <div className="text-center p-6 text-sm text-muted-foreground">
-            <div className="w-12 h-12 rounded-full bg-muted flex items-center justify-center mx-auto mb-3">
+          <div className="text-center p-6 text-sm text-[#8891B0]">
+            <div className="w-12 h-12 rounded-full bg-white/5 border border-white/[.08] flex items-center justify-center mx-auto mb-3">
               <Search className="w-5 h-5 opacity-50" />
             </div>
             {searchQuery ? "No conversations found" : "No conversations yet. Start one!"}

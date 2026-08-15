@@ -17,9 +17,9 @@ export function DateFilter({ currentStart, currentEnd }: { currentStart?: string
 
   return (
     <div className="flex space-x-2">
-      <button onClick={() => handleFilter(0)} className="px-3 py-1 bg-white border border-gray-300 rounded text-sm hover:bg-gray-50">All Time</button>
-      <button onClick={() => handleFilter(7)} className="px-3 py-1 bg-white border border-gray-300 rounded text-sm hover:bg-gray-50">Last 7 Days</button>
-      <button onClick={() => handleFilter(30)} className="px-3 py-1 bg-white border border-gray-300 rounded text-sm hover:bg-gray-50">Last 30 Days</button>
+      <button onClick={() => handleFilter(0)} className="px-3 py-1.5 bg-white/5 border border-white/[.08] rounded-lg text-xs font-semibold text-white hover:bg-white/10 transition-colors">All Time</button>
+      <button onClick={() => handleFilter(7)} className="px-3 py-1.5 bg-white/5 border border-white/[.08] rounded-lg text-xs font-semibold text-white hover:bg-white/10 transition-colors">Last 7 Days</button>
+      <button onClick={() => handleFilter(30)} className="px-3 py-1.5 bg-white/5 border border-white/[.08] rounded-lg text-xs font-semibold text-white hover:bg-white/10 transition-colors">Last 30 Days</button>
     </div>
   );
 }

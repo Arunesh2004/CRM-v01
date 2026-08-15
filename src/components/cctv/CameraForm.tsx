@@ -51,68 +51,78 @@ export function CameraForm() {
     <>
       <button 
         onClick={() => setIsOpen(true)}
-        className="bg-blue-600 text-white px-4 py-2 rounded"
+        className="bg-violet-600 hover:bg-violet-500 text-white px-4 py-2 rounded-lg text-sm font-semibold transition-colors shadow-[0_0_15px_rgba(124,92,252,0.3)]"
       >
         Add Camera
       </button>
 
       {isOpen && (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
-          <div className="bg-white p-6 rounded shadow-lg w-full max-w-md text-black">
-            <h2 className="text-xl font-bold mb-4">Add New Camera</h2>
+        <div className="fixed inset-0 bg-[#06080F]/80 backdrop-blur-md flex items-center justify-center z-50 animate-in fade-in">
+          <div className="glass-panel p-6 rounded-xl w-full max-w-md border border-white/[.08] shadow-2xl animate-in zoom-in-95">
+            <h2 className="text-xl font-display font-bold mb-4 text-white">Add New Camera</h2>
             
-            {error && <div className="bg-red-100 text-red-600 p-2 rounded mb-4">{error}</div>}
+            {error && <div className="bg-rose-500/10 border border-rose-500/20 text-rose-400 p-3 rounded-lg text-sm font-medium mb-4">{error}</div>}
 
             <form onSubmit={handleSubmit} className="space-y-4">
               <div>
-                <label className="block font-semibold mb-1">Camera Name *</label>
-                <input required name="name" type="text" className="w-full border rounded p-2" />
+                <label className="block text-xs font-semibold text-[#8891B0] uppercase tracking-wider mb-1.5">Camera Name *</label>
+                <input required name="name" type="text" className="w-full bg-[#06080F]/50 border border-white/[.08] rounded-lg p-2.5 text-white focus:outline-none focus:border-violet-500/50 focus:ring-1 focus:ring-violet-500/50 transition-all placeholder:text-white/20 text-sm" />
               </div>
               <div>
-                <label className="block font-semibold mb-1">Location *</label>
-                <select required name="locationId" className="w-full border rounded p-2">
-                  <option value="">Select a location...</option>
-                  {locations.map((loc) => (
-                    <option key={loc.id} value={loc.id}>{loc.name}</option>
-                  ))}
-                </select>
+                <label className="block text-xs font-semibold text-[#8891B0] uppercase tracking-wider mb-1.5">Location *</label>
+                <div className="relative">
+                  <select required name="locationId" className="w-full bg-[#06080F]/50 border border-white/[.08] rounded-lg p-2.5 text-white focus:outline-none focus:border-violet-500/50 focus:ring-1 focus:ring-violet-500/50 transition-all text-sm appearance-none cursor-pointer">
+                    <option value="" className="bg-[#0f172a]">Select a location...</option>
+                    {locations.map((loc) => (
+                      <option key={loc.id} value={loc.id} className="bg-[#0f172a]">{loc.name}</option>
+                    ))}
+                  </select>
+                  <div className="absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none text-white/40">
+                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="m6 9 6 6 6-6"/></svg>
+                  </div>
+                </div>
               </div>
               <div>
-                <label className="block font-semibold mb-1">IP Address *</label>
-                <input required name="ipAddress" type="text" placeholder="192.168.1.100" className="w-full border rounded p-2" />
+                <label className="block text-xs font-semibold text-[#8891B0] uppercase tracking-wider mb-1.5">IP Address *</label>
+                <input required name="ipAddress" type="text" placeholder="192.168.1.100" className="w-full bg-[#06080F]/50 border border-white/[.08] rounded-lg p-2.5 text-white focus:outline-none focus:border-violet-500/50 focus:ring-1 focus:ring-violet-500/50 transition-all placeholder:text-white/20 text-sm" />
               </div>
               <div>
-                <label className="block font-semibold mb-1">Protocol *</label>
-                <select required name="protocol" className="w-full border rounded p-2">
-                  <option value="RTSP">RTSP</option>
-                  <option value="ONVIF">ONVIF</option>
-                  <option value="WEBRTC">WebRTC</option>
-                  <option value="HLS">HLS</option>
-                </select>
+                <label className="block text-xs font-semibold text-[#8891B0] uppercase tracking-wider mb-1.5">Protocol *</label>
+                <div className="relative">
+                  <select required name="protocol" className="w-full bg-[#06080F]/50 border border-white/[.08] rounded-lg p-2.5 text-white focus:outline-none focus:border-violet-500/50 focus:ring-1 focus:ring-violet-500/50 transition-all text-sm appearance-none cursor-pointer">
+                    <option value="RTSP" className="bg-[#0f172a]">RTSP</option>
+                    <option value="ONVIF" className="bg-[#0f172a]">ONVIF</option>
+                    <option value="WEBRTC" className="bg-[#0f172a]">WebRTC</option>
+                    <option value="HLS" className="bg-[#0f172a]">HLS</option>
+                  </select>
+                  <div className="absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none text-white/40">
+                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="m6 9 6 6 6-6"/></svg>
+                  </div>
+                </div>
               </div>
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <label className="block font-semibold mb-1">Manufacturer</label>
-                  <input name="manufacturer" type="text" className="w-full border rounded p-2" />
+                  <label className="block text-xs font-semibold text-[#8891B0] uppercase tracking-wider mb-1.5">Manufacturer</label>
+                  <input name="manufacturer" type="text" className="w-full bg-[#06080F]/50 border border-white/[.08] rounded-lg p-2.5 text-white focus:outline-none focus:border-violet-500/50 focus:ring-1 focus:ring-violet-500/50 transition-all placeholder:text-white/20 text-sm" />
                 </div>
                 <div>
-                  <label className="block font-semibold mb-1">Model</label>
-                  <input name="model" type="text" className="w-full border rounded p-2" />
+                  <label className="block text-xs font-semibold text-[#8891B0] uppercase tracking-wider mb-1.5">Model</label>
+                  <input name="model" type="text" className="w-full bg-[#06080F]/50 border border-white/[.08] rounded-lg p-2.5 text-white focus:outline-none focus:border-violet-500/50 focus:ring-1 focus:ring-violet-500/50 transition-all placeholder:text-white/20 text-sm" />
                 </div>
               </div>
 
-              <div className="flex justify-end space-x-2 pt-4">
+              <div className="flex justify-end space-x-3 pt-6 border-t border-white/[.04]">
                 <button 
                   type="button" 
                   onClick={() => setIsOpen(false)}
-                  className="px-4 py-2 bg-gray-200 rounded"
+                  className="px-4 py-2 bg-white/5 hover:bg-white/10 text-white rounded-lg text-sm font-semibold transition-colors"
                 >
                   Cancel
                 </button>
                 <button 
                   type="submit" 
                   disabled={isLoading}
-                  className="px-4 py-2 bg-blue-600 text-white rounded disabled:bg-blue-400"
+                  className="px-4 py-2 bg-violet-600 hover:bg-violet-500 text-white rounded-lg text-sm font-semibold transition-colors disabled:opacity-50"
                 >
                   {isLoading ? 'Saving...' : 'Save Camera'}
                 </button>

@@ -33,21 +33,21 @@ export function ExportControls({ startDate, endDate }: { startDate?: string, end
       <button 
         onClick={() => handleExport('incidents')}
         disabled={loading}
-        className="px-3 py-1 bg-gray-100 border rounded text-sm hover:bg-gray-200"
+        className="px-3 py-1.5 bg-white/5 border border-white/[.08] rounded-lg text-xs font-semibold text-white hover:bg-white/10 transition-colors disabled:opacity-50"
       >
         Export Incidents
       </button>
       <button 
         onClick={() => handleExport('customers')}
         disabled={loading}
-        className="px-3 py-1 bg-gray-100 border rounded text-sm hover:bg-gray-200"
+        className="px-3 py-1.5 bg-white/5 border border-white/[.08] rounded-lg text-xs font-semibold text-white hover:bg-white/10 transition-colors disabled:opacity-50"
       >
         Export Customers
       </button>
       <button 
         onClick={() => handleExport('communications')}
         disabled={loading}
-        className="px-3 py-1 bg-gray-100 border rounded text-sm hover:bg-gray-200"
+        className="px-3 py-1.5 bg-white/5 border border-white/[.08] rounded-lg text-xs font-semibold text-white hover:bg-white/10 transition-colors disabled:opacity-50"
       >
         Export Comms
       </button>

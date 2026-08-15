@@ -28,19 +28,19 @@ export default async function AdminDashboardPage() {
   if (!tenant) {
     return (
       <div className="flex h-[50vh] items-center justify-center">
-        <div className="text-center">
-          <h2 className="text-2xl font-bold text-gray-800">Tenant Not Found</h2>
-          <p className="text-gray-500 mt-2">Could not locate workspace context.</p>
+        <div className="text-center text-[#8891B0]">
+          <h2 className="text-2xl font-display font-bold text-white mb-2">Tenant Not Found</h2>
+          <p>Could not locate workspace context.</p>
         </div>
       </div>
     );
   }
 
   return (
-    <div className="space-y-6">
-      <div>
-        <h1 className="text-2xl font-bold tracking-tight text-primary">Enterprise Settings</h1>
-        <p className="text-sm text-muted-foreground mt-1">Manage organization profile, access controls, and infrastructure.</p>
+    <div className="space-y-8 animate-in fade-in duration-500 pb-12">
+      <div className="border-b border-white/[.08] pb-6">
+        <h1 className="text-3xl font-display font-bold text-white tracking-tight">Enterprise Settings</h1>
+        <p className="text-[#8891B0] mt-2">Manage organization profile, access controls, and infrastructure.</p>
       </div>
       
       <AdminClientTabs 

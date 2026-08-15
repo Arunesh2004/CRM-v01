@@ -1,36 +1,36 @@
 export function SecurityMetricsCard({ data }: { data: any }) {
   if (!data) return null;
   return (
-    <div className="bg-white rounded-lg shadow p-6">
-      <h2 className="text-xl font-bold mb-4">Security Overview</h2>
+    <div className="glass-panel p-6 border-l-4 border-l-violet-500">
+      <h2 className="text-xl font-display font-bold text-white mb-4">Security Overview</h2>
       <div className="grid grid-cols-2 gap-4">
-        <div className="bg-gray-50 p-4 rounded text-center border">
-          <p className="text-gray-500 text-sm font-semibold">Total Incidents</p>
-          <p className="text-3xl font-black text-gray-800">{data.total}</p>
+        <div className="bg-[#0D1326]/40 p-4 rounded-xl border border-white/[.04] text-center">
+          <p className="text-[#8891B0] text-[10px] uppercase tracking-wider font-semibold">Total Incidents</p>
+          <p className="text-3xl font-display font-bold text-white mt-1">{data.total}</p>
         </div>
-        <div className="bg-red-50 p-4 rounded text-center border border-red-100">
-          <p className="text-red-500 text-sm font-semibold">Critical</p>
-          <p className="text-3xl font-black text-red-600">{data.critical}</p>
+        <div className="bg-rose-500/10 p-4 rounded-xl text-center border border-rose-500/20">
+          <p className="text-rose-400 text-[10px] uppercase tracking-wider font-semibold">Critical</p>
+          <p className="text-3xl font-display font-bold text-rose-500 mt-1">{data.critical}</p>
         </div>
-        <div className="bg-blue-50 p-4 rounded text-center border border-blue-100">
-          <p className="text-blue-500 text-sm font-semibold">Open</p>
-          <p className="text-3xl font-black text-blue-600">{data.open}</p>
+        <div className="bg-amber-500/10 p-4 rounded-xl text-center border border-amber-500/20">
+          <p className="text-amber-400 text-[10px] uppercase tracking-wider font-semibold">Open</p>
+          <p className="text-3xl font-display font-bold text-amber-500 mt-1">{data.open}</p>
         </div>
-        <div className="bg-green-50 p-4 rounded text-center border border-green-100">
-          <p className="text-green-500 text-sm font-semibold">Resolved</p>
-          <p className="text-3xl font-black text-green-600">{data.resolved}</p>
+        <div className="bg-emerald-500/10 p-4 rounded-xl text-center border border-emerald-500/20">
+          <p className="text-emerald-400 text-[10px] uppercase tracking-wider font-semibold">Resolved</p>
+          <p className="text-3xl font-display font-bold text-emerald-500 mt-1">{data.resolved}</p>
         </div>
       </div>
       
       {/* Simple progress bar visualization for resolution rate */}
       <div className="mt-6">
-        <div className="flex justify-between text-sm mb-1">
-          <span className="font-medium text-gray-700">Resolution Rate</span>
-          <span>{data.total > 0 ? ((data.resolved / data.total) * 100).toFixed(1) : 0}%</span>
+        <div className="flex justify-between text-[11px] uppercase tracking-wider font-semibold mb-2">
+          <span className="text-[#8891B0]">Resolution Rate</span>
+          <span className="text-emerald-400">{data.total > 0 ? ((data.resolved / data.total) * 100).toFixed(1) : 0}%</span>
         </div>
-        <div className="w-full bg-gray-200 rounded-full h-2">
+        <div className="w-full bg-white/[.04] rounded-full h-1.5 overflow-hidden border border-white/[.02]">
           <div 
-            className="bg-green-500 h-2 rounded-full" 
+            className="bg-emerald-500 h-1.5 rounded-full shadow-[0_0_10px_rgba(16,185,129,0.8)]" 
             style={{ width: `${data.total > 0 ? (data.resolved / data.total) * 100 : 0}%` }}
           ></div>
         </div>

@@ -13,11 +13,11 @@ export default async function ReportsPage({ searchParams }: { searchParams: { st
   const metrics = res.success ? res.data : null;
 
   return (
-    <div className="space-y-6">
-      <div className="flex flex-col sm:flex-row justify-between sm:items-center gap-4">
+    <div className="space-y-8 animate-in fade-in duration-500 pb-12">
+      <div className="flex flex-col sm:flex-row justify-between sm:items-end gap-4 border-b border-white/[.08] pb-6">
         <div>
-          <h1 className="text-2xl font-bold tracking-tight text-primary">Intelligence & Analytics</h1>
-          <p className="text-sm text-muted-foreground mt-1">Enterprise Command Center</p>
+          <h1 className="text-3xl font-display font-bold text-white tracking-tight">Intelligence & Analytics</h1>
+          <p className="text-[#8891B0] mt-2">Enterprise Command Center</p>
         </div>
         <div className="flex items-center gap-2">
           {/* Note: DateFilter is visually preserved but only works if fully implemented in server action. */}
@@ -31,11 +31,11 @@ export default async function ReportsPage({ searchParams }: { searchParams: { st
           <EmptyState 
             title="Analytics Unavailable" 
             description="Failed to load dashboard metrics. Please check server connections."
-            icon={<LayoutDashboard className="w-16 h-16 opacity-30 text-destructive" />}
+            icon={<LayoutDashboard className="w-16 h-16 opacity-30 text-rose-500" />}
           />
         </div>
       ) : (
-        <Suspense fallback={<div className="h-[50vh] flex items-center justify-center animate-pulse text-muted-foreground">Loading Analytics Engine...</div>}>
+        <Suspense fallback={<div className="h-[50vh] flex items-center justify-center animate-pulse text-[#8891B0]">Loading Analytics Engine...</div>}>
           <DashboardClientView metrics={metrics} />
         </Suspense>
       )}
