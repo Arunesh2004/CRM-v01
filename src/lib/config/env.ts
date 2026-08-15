@@ -4,7 +4,9 @@ export function validateEnvironment(): void {
     'DATABASE_URL',
     'NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY',
     'CLERK_SECRET_KEY',
-    'CLERK_WEBHOOK_SECRET'
+    'CLERK_WEBHOOK_SECRET',
+    'COMPANY_TENANT_ID',
+    'ADMIN_EMAIL'
   ];
 
   // We do not strictly enforce billing keys yet in this validation 
@@ -59,6 +61,8 @@ export const ENV = {
   get isProduction() { return process.env.NODE_ENV === 'production'; },
   get databaseUrl() { return process.env.DATABASE_URL!; },
   get redisUrl() { return process.env.REDIS_URL || 'redis://localhost:6379'; },
+  get companyTenantId() { return process.env.COMPANY_TENANT_ID!; },
+  get adminEmail() { return process.env.ADMIN_EMAIL!; },
   
   // Storage
   get awsAccessKeyId() { return process.env.AWS_ACCESS_KEY_ID; },

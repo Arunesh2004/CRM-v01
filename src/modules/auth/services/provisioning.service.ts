@@ -1,5 +1,6 @@
 import prisma from '@/../database/utils/prisma';
 import type { User } from '@clerk/nextjs/server';
+import { ENV } from '@/lib/config/env';
 
 
 export async function ensureUserProvisioned(clerkUser: User | any) {
@@ -33,24 +34,15 @@ export async function ensureUserProvisioned(clerkUser: User | any) {
   // 2. Transactional Upsert for initial provisioning
   try {
     const user = await prisma.$transaction(async (tx) => {
-      let tenant;
-      const isNewTenant = !tenantId;
+      const canonicalTenantId = ENV.companyTenantId;
       
-      if (isNewTenant) {
-        tenant = await tx.tenant.create({
-          data: {
-            name: `${firstName || 'User'}'s Organization`,
-            status: 'ACTIVE'
-          }
-        });
-        tenantId = tenant.id;
-        console.log(`[Provisioning] Created new tenant ${tenantId}.`);
-      } else {
-        // Verify tenant exists
-        tenant = await tx.tenant.findUnique({ where: { id: tenantId } });
-        if (!tenant) throw new Error('Invalid tenantId provided in metadata');
-        
+      const tenant = await tx.tenant.findUnique({ where: { id: canonicalTenantId } });
+      if (!tenant) {
+        throw new Error(`CRITICAL: Deployment not bootstrapped. Canonical tenant ${canonicalTenantId} not found.`);
+      }
 
+      if (tenant.status !== 'ACTIVE') {
+        throw new Error(`CRITICAL: Canonical tenant ${canonicalTenantId} is not ACTIVE.`);
       }
 
       // Upsert User to handle concurrent webhooks/logins safely
@@ -63,19 +55,10 @@ export async function ensureUserProvisioned(clerkUser: User | any) {
           tenantId: tenant.id
         }
       });
-      console.log(`[Provisioning] Upserted user ${upsertedUser.id}.`);
+      console.log(`[Provisioning] Upserted user ${upsertedUser.id} to canonical tenant ${tenant.id}.`);
 
-      if (isNewTenant) {
-        // We just created the tenant, now set the ownerId to the newly created user
-        await tx.tenant.update({
-          where: { id: tenant.id },
-          data: { ownerId: upsertedUser.id }
-        });
-        console.log(`[Provisioning] Set ownerId of tenant ${tenant.id} to user ${upsertedUser.id}.`);
-      }
-
-      // Find or create role
-      const roleName = publicMetadata.tenantId ? 'MEMBER' : 'TENANT_ADMIN';
+      // Determine role based on ADMIN_EMAIL
+      const roleName = email.toLowerCase() === ENV.adminEmail.toLowerCase() ? 'TENANT_ADMIN' : 'MEMBER';
       let role = await tx.role.findFirst({
         where: { name: roleName, tenantId: tenant.id }
       });
@@ -84,7 +67,7 @@ export async function ensureUserProvisioned(clerkUser: User | any) {
         role = await tx.role.create({
           data: { name: roleName, tenantId: tenant.id }
         });
-        console.log(`[Provisioning] Created role ${roleName}.`);
+        console.log(`[Provisioning] Created required system role ${roleName}.`);
       }
 
       // Upsert User Role to handle concurrency safely
