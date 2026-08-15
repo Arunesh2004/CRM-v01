@@ -113,6 +113,7 @@ model Tenant {
   meetings                Meeting[]
   meetingParticipants     MeetingParticipant[]
   demoStorageFiles        DemoStorage[]
+  documents               Document[]
   emailThreads            EmailThread[]
   emailMessages           EmailMessage[]
   emailAttachments        EmailAttachment[]
@@ -138,13 +139,13 @@ model Tenant {
   webhookEvents     WebhookEvent[]
 
   // DR Lock
-  isRestoreLocked Boolean      @default(false)
-  crmComments     CRMComment[]
-  pipelines       Pipeline[]
-  pipelineStages  PipelineStage[]
-  deals           Deal[]
-  dealStageHistories DealStageHistory[]
-  eventOutboxes   EventOutbox[]
+  isRestoreLocked        Boolean                 @default(false)
+  crmComments            CRMComment[]
+  pipelines              Pipeline[]
+  pipelineStages         PipelineStage[]
+  deals                  Deal[]
+  dealStageHistories     DealStageHistory[]
+  eventOutboxes          EventOutbox[]
   aiConversations        AIConversation[]
   aiConversationMessages AIConversationMessage[]
 }
@@ -183,6 +184,7 @@ model User {
   dealStageHistories     DealStageHistory[]
   meetingParticipants    MeetingParticipant[]
   aiConversations        AIConversation[]
+  uploadedDocuments      Document[]
 
   @@index([tenantId, id])
   @@index([tenantId, createdAt])
@@ -424,7 +426,6 @@ enum OutboxStatus {
   FAILED
 }
 
-
 // -----------------------------------------------------------------------------
 // CRM MODELS
 // -----------------------------------------------------------------------------
@@ -471,6 +472,7 @@ model Customer {
   locations    Location[]
   tasks        Task[]
   deals        Deal[]
+  documents    Document[]
 
   // Communication
   emailThreads  EmailThread[]
@@ -542,11 +544,12 @@ model Task {
   updatedAt      DateTime     @updatedAt
   deletedAt      DateTime?
 
-  tenant       Tenant        @relation(fields: [tenantId], references: [id])
-  assignedUser User?         @relation(fields: [assignedUserId], references: [id], onDelete: SetNull)
-  lead         Lead?         @relation(fields: [leadId], references: [id], onDelete: SetNull)
-  customer     Customer?     @relation(fields: [customerId], references: [id], onDelete: SetNull)
-  deal         Deal?         @relation(fields: [dealId], references: [id], onDelete: SetNull)
+  tenant       Tenant     @relation(fields: [tenantId], references: [id])
+  assignedUser User?      @relation(fields: [assignedUserId], references: [id], onDelete: SetNull)
+  lead         Lead?      @relation(fields: [leadId], references: [id], onDelete: SetNull)
+  customer     Customer?  @relation(fields: [customerId], references: [id], onDelete: SetNull)
+  deal         Deal?      @relation(fields: [dealId], references: [id], onDelete: SetNull)
+  documents    Document[]
 
   @@index([tenantId, assignedUserId, status])
   @@index([tenantId, leadId])
@@ -567,10 +570,10 @@ model CRMComment {
   updatedAt  DateTime   @updatedAt
   deletedAt  DateTime?
 
-  tenant     Tenant       @relation(fields: [tenantId], references: [id])
-  user       User         @relation(fields: [userId], references: [id], onDelete: Restrict)
-  parent     CRMComment?  @relation("Thread", fields: [parentId], references: [id], onDelete: SetNull)
-  replies    CRMComment[] @relation("Thread")
+  tenant  Tenant       @relation(fields: [tenantId], references: [id])
+  user    User         @relation(fields: [userId], references: [id], onDelete: Restrict)
+  parent  CRMComment?  @relation("Thread", fields: [parentId], references: [id], onDelete: SetNull)
+  replies CRMComment[] @relation("Thread")
 
   @@index([tenantId, entityType, entityId])
   @@index([parentId])
@@ -695,15 +698,15 @@ model AISummary {
 // -----------------------------------------------------------------------------
 
 model Meeting {
-  id              String        @id @default(uuid())
-  tenantId        String
-  providerId      String?
-  status          String        @default("SCHEDULED") // SCHEDULED, IN_PROGRESS, COMPLETED, CANCELLED
-  startedAt       DateTime?
-  endedAt         DateTime?
-  recordingUrl    String?
-  createdAt       DateTime      @default(now())
-  updatedAt       DateTime      @updatedAt
+  id           String    @id @default(uuid())
+  tenantId     String
+  providerId   String?
+  status       String    @default("SCHEDULED") // SCHEDULED, IN_PROGRESS, COMPLETED, CANCELLED
+  startedAt    DateTime?
+  endedAt      DateTime?
+  recordingUrl String?
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
 
   tenant       Tenant               @relation(fields: [tenantId], references: [id])
   participants MeetingParticipant[]
@@ -714,15 +717,15 @@ model Meeting {
 }
 
 model MeetingParticipant {
-  id          String   @id @default(uuid())
-  tenantId    String
-  meetingId   String
-  userId      String?
-  contactId   String?
-  role        String   @default("ATTENDEE") // HOST, ATTENDEE
-  joinedAt    DateTime?
-  leftAt      DateTime?
-  createdAt   DateTime @default(now())
+  id        String    @id @default(uuid())
+  tenantId  String
+  meetingId String
+  userId    String?
+  contactId String?
+  role      String    @default("ATTENDEE") // HOST, ATTENDEE
+  joinedAt  DateTime?
+  leftAt    DateTime?
+  createdAt DateTime  @default(now())
 
   tenant  Tenant           @relation(fields: [tenantId], references: [id])
   meeting Meeting          @relation(fields: [meetingId], references: [id], onDelete: Cascade)
@@ -738,16 +741,38 @@ model MeetingParticipant {
 // -----------------------------------------------------------------------------
 
 model DemoStorage {
-  id          String   @id @default(uuid())
-  tenantId    String
-  fileName    String
-  mimeType    String
-  base64Data  String
-  createdAt   DateTime @default(now())
+  id         String   @id @default(uuid())
+  tenantId   String
+  fileName   String
+  mimeType   String
+  base64Data String
+  createdAt  DateTime @default(now())
 
-  tenant  Tenant @relation(fields: [tenantId], references: [id])
+  tenant Tenant @relation(fields: [tenantId], references: [id])
 
   @@index([tenantId])
+}
+
+model Document {
+  id           String   @id @default(uuid())
+  tenantId     String
+  fileName     String
+  mimeType     String
+  sizeBytes    Int
+  storageKey   String
+  uploadedById String
+  customerId   String?
+  taskId       String?
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  tenant     Tenant    @relation(fields: [tenantId], references: [id])
+  uploadedBy User      @relation(fields: [uploadedById], references: [id], onDelete: Restrict)
+  customer   Customer? @relation(fields: [customerId], references: [id], onDelete: Cascade)
+  task       Task?     @relation(fields: [taskId], references: [id], onDelete: Cascade)
+
+  @@index([tenantId, customerId])
+  @@index([tenantId, taskId])
 }
 
 model EmailThread {
@@ -1323,11 +1348,11 @@ model PipelineStage {
   createdAt    DateTime @default(now())
   updatedAt    DateTime @updatedAt
 
-  tenant   Tenant   @relation(fields: [tenantId], references: [id])
-  pipeline Pipeline @relation(fields: [pipelineId], references: [id], onDelete: Cascade)
-  deals    Deal[]
+  tenant      Tenant             @relation(fields: [tenantId], references: [id])
+  pipeline    Pipeline           @relation(fields: [pipelineId], references: [id], onDelete: Cascade)
+  deals       Deal[]
   historyFrom DealStageHistory[] @relation("HistoryFromStage")
-  historyTo DealStageHistory[] @relation("HistoryToStage")
+  historyTo   DealStageHistory[] @relation("HistoryToStage")
 
   @@index([tenantId, pipelineId])
   @@index([pipelineId, order])
@@ -1351,24 +1376,24 @@ model Deal {
   lostAt            DateTime?
   version           Int        @default(1)
 
-  pipelineId        String
-  stageId           String
-  customerId        String?
-  leadId            String?
-  assignedUserId    String
-  createdById       String
+  pipelineId     String
+  stageId        String
+  customerId     String?
+  leadId         String?
+  assignedUserId String
+  createdById    String
 
-  createdAt         DateTime   @default(now())
-  updatedAt         DateTime   @updatedAt
-  deletedAt         DateTime?
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+  deletedAt DateTime?
 
-  tenant       Tenant          @relation(fields: [tenantId], references: [id])
-  pipeline     Pipeline        @relation(fields: [pipelineId], references: [id], onDelete: Restrict)
-  stage        PipelineStage   @relation(fields: [stageId], references: [id], onDelete: Restrict)
-  customer     Customer?       @relation(fields: [customerId], references: [id], onDelete: SetNull)
-  lead         Lead?           @relation(fields: [leadId], references: [id], onDelete: SetNull)
-  assignedUser User            @relation("DealAssignedUser", fields: [assignedUserId], references: [id])
-  createdUser  User            @relation("DealCreatedUser", fields: [createdById], references: [id])
+  tenant       Tenant             @relation(fields: [tenantId], references: [id])
+  pipeline     Pipeline           @relation(fields: [pipelineId], references: [id], onDelete: Restrict)
+  stage        PipelineStage      @relation(fields: [stageId], references: [id], onDelete: Restrict)
+  customer     Customer?          @relation(fields: [customerId], references: [id], onDelete: SetNull)
+  lead         Lead?              @relation(fields: [leadId], references: [id], onDelete: SetNull)
+  assignedUser User               @relation("DealAssignedUser", fields: [assignedUserId], references: [id])
+  createdUser  User               @relation("DealCreatedUser", fields: [createdById], references: [id])
   stageHistory DealStageHistory[]
   tasks        Task[]
 
@@ -1386,11 +1411,11 @@ model DealStageHistory {
   changedById String
   createdAt   DateTime @default(now())
 
-  tenant      Tenant        @relation(fields: [tenantId], references: [id])
-  deal        Deal          @relation(fields: [dealId], references: [id], onDelete: Cascade)
-  fromStage   PipelineStage? @relation("HistoryFromStage", fields: [fromStageId], references: [id], onDelete: SetNull)
-  toStage     PipelineStage @relation("HistoryToStage", fields: [toStageId], references: [id], onDelete: Cascade)
-  changedBy   User          @relation(fields: [changedById], references: [id])
+  tenant    Tenant         @relation(fields: [tenantId], references: [id])
+  deal      Deal           @relation(fields: [dealId], references: [id], onDelete: Cascade)
+  fromStage PipelineStage? @relation("HistoryFromStage", fields: [fromStageId], references: [id], onDelete: SetNull)
+  toStage   PipelineStage  @relation("HistoryToStage", fields: [toStageId], references: [id], onDelete: Cascade)
+  changedBy User           @relation(fields: [changedById], references: [id])
 
   @@index([tenantId, dealId])
   @@index([tenantId, createdAt])

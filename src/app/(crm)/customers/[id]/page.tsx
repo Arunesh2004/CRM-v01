@@ -12,6 +12,9 @@ import { getCustomerTimelineAction } from '@/modules/crm/actions/customer.action
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/Tabs';
 import { ContactForm } from '@/components/crm/ContactForm';
 import { LocationForm } from '@/components/crm/LocationForm';
+import { getDocumentsForCustomer } from '@/modules/crm/document/document.service';
+import { DocumentList } from '@/components/crm/DocumentList';
+import { DocumentUploader } from '@/components/crm/DocumentUploader';
 
 export default async function CustomerDetailsPage({ params }: { params: { id: string } }) {
   const result = await getCustomerByIdAction(params.id);
@@ -26,6 +29,8 @@ export default async function CustomerDetailsPage({ params }: { params: { id: st
 
   const timelineResult = await getCustomerTimelineAction({ customerId: customer.id, limit: 100 });
   const timelineEvents = timelineResult.success ? (timelineResult.data as any).data : [];
+
+  const documents = await getDocumentsForCustomer(customer.id);
 
   return (
     <div className="space-y-6 animate-in fade-in duration-500 pb-10 px-4 sm:px-6 lg:px-8 max-w-6xl mx-auto py-8">
@@ -70,6 +75,7 @@ export default async function CustomerDetailsPage({ params }: { params: { id: st
           <TabsTrigger value="overview">Overview</TabsTrigger>
           <TabsTrigger value="contacts">Contacts</TabsTrigger>
           <TabsTrigger value="locations">Locations</TabsTrigger>
+          <TabsTrigger value="documents">Documents</TabsTrigger>
           <TabsTrigger value="timeline">Activity Timeline</TabsTrigger>
         </TabsList>
 
@@ -174,6 +180,16 @@ export default async function CustomerDetailsPage({ params }: { params: { id: st
                 ))}
               </div>
             )}
+          </div>
+        </TabsContent>
+
+        <TabsContent value="documents">
+          <div className="glass-panel p-6">
+            <div className="flex flex-row items-center justify-between mb-6">
+              <h3 className="text-lg font-display font-semibold text-white">Documents</h3>
+            </div>
+            <DocumentUploader customerId={customer.id} />
+            <DocumentList documents={documents as any} customerId={customer.id} />
           </div>
         </TabsContent>
 

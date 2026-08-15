@@ -8,6 +8,9 @@ import { UnifiedTimelineItem } from '@/modules/crm/crm.types';
 import { AlertCircle, Calendar, CheckSquare, Clock, User, Building, PhoneCall, ArrowLeft } from 'lucide-react';
 import Link from 'next/link';
 import { TaskComments } from '@/components/crm/TaskComments';
+import { getDocumentsForTask } from '@/modules/crm/document/document.service';
+import { DocumentList } from '@/components/crm/DocumentList';
+import { DocumentUploader } from '@/components/crm/DocumentUploader';
 
 export default async function TaskDetailPage({ params }: { params: { id: string } }) {
   const result = await getTaskByIdAction(params.id);
@@ -17,6 +20,8 @@ export default async function TaskDetailPage({ params }: { params: { id: string 
   }
 
   const task = result.data;
+
+  const documents = await getDocumentsForTask(task.id);
 
   // Map activities and comments to UnifiedTimelineItem
   const timelineEvents: UnifiedTimelineItem[] = [
@@ -117,6 +122,12 @@ export default async function TaskDetailPage({ params }: { params: { id: string 
           <div className="glass-panel p-6">
             <h3 className="text-lg font-display font-semibold text-white mb-4">Discussion</h3>
             <TaskComments taskId={task.id} initialComments={task.comments} />
+          </div>
+
+          <div className="glass-panel p-6">
+            <h3 className="text-lg font-display font-semibold text-white mb-4">Documents</h3>
+            <DocumentUploader taskId={task.id} />
+            <DocumentList documents={documents as any} taskId={task.id} />
           </div>
         </div>
 
