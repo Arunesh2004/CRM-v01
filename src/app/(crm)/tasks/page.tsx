@@ -126,7 +126,7 @@ export default async function TasksPage({
         </div>
       </div>
       
-      <div className="bg-card p-4 rounded-xl border shadow-sm">
+      <div className="glass-panel p-4 rounded-xl">
         <FilterBar 
           filters={[
             {

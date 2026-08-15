@@ -88,104 +88,112 @@ export default function IntegrationsPage() {
   }
 
   return (
-    <div className="space-y-6">
-      <div>
-        <h1 className="text-2xl font-bold tracking-tight">Communication Providers</h1>
-        <p className="text-muted-foreground">Manage your infrastructure providers and credentials. Integrations are isolated by tenant.</p>
+    <div className="space-y-6 max-w-6xl mx-auto py-8 px-4 sm:px-6 lg:px-8">
+      {/* Header Panel */}
+      <div className="glass-panel p-6 sm:p-8 relative overflow-hidden group">
+        <div className="absolute inset-0 bg-gradient-to-br from-[#7C5CFC]/5 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
+        <div className="relative z-10 flex items-center justify-between">
+          <div>
+            <h1 className="text-2xl font-display font-bold text-white tracking-tight">Communication Providers</h1>
+            <p className="text-sm text-[#8891B0] mt-1">Manage your infrastructure providers and credentials. Integrations are isolated by department.</p>
+          </div>
+          <div className="hidden sm:flex w-12 h-12 rounded-2xl bg-cyan-500/10 items-center justify-center border border-cyan-500/20">
+            <Plug className="w-6 h-6 text-cyan-400" />
+          </div>
+        </div>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         {REQUIRED_PROVIDERS.map((providerDef) => {
           const integration = getIntegrationData(providerDef.id);
           const isDemo = !integration;
 
           return (
-            <Card key={providerDef.id}>
-              <CardHeader className="pb-3">
-                <div className="flex justify-between items-start">
-                  <div>
-                    <CardTitle className="text-base">{providerDef.name}</CardTitle>
-                    <div className="text-xs text-muted-foreground">{providerDef.description}</div>
-                  </div>
-                  <Badge variant={isDemo ? 'secondary' : 'default'}>
-                    {isDemo ? 'Demo Mode' : 'Production'}
-                  </Badge>
+            <div key={providerDef.id} className="glass-panel p-6 flex flex-col h-full transition-all duration-300 hover:border-white/10 hover:shadow-2xl hover:shadow-violet-500/5 group">
+              <div className="flex justify-between items-start mb-4">
+                <div>
+                  <h3 className="text-base font-display font-semibold text-white">{providerDef.name}</h3>
+                  <div className="text-xs text-[#8891B0] mt-0.5">{providerDef.description}</div>
                 </div>
-              </CardHeader>
-              <CardContent className="space-y-4">
+                <Badge variant={isDemo ? 'slate' : 'violet'}>
+                  {isDemo ? 'Demo Mode' : 'Production'}
+                </Badge>
+              </div>
+
+              <div className="flex-1 space-y-4 mb-6">
                 {isDemo ? (
-                  <div className="bg-muted/50 p-3 rounded-md border text-sm text-muted-foreground">
+                  <div className="bg-[#0D1326]/50 p-4 rounded-xl border border-white/[.04] text-xs text-[#8891B0] leading-relaxed">
                     Currently using the default Demo Provider. Simulated records will be generated automatically.
                   </div>
                 ) : (
-                  <div className="space-y-3">
+                  <div className="space-y-3 bg-[#0D1326]/30 p-4 rounded-xl border border-white/[.02]">
                     <div className="flex items-center gap-2 text-sm">
                       {integration.status === 'ACTIVE' ? (
-                        <CheckCircle2 className="w-4 h-4 text-green-500" />
+                        <CheckCircle2 className="w-4 h-4 text-emerald-400" />
                       ) : (
-                        <AlertCircle className="w-4 h-4 text-red-500" />
+                        <AlertCircle className="w-4 h-4 text-rose-400" />
                       )}
-                      <span className="font-medium">
-                        Status: <span className={integration.status === 'ACTIVE' ? 'text-green-500' : 'text-red-500'}>{integration.status}</span>
+                      <span className="font-medium text-[#E7EAF5]">
+                        Status: <span className={integration.status === 'ACTIVE' ? 'text-emerald-400' : 'text-rose-400'}>{integration.status}</span>
                       </span>
                     </div>
                     
-                    <div className="text-xs text-muted-foreground">
+                    <div className="text-xs text-[#8891B0]">
                       Credentials are masked and encrypted (AES-256-GCM).
                     </div>
                     
                     {integration.lastCheckedAt && (
-                      <div className="text-xs text-muted-foreground">
+                      <div className="text-[10px] text-[#8891B0]/70 font-mono">
                         Last checked: {formatDistanceToNow(new Date(integration.lastCheckedAt), { addSuffix: true })}
                       </div>
                     )}
                   </div>
                 )}
+              </div>
 
-                <div className="pt-2 flex gap-2">
-                  <Dialog open={selectedProvider?.id === providerDef.id} onOpenChange={(open) => !open && setSelectedProvider(null)}>
-                    <DialogTrigger render={<Button variant="outline" size="sm" className="flex-1 gap-2" onClick={() => setSelectedProvider(providerDef)} />}>
-                      <Settings className="w-4 h-4" />
-                      Configure
-                    </DialogTrigger>
-                    <DialogContent>
-                      <DialogHeader>
-                        <DialogTitle>Configure {providerDef.name} Credentials</DialogTitle>
-                      </DialogHeader>
-                      <div className="space-y-4 py-4">
-                        <div className="text-sm text-muted-foreground">
-                          Enter credentials as a JSON object (e.g. `&#123;&quot;provider&quot;:&quot;twilio&quot;,&quot;sid&quot;:&quot;...&quot;&#125;`). 
-                          Secrets will be encrypted immediately and are never returned to the frontend.
-                        </div>
-                        <Input 
-                          placeholder='{"provider": "twilio", "key": "secret"}' 
-                          value={credentialsJson}
-                          onChange={e => setCredentialsJson(e.target.value)}
-                        />
-                        <div className="flex justify-end gap-2">
-                          <Button variant="outline" onClick={() => setSelectedProvider(null)}>Cancel</Button>
-                          <Button onClick={handleSaveCredentials} disabled={isUpdating || !credentialsJson}>
-                            {isUpdating && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-                            Save Securely
-                          </Button>
-                        </div>
+              <div className="pt-4 border-t border-white/[.04] flex gap-2 mt-auto">
+                <Dialog open={selectedProvider?.id === providerDef.id} onOpenChange={(open) => !open && setSelectedProvider(null)}>
+                  <DialogTrigger render={<Button variant="ghost" size="sm" className="flex-1 gap-2 bg-white/5 hover:bg-white/10" onClick={() => setSelectedProvider(providerDef)} />}>
+                    <Settings className="w-4 h-4" />
+                    Configure
+                  </DialogTrigger>
+                  <DialogContent>
+                    <DialogHeader>
+                      <DialogTitle>Configure {providerDef.name} Credentials</DialogTitle>
+                    </DialogHeader>
+                    <div className="space-y-4 py-4">
+                      <div className="text-sm text-[#8891B0]">
+                        Enter credentials as a JSON object (e.g. `&#123;&quot;provider&quot;:&quot;twilio&quot;,&quot;sid&quot;:&quot;...&quot;&#125;`). 
+                        Secrets will be encrypted immediately and are never returned to the frontend.
                       </div>
-                    </DialogContent>
-                  </Dialog>
+                      <Input 
+                        placeholder='{"provider": "twilio", "key": "secret"}' 
+                        value={credentialsJson}
+                        onChange={e => setCredentialsJson(e.target.value)}
+                      />
+                      <div className="flex justify-end gap-2 pt-4">
+                        <Button variant="ghost" onClick={() => setSelectedProvider(null)}>Cancel</Button>
+                        <Button onClick={handleSaveCredentials} disabled={isUpdating || !credentialsJson}>
+                          {isUpdating && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                          Save Securely
+                        </Button>
+                      </div>
+                    </div>
+                  </DialogContent>
+                </Dialog>
 
-                  {!isDemo && (
-                    <>
-                      <Button variant="outline" size="icon" onClick={() => handleTestConnection(providerDef.id as any)} title="Test Connection">
-                        <Plug className="w-4 h-4" />
-                      </Button>
-                      <Button variant="danger" size="icon" onClick={() => handleDelete(providerDef.id as any)} title="Remove Integration">
-                        <Trash2 className="w-4 h-4" />
-                      </Button>
-                    </>
-                  )}
-                </div>
-              </CardContent>
-            </Card>
+                {!isDemo && (
+                  <>
+                    <Button variant="ghost" size="icon" className="bg-white/5 hover:bg-white/10 hover:text-cyan-400" onClick={() => handleTestConnection(providerDef.id as any)} title="Test Connection">
+                      <Plug className="w-4 h-4" />
+                    </Button>
+                    <Button variant="danger" size="icon" onClick={() => handleDelete(providerDef.id as any)} title="Remove Integration">
+                      <Trash2 className="w-4 h-4" />
+                    </Button>
+                  </>
+                )}
+              </div>
+            </div>
           );
         })}
       </div>

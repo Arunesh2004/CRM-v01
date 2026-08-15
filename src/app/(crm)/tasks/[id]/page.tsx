@@ -5,7 +5,7 @@ import { Badge } from '@/components/ui/Badge';
 import { format } from 'date-fns';
 import { CustomerActivityTimeline } from '@/components/crm/CustomerActivityTimeline';
 import { UnifiedTimelineItem } from '@/modules/crm/crm.types';
-import { AlertCircle, Calendar, CheckSquare, Clock, User, Building, PhoneCall } from 'lucide-react';
+import { AlertCircle, Calendar, CheckSquare, Clock, User, Building, PhoneCall, ArrowLeft } from 'lucide-react';
 import Link from 'next/link';
 import { TaskComments } from '@/components/crm/TaskComments';
 
@@ -59,36 +59,47 @@ export default async function TaskDetailPage({ params }: { params: { id: string 
   const isOverdue = task.dueDate && new Date(task.dueDate) < new Date() && task.status !== 'COMPLETED';
 
   return (
-    <div className="space-y-6 animate-in fade-in duration-500 pb-10 max-w-6xl mx-auto">
-      <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 bg-card p-6 rounded-xl border shadow-sm">
-        <div className="space-y-1">
+    <div className="space-y-6 animate-in fade-in duration-500 pb-10 max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+      
+      <div className="flex items-center gap-2 text-sm text-[#8891B0] mb-2">
+        <Link href="/tasks" className="hover:text-white transition-colors flex items-center">
+          <ArrowLeft className="w-4 h-4 mr-1" />
+          Back to Tasks
+        </Link>
+      </div>
+
+      <div className="glass-panel p-6 sm:p-8 flex flex-col md:flex-row justify-between items-start md:items-center gap-4 relative overflow-hidden group">
+        <div className="absolute inset-0 bg-gradient-to-br from-[#7C5CFC]/5 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
+        <div className="relative z-10 space-y-2 flex-1">
           <div className="flex items-center gap-3">
-            <h1 className="text-2xl font-bold tracking-tight text-foreground flex items-center gap-2">
-              <CheckSquare className="w-6 h-6 text-primary" />
+            <h1 className="text-2xl font-display font-bold tracking-tight text-white flex items-center gap-3">
+              <div className="w-10 h-10 rounded-lg bg-violet-500/10 border border-violet-500/20 flex items-center justify-center shrink-0">
+                <CheckSquare className="w-5 h-5 text-violet-400" />
+              </div>
               {task.title}
             </h1>
             {isOverdue && (
-              <Badge variant="destructive" className="animate-pulse flex items-center gap-1">
+              <Badge variant="rose" className="animate-pulse flex items-center gap-1 ml-2">
                 <AlertCircle className="w-3 h-3" /> OVERDUE
               </Badge>
             )}
           </div>
-          <div className="text-sm text-muted-foreground flex items-center gap-4 flex-wrap">
-            <span className="flex items-center gap-1">
-              <Calendar className="w-4 h-4" /> 
+          <div className="text-sm text-[#8891B0] flex items-center gap-4 flex-wrap ml-14">
+            <span className="flex items-center gap-1.5">
+              <Calendar className="w-4 h-4 opacity-70" /> 
               Created {format(new Date(task.createdAt), 'MMM d, yyyy')}
             </span>
-            <span className="flex items-center gap-1">
-              <Clock className="w-4 h-4" /> 
+            <span className="flex items-center gap-1.5">
+              <Clock className="w-4 h-4 opacity-70" /> 
               Due: {task.dueDate ? format(new Date(task.dueDate), 'MMM d, yyyy h:mm a') : 'No due date'}
             </span>
           </div>
         </div>
-        <div className="flex items-center gap-3">
-          <Badge className={`${getStatusColor(task.status)} border px-3 py-1 text-xs uppercase font-semibold`}>
+        <div className="relative z-10 flex items-center gap-3 mt-2 md:mt-0 ml-14 md:ml-0">
+          <Badge variant={task.status === 'COMPLETED' ? 'emerald' : task.status === 'IN_PROGRESS' ? 'amber' : 'slate'} className="px-3 py-1 text-xs uppercase font-semibold h-auto">
             {task.status.replace('_', ' ')}
           </Badge>
-          <Badge className={`${getPriorityColor(task.priority)} border px-3 py-1 text-xs uppercase font-semibold`}>
+          <Badge variant={getPriorityColor(task.priority).includes('red') || getPriorityColor(task.priority).includes('orange') ? 'rose' : getPriorityColor(task.priority).includes('blue') ? 'violet' : 'slate'} className="px-3 py-1 text-xs uppercase font-semibold h-auto">
             {task.priority}
           </Badge>
         </div>
@@ -96,89 +107,71 @@ export default async function TaskDetailPage({ params }: { params: { id: string 
 
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
         <div className="md:col-span-2 space-y-6">
-          <Card>
-            <CardHeader>
-              <CardTitle className="text-lg">Task Description</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="text-sm text-foreground leading-relaxed whitespace-pre-wrap min-h-[100px]">
-                {task.description || <span className="text-muted-foreground italic">No description provided.</span>}
-              </div>
-            </CardContent>
-          </Card>
+          <div className="glass-panel p-6">
+            <h3 className="text-lg font-display font-semibold text-white mb-4">Task Description</h3>
+            <div className="text-sm text-[#E7EAF5] leading-relaxed whitespace-pre-wrap min-h-[100px] bg-[#0D1326]/30 p-4 rounded-xl border border-white/[.04]">
+              {task.description || <span className="text-[#8891B0] italic">No description provided.</span>}
+            </div>
+          </div>
 
-          <Card>
-            <CardHeader>
-              <CardTitle className="text-lg">Discussion</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <TaskComments taskId={task.id} initialComments={task.comments} />
-            </CardContent>
-          </Card>
+          <div className="glass-panel p-6">
+            <h3 className="text-lg font-display font-semibold text-white mb-4">Discussion</h3>
+            <TaskComments taskId={task.id} initialComments={task.comments} />
+          </div>
         </div>
 
         <div className="space-y-6">
-          <Card>
-            <CardHeader>
-              <CardTitle className="text-md flex items-center gap-2">
-                <User className="w-4 h-4 text-primary" /> Assignment
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="flex items-center gap-3 p-3 rounded-lg border bg-muted/20">
-                {task.assignedUser ? (
-                  <>
-                    <div className="w-10 h-10 rounded-full bg-primary/10 text-primary flex items-center justify-center uppercase font-bold">
-                      {task.assignedUser.email.charAt(0)}
-                    </div>
-                    <div>
-                      <p className="text-sm font-medium text-foreground">{task.assignedUser.email.split('@')[0]}</p>
-                      <p className="text-xs text-muted-foreground">{task.assignedUser.email}</p>
-                    </div>
-                  </>
-                ) : (
-                  <div className="text-sm text-muted-foreground italic">Unassigned</div>
-                )}
-              </div>
-            </CardContent>
-          </Card>
+          <div className="glass-panel p-6">
+            <h3 className="text-md font-display font-semibold text-white flex items-center gap-2 mb-4">
+              <User className="w-4 h-4 text-violet-400" /> Assignment
+            </h3>
+            <div className="flex items-center gap-4 p-4 rounded-xl border border-white/[.04] bg-[#0D1326]/40">
+              {task.assignedUser ? (
+                <>
+                  <div className="w-10 h-10 rounded-full bg-violet-500/20 text-violet-400 flex items-center justify-center uppercase font-bold border border-violet-500/30">
+                    {task.assignedUser.email.charAt(0)}
+                  </div>
+                  <div>
+                    <p className="text-sm font-medium text-white">{task.assignedUser.email.split('@')[0]}</p>
+                    <p className="text-xs text-[#8891B0] mt-0.5">{task.assignedUser.email}</p>
+                  </div>
+                </>
+              ) : (
+                <div className="text-sm text-[#8891B0] italic">Unassigned</div>
+              )}
+            </div>
+          </div>
 
           {(task.customer || task.lead) && (
-            <Card>
-              <CardHeader>
-                <CardTitle className="text-md flex items-center gap-2">
-                  <Building className="w-4 h-4 text-primary" /> Related Context
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-4">
+            <div className="glass-panel p-6">
+              <h3 className="text-md font-display font-semibold text-white flex items-center gap-2 mb-4">
+                <Building className="w-4 h-4 text-cyan-400" /> Related Context
+              </h3>
+              <div className="space-y-4">
                 {task.customer && (
-                  <div className="space-y-1">
-                    <p className="text-xs text-muted-foreground font-medium uppercase tracking-wider">Customer</p>
-                    <Link href={`/customers/${task.customer.id}`} className="text-sm font-medium text-primary hover:underline flex items-center gap-2">
-                      <Building className="w-3 h-3" /> {task.customer.name}
+                  <div className="p-3 rounded-lg border border-white/[.04] bg-[#0D1326]/30">
+                    <p className="text-[10px] text-[#8891B0] font-medium uppercase tracking-wider mb-1">Customer</p>
+                    <Link href={`/customers/${task.customer.id}`} className="text-sm font-medium text-white hover:text-cyan-400 transition-colors flex items-center gap-2">
+                      <Building className="w-3.5 h-3.5 text-cyan-500/70" /> {task.customer.name}
                     </Link>
                   </div>
                 )}
                 {task.lead && (
-                  <div className="space-y-1">
-                    <p className="text-xs text-muted-foreground font-medium uppercase tracking-wider">Lead</p>
-                    <Link href={`/leads/${task.lead.id}`} className="text-sm font-medium text-primary hover:underline flex items-center gap-2">
-                      <PhoneCall className="w-3 h-3" /> {task.lead.name} {task.lead.company ? `(${task.lead.company})` : ''}
+                  <div className="p-3 rounded-lg border border-white/[.04] bg-[#0D1326]/30">
+                    <p className="text-[10px] text-[#8891B0] font-medium uppercase tracking-wider mb-1">Lead</p>
+                    <Link href={`/leads/${task.lead.id}`} className="text-sm font-medium text-white hover:text-cyan-400 transition-colors flex items-center gap-2">
+                      <PhoneCall className="w-3.5 h-3.5 text-cyan-500/70" /> {task.lead.name} {task.lead.company ? `(${task.lead.company})` : ''}
                     </Link>
                   </div>
                 )}
-              </CardContent>
-            </Card>
+              </div>
+            </div>
           )}
 
-          <Card>
-            <CardHeader>
-              <CardTitle className="text-md">Activity Timeline</CardTitle>
-            </CardHeader>
-            <CardContent className="p-0">
-              <CustomerActivityTimeline activities={timelineEvents} />
-            </CardContent>
-          </Card>
+          <div className="glass-panel p-6">
+            <h3 className="text-md font-display font-semibold text-white mb-4">Activity Timeline</h3>
+            <CustomerActivityTimeline activities={timelineEvents} />
+          </div>
         </div>
       </div>
     </div>

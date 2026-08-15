@@ -4,10 +4,8 @@ import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { updateIncidentStatusAction, resolveIncidentAction, deleteIncidentAction } from '@/modules/incident/actions/incident.actions';
 import { IncidentNotificationStatus } from './IncidentNotificationStatus';
-import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/Card';
 import { Badge } from '@/components/ui/Badge';
 import { AlertCircle, ShieldAlert, CheckCircle, Video, MapPin, Clock, Search, Shield, ChevronRight, User2 } from 'lucide-react';
-import { EmptyState } from '@/components/ui/EmptyState';
 
 export function IncidentClientTable({ incidents }: { incidents: any[] }) {
   const router = useRouter();
@@ -47,149 +45,140 @@ export function IncidentClientTable({ incidents }: { incidents: any[] }) {
 
   const getSeverityColor = (severity: string) => {
     switch (severity) {
-      case 'CRITICAL': return 'border-red-500 bg-red-500/10 text-red-600';
-      case 'HIGH': return 'border-orange-500 bg-orange-500/10 text-orange-600';
-      case 'MEDIUM': return 'border-yellow-500 bg-yellow-500/10 text-yellow-600';
-      case 'LOW': return 'border-blue-500 bg-blue-500/10 text-blue-600';
-      default: return 'border-gray-500 bg-gray-500/10 text-gray-600';
+      case 'CRITICAL': return 'border-rose-500/30 bg-rose-500/10 text-rose-400';
+      case 'HIGH': return 'border-orange-500/30 bg-orange-500/10 text-orange-400';
+      case 'MEDIUM': return 'border-amber-500/30 bg-amber-500/10 text-amber-400';
+      case 'LOW': return 'border-blue-500/30 bg-blue-500/10 text-blue-400';
+      default: return 'border-white/[.08] bg-white/[.02] text-[#8891B0]';
     }
   };
 
   if (incidents.length === 0) {
     return (
       <div className="h-[60vh] flex items-center justify-center">
-        <EmptyState 
-          title="Security Perimeter Secure" 
-          description="No incidents have been detected by the surveillance systems or manually reported."
-          icon={<Shield className="w-16 h-16 opacity-30 text-success" />}
-        />
+        <div className="text-center p-8">
+          <Shield className="w-16 h-16 opacity-30 text-emerald-400 mx-auto mb-4" />
+          <h3 className="text-lg font-display font-semibold text-white mb-2">Security Perimeter Secure</h3>
+          <p className="text-sm text-[#8891B0]">No incidents have been detected by the surveillance systems or manually reported.</p>
+        </div>
       </div>
     );
   }
 
   return (
-    <div className="flex flex-col h-[calc(100vh-8rem)] animate-in fade-in duration-500 gap-4">
+    <div className="flex flex-col h-[calc(100vh-8rem)] animate-in fade-in duration-500 gap-4 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
       
       {/* TOP COMMAND BAR */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4 shrink-0">
-        <Card className="bg-card shadow-sm">
-          <CardContent className="p-4 flex items-center justify-between">
-            <div>
-              <p className="text-xs font-medium text-muted-foreground uppercase tracking-wider">Total Alerts</p>
-              <h3 className="text-2xl font-bold text-foreground mt-1">{totalIncidents}</h3>
-            </div>
-            <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center text-primary">
-              <ShieldAlert className="w-5 h-5" />
-            </div>
-          </CardContent>
-        </Card>
-        <Card className="bg-card shadow-sm">
-          <CardContent className="p-4 flex items-center justify-between">
-            <div>
-              <p className="text-xs font-medium text-muted-foreground uppercase tracking-wider">Active</p>
-              <h3 className="text-2xl font-bold text-foreground mt-1">{openIncidents}</h3>
-            </div>
-            <div className="w-10 h-10 rounded-full bg-amber-500/10 flex items-center justify-center text-amber-500">
-              <AlertCircle className="w-5 h-5" />
-            </div>
-          </CardContent>
-        </Card>
-        <Card className="bg-card shadow-sm border-l-4 border-l-red-500">
-          <CardContent className="p-4 flex items-center justify-between">
-            <div>
-              <p className="text-xs font-medium text-muted-foreground uppercase tracking-wider">Critical Threat</p>
-              <h3 className="text-2xl font-bold text-foreground mt-1">{criticalIncidents}</h3>
-            </div>
-            <div className="w-10 h-10 rounded-full bg-red-500/10 flex items-center justify-center text-red-500">
-              <ShieldAlert className="w-5 h-5" />
-            </div>
-          </CardContent>
-        </Card>
-        <Card className="bg-card shadow-sm">
-          <CardContent className="p-4 flex items-center justify-between">
-            <div>
-              <p className="text-xs font-medium text-muted-foreground uppercase tracking-wider">Impacted Sites</p>
-              <h3 className="text-2xl font-bold text-foreground mt-1">{uniqueLocations}</h3>
-            </div>
-            <div className="w-10 h-10 rounded-full bg-indigo-500/10 flex items-center justify-center text-indigo-500">
-              <MapPin className="w-5 h-5" />
-            </div>
-          </CardContent>
-        </Card>
+        <div className="glass-panel p-4 flex items-center justify-between group">
+          <div>
+            <p className="text-xs font-semibold text-[#8891B0] uppercase tracking-wider">Total Alerts</p>
+            <h3 className="text-2xl font-display font-bold text-white mt-1 group-hover:text-violet-400 transition-colors">{totalIncidents}</h3>
+          </div>
+          <div className="w-10 h-10 rounded-xl bg-violet-500/10 border border-violet-500/20 flex items-center justify-center text-violet-400">
+            <ShieldAlert className="w-5 h-5" />
+          </div>
+        </div>
+        <div className="glass-panel p-4 flex items-center justify-between group">
+          <div>
+            <p className="text-xs font-semibold text-[#8891B0] uppercase tracking-wider">Active</p>
+            <h3 className="text-2xl font-display font-bold text-white mt-1 group-hover:text-amber-400 transition-colors">{openIncidents}</h3>
+          </div>
+          <div className="w-10 h-10 rounded-xl bg-amber-500/10 border border-amber-500/20 flex items-center justify-center text-amber-400">
+            <AlertCircle className="w-5 h-5" />
+          </div>
+        </div>
+        <div className="glass-panel p-4 flex items-center justify-between border-l-4 border-l-rose-500 group">
+          <div>
+            <p className="text-xs font-semibold text-[#8891B0] uppercase tracking-wider">Critical Threat</p>
+            <h3 className="text-2xl font-display font-bold text-white mt-1 group-hover:text-rose-400 transition-colors">{criticalIncidents}</h3>
+          </div>
+          <div className="w-10 h-10 rounded-xl bg-rose-500/10 border border-rose-500/20 flex items-center justify-center text-rose-400">
+            <ShieldAlert className="w-5 h-5" />
+          </div>
+        </div>
+        <div className="glass-panel p-4 flex items-center justify-between group">
+          <div>
+            <p className="text-xs font-semibold text-[#8891B0] uppercase tracking-wider">Impacted Sites</p>
+            <h3 className="text-2xl font-display font-bold text-white mt-1 group-hover:text-cyan-400 transition-colors">{uniqueLocations}</h3>
+          </div>
+          <div className="w-10 h-10 rounded-xl bg-cyan-500/10 border border-cyan-500/20 flex items-center justify-center text-cyan-400">
+            <MapPin className="w-5 h-5" />
+          </div>
+        </div>
       </div>
 
       {/* THREE PANE LAYOUT */}
       <div className="flex-1 flex flex-col lg:flex-row gap-4 overflow-hidden">
         
         {/* LEFT PANEL: Queue */}
-        <Card className="lg:w-80 flex flex-col shrink-0 h-full overflow-hidden bg-card/50 shadow-sm border">
-          <CardHeader className="border-b px-4 py-3 bg-muted/30">
-            <CardTitle className="text-sm font-semibold flex items-center justify-between">
-              <span className="flex items-center"><ShieldAlert className="w-4 h-4 mr-2 text-primary" /> Incident Queue</span>
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="flex-1 p-0 overflow-y-auto custom-scrollbar">
-            <div className="flex flex-col divide-y">
+        <div className="glass-panel lg:w-80 flex flex-col shrink-0 h-full overflow-hidden">
+          <div className="border-b border-white/[.04] px-4 py-3 bg-[#0D1326]/30">
+            <h3 className="text-sm font-semibold text-[#8891B0] uppercase tracking-wider flex items-center">
+              <ShieldAlert className="w-4 h-4 mr-2 text-violet-400" /> Incident Queue
+            </h3>
+          </div>
+          <div className="flex-1 p-0 overflow-y-auto custom-scrollbar">
+            <div className="flex flex-col divide-y divide-white/[.04]">
               {incidents.map((incident) => {
                 const isSelected = selectedIncidentId === incident.id;
                 return (
                   <button
                     key={incident.id}
                     onClick={() => setSelectedIncidentId(incident.id)}
-                    className={`w-full text-left p-4 hover:bg-muted/50 transition-colors border-l-4 ${isSelected ? 'bg-muted border-l-primary' : 'border-l-transparent'}`}
+                    className={`w-full text-left p-4 hover:bg-white/[.02] transition-colors border-l-4 ${isSelected ? 'bg-white/[.04] border-l-violet-500' : 'border-l-transparent'}`}
                   >
-                    <div className="flex justify-between items-start mb-1">
-                      <div className={`text-xs font-bold px-1.5 py-0.5 rounded border ${getSeverityColor(incident.severity)}`}>
+                    <div className="flex justify-between items-start mb-2">
+                      <div className={`text-[10px] font-bold px-1.5 py-0.5 rounded border uppercase tracking-wider ${getSeverityColor(incident.severity)}`}>
                         {incident.severity}
                       </div>
-                      <div className="text-[10px] text-muted-foreground font-medium">
+                      <div className="text-[10px] text-[#8891B0] font-medium">
                         {new Date(incident.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
                       </div>
                     </div>
-                    <div className="font-semibold text-sm text-foreground truncate mt-2">{incident.title}</div>
-                    <div className="text-xs text-muted-foreground mt-1 flex items-center truncate">
-                      <MapPin className="w-3 h-3 mr-1 shrink-0" />
+                    <div className="font-semibold text-sm text-white truncate">{incident.title}</div>
+                    <div className="text-xs text-[#8891B0] mt-1.5 flex items-center truncate">
+                      <MapPin className="w-3.5 h-3.5 mr-1 shrink-0 opacity-70" />
                       {incident.location?.name || 'Unknown Site'}
                     </div>
                   </button>
                 );
               })}
             </div>
-          </CardContent>
-        </Card>
+          </div>
+        </div>
 
         {/* CENTER PANEL: Investigation Workspace */}
-        <Card className="flex-1 flex flex-col h-full overflow-hidden shadow-sm border">
+        <div className="glass-panel flex-1 flex flex-col h-full overflow-hidden">
           {!selectedIncident ? (
-            <div className="h-full flex items-center justify-center bg-slate-50/50">
-              <EmptyState 
-                title="No Selection" 
-                description="Select an incident from the queue to begin investigation."
-                icon={<Search className="w-12 h-12 opacity-30" />}
-                className="border-none bg-transparent"
-              />
+            <div className="h-full flex items-center justify-center">
+              <div className="text-center p-8">
+                <Search className="w-12 h-12 opacity-30 text-[#8891B0] mx-auto mb-4" />
+                <h3 className="text-lg font-display font-semibold text-white mb-2">No Selection</h3>
+                <p className="text-sm text-[#8891B0]">Select an incident from the queue to begin investigation.</p>
+              </div>
             </div>
           ) : (
             <>
-              <CardHeader className="border-b px-6 py-4 bg-card shadow-sm z-10 flex flex-row items-start justify-between">
+              <div className="border-b border-white/[.04] px-6 py-5 bg-[#0D1326]/30 z-10 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
                 <div>
                   <div className="flex items-center gap-3 mb-2">
-                    <Badge variant={selectedIncident.status === 'RESOLVED' || selectedIncident.status === 'CLOSED' ? 'success' : 'destructive'} className="uppercase">
+                    <Badge variant={selectedIncident.status === 'RESOLVED' || selectedIncident.status === 'CLOSED' ? 'emerald' : 'slate'} className="uppercase h-auto py-0.5 px-2">
                       {selectedIncident.status}
                     </Badge>
-                    <div className={`text-xs font-bold px-2 py-0.5 rounded border uppercase tracking-widest ${getSeverityColor(selectedIncident.severity)}`}>
+                    <div className={`text-[10px] font-bold px-1.5 py-0.5 rounded border uppercase tracking-wider ${getSeverityColor(selectedIncident.severity)}`}>
                       {selectedIncident.severity}
                     </div>
                   </div>
-                  <CardTitle className="text-xl font-bold text-primary mt-1">{selectedIncident.title}</CardTitle>
+                  <h2 className="text-xl font-display font-bold text-white mt-1">{selectedIncident.title}</h2>
                 </div>
                 
-                <div className="flex gap-2">
+                <div className="flex gap-2 shrink-0">
                   {selectedIncident.status === 'OPEN' && (
                     <button 
                       onClick={() => handleInvestigate(selectedIncident.id)}
                       disabled={loadingId === selectedIncident.id}
-                      className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded text-sm font-medium transition-colors disabled:opacity-50"
+                      className="bg-violet-600 hover:bg-violet-700 text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors disabled:opacity-50"
                     >
                       {loadingId === selectedIncident.id ? 'Working...' : 'Start Investigation'}
                     </button>
@@ -198,7 +187,7 @@ export function IncidentClientTable({ incidents }: { incidents: any[] }) {
                     <button 
                       onClick={() => handleResolve(selectedIncident.id)}
                       disabled={loadingId === selectedIncident.id}
-                      className="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded text-sm font-medium transition-colors disabled:opacity-50"
+                      className="bg-emerald-600 hover:bg-emerald-700 text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors disabled:opacity-50"
                     >
                       {loadingId === selectedIncident.id ? 'Working...' : 'Resolve Incident'}
                     </button>
@@ -206,53 +195,53 @@ export function IncidentClientTable({ incidents }: { incidents: any[] }) {
                   <button 
                     onClick={() => handleDelete(selectedIncident.id)}
                     disabled={loadingId === selectedIncident.id}
-                    className="bg-muted hover:bg-red-100 hover:text-red-600 text-muted-foreground px-4 py-2 rounded text-sm font-medium transition-colors disabled:opacity-50"
+                    className="bg-white/5 hover:bg-rose-500/20 text-[#8891B0] hover:text-rose-400 px-4 py-2 rounded-lg text-sm font-medium transition-colors disabled:opacity-50"
                   >
                     Delete
                   </button>
                 </div>
-              </CardHeader>
+              </div>
               
-              <div className="flex-1 overflow-y-auto p-6 bg-slate-50/30">
+              <div className="flex-1 overflow-y-auto p-6 custom-scrollbar">
                 <div className="max-w-3xl space-y-8">
                   
                   {/* Description */}
                   <section>
-                    <h3 className="text-sm font-semibold text-foreground uppercase tracking-wider mb-3 flex items-center">
-                      <AlertCircle className="w-4 h-4 mr-2 opacity-50" />
+                    <h3 className="text-xs font-semibold text-[#8891B0] uppercase tracking-wider mb-3 flex items-center">
+                      <AlertCircle className="w-4 h-4 mr-2 text-amber-400" />
                       Incident Details
                     </h3>
-                    <div className="bg-white border rounded-lg p-5 shadow-sm text-sm text-foreground leading-relaxed whitespace-pre-wrap">
-                      {selectedIncident.description || <span className="italic text-muted-foreground">No description provided for this incident.</span>}
+                    <div className="bg-[#0D1326]/40 border border-white/[.04] rounded-xl p-5 text-sm text-white leading-relaxed whitespace-pre-wrap">
+                      {selectedIncident.description || <span className="italic text-[#8891B0]">No description provided for this incident.</span>}
                     </div>
                   </section>
 
                   {/* Timeline */}
                   <section>
-                    <h3 className="text-sm font-semibold text-foreground uppercase tracking-wider mb-3 flex items-center">
-                      <Clock className="w-4 h-4 mr-2 opacity-50" />
+                    <h3 className="text-xs font-semibold text-[#8891B0] uppercase tracking-wider mb-3 flex items-center">
+                      <Clock className="w-4 h-4 mr-2 text-cyan-400" />
                       Event Timeline
                     </h3>
                     <div className="space-y-4 pl-2">
                       <div className="flex gap-4">
                         <div className="flex flex-col items-center">
-                          <div className="w-3 h-3 rounded-full bg-red-500 mt-1"></div>
-                          <div className="w-0.5 h-full bg-border my-1"></div>
+                          <div className="w-3 h-3 rounded-full bg-rose-500 mt-1 shadow-[0_0_10px_rgba(244,63,94,0.5)]"></div>
+                          <div className="w-px h-full bg-white/[.08] my-1"></div>
                         </div>
                         <div className="pb-4">
-                          <div className="text-sm font-semibold">Incident Created</div>
-                          <div className="text-xs text-muted-foreground mt-0.5">{new Date(selectedIncident.createdAt).toLocaleString()}</div>
+                          <div className="text-sm font-medium text-white">Incident Created</div>
+                          <div className="text-xs text-[#8891B0] mt-1">{new Date(selectedIncident.createdAt).toLocaleString()}</div>
                         </div>
                       </div>
                       
                       {selectedIncident.resolvedAt && (
                         <div className="flex gap-4">
                           <div className="flex flex-col items-center">
-                            <div className="w-3 h-3 rounded-full bg-green-500 mt-1"></div>
+                            <div className="w-3 h-3 rounded-full bg-emerald-500 mt-1 shadow-[0_0_10px_rgba(16,185,129,0.5)]"></div>
                           </div>
                           <div className="pb-2">
-                            <div className="text-sm font-semibold">Incident Resolved</div>
-                            <div className="text-xs text-muted-foreground mt-0.5">{new Date(selectedIncident.resolvedAt).toLocaleString()}</div>
+                            <div className="text-sm font-medium text-white">Incident Resolved</div>
+                            <div className="text-xs text-[#8891B0] mt-1">{new Date(selectedIncident.resolvedAt).toLocaleString()}</div>
                           </div>
                         </div>
                       )}
@@ -263,94 +252,94 @@ export function IncidentClientTable({ incidents }: { incidents: any[] }) {
               </div>
             </>
           )}
-        </Card>
+        </div>
 
         {/* RIGHT PANEL: Context */}
-        <Card className="lg:w-72 flex flex-col shrink-0 h-full overflow-y-auto bg-card shadow-sm border hidden xl:flex">
-          <CardHeader className="border-b px-4 py-3 bg-muted/20">
-            <CardTitle className="text-sm font-semibold flex items-center">
-              <Shield className="w-4 h-4 mr-2 text-primary" />
+        <div className="glass-panel lg:w-72 flex flex-col shrink-0 h-full overflow-y-auto custom-scrollbar hidden xl:flex">
+          <div className="border-b border-white/[.04] px-4 py-3 bg-[#0D1326]/30">
+            <h3 className="text-sm font-semibold text-[#8891B0] uppercase tracking-wider flex items-center">
+              <Shield className="w-4 h-4 mr-2 text-violet-400" />
               Security Context
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="p-4 space-y-6">
+            </h3>
+          </div>
+          <div className="p-4 space-y-6">
             
             {selectedIncident ? (
               <>
                 <div>
-                  <h4 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-2">Location Data</h4>
+                  <h4 className="text-[10px] font-semibold text-[#8891B0] uppercase tracking-wider mb-2">Location Data</h4>
                   {selectedIncident.location ? (
-                    <div className="bg-muted/40 rounded p-3 border">
-                      <div className="font-medium text-sm text-foreground flex items-center">
-                        <MapPin className="w-3.5 h-3.5 mr-1.5 text-primary" />
+                    <div className="bg-[#0D1326]/30 rounded-xl p-3 border border-white/[.04]">
+                      <div className="font-medium text-sm text-white flex items-center">
+                        <MapPin className="w-3.5 h-3.5 mr-2 text-cyan-400" />
                         {selectedIncident.location.name}
                       </div>
                       {(selectedIncident.location.address || selectedIncident.location.city) && (
-                        <div className="text-xs text-muted-foreground mt-1 ml-5">
+                        <div className="text-xs text-[#8891B0] mt-1.5 ml-5.5">
                           {selectedIncident.location.address} {selectedIncident.location.city}
                         </div>
                       )}
                     </div>
                   ) : (
-                    <div className="text-xs text-muted-foreground italic border border-dashed rounded p-3 bg-muted/10">Unknown Location</div>
+                    <div className="text-xs text-[#8891B0] italic border border-white/[.04] border-dashed rounded-xl p-3 bg-white/[.02]">Unknown Location</div>
                   )}
                 </div>
 
                 <div>
-                  <h4 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-2 flex items-center justify-between">
+                  <h4 className="text-[10px] font-semibold text-[#8891B0] uppercase tracking-wider mb-2 flex items-center justify-between">
                     Camera Feed
-                    <Badge variant="outline" className="text-[9px] uppercase tracking-widest bg-blue-50 text-blue-700 border-blue-200">Ready</Badge>
+                    <Badge variant="slate" className="text-[9px] uppercase tracking-widest bg-violet-500/10 text-violet-400 border-violet-500/20 h-auto py-0.5 px-1.5">Ready</Badge>
                   </h4>
                   {selectedIncident.camera ? (
-                    <div className="rounded border bg-black aspect-video flex flex-col items-center justify-center text-center p-4 relative overflow-hidden group">
-                      <Video className="w-8 h-8 text-white/30 mb-2" />
+                    <div className="rounded-xl border border-white/[.04] bg-[#070B18] aspect-video flex flex-col items-center justify-center text-center p-4 relative overflow-hidden group shadow-inner">
+                      <Video className="w-8 h-8 text-white/20 mb-2 group-hover:text-violet-400/50 transition-colors" />
                       <div className="text-xs text-white/70 font-medium z-10">{selectedIncident.camera.name}</div>
                       <div className="text-[9px] text-white/40 mt-1 z-10">Live integration available after CCTV provider connection</div>
                       <div className="absolute inset-0 bg-gradient-to-t from-black/80 to-transparent pointer-events-none" />
                     </div>
                   ) : (
-                    <div className="text-xs text-muted-foreground italic border border-dashed rounded p-3 bg-muted/10 text-center">
-                      <Video className="w-5 h-5 mx-auto mb-1 opacity-20" />
+                    <div className="text-xs text-[#8891B0] italic border border-white/[.04] border-dashed rounded-xl p-4 bg-white/[.02] text-center">
+                      <Video className="w-5 h-5 mx-auto mb-1.5 opacity-30" />
                       No Camera Linked
                     </div>
                   )}
                 </div>
 
                 <div>
-                  <h4 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-2">Assigned Investigator</h4>
+                  <h4 className="text-[10px] font-semibold text-[#8891B0] uppercase tracking-wider mb-2">Assigned Investigator</h4>
                   {selectedIncident.assignedUser ? (
-                    <div className="flex items-center gap-2 border rounded p-2 bg-card">
-                      <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center text-primary text-xs font-bold">
+                    <div className="flex items-center gap-3 border border-white/[.04] rounded-xl p-3 bg-[#0D1326]/30">
+                      <div className="w-8 h-8 rounded-full bg-violet-500/20 flex items-center justify-center text-violet-400 text-xs font-bold border border-violet-500/30">
                         {selectedIncident.assignedUser.email?.charAt(0).toUpperCase()}
                       </div>
-                      <div className="text-sm font-medium text-foreground truncate" title={selectedIncident.assignedUser.email}>
-                        {selectedIncident.assignedUser.email}
+                      <div className="text-sm font-medium text-white truncate" title={selectedIncident.assignedUser.email}>
+                        {selectedIncident.assignedUser.email.split('@')[0]}
                       </div>
                     </div>
                   ) : (
-                    <div className="flex items-center gap-2 border border-dashed rounded p-2 bg-muted/10 text-muted-foreground">
-                      <User2 className="w-8 h-8 p-1.5 rounded-full bg-muted opacity-50" />
+                    <div className="flex items-center gap-3 border border-white/[.04] border-dashed rounded-xl p-3 bg-white/[.02] text-[#8891B0]">
+                      <User2 className="w-8 h-8 p-1.5 rounded-full bg-white/5 opacity-50" />
                       <div className="text-xs italic">Unassigned</div>
                     </div>
                   )}
                 </div>
                 
                 <div>
-                  <h4 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-2">Notification Status</h4>
-                  <div className="border rounded p-3">
+                  <h4 className="text-[10px] font-semibold text-[#8891B0] uppercase tracking-wider mb-2">Notification Status</h4>
+                  <div className="border border-white/[.04] rounded-xl p-3 bg-[#0D1326]/30">
                     <IncidentNotificationStatus incidentId={selectedIncident.id} />
                   </div>
                 </div>
               </>
             ) : (
               <div className="text-center py-10 opacity-50">
-                <Search className="w-8 h-8 mx-auto mb-2" />
-                <p className="text-xs">Context will appear here</p>
+                <Search className="w-8 h-8 mx-auto mb-2 text-[#8891B0]" />
+                <p className="text-xs text-[#8891B0]">Context will appear here</p>
               </div>
             )}
 
-          </CardContent>
-        </Card>
+          </div>
+        </div>
 
       </div>
     </div>
