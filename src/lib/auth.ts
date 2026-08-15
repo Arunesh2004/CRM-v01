@@ -96,19 +96,7 @@ export const getCurrentUser = cache(async function getCurrentUser() {
   const loadTestUser = await tryLoadTestIdentity();
   if (loadTestUser) return loadTestUser;
 
-  // LEGACY: Global TEST_USER_ID bypass — intentionally left to avoid breaking existing local dev
-  // workflows but remains unsafe for Vercel (see Phase 26 auth report).
-  if (process.env.TEST_USER_ID) {
-    return await prisma.user.findUnique({
-      where: { id: process.env.TEST_USER_ID },
-      include: {
-        tenant: true,
-        userRoles: {
-          include: { role: { include: { permissions: { include: { permission: true } } } } }
-        }
-      }
-    });
-  }
+
 
   const clerkAuth = await auth();
   const clerkId = clerkAuth.userId;
@@ -184,9 +172,7 @@ export async function requireAuth() {
 }
 
 export async function requireTenant() {
-  if (process.env.TEST_TENANT_ID) {
-    return process.env.TEST_TENANT_ID;
-  }
+
   const tenant = await getCurrentTenant();
   if (!tenant) {
     throw new Error('Tenant Context Missing');
@@ -298,12 +284,7 @@ export const getCurrentUserIdentity = cache(async function getCurrentUserIdentit
   const loadTestUser = await tryLoadTestIdentityLight();
   if (loadTestUser) return loadTestUser;
 
-  if (process.env.TEST_USER_ID) {
-    return await prisma.user.findUnique({
-      where: { id: process.env.TEST_USER_ID },
-      select: { id: true, tenantId: true, email: true }
-    });
-  }
+
 
   const clerkAuth = await auth();
   const clerkId = clerkAuth.userId;
@@ -336,9 +317,7 @@ export async function requireAuthIdentity() {
 }
 
 export function requireTenantFromIdentity(user: { tenantId: string | null }) {
-  if (process.env.TEST_TENANT_ID) {
-    return process.env.TEST_TENANT_ID;
-  }
+
   if (!user || !user.tenantId) {
     throw new Error('Tenant Context Missing');
   }
