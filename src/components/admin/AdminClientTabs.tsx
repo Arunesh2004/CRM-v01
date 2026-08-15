@@ -5,18 +5,16 @@ import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/Card';
 import { Badge } from '@/components/ui/Badge';
 import { Building2, Users, Shield, Plug, CreditCard, User2, MapPin, Lock, Webhook, IndianRupee } from 'lucide-react';
 
-type TabType = 'organization' | 'people' | 'security' | 'integrations' | 'billing';
+type TabType = 'organization' | 'people' | 'security' | 'integrations';
 
 export function AdminClientTabs({ 
   tenant, 
   users, 
-  roles,
-  subscriptions
+  roles
 }: { 
   tenant: any, 
   users: any[], 
-  roles: any[],
-  subscriptions: any[]
+  roles: any[]
 }) {
   const [activeTab, setActiveTab] = useState<TabType>('organization');
 
@@ -25,12 +23,9 @@ export function AdminClientTabs({
     { id: 'people', label: 'People & Roles', icon: Users },
     { id: 'security', label: 'Security Controls', icon: Shield },
     { id: 'integrations', label: 'Connected Services', icon: Plug },
-    { id: 'billing', label: 'Billing & Plans', icon: CreditCard },
   ];
 
-  const formatINR = (value: number) => {
-    return new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR', maximumFractionDigits: 0 }).format(value);
-  };
+
 
   return (
     <div className="flex flex-col md:flex-row gap-8 animate-in fade-in duration-500 min-h-[calc(100vh-10rem)]">
@@ -239,41 +234,7 @@ export function AdminClientTabs({
           </div>
         )}
 
-        {/* 5. BILLING */}
-        {activeTab === 'billing' && (
-          <div className="space-y-8">
-            <div className="border-b border-white/[.04] pb-4">
-              <h2 className="text-xl font-display font-bold text-white tracking-tight">Billing & Plans</h2>
-              <p className="text-sm text-[#8891B0] mt-1">Manage your active subscriptions and payment methods.</p>
-            </div>
 
-            {subscriptions.length > 0 ? (
-              <div className="space-y-4 max-w-2xl">
-                {subscriptions.map(sub => (
-                  <div key={sub.id} className="border border-emerald-500/20 bg-emerald-500/5 rounded-xl p-6">
-                    <div className="flex justify-between items-start">
-                      <div>
-                        <span className="bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider mb-3 inline-block">ACTIVE SUBSCRIPTION</span>
-                        <h3 className="font-display font-bold text-xl text-white">{sub.plan?.name || 'Enterprise Plan'}</h3>
-                        <p className="text-sm text-[#8891B0] mt-1">Valid until {new Date(sub.endDate || sub.renewalDate).toLocaleDateString()}</p>
-                      </div>
-                      <div className="text-right">
-                        <div className="text-2xl font-display font-bold text-emerald-400">{formatINR(Number(sub.plan?.price || 0))}</div>
-                        <div className="text-xs text-emerald-500/70 font-bold uppercase tracking-widest mt-1">/{sub.plan?.billingCycle || 'CYCLE'}</div>
-                      </div>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            ) : (
-              <div className="border border-white/[.04] border-dashed rounded-xl p-12 text-center bg-white/[.01]">
-                <CreditCard className="w-16 h-16 mx-auto text-white/10 mb-4" />
-                <h3 className="text-lg font-bold text-white">Billing Module Not Configured</h3>
-                <p className="text-sm text-[#8891B0] mt-2">Active subscriptions will appear here.</p>
-              </div>
-            )}
-          </div>
-        )}
       </div>
     </div>
   );

@@ -77,7 +77,7 @@ const NAV_GROUPS = [
   {
     section: "System",
     items: [
-      { name: "Settings", href: "/settings", icon: Settings },
+      { name: "Settings", href: "/settings/employees", icon: Settings },
       { name: "Admin", href: "/admin", icon: Shield, adminOnly: true },
     ],
   },

@@ -7,7 +7,7 @@ export default async function AdminDashboardPage() {
   const tenantId = await requireTenant();
   
   // Fetch everything securely isolated by tenantId
-  const [tenant, users, roles, subscriptions] = await Promise.all([
+  const [tenant, users, roles] = await Promise.all([
     prisma.tenant.findUnique({
       where: { id: tenantId }
     }),
@@ -19,10 +19,6 @@ export default async function AdminDashboardPage() {
       where: { tenantId },
       select: { id: true, name: true }
     }).catch(() => []), // Graceful fallback if roles table isn't active
-    prisma.subscription.findMany({
-      where: { tenantId, status: 'ACTIVE' },
-      include: { plan: true }
-    }).catch(() => []) // Graceful fallback if billing module isn't active
   ]);
 
   if (!tenant) {
@@ -47,7 +43,6 @@ export default async function AdminDashboardPage() {
         tenant={tenant} 
         users={users} 
         roles={roles} 
-        subscriptions={subscriptions} 
       />
     </div>
   );
