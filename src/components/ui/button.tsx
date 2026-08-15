@@ -10,23 +10,58 @@ export interface ButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElemen
 
 export const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
   ({ className, variant = 'primary', size = 'default', isLoading, children, ...props }, ref) => {
-    
-    const baseStyles = 'inline-flex items-center justify-center rounded-md text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent disabled:opacity-50 disabled:pointer-events-none px-4 py-2';
-    
+    // Base styles match Nexus CRM reference button patterns
+    const baseStyles = 'inline-flex items-center justify-center gap-1.5 font-semibold transition-all duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-violet-500/50 disabled:opacity-50 disabled:pointer-events-none';
+
     const variants = {
-      primary: 'bg-primary text-primary-foreground hover:bg-primary/90',
-      secondary: 'bg-muted text-muted-foreground hover:bg-muted/80',
-      danger: 'bg-red-500 text-white hover:bg-red-600',
-      ghost: 'hover:bg-muted hover:text-foreground',
-      outline: 'border border-input hover:bg-accent hover:text-accent-foreground',
-      default: 'bg-primary text-primary-foreground hover:bg-primary/90'
+      primary: [
+        'text-white rounded-[.7rem] px-[1.1rem] py-[.6rem]',
+        'bg-gradient-to-br from-[#7C5CFC] to-[#9B7BFF]',
+        'shadow-[0_6px_18px_rgba(124,92,252,.35)]',
+        'hover:brightness-110 hover:-translate-y-px',
+      ].join(' '),
+
+      default: [
+        'text-white rounded-[.7rem] px-[1.1rem] py-[.6rem]',
+        'bg-gradient-to-br from-[#7C5CFC] to-[#9B7BFF]',
+        'shadow-[0_6px_18px_rgba(124,92,252,.35)]',
+        'hover:brightness-110 hover:-translate-y-px',
+      ].join(' '),
+
+      secondary: [
+        'rounded-[.7rem] px-[1.1rem] py-[.6rem]',
+        'bg-[rgba(20,27,51,.55)] backdrop-blur-[20px]',
+        'border border-white/[.08]',
+        'text-[#E7EAF5] font-medium',
+        'hover:bg-[rgba(124,92,252,.08)] hover:border-[#7C5CFC]',
+      ].join(' '),
+
+      ghost: [
+        'rounded-[.7rem] px-[1.1rem] py-[.6rem]',
+        'border border-white/[.08]',
+        'text-[#E7EAF5] font-medium',
+        'hover:bg-[rgba(124,92,252,.08)] hover:border-[#7C5CFC]',
+      ].join(' '),
+
+      outline: [
+        'rounded-[.7rem] px-[1.1rem] py-[.6rem]',
+        'border border-white/[.08]',
+        'text-[#E7EAF5] font-medium',
+        'hover:bg-[rgba(124,92,252,.08)] hover:border-[#7C5CFC]',
+      ].join(' '),
+
+      danger: [
+        'text-white rounded-[.7rem] px-[1.1rem] py-[.6rem]',
+        'bg-[#F43F5E] hover:bg-[#F43F5E]/90',
+        'shadow-[0_6px_18px_rgba(244,63,94,.3)]',
+      ].join(' '),
     };
 
     const sizes = {
-      default: 'h-10 px-4 py-2',
-      sm: 'h-9 rounded-md px-3',
-      lg: 'h-11 rounded-md px-8',
-      icon: 'h-10 w-10',
+      default: 'text-sm',
+      sm: 'text-xs px-3 py-[.45rem]',
+      lg: 'text-base px-5 py-3',
+      icon: 'w-9 h-9 p-0 rounded-[.7rem]',
     };
 
     return (
@@ -36,7 +71,7 @@ export const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
         disabled={isLoading || props.disabled}
         {...props}
       >
-        {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+        {isLoading && <Loader2 className="mr-1.5 h-4 w-4 animate-spin" />}
         {children}
       </button>
     );

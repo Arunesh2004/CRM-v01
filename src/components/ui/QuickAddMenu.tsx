@@ -1,18 +1,19 @@
 'use client';
 
 import * as React from 'react';
-import { Plus, User, Target, CheckSquare, Phone, MapPin, Building2, UserPlus, StickyNote } from 'lucide-react';
+import { Plus, Target, CheckSquare, Phone, Building2 } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 
 export function QuickAddMenu() {
   const [open, setOpen] = React.useState(false);
+  const ref = React.useRef<HTMLDivElement>(null);
   const router = useRouter();
 
   const actions = [
-    { label: 'Create Customer', icon: <Building2 className="w-4 h-4" />, href: '/customers/new' },
-    { label: 'Create Lead', icon: <Target className="w-4 h-4" />, href: '/leads' },
-    { label: 'Create Task', icon: <CheckSquare className="w-4 h-4" />, href: '/tasks' },
-    { label: 'Log Call', icon: <Phone className="w-4 h-4" />, href: '/communications' },
+    { label: 'New Customer', icon: Building2, href: '/customers/new' },
+    { label: 'New Lead', icon: Target, href: '/leads' },
+    { label: 'New Task', icon: CheckSquare, href: '/tasks' },
+    { label: 'Log Call', icon: Phone, href: '/communications' },
   ];
 
   const handleAction = (href: string) => {
@@ -20,36 +21,60 @@ export function QuickAddMenu() {
     router.push(href);
   };
 
+  // Close on outside click
+  React.useEffect(() => {
+    const handleClick = (e: MouseEvent) => {
+      if (ref.current && !ref.current.contains(e.target as Node)) setOpen(false);
+    };
+    if (open) document.addEventListener('mousedown', handleClick);
+    return () => document.removeEventListener('mousedown', handleClick);
+  }, [open]);
+
   return (
-    <div className="relative">
+    <div className="relative" ref={ref}>
+      {/* Trigger */}
       <button
         onClick={() => setOpen(!open)}
-        className="flex items-center justify-center w-8 h-8 rounded-full bg-primary text-primary-foreground hover:bg-primary/90 transition-colors shadow-sm"
+        className="w-9 h-9 flex items-center justify-center rounded-lg grad-primary text-white card-hover ring-glow"
+        title="Quick Add"
+        aria-label="Quick Add"
       >
-        <Plus className="w-5 h-5" />
+        <Plus className="w-4 h-4" />
       </button>
 
+      {/* Dropdown */}
       {open && (
-        <>
-          <div className="fixed inset-0 z-40" onClick={() => setOpen(false)} />
-          <div className="absolute right-0 top-10 w-48 bg-card border rounded-lg shadow-xl z-50 overflow-hidden animate-in slide-in-from-top-2">
-            <div className="px-3 py-2 border-b bg-muted/50 text-xs font-semibold text-muted-foreground uppercase tracking-wider">
-              Quick Add
-            </div>
-            <div className="p-1">
-              {actions.map((action, i) => (
-                <button
-                  key={i}
-                  onClick={() => handleAction(action.href)}
-                  className="w-full flex items-center gap-3 px-3 py-2 text-sm text-foreground hover:bg-accent hover:text-accent-foreground rounded-md transition-colors"
-                >
-                  <span className="text-muted-foreground">{action.icon}</span>
-                  {action.label}
-                </button>
-              ))}
-            </div>
+        <div
+          className="absolute right-0 mt-2 w-48 rounded-[1rem] overflow-hidden z-50 animate-in"
+          style={{
+            background: "linear-gradient(180deg, rgba(27,35,64,.9), rgba(13,19,38,.9))",
+            border: "1px solid rgba(255,255,255,.08)",
+            boxShadow: "0 16px 48px rgba(0,0,0,.5)",
+            backdropFilter: "blur(24px)",
+          }}
+        >
+          {/* Header */}
+          <div
+            className="px-3 py-2 text-[10px] font-bold uppercase tracking-wider border-b border-white/[.05]"
+            style={{ color: "#8891B0" }}
+          >
+            Quick Add
           </div>
-        </>
+
+          {/* Items */}
+          <div className="p-1.5 space-y-0.5">
+            {actions.map(({ label, icon: Icon, href }) => (
+              <button
+                key={href}
+                onClick={() => handleAction(href)}
+                className="w-full flex items-center gap-2.5 px-2.5 py-2 rounded-lg text-[13px] font-medium text-[#E7EAF5] hover:bg-violet-500/10 hover:text-violet-300 transition-all duration-150"
+              >
+                <Icon className="w-3.5 h-3.5 text-violet-400" />
+                {label}
+              </button>
+            ))}
+          </div>
+        </div>
       )}
     </div>
   );

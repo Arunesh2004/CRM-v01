@@ -1,23 +1,34 @@
 import * as React from "react"
 import { cn } from "@/lib/utils"
 
-export interface BadgeProps extends React.HTMLAttributes<HTMLDivElement> {
-  variant?: "default" | "secondary" | "destructive" | "outline" | "success"
+export interface BadgeProps extends React.HTMLAttributes<HTMLSpanElement> {
+  variant?: "default" | "secondary" | "destructive" | "outline" | "success" |
+            "violet" | "emerald" | "amber" | "rose" | "cyan" | "slate"
+}
+
+// Maps our old variant names and adds the new Nexus CRM color tokens
+const variantStyles: Record<string, string> = {
+  default:     "bg-[rgba(124,92,252,.12)] text-[#7C5CFC]",         // = badge-violet
+  violet:      "bg-[rgba(124,92,252,.12)] text-[#7C5CFC]",
+  success:     "bg-[rgba(16,185,129,.12)] text-[#10B981]",          // = badge-emerald
+  emerald:     "bg-[rgba(16,185,129,.12)] text-[#10B981]",
+  secondary:   "bg-[rgba(245,166,35,.14)] text-[#F5A623]",          // = badge-amber
+  amber:       "bg-[rgba(245,166,35,.14)] text-[#F5A623]",
+  destructive: "bg-[rgba(244,63,94,.12)] text-[#F43F5E]",           // = badge-rose
+  rose:        "bg-[rgba(244,63,94,.12)] text-[#F43F5E]",
+  cyan:        "bg-[rgba(34,211,238,.12)] text-[#22D3EE]",
+  slate:       "bg-[rgba(100,116,139,.12)] text-[#8891B0]",
+  outline:     "border border-white/10 text-[#E7EAF5]",
 }
 
 function Badge({ className, variant = "default", ...props }: BadgeProps) {
-  const variants = {
-    default: "border-transparent bg-primary text-primary-foreground hover:bg-primary/80",
-    secondary: "border-transparent bg-secondary text-secondary-foreground hover:bg-secondary/80",
-    destructive: "border-transparent bg-red-500 text-white hover:bg-red-500/80",
-    success: "border-transparent bg-green-500 text-white hover:bg-green-500/80",
-    outline: "text-foreground",
-  }
   return (
-    <div
+    <span
       className={cn(
-        "inline-flex items-center rounded-full border px-2.5 py-0.5 text-xs font-semibold transition-colors focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2",
-        variants[variant],
+        // Reference: .badge
+        "inline-flex items-center gap-1 rounded-full font-semibold",
+        "text-[.68rem] leading-none px-[.55rem] py-[.15rem] tracking-[.02em]",
+        variantStyles[variant] ?? variantStyles.default,
         className
       )}
       {...props}

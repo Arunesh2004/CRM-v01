@@ -2,7 +2,6 @@ import { Suspense } from "react";
 import { requireAuth, requireTenant } from "@/lib/auth";
 import { withTenant } from "@/../database/utils/prisma-tenant";
 import { getDashboardAnalytics } from "@/modules/analytics/analytics.service";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/Card";
 import { Skeleton } from "@/components/ui/Skeleton";
 import { EmptyState } from "@/components/ui/EmptyState";
 import {
@@ -13,22 +12,66 @@ import {
   MessageSquare,
   AlertTriangle,
   Activity,
-  User,
   Mail,
-  Link as LinkIcon,
+  TrendingUp,
 } from "lucide-react";
-
 import Link from "next/link";
-
 import { SalesChartClientWrapper as SalesChart } from "@/components/ui/SalesChartClientWrapper";
 
-export default async function DashboardPage() {
+// ── Nexus CRM color palette
+const colorMap: Record<string, string> = {
+  violet: "#7C5CFC",
+  cyan: "#22D3EE",
+  emerald: "#10B981",
+  amber: "#F5A623",
+  rose: "#F43F5E",
+};
 
+// KPI card definition
+interface KpiDef {
+  label: string;
+  value: number | string;
+  icon: React.ElementType;
+  color: keyof typeof colorMap;
+  href?: string;
+}
+
+function KpiCard({ kpi }: { kpi: KpiDef }) {
+  const hex = colorMap[kpi.color] ?? colorMap.violet;
+  const Icon = kpi.icon;
+  const content = (
+    <div
+      className="kpi-card glass-panel p-4 card-hover animate-in h-full"
+      style={{ animationDelay: "0ms" }}
+    >
+      <div className="flex items-center justify-between mb-3">
+        <div
+          className="w-9 h-9 rounded-xl flex items-center justify-center"
+          style={{ background: `${hex}1F` }}
+        >
+          <Icon className="w-4 h-4" style={{ color: hex }} />
+        </div>
+      </div>
+      <p className="font-display font-bold text-xl text-white font-mono">
+        {typeof kpi.value === "number" ? kpi.value.toLocaleString("en-IN") : kpi.value}
+      </p>
+      <p className="text-xs mt-0.5" style={{ color: "#8891B0" }}>
+        {kpi.label}
+      </p>
+    </div>
+  );
+
+  if (kpi.href) {
+    return <Link href={kpi.href} className="block h-full">{content}</Link>;
+  }
+  return content;
+}
+
+export default async function DashboardPage() {
   await requireAuth();
   const tenantId = await requireTenant();
   const prisma = withTenant(tenantId);
 
-  // Parallelize independent dashboard queries
   const [
     customerCount,
     activeLeadsCount,
@@ -40,9 +83,7 @@ export default async function DashboardPage() {
     recentActivities,
   ] = await Promise.all([
     prisma.customer.count({ where: { tenantId, deletedAt: null } }),
-    prisma.lead.count({
-      where: { tenantId, status: { notIn: ["LOST", "CONVERTED"] } },
-    }),
+    prisma.lead.count({ where: { tenantId, status: { notIn: ["LOST", "CONVERTED"] } } }),
     prisma.task.count({ where: { tenantId, status: "PENDING" } }),
     prisma.call.count({ where: { tenantId } }),
     prisma.message.count({ where: { tenantId } }),
@@ -51,206 +92,146 @@ export default async function DashboardPage() {
     prisma.activityTimeline.findMany({
       where: { tenantId },
       orderBy: { createdAt: "desc" },
-      take: 5,
+      take: 6,
       include: { actor: true },
     }),
   ]);
 
   const analyticsData = await getDashboardAnalytics(tenantId, 6);
 
+  const kpis: KpiDef[] = [
+    { label: "Total Customers", value: customerCount, icon: Users, color: "cyan", href: "/customers" },
+    { label: "Active Leads", value: activeLeadsCount, icon: Target, color: "violet", href: "/leads" },
+    { label: "Pending Tasks", value: pendingTasksCount, icon: CheckSquare, color: "emerald", href: "/tasks" },
+    { label: "Total Calls", value: callCount, icon: Phone, color: "amber" },
+    { label: "Total Emails", value: emailCount, icon: Mail, color: "violet" },
+    { label: "Total Messages", value: messageCount, icon: MessageSquare, color: "cyan" },
+    { label: "Security Incidents", value: incidentCount, icon: AlertTriangle, color: "rose", href: "/incidents" },
+  ];
+
   return (
-    <div className="space-y-8 animate-in fade-in duration-500">
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+    <div className="space-y-6 animate-in">
+
+      {/* ── Welcome strip */}
+      <div className="glass-panel rounded-[1.25rem] p-5 sm:p-6 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
-          <h1 className="text-3xl font-bold tracking-tight text-primary">
-            Command Center
-          </h1>
-          <p className="text-muted-foreground mt-1">
-            Global operations overview for India Region.
+          <p className="font-display font-bold text-xl text-white">
+            Command Center 🛡️
           </p>
+          <p className="text-sm mt-1" style={{ color: "#8891B0" }}>
+            Real-time operations overview for your security deployment.
+          </p>
+        </div>
+        <div className="flex gap-2 shrink-0">
+          <Link href="/leads" className="btn-primary text-sm">
+            <Target className="w-4 h-4" />
+            View Leads
+          </Link>
         </div>
       </div>
 
-      {/* Primary CRM Metrics */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-        <Link href="/customers" className="block">
-          <Card className="hover:shadow-md transition-shadow border-t-4 border-t-blue-500 cursor-pointer h-full">
-            <CardHeader className="flex flex-row items-center justify-between pb-2">
-              <CardTitle className="text-sm font-medium text-muted-foreground">
-                Total Customers
-              </CardTitle>
-              <Users className="h-4 w-4 text-blue-500" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-3xl font-bold">
-                {customerCount.toLocaleString("en-IN")}
-              </div>
-            </CardContent>
-          </Card>
-        </Link>
-
-        <Link href="/leads" className="block">
-          <Card className="hover:shadow-md transition-shadow border-t-4 border-t-purple-500 cursor-pointer h-full">
-            <CardHeader className="flex flex-row items-center justify-between pb-2">
-              <CardTitle className="text-sm font-medium text-muted-foreground">
-                Active Leads
-              </CardTitle>
-              <Target className="h-4 w-4 text-purple-500" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-3xl font-bold">
-                {activeLeadsCount.toLocaleString("en-IN")}
-              </div>
-            </CardContent>
-          </Card>
-        </Link>
-
-        <Link href="/tasks" className="block">
-          <Card className="hover:shadow-md transition-shadow border-t-4 border-t-green-500 cursor-pointer h-full">
-            <CardHeader className="flex flex-row items-center justify-between pb-2">
-              <CardTitle className="text-sm font-medium text-muted-foreground">
-                Pending Tasks
-              </CardTitle>
-              <CheckSquare className="h-4 w-4 text-green-500" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-3xl font-bold">
-                {pendingTasksCount.toLocaleString("en-IN")}
-              </div>
-            </CardContent>
-          </Card>
-        </Link>
+      {/* ── KPI grid — 4 columns on large screens */}
+      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4">
+        {kpis.map((kpi, i) => (
+          <div key={kpi.label} className="animate-in" style={{ animationDelay: `${i * 40}ms` }}>
+            <KpiCard kpi={kpi} />
+          </div>
+        ))}
       </div>
 
-      {/* Communication & Security Metrics */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-        <Card className="hover:shadow-md transition-shadow border-t-4 border-t-orange-500">
-          <CardHeader className="flex flex-row items-center justify-between pb-2">
-            <CardTitle className="text-sm font-medium text-muted-foreground">
-              Total Calls
-            </CardTitle>
-            <Phone className="h-4 w-4 text-orange-500" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-3xl font-bold">
-              {callCount.toLocaleString("en-IN")}
+      {/* ── Charts row */}
+      <div className="grid lg:grid-cols-3 gap-4">
+        {/* Revenue / Sales Trend */}
+        <div className="lg:col-span-2 glass-panel rounded-[1.1rem] p-5 card-hover animate-in">
+          <div className="flex items-center justify-between mb-4">
+            <div>
+              <p className="font-display font-semibold text-white">Sales Trend</p>
+              <p className="text-xs mt-0.5" style={{ color: "#8891B0" }}>
+                Last 6 months
+              </p>
             </div>
-          </CardContent>
-        </Card>
-
-        <Card className="hover:shadow-md transition-shadow border-t-4 border-t-indigo-500">
-          <CardHeader className="flex flex-row items-center justify-between pb-2">
-            <CardTitle className="text-sm font-medium text-muted-foreground">
-              Total Emails
-            </CardTitle>
-            <Mail className="h-4 w-4 text-indigo-500" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-3xl font-bold">
-              {emailCount.toLocaleString("en-IN")}
-            </div>
-          </CardContent>
-        </Card>
-
-        <Card className="hover:shadow-md transition-shadow border-t-4 border-t-teal-500">
-          <CardHeader className="flex flex-row items-center justify-between pb-2">
-            <CardTitle className="text-sm font-medium text-muted-foreground">
-              Total Messages
-            </CardTitle>
-            <MessageSquare className="h-4 w-4 text-teal-500" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-3xl font-bold">
-              {messageCount.toLocaleString("en-IN")}
-            </div>
-          </CardContent>
-        </Card>
-
-        <Card className="hover:shadow-md transition-shadow border-t-4 border-t-red-500">
-          <CardHeader className="flex flex-row items-center justify-between pb-2">
-            <CardTitle className="text-sm font-medium text-muted-foreground">
-              Security Incidents
-            </CardTitle>
-            <AlertTriangle className="h-4 w-4 text-red-500" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-3xl font-bold">
-              {incidentCount.toLocaleString("en-IN")}
-            </div>
-          </CardContent>
-        </Card>
-      </div>
-
-      <div className="grid grid-cols-1 lg:grid-cols-7 gap-6">
-        <Card className="lg:col-span-4">
-          <CardHeader>
-            <CardTitle>Regional Sales Trend</CardTitle>
-          </CardHeader>
-          <CardContent>
+            <span className="badge badge-emerald">
+              <TrendingUp className="w-2.5 h-2.5" />
+              Live
+            </span>
+          </div>
+          <div className="h-56">
             <SalesChart data={analyticsData} />
-          </CardContent>
-        </Card>
+          </div>
+        </div>
 
-        <Card className="lg:col-span-3 flex flex-col">
-          <CardHeader>
-            <CardTitle>Activity Timeline</CardTitle>
-          </CardHeader>
-          <CardContent className="flex-1">
-            <Suspense
-              fallback={
-                <div className="space-y-4">
-                  {[1, 2, 3].map((i) => (
-                    <div key={i} className="flex gap-3">
-                      <Skeleton className="w-8 h-8 rounded-full shrink-0" />
-                      <div className="space-y-2 flex-1">
-                        <Skeleton className="h-4 w-full" />
-                        <Skeleton className="h-3 w-1/2" />
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              }
+        {/* Activity feed */}
+        <div className="glass-panel rounded-[1.1rem] p-5 animate-in flex flex-col">
+          <div className="flex items-center justify-between mb-4">
+            <p className="font-display font-semibold text-white">Recent Activity</p>
+            <Link
+              href="/reports"
+              className="text-[11px] font-medium"
+              style={{ color: "var(--violet)" }}
             >
-              {recentActivities.length === 0 ? (
-                <EmptyState
-                  title="No Recent Activity"
-                  description="Your team's operations will appear here once workflows begin."
-                  icon={<Activity className="w-8 h-8 opacity-50" />}
-                  className="mt-4 border-dashed"
-                />
-              ) : (
-                <div className="space-y-6 relative before:absolute before:inset-0 before:ml-5 before:-translate-x-px md:before:mx-auto md:before:translate-x-0 before:h-full before:w-0.5 before:bg-gradient-to-b before:from-transparent before:via-border before:to-transparent">
-                  {recentActivities.map((activity) => (
+              View report
+            </Link>
+          </div>
+
+          <Suspense
+            fallback={
+              <div className="space-y-3">
+                {[1, 2, 3].map((i) => (
+                  <div key={i} className="flex gap-3">
+                    <div className="w-8 h-8 rounded-lg skeleton shrink-0" />
+                    <div className="space-y-2 flex-1">
+                      <div className="h-3 skeleton rounded-full" />
+                      <div className="h-2.5 skeleton rounded-full w-2/3" />
+                    </div>
+                  </div>
+                ))}
+              </div>
+            }
+          >
+            {recentActivities.length === 0 ? (
+              <EmptyState
+                title="No Activity Yet"
+                description="Team operations will appear here."
+                icon={<Activity className="w-6 h-6" />}
+              />
+            ) : (
+              <div className="space-y-1 flex-1 overflow-y-auto">
+                {recentActivities.map((activity, idx) => {
+                  const colors = [colorMap.violet, colorMap.cyan, colorMap.emerald, colorMap.amber, colorMap.rose];
+                  const hex = colors[idx % colors.length];
+                  return (
                     <div
                       key={activity.id}
-                      className="relative flex items-center justify-between md:justify-normal md:odd:flex-row-reverse group is-active"
+                      className="flex items-start gap-3 py-2.5 border-b last:border-0"
+                      style={{ borderColor: "rgba(255,255,255,.05)" }}
                     >
-                      <div className="flex items-center justify-center w-10 h-10 rounded-full border border-white bg-slate-100 text-slate-500 shadow shrink-0 md:order-1 md:group-odd:-translate-x-1/2 md:group-even:translate-x-1/2 z-10">
-                        <User className="w-4 h-4" />
+                      <div
+                        className="w-8 h-8 rounded-lg flex items-center justify-center shrink-0"
+                        style={{ background: `${hex}1F` }}
+                      >
+                        <Activity className="w-3.5 h-3.5" style={{ color: hex }} />
                       </div>
-                      <div className="w-[calc(100%-4rem)] md:w-[calc(50%-2.5rem)] bg-card p-4 rounded border shadow-sm">
-                        <div className="flex items-center justify-between space-x-2 mb-1">
-                          <div className="font-bold text-slate-900">
-                            {activity.actor?.email || "System"}
-                          </div>
-                          <time className="text-xs font-medium text-indigo-500">
-                            {new Date(activity.createdAt).toLocaleTimeString(
-                              "en-IN",
-                              { hour: "2-digit", minute: "2-digit" },
-                            )}
-                          </time>
-                        </div>
-                        <div className="text-slate-500 text-sm">
-                          {activity.content}
-                        </div>
+                      <div className="flex-1 min-w-0">
+                        <p className="text-[13px] text-white leading-snug">
+                          <span className="font-medium">
+                            {activity.actor?.email?.split("@")[0] || "System"}
+                          </span>{" "}
+                          <span style={{ color: "#8891B0" }}>{activity.content}</span>
+                        </p>
+                        <p className="text-[11px] mt-0.5" style={{ color: "#8891B0" }}>
+                          {new Date(activity.createdAt).toLocaleTimeString("en-IN", {
+                            hour: "2-digit",
+                            minute: "2-digit",
+                          })}
+                        </p>
                       </div>
                     </div>
-                  ))}
-                </div>
-              )}
-            </Suspense>
-          </CardContent>
-        </Card>
+                  );
+                })}
+              </div>
+            )}
+          </Suspense>
+        </div>
       </div>
     </div>
   );

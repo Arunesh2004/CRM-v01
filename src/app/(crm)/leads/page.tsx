@@ -53,15 +53,12 @@ export default async function LeadsPage({
   });
 
   return (
-    <div className="space-y-6 h-full flex flex-col animate-in fade-in duration-500">
-      <div className="flex flex-col sm:flex-row justify-between sm:items-center gap-4">
+    <div className="space-y-6 h-full flex flex-col animate-in">
+      {/* Page header */}
+      <div className="glass-panel rounded-[1.25rem] p-5 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-bold tracking-tight text-primary">
-            Leads Pipeline
-          </h1>
-          <p className="text-sm text-muted-foreground mt-1">
-            Track and convert incoming regional prospects.
-          </p>
+          <p className="font-display font-bold text-xl text-white">Leads Pipeline</p>
+          <p className="text-sm mt-1" style={{ color: '#8891B0' }}>Track and convert incoming regional prospects.</p>
         </div>
         <div className="shrink-0">
           <LeadForm />

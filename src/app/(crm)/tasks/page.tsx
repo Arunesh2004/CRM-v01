@@ -56,63 +56,71 @@ export default async function TasksPage({
     select: { id: true, email: true } 
   });
 
-  const getPriorityColor = (p: string) => {
-    switch (p) {
-      case 'URGENT': return 'bg-red-100 text-red-800 border-red-200';
-      case 'HIGH': return 'bg-orange-100 text-orange-800 border-orange-200';
-      case 'MEDIUM': return 'bg-blue-100 text-blue-800 border-blue-200';
-      case 'LOW': return 'bg-gray-100 text-gray-800 border-gray-200';
-      default: return 'bg-gray-100 text-gray-800';
-    }
+  const getPriorityBadge = (p: string) => {
+    const map: Record<string, string> = {
+      URGENT: 'badge-rose',
+      HIGH:   'badge-rose',
+      MEDIUM: 'badge-amber',
+      LOW:    'badge-slate',
+    };
+    return map[p] ?? 'badge-slate';
   };
 
   const getDueDateBadge = (task: any) => {
     if (task.status === 'COMPLETED') {
-      return <Badge className="bg-green-100 text-green-800 flex gap-1 border-green-200"><CheckCircle2 className="w-3 h-3"/> COMPLETED</Badge>;
+      return <Badge variant="emerald"><CheckCircle2 className="w-3 h-3"/>Done</Badge>;
     }
-    if (!task.dueDate) return <Badge variant="outline" className="text-muted-foreground">NO DATE</Badge>;
-    
+    if (!task.dueDate) return <Badge variant="slate">No date</Badge>;
     const due = new Date(task.dueDate);
     const today = new Date();
     today.setHours(0,0,0,0);
     const dueDate = new Date(due);
     dueDate.setHours(0,0,0,0);
-
     if (dueDate < today) {
-      return <Badge variant="destructive" className="animate-pulse flex gap-1"><AlertCircle className="w-3 h-3"/> OVERDUE</Badge>;
+      return <Badge variant="rose"><AlertCircle className="w-3 h-3"/>Overdue</Badge>;
     } else if (dueDate.getTime() === today.getTime()) {
-      return <Badge className="bg-yellow-100 text-yellow-800 flex gap-1 border-yellow-200"><Clock className="w-3 h-3"/> DUE TODAY</Badge>;
+      return <Badge variant="amber"><Clock className="w-3 h-3"/>Due today</Badge>;
     } else {
-      return <Badge variant="secondary" className="flex gap-1 border-muted"><CalendarIcon className="w-3 h-3"/> UPCOMING</Badge>;
+      return <Badge variant="slate"><CalendarIcon className="w-3 h-3"/>Upcoming</Badge>;
     }
   };
 
   return (
-    <div className="space-y-6 animate-in fade-in duration-500 pb-10">
-      <div className="flex flex-col sm:flex-row justify-between sm:items-center gap-4">
+    <div className="space-y-6 animate-in pb-10">
+      {/* Page header */}
+      <div className="glass-panel rounded-[1.25rem] p-5 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-bold tracking-tight text-primary flex items-center gap-2">
-            <CheckSquare className="w-6 h-6" /> Task Workspace
-          </h1>
-          <p className="text-sm text-muted-foreground mt-1">Manage operations and daily follow-ups.</p>
+          <p className="font-display font-bold text-xl text-white flex items-center gap-2">
+            <CheckSquare className="w-5 h-5" style={{ color: '#7C5CFC' }} /> Task Workspace
+          </p>
+          <p className="text-sm mt-1" style={{ color: '#8891B0' }}>Manage operations and daily follow-ups.</p>
         </div>
         <div className="flex items-center gap-3 shrink-0">
-          <div className="flex items-center bg-card rounded-md border p-1 shadow-sm">
-            <Link 
-              href="?view=list" 
-              className={`px-3 py-1.5 text-xs font-medium rounded ${viewMode === 'list' ? 'bg-primary text-primary-foreground' : 'text-muted-foreground hover:bg-muted'}`}
+          {/* View toggle */}
+          <div className="flex p-1 rounded-[.7rem] gap-0.5" style={{ background: 'rgba(20,27,51,.6)', border: '1px solid rgba(255,255,255,.08)' }}>
+            <Link
+              href="?view=list"
+              className={`px-3.5 py-1.5 rounded-[.55rem] text-xs font-medium transition-all ${
+                viewMode === 'list'
+                  ? 'bg-gradient-to-br from-[#7C5CFC] to-[#9B7BFF] text-white'
+                  : 'text-[#8891B0] hover:text-white hover:bg-white/5'
+              }`}
             >
               List
             </Link>
-            <Link 
-              href="?view=calendar" 
-              className={`px-3 py-1.5 text-xs font-medium rounded ${viewMode === 'calendar' ? 'bg-primary text-primary-foreground' : 'text-muted-foreground hover:bg-muted'}`}
+            <Link
+              href="?view=calendar"
+              className={`px-3.5 py-1.5 rounded-[.55rem] text-xs font-medium transition-all ${
+                viewMode === 'calendar'
+                  ? 'bg-gradient-to-br from-[#7C5CFC] to-[#9B7BFF] text-white'
+                  : 'text-[#8891B0] hover:text-white hover:bg-white/5'
+              }`}
             >
               Calendar
             </Link>
           </div>
           <Button>
-            <Plus className="w-4 h-4 mr-2" />
+            <Plus className="w-4 h-4" />
             New Task
           </Button>
         </div>
@@ -164,38 +172,56 @@ export default async function TasksPage({
               <div className="grid gap-3">
                 {tasks.map((task: any) => (
                   <Link href={`/tasks/${task.id}`} key={task.id} className="block group">
-                    <div className="bg-card p-4 rounded-xl border shadow-sm group-hover:shadow-md group-hover:border-primary/30 transition-all flex flex-col md:flex-row md:items-center justify-between gap-4">
+                    <div
+                      className="glass rounded-[.9rem] p-4 card-hover flex flex-col md:flex-row md:items-center justify-between gap-4"
+                    >
                       <div className="flex items-start gap-4 flex-1 overflow-hidden">
+                        {/* Status dot */}
                         <div className="shrink-0 mt-1">
-                          <div className={`w-3 h-3 rounded-full ${task.status === 'COMPLETED' ? 'bg-green-500' : 'bg-primary ring-4 ring-primary/20'}`} />
+                          <div
+                            className={`w-3 h-3 rounded-full ${
+                              task.status === 'COMPLETED'
+                                ? 'bg-emerald-400'
+                                : 'bg-violet-400 ring-4 ring-violet-500/20'
+                            }`}
+                          />
                         </div>
                         <div className="flex-1 min-w-0">
-                          <h3 className={`font-semibold text-foreground truncate ${task.status === 'COMPLETED' ? 'line-through text-muted-foreground' : ''}`}>
+                          <p
+                            className={`font-medium text-white truncate ${
+                              task.status === 'COMPLETED'
+                                ? 'line-through text-slate-500'
+                                : ''
+                            }`}
+                          >
                             {task.title}
-                          </h3>
-                          <div className="flex items-center gap-3 mt-1.5 flex-wrap">
-                            <Badge className={`${getPriorityColor(task.priority)} border text-[10px] uppercase font-bold px-2 py-0.5`}>
+                          </p>
+                          <div className="flex items-center gap-2 mt-1.5 flex-wrap">
+                            <Badge variant={getPriorityBadge(task.priority) as any}>
                               {task.priority}
                             </Badge>
                             {task.assignedUser ? (
-                              <span className="text-xs text-muted-foreground flex items-center gap-1">
-                                <span className="w-4 h-4 rounded-full bg-muted flex items-center justify-center font-medium text-[8px] uppercase">
-                                  {task.assignedUser.email.charAt(0)}
+                              <span className="text-xs text-slate-400 flex items-center gap-1">
+                                <span
+                                  className="w-4 h-4 rounded-full flex items-center justify-center font-bold text-[8px] text-white"
+                                  style={{ background: 'rgba(124,92,252,.2)' }}
+                                >
+                                  {task.assignedUser.email.charAt(0).toUpperCase()}
                                 </span>
-                                {task.assignedUser.email}
+                                {task.assignedUser.email.split('@')[0]}
                               </span>
                             ) : (
-                              <span className="text-xs text-muted-foreground italic">Unassigned</span>
+                              <span className="text-xs text-slate-500 italic">Unassigned</span>
                             )}
                             {(task.customer || task.lead) && (
-                              <span className="text-xs text-muted-foreground truncate max-w-[200px]">
-                                • {task.customer?.name || task.lead?.name}
+                              <span className="text-xs text-slate-400 truncate max-w-[200px]">
+                                · {task.customer?.name || task.lead?.name}
                               </span>
                             )}
                           </div>
                         </div>
                       </div>
-                      <div className="shrink-0 flex items-center justify-end md:w-[200px]">
+                      <div className="shrink-0 flex items-center justify-end md:w-[180px]">
                         {getDueDateBadge(task)}
                       </div>
                     </div>

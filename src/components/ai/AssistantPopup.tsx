@@ -1,7 +1,7 @@
 'use client';
 import { useState, useRef, useEffect } from 'react';
 import { askAssistantAction } from '@/modules/ai/actions/assistant.actions';
-import { Bot, X, Maximize2, Minimize2, MessageSquare, Loader2, Sparkles } from 'lucide-react';
+import { X, Maximize2, Minimize2, MessageSquare, Loader2, Sparkles, Send } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 export function AssistantPopup() {
@@ -25,7 +25,6 @@ export function AssistantPopup() {
     }
   }, [history, isOpen, loading]);
 
-  // Handle escape to close
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
       if (e.key === 'Escape' && isOpen) setIsOpen(false);
@@ -36,21 +35,17 @@ export function AssistantPopup() {
 
   const handleSend = async (q: string) => {
     if (!q.trim()) return;
-
     const newHistory = [...history, { role: 'user' as const, content: q }];
     setHistory(newHistory);
     setPrompt('');
     setLoading(true);
-
     const res = await askAssistantAction(q, conversationId);
-
     if (res.success) {
       if (res.conversationId) setConversationId(res.conversationId);
       setHistory([...newHistory, { role: 'assistant', content: res.data || 'Empty response' }]);
     } else {
       setHistory([...newHistory, { role: 'assistant', content: 'Error: ' + res.error }]);
     }
-
     setLoading(false);
   };
 
@@ -58,81 +53,111 @@ export function AssistantPopup() {
     "What are my tasks today?",
     "Which leads need follow-up?",
     "Show critical incidents",
-    "What changed today?"
   ];
 
   return (
     <>
-      {/* Floating Button */}
+      {/* ─── Floating Sparkle Button ─── */}
       <button
         onClick={() => setIsOpen(!isOpen)}
         aria-label="Toggle AI Assistant"
         aria-expanded={isOpen}
         className={cn(
-          "fixed bottom-6 right-6 z-50 flex items-center justify-center p-4 rounded-full shadow-lg transition-all duration-300",
-          isOpen ? "bg-muted text-muted-foreground scale-90 opacity-0 pointer-events-none" : "bg-primary text-primary-foreground hover:scale-105"
+          "fixed bottom-6 right-6 z-50 flex items-center justify-center w-13 h-13 rounded-full shadow-lg transition-all duration-300",
+          "grad-primary ring-glow float-slow",
+          isOpen ? "scale-90 opacity-0 pointer-events-none" : "scale-100 opacity-100 hover:scale-105"
         )}
+        style={{ width: 52, height: 52 }}
       >
-        <Sparkles className="w-6 h-6" />
+        <Sparkles className="w-6 h-6 text-white" />
       </button>
 
-      {/* Popup Window */}
+      {/* ─── Chat Window ─── */}
       <div
         role="dialog"
         aria-label="AI Assistant"
         className={cn(
-          "fixed z-50 flex flex-col bg-background border shadow-2xl transition-all duration-300 ease-in-out sm:rounded-2xl overflow-hidden",
+          "fixed z-50 flex flex-col transition-all duration-300 ease-in-out",
+          "rounded-[1.25rem] overflow-hidden",
+          "border border-white/[.08]",
           isOpen
             ? "translate-y-0 opacity-100 scale-100 pointer-events-auto"
             : "translate-y-12 opacity-0 scale-95 pointer-events-none",
           isExpanded
-            ? "inset-0 sm:inset-6 md:inset-12 lg:inset-y-12 lg:right-12 lg:left-auto lg:w-[800px]" // Expanded mode
-            : "bottom-0 right-0 top-0 w-full sm:top-auto sm:bottom-6 sm:right-6 sm:w-[400px] sm:h-[600px]" // Default mode
+            ? "inset-4 sm:inset-8 lg:inset-y-12 lg:right-8 lg:left-auto lg:w-[700px]"
+            : "bottom-0 right-0 top-0 w-full sm:top-auto sm:bottom-6 sm:right-6 sm:w-[420px] sm:h-[580px]"
         )}
+        style={{
+          background: "linear-gradient(180deg, rgba(20,27,51,.95), rgba(7,11,24,.95))",
+          boxShadow: "0 32px 80px rgba(0,0,0,.7)",
+          backdropFilter: "blur(28px)",
+        }}
       >
         {/* Header */}
-        <div className="flex items-center justify-between px-4 py-3 border-b bg-muted/30">
-          <div className="flex items-center gap-2 font-semibold">
-            <Bot className="w-5 h-5 text-primary" />
-            <span>AI Assistant</span>
+        <div
+          className="flex items-center justify-between px-4 py-3 border-b border-white/[.06]"
+          style={{ background: "rgba(13,19,38,.6)" }}
+        >
+          <div className="flex items-center gap-2">
+            {/* Violet glow icon */}
+            <div
+              className="w-7 h-7 rounded-lg flex items-center justify-center"
+              style={{ background: "rgba(124,92,252,.15)" }}
+            >
+              <Sparkles className="w-3.5 h-3.5" style={{ color: "#7C5CFC" }} />
+            </div>
+            <div>
+              <p className="font-display font-semibold text-sm text-white">Nexus AI</p>
+              <p className="text-[10px]" style={{ color: "#22D3EE" }}>
+                <span className="nav-pulse-dot inline-block mr-1" />
+                Online
+              </p>
+            </div>
           </div>
           <div className="flex items-center gap-1">
             <button
               onClick={() => setIsExpanded(!isExpanded)}
-              className="p-1.5 rounded-md hover:bg-muted hidden sm:block text-muted-foreground transition-colors"
+              className="w-7 h-7 flex items-center justify-center rounded-lg text-slate-400 hover:bg-white/10 hover:text-white transition-all hidden sm:flex"
               aria-label={isExpanded ? "Collapse" : "Expand"}
             >
-              {isExpanded ? <Minimize2 className="w-4 h-4" /> : <Maximize2 className="w-4 h-4" />}
+              {isExpanded ? <Minimize2 className="w-3.5 h-3.5" /> : <Maximize2 className="w-3.5 h-3.5" />}
             </button>
             <button
               onClick={() => setIsOpen(false)}
-              className="p-1.5 rounded-md hover:bg-muted text-muted-foreground transition-colors"
+              className="w-7 h-7 flex items-center justify-center rounded-lg text-slate-400 hover:bg-white/10 hover:text-white transition-all"
               aria-label="Close"
             >
-              <X className="w-4 h-4" />
+              <X className="w-3.5 h-3.5" />
             </button>
           </div>
         </div>
 
-        {/* Chat Area */}
-        <div className="flex-1 overflow-y-auto p-4 space-y-4">
+        {/* Messages */}
+        <div className="flex-1 overflow-y-auto p-4 space-y-3">
           {history.length === 0 && (
-            <div className="flex flex-col items-center justify-center h-full text-center space-y-4 text-muted-foreground p-6">
-              <div className="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center">
-                <Sparkles className="w-6 h-6 text-primary" />
+            <div className="flex flex-col items-center justify-center h-full text-center gap-4 pb-4">
+              {/* Idle glow icon */}
+              <div
+                className="w-14 h-14 rounded-2xl flex items-center justify-center"
+                style={{ background: "rgba(124,92,252,.12)" }}
+              >
+                <Sparkles className="w-7 h-7" style={{ color: "#7C5CFC" }} />
               </div>
               <div>
-                <h3 className="font-semibold text-foreground">How can I help you today?</h3>
-                <p className="text-sm mt-1">Ask me anything about your CRM data, tasks, leads, or security incidents.</p>
+                <p className="font-display font-bold text-white">How can I help?</p>
+                <p className="text-xs mt-1" style={{ color: "#8891B0" }}>
+                  Ask about leads, tasks, incidents, or anything in your CRM.
+                </p>
               </div>
-              
-              <div className="flex flex-wrap justify-center gap-2 mt-4">
-                {suggestions.map((s, i) => (
+              {/* Suggestion chips */}
+              <div className="flex flex-wrap justify-center gap-2 mt-1">
+                {suggestions.map((s) => (
                   <button
-                    key={i}
+                    key={s}
                     onClick={() => handleSend(s)}
                     disabled={loading}
-                    className="text-xs bg-background border hover:bg-muted px-3 py-1.5 rounded-full transition-colors"
+                    className="chip glass text-[11px] hover:border-violet-400 hover:text-violet-300 transition-all"
+                    style={{ color: "#8891B0" }}
                   >
                     {s}
                   </button>
@@ -142,14 +167,25 @@ export function AssistantPopup() {
           )}
 
           {history.map((msg, idx) => (
-            <div key={idx} className={cn("flex", msg.role === 'user' ? 'justify-end' : 'justify-start')}>
+            <div
+              key={idx}
+              className={cn(
+                "flex animate-in",
+                msg.role === 'user' ? 'justify-end' : 'justify-start'
+              )}
+            >
               <div
                 className={cn(
-                  "max-w-[85%] p-3 rounded-2xl text-sm",
+                  "max-w-[82%] px-4 py-3 rounded-2xl text-sm leading-relaxed",
                   msg.role === 'user'
-                    ? "bg-primary text-primary-foreground rounded-br-sm"
-                    : "bg-muted text-foreground rounded-bl-sm border"
+                    ? "rounded-tr-sm text-white"
+                    : "rounded-tl-sm glass"
                 )}
+                style={
+                  msg.role === 'user'
+                    ? { background: "rgba(124,92,252,.2)", border: "1px solid rgba(124,92,252,.3)" }
+                    : {}
+                }
               >
                 {msg.content}
               </div>
@@ -157,18 +193,21 @@ export function AssistantPopup() {
           ))}
 
           {loading && (
-            <div className="flex justify-start">
-              <div className="bg-muted text-foreground p-3 rounded-2xl rounded-bl-sm border flex items-center gap-2">
-                <Loader2 className="w-4 h-4 animate-spin text-muted-foreground" />
-                <span className="text-sm text-muted-foreground">Thinking...</span>
+            <div className="flex justify-start animate-in">
+              <div className="glass px-4 py-3 rounded-2xl rounded-tl-sm flex items-center gap-2">
+                <Loader2 className="w-3.5 h-3.5 animate-spin" style={{ color: "#7C5CFC" }} />
+                <span className="text-xs" style={{ color: "#8891B0" }}>Thinking…</span>
               </div>
             </div>
           )}
           <div ref={messagesEndRef} />
         </div>
 
-        {/* Input Area */}
-        <div className="p-4 border-t bg-background">
+        {/* Input */}
+        <div
+          className="p-3 border-t border-white/[.06]"
+          style={{ background: "rgba(13,19,38,.5)" }}
+        >
           <form
             onSubmit={(e) => { e.preventDefault(); handleSend(prompt); }}
             className="flex gap-2"
@@ -179,31 +218,37 @@ export function AssistantPopup() {
               value={prompt}
               onChange={(e) => setPrompt(e.target.value)}
               disabled={loading}
-              placeholder="Ask a question..."
-              className="flex-1 bg-muted/50 border-0 focus-visible:ring-1 focus-visible:ring-primary rounded-full px-4 py-2.5 text-sm"
+              placeholder="Ask me anything…"
+              className="flex-1 text-sm"
+              style={{
+                background: "rgba(20,27,51,.55)",
+                border: "1px solid rgba(255,255,255,.08)",
+                borderRadius: ".7rem",
+                padding: ".55rem .85rem",
+                color: "#E7EAF5",
+                outline: "none",
+              }}
             />
             <button
               type="submit"
               disabled={loading || !prompt.trim()}
-              className="bg-primary text-primary-foreground p-2.5 rounded-full hover:bg-primary/90 disabled:opacity-50 transition-colors"
-              aria-label="Send message"
+              className="w-9 h-9 flex items-center justify-center rounded-lg grad-primary text-white disabled:opacity-40 hover:brightness-110 transition-all"
+              aria-label="Send"
             >
-              <MessageSquare className="w-4 h-4" />
+              <Send className="w-3.5 h-3.5" />
             </button>
           </form>
-          
+
           {history.length > 0 && (
-            <div className="flex justify-center mt-3">
+            <div className="flex justify-center mt-2">
               <button
                 type="button"
-                onClick={() => {
-                  setHistory([]);
-                  setConversationId(undefined);
-                }}
+                onClick={() => { setHistory([]); setConversationId(undefined); }}
                 disabled={loading}
-                className="text-xs text-muted-foreground hover:text-foreground transition-colors"
+                className="text-[11px] transition-colors hover:text-violet-400"
+                style={{ color: "#8891B0" }}
               >
-                Start a new conversation
+                Start new conversation
               </button>
             </div>
           )}
