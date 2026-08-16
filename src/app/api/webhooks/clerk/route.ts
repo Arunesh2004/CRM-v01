@@ -72,9 +72,10 @@ export async function POST(req: NextRequest) {
 
   if (eventType === 'user.updated') {
     const { id, email_addresses } = evt.data;
-    const email = email_addresses[0]?.email_address;
+    const email = email_addresses[0]?.email_address?.toLowerCase()?.trim();
+    if (!email) return NextResponse.json({ error: 'No email' }, { status: 400 });
     try {
-      await prisma.user.update({
+      await prisma.user.updateMany({
         where: { clerkId: id },
         data: { email: email }
       });
@@ -86,8 +87,9 @@ export async function POST(req: NextRequest) {
 
   if (eventType === 'user.deleted') {
     const { id } = evt.data;
+    if (!id) return NextResponse.json({ error: 'No id' }, { status: 400 });
     try {
-      await prisma.user.update({
+      await prisma.user.updateMany({
         where: { clerkId: id },
         data: { 
           status: 'INACTIVE',

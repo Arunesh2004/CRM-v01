@@ -20,6 +20,11 @@ enum TenantStatus {
   PENDING
 }
 
+enum OnboardingStatus {
+  PENDING
+  COMPLETED
+}
+
 enum RpoPolicy {
   BASIC
   BUSINESS
@@ -94,6 +99,8 @@ model Tenant {
   deletionReason String?
   rpoPolicy      RpoPolicy    @default(BASIC)
 
+  tenantBootstrap    TenantBootstrap?
+  departments        Department[]
   users              User[]
   roles              Role[]
   deviceSessions     DeviceSession[]
@@ -150,17 +157,47 @@ model Tenant {
   aiConversationMessages AIConversationMessage[]
 }
 
+model TenantBootstrap {
+  tenantId       String   @id
+  bootstrappedAt DateTime @default(now())
+  tenant         Tenant   @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+}
+
+model Department {
+  id          String   @id @default(uuid())
+  tenantId    String
+  name        String
+  description String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  tenant Tenant @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  users  User[]
+
+  @@unique([tenantId, name])
+  @@index([tenantId])
+}
+
 model User {
-  id        String     @id @default(uuid())
-  clerkId   String     @unique
-  email     String     @unique
-  tenantId  String
-  status    UserStatus @default(INVITED)
-  createdAt DateTime   @default(now())
-  updatedAt DateTime   @updatedAt
+  id               String           @id @default(uuid())
+  clerkId          String?
+  email            String
+  employeeId       String?
+  firstName        String?
+  lastName         String?
+  phone            String?
+  designation      String?
+  profilePhotoUrl  String?
+  tenantId         String
+  departmentId     String?
+  status           UserStatus       @default(INVITED)
+  onboardingStatus OnboardingStatus @default(PENDING)
+  createdAt        DateTime         @default(now())
+  updatedAt        DateTime         @updatedAt
 
   tenant            Tenant             @relation(fields: [tenantId], references: [id])
   ownedTenant       Tenant?            @relation("TenantOwner")
+  department        Department?        @relation(fields: [departmentId], references: [id], onDelete: SetNull)
   userRoles         UserRole[]
   deviceSessions    DeviceSession[]
   assignedLeads     Lead[]
@@ -186,8 +223,12 @@ model User {
   aiConversations        AIConversation[]
   uploadedDocuments      Document[]
 
+  @@unique([tenantId, email])
+  @@unique([tenantId, employeeId])
+  @@unique([tenantId, clerkId])
   @@index([tenantId, id])
   @@index([tenantId, createdAt])
+  @@index([tenantId, departmentId])
 }
 
 model DeviceSession {

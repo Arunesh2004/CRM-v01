@@ -7,6 +7,11 @@ export const dynamic = 'force-dynamic';
 
 export default async function CRMLayout({ children }: { children: ReactNode }) {
   const user = await requireAuth();
+  
+  if (user.onboardingStatus === 'PENDING') {
+    const { redirect } = await import('next/navigation');
+    redirect('/onboarding');
+  }
 
   // Extract tenant name from the authenticated user context
   const tenantName = user?.tenant?.name || "Organization";

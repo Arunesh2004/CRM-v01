@@ -1,4 +1,6 @@
 import { getEmployees } from '@/modules/users/user.service';
+import prisma from '@/../database/utils/prisma';
+import { requireTenant } from '@/lib/auth';
 import { EmployeeInviteForm } from './EmployeeInviteForm';
 import { RemoveEmployeeForm } from './RemoveEmployeeForm';
 import { UpdateRoleForm } from './UpdateRoleForm';
@@ -6,7 +8,11 @@ import { format } from 'date-fns';
 import { Badge } from '@/components/ui/Badge';
 
 export default async function EmployeesPage() {
+  const tenantId = await requireTenant();
   const employees = await getEmployees();
+  const departments = await prisma.department.findMany({
+    where: { tenantId }
+  });
 
   return (
     <div className="space-y-6 max-w-6xl mx-auto py-8 px-4 sm:px-6 lg:px-8">
@@ -24,7 +30,7 @@ export default async function EmployeesPage() {
         <div className="lg:col-span-1 space-y-4">
           <div className="glass-panel p-6">
             <h3 className="font-display font-semibold text-white mb-5">Invite New Employee</h3>
-            <EmployeeInviteForm />
+            <EmployeeInviteForm departments={departments} />
           </div>
         </div>
         

@@ -62,7 +62,7 @@ async function runTests() {
     throw new Error(`Failed to process valid webhook: ${await validRes.text()}`);
   }
 
-  const createdUser = await prisma.user.findUnique({ where: { clerkId: clerkUserId } });
+  const createdUser = await prisma.user.findFirst({ where: { clerkId: clerkUserId } });
   if (!createdUser) throw new Error('Local user was not provisioned');
   if (!createdUser.tenantId) throw new Error('Tenant was not assigned');
   

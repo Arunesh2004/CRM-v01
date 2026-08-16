@@ -1,7 +1,7 @@
 import { auth, clerkClient } from '@clerk/nextjs/server';
 import prisma from '@/../database/utils/prisma';
 import { Action, Resource } from '@prisma/client';
-import { ensureUserProvisioned } from '@/modules/auth/services/provisioning.service';
+import { ensureUserProvisioned, synchronizeClerkIdentity } from '@/modules/auth/services/provisioning.service';
 import { Logger } from '@/lib/observability/logger';
 import { headers } from 'next/headers';
 import jwt from 'jsonwebtoken';
@@ -105,7 +105,7 @@ export const getCurrentUser = cache(async function getCurrentUser() {
     return null;
   }
 
-  const user = await prisma.user.findUnique({
+  const user = await prisma.user.findFirst({
     where: { clerkId },
     include: {
       tenant: true,
@@ -149,10 +149,16 @@ export async function checkPermission(resource: Resource, action: Action) {
 async function ensureUserProvisionedFromClerk(clerkId: string) {
   try {
     const client = await clerkClient();
-    const user = await client.users.getUser(clerkId);
-    await ensureUserProvisioned(user);
+    const clerkUser = await client.users.getUser(clerkId);
+    let email = '';
+    if (clerkUser.emailAddresses && clerkUser.emailAddresses.length > 0) {
+      email = clerkUser.emailAddresses[0].emailAddress;
+    }
+    if (!email) return null;
+    return await synchronizeClerkIdentity(clerkId, email);
   } catch (err: unknown) {
     logger.error('Failed to fetch and provision user from Clerk', undefined, { clerkId, name: (err as { name?: string })?.name });
+    return null;
   }
 }
 
@@ -161,13 +167,21 @@ export async function requireAuth() {
   if (!user) {
     const clerkAuth = await auth();
     if (clerkAuth.userId) {
-      await ensureUserProvisionedFromClerk(clerkAuth.userId);
-      user = await getCurrentUser();
+      // Fast path failed (clerkId not found), so attempt synchronization (bootstrap or invite linking)
+      const syncedUser = await ensureUserProvisionedFromClerk(clerkAuth.userId);
+      if (syncedUser) {
+        user = await getCurrentUser();
+      }
     }
     if (!user) {
       throw new Error('Unauthorized');
     }
   }
+
+  if (user.status === 'INACTIVE') {
+    throw new Error('Unauthorized');
+  }
+
   return user;
 }
 
@@ -267,7 +281,7 @@ async function tryLoadTestIdentityLight() {
   // SHALLOW LOOKUP: No roles, no permissions, no related tenant object.
   const user = await prisma.user.findUnique({
     where: { id: userId },
-    select: { id: true, tenantId: true, email: true }
+    select: { id: true, tenantId: true, email: true, status: true }
   });
 
   if (!user) return null;
@@ -293,9 +307,9 @@ export const getCurrentUserIdentity = cache(async function getCurrentUserIdentit
     return null;
   }
 
-  const user = await prisma.user.findUnique({
+  const user = await prisma.user.findFirst({
     where: { clerkId },
-    select: { id: true, tenantId: true, email: true }
+    select: { id: true, tenantId: true, email: true, status: true }
   });
 
   return user;
@@ -306,13 +320,20 @@ export async function requireAuthIdentity() {
   if (!user) {
     const clerkAuth = await auth();
     if (clerkAuth.userId) {
-      await ensureUserProvisionedFromClerk(clerkAuth.userId);
-      user = await getCurrentUserIdentity();
+      const syncedUser = await ensureUserProvisionedFromClerk(clerkAuth.userId);
+      if (syncedUser) {
+        user = await getCurrentUserIdentity();
+      }
     }
     if (!user) {
       throw new Error('Unauthorized');
     }
   }
+
+  if (user.status === 'INACTIVE') {
+    throw new Error('Unauthorized');
+  }
+
   return user;
 }
 

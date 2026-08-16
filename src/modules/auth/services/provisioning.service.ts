@@ -1,9 +1,9 @@
 import prisma from '@/../database/utils/prisma';
-import type { User } from '@clerk/nextjs/server';
+import type { User as ClerkUser } from '@clerk/nextjs/server';
 import { ENV } from '@/lib/config/env';
+import crypto from 'crypto';
 
-
-export async function ensureUserProvisioned(clerkUser: User | any) {
+export async function ensureUserProvisioned(clerkUser: ClerkUser | any) {
   // Normalize user data handling both Clerk SDK User object and Webhook payload
   const id = clerkUser.id;
   
@@ -15,86 +15,139 @@ export async function ensureUserProvisioned(clerkUser: User | any) {
     email = clerkUser.email_addresses[0].email_address;
   }
   
-  const firstName = clerkUser.firstName || clerkUser.first_name || '';
-  const publicMetadata = clerkUser.publicMetadata || clerkUser.public_metadata || {};
-  let tenantId = publicMetadata.tenantId as string | undefined;
+  if (!email) {
+    console.warn(`[Provisioning] Clerk user ${id} has no email. Skipping.`);
+    return null;
+  }
 
-  console.log(`[Provisioning] Ensuring user ${id} (${email}) is provisioned.`);
+  return synchronizeClerkIdentity(id, email);
+}
 
-  // 1. Idempotency Check: Fast path, no transaction if user exists.
-  const existingUser = await prisma.user.findUnique({
-    where: { clerkId: id }
+export async function synchronizeClerkIdentity(clerkId: string, emailStr: string) {
+  const email = emailStr.toLowerCase().trim();
+  const canonicalTenantId = ENV.companyTenantId;
+
+  // 1. Find the user locally
+  const user = await prisma.user.findFirst({
+    where: {
+      tenantId: canonicalTenantId,
+      email: email
+    }
   });
 
-  if (existingUser) {
-    console.log(`[Provisioning] User ${id} already exists in DB. Skip provisioning.`);
-    return existingUser;
-  }
+  // 2. If no user, check for Atomic Bootstrap
+  if (!user) {
+    if (email === ENV.initialAdminEmail) {
+       console.log(`[Provisioning] Evaluating Initial Admin Bootstrap for ${email}`);
+       try {
+         await prisma.$transaction(async (tx) => {
+            // Lock the tenant row serially
+            const tenants: any[] = await tx.$queryRaw`SELECT id FROM "Tenant" WHERE id = ${canonicalTenantId} FOR UPDATE`;
+            if (tenants.length === 0) {
+               throw new Error(`CRITICAL: Canonical tenant ${canonicalTenantId} not found.`);
+            }
 
-  // 2. Transactional Upsert for initial provisioning
-  try {
-    const user = await prisma.$transaction(async (tx) => {
-      const canonicalTenantId = ENV.companyTenantId;
-      
-      const tenant = await tx.tenant.findUnique({ where: { id: canonicalTenantId } });
-      if (!tenant) {
-        throw new Error(`CRITICAL: Deployment not bootstrapped. Canonical tenant ${canonicalTenantId} not found.`);
-      }
+            // Check if bootstrap exists
+            const bootstrap = await tx.tenantBootstrap.findUnique({
+              where: { tenantId: canonicalTenantId }
+            });
 
-      if (tenant.status !== 'ACTIVE') {
-        throw new Error(`CRITICAL: Canonical tenant ${canonicalTenantId} is not ACTIVE.`);
-      }
+            // Check if any users exist
+            const userCount = await tx.user.count({
+              where: { tenantId: canonicalTenantId }
+            });
 
-      // Upsert User to handle concurrent webhooks/logins safely
-      const upsertedUser = await tx.user.upsert({
-        where: { clerkId: id },
-        update: {}, // Do nothing if it exists (idempotent)
-        create: {
-          clerkId: id,
-          email: email,
-          tenantId: tenant.id
-        }
-      });
-      console.log(`[Provisioning] Upserted user ${upsertedUser.id} to canonical tenant ${tenant.id}.`);
+            if (!bootstrap && userCount === 0) {
+               console.log(`[Provisioning] Executing Initial Admin Bootstrap for ${email}`);
+               // Create bootstrap record
+               await tx.tenantBootstrap.create({
+                 data: { tenantId: canonicalTenantId }
+               });
 
-      // Determine role based on ADMIN_EMAIL
-      const roleName = email.toLowerCase() === ENV.adminEmail.toLowerCase() ? 'TENANT_ADMIN' : 'MEMBER';
-      let role = await tx.role.findFirst({
-        where: { name: roleName, tenantId: tenant.id }
-      });
-      
-      if (!role) {
-        role = await tx.role.create({
-          data: { name: roleName, tenantId: tenant.id }
-        });
-        console.log(`[Provisioning] Created required system role ${roleName}.`);
-      }
+               const empId = `EMP-${crypto.randomBytes(4).toString('hex').toUpperCase()}`;
 
-      // Upsert User Role to handle concurrency safely
-      const existingUserRole = await tx.userRole.findFirst({
-        where: { userId: upsertedUser.id, roleId: role.id }
-      });
-      
-      if (!existingUserRole) {
-        await tx.userRole.create({
-          data: {
-            userId: upsertedUser.id,
-            roleId: role.id
-          }
-        });
-        console.log(`[Provisioning] Assigned role ${roleName} to user.`);
-      }
+               // Ensure TENANT_ADMIN role exists
+               let adminRole = await tx.role.findFirst({
+                 where: { name: 'TENANT_ADMIN', tenantId: canonicalTenantId }
+               });
+               if (!adminRole) {
+                  adminRole = await tx.role.create({
+                    data: { name: 'TENANT_ADMIN', tenantId: canonicalTenantId }
+                  });
+               }
 
-      return upsertedUser;
-    }, {
-      // Isolation level and retry can be added here if needed, but standard transaction is fine for now
-      maxWait: 5000,
-      timeout: 10000,
-    });
+               await tx.user.create({
+                 data: {
+                   clerkId,
+                   email,
+                   employeeId: empId,
+                   tenantId: canonicalTenantId,
+                   status: 'ACTIVE',
+                   onboardingStatus: 'PENDING',
+                   userRoles: {
+                     create: { roleId: adminRole.id }
+                   }
+                 }
+               });
+            }
+         });
+         
+         const bootstrappedUser = await prisma.user.findFirst({
+           where: { tenantId: canonicalTenantId, email }
+         });
+         if (bootstrappedUser) return bootstrappedUser;
+
+       } catch (error) {
+         console.error('[Provisioning] Bootstrap transaction failed/aborted:', error);
+       }
+    }
     
-    return user;
-  } catch (err: any) {
-    console.error(`[Provisioning] Failed to provision user ${id}:`, err);
-    throw err;
+    // If not bootstrap, DENY
+    console.warn(`[Provisioning] Unknown Gmail ${email} attempted to login. Denied.`);
+    return null;
   }
+
+  // 3. User exists. Check status
+  if (user.status === 'INACTIVE') {
+     console.warn(`[Provisioning] Inactive user ${email} attempted to login. Denied.`);
+     return null;
+  }
+
+  // 4. If status is INVITED (clerkId is null), link them atomically
+  if (user.status === 'INVITED') {
+     const { count } = await prisma.user.updateMany({
+       where: {
+         id: user.id,
+         clerkId: { equals: null },
+         status: 'INVITED'
+       },
+       data: {
+         clerkId: clerkId,
+         status: 'ACTIVE'
+       }
+     });
+
+     if (count === 1) {
+       console.log(`[Provisioning] Successfully linked clerkId to invited user ${email}`);
+       return { ...user, clerkId, status: 'ACTIVE' };
+     } else {
+       // Race condition: someone else linked it, or status changed
+       const refreshedUser = await prisma.user.findUnique({ where: { id: user.id } });
+       if (!refreshedUser || refreshedUser.status === 'INACTIVE') return null;
+       if (refreshedUser.clerkId === clerkId) return refreshedUser;
+       return null;
+     }
+  }
+
+  // 5. If status is ACTIVE, verify identity matches
+  if (user.status === 'ACTIVE') {
+     if (user.clerkId === clerkId) {
+        return user;
+     } else {
+        console.warn(`[Provisioning] Identity Reassignment Denied for ${email}. Expected ${user.clerkId}, got ${clerkId}`);
+        return null;
+     }
+  }
+
+  return null;
 }

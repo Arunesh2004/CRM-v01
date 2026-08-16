@@ -7,10 +7,11 @@ export async function inviteEmployeeAction(formData: FormData) {
   try {
     const email = formData.get('email') as string;
     const roleName = formData.get('roleName') as string || 'MEMBER';
+    const departmentId = formData.get('departmentId') as string | undefined;
     
     if (!email) throw new Error("Email is required");
 
-    await inviteEmployee(email, roleName);
+    await inviteEmployee(email, roleName, departmentId);
     revalidatePath('/settings/employees');
     return { success: true };
   } catch (error: any) {
