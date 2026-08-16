@@ -58,7 +58,8 @@ export class RedisRateLimiter implements RateLimiter {
         return current
       `;
       
-      const currentRaw = await redis.eval(luaScript, 1, `ratelimit:v2:${identifier}`, windowMs);
+      const env = process.env.VERCEL_ENV || process.env.NODE_ENV || 'development';
+      const currentRaw = await redis.eval(luaScript, 1, `ratelimit:v2:${env}:${identifier}`, windowMs);
       return Number(currentRaw) <= limit;
     } catch (e: any) {
       const safeMsg = e?.message?.replace(/redis:\/\/[^@]+@/, 'redis://***@');

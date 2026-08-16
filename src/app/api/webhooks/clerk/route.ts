@@ -1,6 +1,5 @@
 import { Webhook } from 'svix';
 import { NextRequest, NextResponse } from 'next/server';
-import { headers } from 'next/headers';
 import { WebhookEvent } from '@clerk/nextjs/server';
 import prisma from '@/../database/utils/prisma';
 import { Logger } from '@/lib/observability/logger';
@@ -34,7 +33,7 @@ export async function POST(req: NextRequest) {
   // Create a new Svix instance with your secret.
   const wh = new Webhook(WEBHOOK_SECRET);
 
-  let evt: any;
+  let evt: WebhookEvent;
 
   // Verify the payload with the headers
   try {
@@ -45,10 +44,11 @@ export async function POST(req: NextRequest) {
         'svix-id': svix_id,
         'svix-timestamp': svix_timestamp,
         'svix-signature': svix_signature,
-      });
+      }) as WebhookEvent;
     }
-  } catch (err: any) {
-    logger.error('Error verifying Clerk webhook signature', undefined, { name: err?.name });
+  } catch (err: unknown) {
+    const error = err as Error;
+    logger.error('Error verifying Clerk webhook signature', undefined, { name: error?.name });
     return new NextResponse('Error occured', {
       status: 400,
     });
@@ -63,8 +63,9 @@ export async function POST(req: NextRequest) {
     try {
       await ensureUserProvisioned(evt.data);
       return NextResponse.json({ success: true }, { status: 201 });
-    } catch (err: any) {
-      logger.error('Failed to sync user from Clerk webhook', undefined, { name: err?.name });
+    } catch (err: unknown) {
+      const error = err as Error;
+      logger.error('Failed to sync user from Clerk webhook', undefined, { name: error?.name });
       return NextResponse.json({ error: 'Failed to sync user' }, { status: 500 });
     }
   }
@@ -78,7 +79,7 @@ export async function POST(req: NextRequest) {
         data: { email: email }
       });
       return NextResponse.json({ success: true }, { status: 200 });
-    } catch (err) {
+    } catch {
       return NextResponse.json({ error: 'Update failed' }, { status: 500 });
     }
   }
@@ -94,7 +95,7 @@ export async function POST(req: NextRequest) {
         }
       });
       return NextResponse.json({ success: true }, { status: 200 });
-    } catch (err) {
+    } catch {
       return NextResponse.json({ error: 'Delete failed' }, { status: 500 });
     }
   }

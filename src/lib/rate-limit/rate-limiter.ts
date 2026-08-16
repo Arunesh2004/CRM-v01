@@ -12,8 +12,9 @@ export class DistributedRateLimiter {
    * Generates a Redis key safely namespaced to prevent tenant bleed.
    */
   private static generateKey(tenantId: string, resource: string, action: string, ip?: string, userId?: string): string {
+    const env = process.env.VERCEL_ENV || process.env.NODE_ENV || 'development';
     const scope = ip ? `ip:${ip}` : (userId ? `user:${userId}` : `tenant:${tenantId}`);
-    return `ratelimit:${scope}:${resource}:${action}`;
+    return `ratelimit:${env}:${scope}:${resource}:${action}`;
   }
 
   static async checkLimit(tenantId: string, resource: string, action: string, limit: number, windowSeconds: number, ip?: string, userId?: string): Promise<RateLimitResult> {

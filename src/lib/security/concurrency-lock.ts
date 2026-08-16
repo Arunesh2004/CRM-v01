@@ -19,15 +19,15 @@ export class DistributedConcurrencyLock {
       // Calculate absolute TTL (Execution max + buffer)
       const ttlMs = AIConfig.MAX_EXECUTION_MS + AIConfig.LOCK_TTL_BUFFER_MS;
 
-      // 1. Check Tenant Concurrency
-      const tenantKey = `concurrent:tenant:${tenantId}`;
+      const env = process.env.VERCEL_ENV || process.env.NODE_ENV || 'development';
+      const tenantKey = `concurrent:${env}:tenant:${tenantId}`;
       const tenantActive = await redis.scard(tenantKey);
       if (tenantActive >= AIConfig.MAX_CONCURRENT_PER_TENANT) {
         return { acquired: false };
       }
 
       // 2. Check User Concurrency
-      const userKey = `concurrent:user:${userId}`;
+      const userKey = `concurrent:${env}:user:${userId}`;
       const userActive = await redis.scard(userKey);
       if (userActive >= AIConfig.MAX_CONCURRENT_PER_USER) {
         return { acquired: false };
@@ -42,7 +42,7 @@ export class DistributedConcurrencyLock {
       // E.g. concurrent:user:123:slot:0, concurrent:user:123:slot:1
       let acquiredUserSlot: string | null = null;
       for (let i = 0; i < AIConfig.MAX_CONCURRENT_PER_USER; i++) {
-        const slotKey = `concurrent:user:${userId}:slot:${i}`;
+        const slotKey = `concurrent:${env}:user:${userId}:slot:${i}`;
         const ok = await redis.set(slotKey, requestId, 'PX', ttlMs, 'NX');
         if (ok === 'OK') {
           acquiredUserSlot = slotKey;
@@ -58,7 +58,7 @@ export class DistributedConcurrencyLock {
       // Try to acquire tenant slot
       let acquiredTenantSlot: string | null = null;
       for (let i = 0; i < AIConfig.MAX_CONCURRENT_PER_TENANT; i++) {
-        const slotKey = `concurrent:tenant:${tenantId}:slot:${i}`;
+        const slotKey = `concurrent:${env}:tenant:${tenantId}:slot:${i}`;
         const ok = await redis.set(slotKey, requestId, 'PX', ttlMs, 'NX');
         if (ok === 'OK') {
           acquiredTenantSlot = slotKey;
@@ -98,14 +98,16 @@ export class DistributedConcurrencyLock {
         end
       `;
 
+      const env = process.env.VERCEL_ENV || process.env.NODE_ENV || 'development';
+
       // Release user slots
       for (let i = 0; i < AIConfig.MAX_CONCURRENT_PER_USER; i++) {
-        await redis.eval(luaScript, 1, `concurrent:user:${userId}:slot:${i}`, requestId);
+        await redis.eval(luaScript, 1, `concurrent:${env}:user:${userId}:slot:${i}`, requestId);
       }
 
       // Release tenant slots
       for (let i = 0; i < AIConfig.MAX_CONCURRENT_PER_TENANT; i++) {
-        await redis.eval(luaScript, 1, `concurrent:tenant:${tenantId}:slot:${i}`, requestId);
+        await redis.eval(luaScript, 1, `concurrent:${env}:tenant:${tenantId}:slot:${i}`, requestId);
       }
     } catch (err) {
       Logger.error('Redis Concurrency Release Failed', err as Error, { event: 'REDIS_FAILURE', fallback: true });
