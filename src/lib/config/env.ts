@@ -11,7 +11,7 @@ export function validateEnvironment(): void {
 
   // We do not strictly enforce billing keys yet in this validation 
   // since they are not activated, but architecturally they will be added here.
-  const isProduction = process.env.NODE_ENV === 'production';
+  const isProduction = process.env.NODE_ENV === 'production' && process.env.VERCEL_ENV === 'production';
   const missing = requiredVars.filter(v => !process.env[v]);
   
   if (missing.length > 0) {
@@ -64,7 +64,7 @@ export function validateEnvironment(): void {
 }
 
 export const ENV = {
-  get isProduction() { return process.env.NODE_ENV === 'production'; },
+  get isProduction() { return process.env.NODE_ENV === 'production' && process.env.VERCEL_ENV === 'production'; },
   get databaseUrl() { return process.env.DATABASE_URL!; },
   get redisUrl() { return process.env.REDIS_URL || 'redis://localhost:6379'; },
   get companyTenantId() { return process.env.COMPANY_TENANT_ID?.trim()!; },
