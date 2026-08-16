@@ -128,28 +128,28 @@ export async function getTaskById(taskId: string) {
 
   const prisma = withTenant(tenantId);
 
-  const task = await prisma.task.findFirst({
-    where: { id: taskId, tenantId, deletedAt: null },
-    include: {
-      assignedUser: { select: { id: true, email: true } },
-      customer: { select: { id: true, name: true } },
-      lead: { select: { id: true, name: true, company: true } }
-    }
-  });
+  const [task, activities, comments] = await Promise.all([
+    prisma.task.findFirst({
+      where: { id: taskId, tenantId, deletedAt: null },
+      include: {
+        assignedUser: { select: { id: true, email: true } },
+        customer: { select: { id: true, name: true } },
+        lead: { select: { id: true, name: true, company: true } }
+      }
+    }),
+    prisma.activityTimeline.findMany({
+      where: { tenantId, entityType: 'TASK', entityId: taskId },
+      orderBy: { createdAt: 'desc' },
+      include: { actor: { select: { id: true, email: true } } }
+    }),
+    prisma.cRMComment.findMany({
+      where: { tenantId, entityType: 'TASK', entityId: taskId, deletedAt: null },
+      orderBy: { createdAt: 'desc' },
+      include: { user: { select: { id: true, email: true } } }
+    })
+  ]);
 
   if (!task) return null;
-
-  const activities = await prisma.activityTimeline.findMany({
-    where: { tenantId, entityType: 'TASK', entityId: taskId },
-    orderBy: { createdAt: 'desc' },
-    include: { actor: { select: { id: true, email: true } } }
-  });
-
-  const comments = await prisma.cRMComment.findMany({
-    where: { tenantId, entityType: 'TASK', entityId: taskId, deletedAt: null },
-    orderBy: { createdAt: 'desc' },
-    include: { user: { select: { id: true, email: true } } }
-  });
 
   return { ...task, activities, comments };
 }

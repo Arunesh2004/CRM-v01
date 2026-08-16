@@ -5,7 +5,8 @@ import { DashboardClientView } from '@/components/reporting/DashboardClientView'
 import { EmptyState } from '@/components/ui/EmptyState';
 import { LayoutDashboard } from 'lucide-react';
 
-export default async function ReportsPage({ searchParams }: { searchParams: { start?: string, end?: string } }) {
+export default async function ReportsPage(props: { searchParams: Promise<{ [key: string]: string | undefined }> }) {
+  const searchParams = await props.searchParams;
   const startDate = searchParams.start ? new Date(searchParams.start) : undefined;
   const endDate = searchParams.end ? new Date(searchParams.end) : undefined;
 

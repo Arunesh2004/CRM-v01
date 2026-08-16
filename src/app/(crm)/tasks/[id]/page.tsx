@@ -1,3 +1,4 @@
+import { Suspense } from 'react';
 import { notFound } from 'next/navigation';
 import { getTaskByIdAction } from '@/modules/crm/actions/task.actions';
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/Card';
@@ -8,9 +9,7 @@ import { UnifiedTimelineItem } from '@/modules/crm/crm.types';
 import { AlertCircle, Calendar, CheckSquare, Clock, User, Building, PhoneCall, ArrowLeft } from 'lucide-react';
 import Link from 'next/link';
 import { TaskComments } from '@/components/crm/TaskComments';
-import { getDocumentsForTask } from '@/modules/crm/document/document.service';
-import { DocumentList } from '@/components/crm/DocumentList';
-import { DocumentUploader } from '@/components/crm/DocumentUploader';
+import { TaskDocumentsWrapper } from './TaskDocumentsWrapper';
 
 export default async function TaskDetailPage({ params }: { params: { id: string } }) {
   const result = await getTaskByIdAction(params.id);
@@ -20,8 +19,6 @@ export default async function TaskDetailPage({ params }: { params: { id: string 
   }
 
   const task = result.data;
-
-  const documents = await getDocumentsForTask(task.id);
 
   // Map activities and comments to UnifiedTimelineItem
   const timelineEvents: UnifiedTimelineItem[] = [
@@ -124,10 +121,14 @@ export default async function TaskDetailPage({ params }: { params: { id: string 
             <TaskComments taskId={task.id} initialComments={task.comments} />
           </div>
 
-          <div className="glass-panel p-6">
-            <h3 className="text-lg font-display font-semibold text-white mb-4">Documents</h3>
-            <DocumentUploader taskId={task.id} />
-            <DocumentList documents={documents as any} taskId={task.id} />
+          <div className="lg:col-span-3">
+            <Suspense fallback={
+              <div className="glass-panel p-6 flex items-center justify-center min-h-[200px]">
+                <div className="w-6 h-6 border-2 border-violet-500 border-t-transparent rounded-full animate-spin"></div>
+              </div>
+            }>
+              <TaskDocumentsWrapper taskId={task.id} />
+            </Suspense>
           </div>
         </div>
 

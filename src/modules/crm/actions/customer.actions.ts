@@ -24,9 +24,8 @@ export async function updateCustomerAction(payload: z.infer<typeof UpdateCustome
   try {
     const validatedData = UpdateCustomerSchema.parse(payload);
     
-    await requireAuth();
-    await requireTenant();
-    await requirePermission('CUSTOMER', 'UPDATE');
+    // FAST PATH: Authentication, Tenant Resolution, and RBAC are mechanically
+    // enforced inside customerService.updateCustomer
     
     const result = await customerService.updateCustomer(validatedData);
     return { success: true, data: result };
@@ -39,10 +38,6 @@ import { QueryParams } from '../../core/types';
 
 export async function getCustomersAction(params?: QueryParams) {
   try {
-    await requireAuth();
-    await requireTenant();
-    await requirePermission('CUSTOMER', 'READ');
-    
     const result = await customerService.getCustomers(params);
     return { success: true, data: result };
   } catch (error: any) {
@@ -52,10 +47,6 @@ export async function getCustomersAction(params?: QueryParams) {
 
 export async function getCustomerByIdAction(id: string) {
   try {
-    await requireAuth();
-    await requireTenant();
-    await requirePermission('CUSTOMER', 'READ');
-    
     const result = await customerService.getCustomerById(id);
     return { success: true, data: result };
   } catch (error: any) {
@@ -65,10 +56,6 @@ export async function getCustomerByIdAction(id: string) {
 
 export async function deleteCustomerAction(customerId: string) {
   try {
-    await requireAuth();
-    await requireTenant();
-    await requirePermission('CUSTOMER', 'DELETE');
-    
     const result = await customerService.deleteCustomer(customerId);
     return { success: true, data: result };
   } catch (error: any) {

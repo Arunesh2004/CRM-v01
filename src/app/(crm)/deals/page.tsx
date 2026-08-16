@@ -12,11 +12,10 @@ import { requireTenant } from "@/lib/auth";
 import { DealKanbanBoardClientWrapper as DealKanbanBoard } from "./DealKanbanBoardClientWrapper";
 import { DollarSign, Percent, TrendingUp, AlertCircle } from "lucide-react";
 
-export default async function DealsPage({
-  searchParams,
-}: {
-  searchParams: { [key: string]: string | string[] | undefined };
+export default async function DealsPage(props: {
+  searchParams: Promise<{ [key: string]: string | string[] | undefined }>;
 }) {
+  const searchParams = await props.searchParams;
   const tenantId = await requireTenant();
 
   // Ensure default pipeline exists

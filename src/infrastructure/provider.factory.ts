@@ -23,12 +23,9 @@ export class ProviderFactory {
 
     if (!credentials) {
       const prisma = withTenant(tenantId);
-      const integration = await prisma.tenantIntegration.findUnique({
+      const integration = await prisma.tenantIntegration.findFirst({
         where: {
-          tenantId_provider: {
-            tenantId,
-            provider: providerType
-          }
+          provider: providerType
         }
       });
 

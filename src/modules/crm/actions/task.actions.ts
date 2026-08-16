@@ -11,9 +11,6 @@ import { QueryParams } from '../../core/types';
 export async function createTaskAction(payload: z.infer<typeof CreateTaskSchema>) {
   try {
     const validatedData = CreateTaskSchema.parse(payload);
-    await requireAuth();
-    await requireTenant();
-    await requirePermission('TASK', 'CREATE');
     const result = await taskService.createTask(validatedData);
     return { success: true, data: result };
   } catch (error: any) {
@@ -24,9 +21,6 @@ export async function createTaskAction(payload: z.infer<typeof CreateTaskSchema>
 export async function updateTaskAction(payload: z.infer<typeof UpdateTaskSchema>) {
   try {
     const validatedData = UpdateTaskSchema.parse(payload);
-    await requireAuth();
-    await requireTenant();
-    await requirePermission('TASK', 'UPDATE');
     const result = await taskService.updateTask(validatedData);
     return { success: true, data: result };
   } catch (error: any) {
@@ -42,10 +36,6 @@ export async function getTasksAction(params?: QueryParams & {
   dueDateEnd?: Date;
 }) {
   try {
-    await requireAuth();
-    await requireTenant();
-    await requirePermission('TASK', 'READ');
-    
     const result = await taskService.getTasks(params);
     return { success: true, data: result };
   } catch (error: any) {

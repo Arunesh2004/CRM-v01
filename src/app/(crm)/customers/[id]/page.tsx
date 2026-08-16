@@ -15,6 +15,8 @@ import { LocationForm } from '@/components/crm/LocationForm';
 import { getDocumentsForCustomer } from '@/modules/crm/document/document.service';
 import { DocumentList } from '@/components/crm/DocumentList';
 import { DocumentUploader } from '@/components/crm/DocumentUploader';
+import { TimelineTabWrapper } from './TimelineTabWrapper';
+import { DocumentsTabWrapper } from './DocumentsTabWrapper';
 
 export default async function CustomerDetailsPage({ params }: { params: { id: string } }) {
   const result = await getCustomerByIdAction(params.id);
@@ -26,11 +28,6 @@ export default async function CustomerDetailsPage({ params }: { params: { id: st
   const customer = result.data;
   const locations = customer.locations || [];
   const contacts = customer.contacts || [];
-
-  const timelineResult = await getCustomerTimelineAction({ customerId: customer.id, limit: 100 });
-  const timelineEvents = timelineResult.success ? (timelineResult.data as any).data : [];
-
-  const documents = await getDocumentsForCustomer(customer.id);
 
   return (
     <div className="space-y-6 animate-in fade-in duration-500 pb-10 px-4 sm:px-6 lg:px-8 max-w-6xl mx-auto py-8">
@@ -184,20 +181,23 @@ export default async function CustomerDetailsPage({ params }: { params: { id: st
         </TabsContent>
 
         <TabsContent value="documents">
-          <div className="glass-panel p-6">
-            <div className="flex flex-row items-center justify-between mb-6">
-              <h3 className="text-lg font-display font-semibold text-white">Documents</h3>
+          <Suspense fallback={
+            <div className="glass-panel p-6 flex items-center justify-center min-h-[200px]">
+              <div className="w-6 h-6 border-2 border-violet-500 border-t-transparent rounded-full animate-spin"></div>
             </div>
-            <DocumentUploader customerId={customer.id} />
-            <DocumentList documents={documents as any} customerId={customer.id} />
-          </div>
+          }>
+            <DocumentsTabWrapper customerId={customer.id} />
+          </Suspense>
         </TabsContent>
 
         <TabsContent value="timeline">
-          <div className="glass-panel p-6">
-            <h3 className="text-lg font-display font-semibold text-white mb-6">Unified Timeline</h3>
-            <CustomerActivityTimeline activities={timelineEvents} />
-          </div>
+          <Suspense fallback={
+            <div className="glass-panel p-6 flex items-center justify-center min-h-[200px]">
+              <div className="w-6 h-6 border-2 border-violet-500 border-t-transparent rounded-full animate-spin"></div>
+            </div>
+          }>
+            <TimelineTabWrapper customerId={customer.id} />
+          </Suspense>
         </TabsContent>
       </Tabs>
     </div>

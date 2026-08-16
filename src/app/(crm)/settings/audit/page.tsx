@@ -5,11 +5,10 @@ import { Badge } from '@/components/ui/Badge';
 import { ShieldAlert, User, Activity, Clock } from 'lucide-react';
 import { format } from 'date-fns';
 
-export default async function AuditLogsPage({
-  searchParams,
-}: {
-  searchParams: { [key: string]: string | string[] | undefined };
+export default async function AuditLogsPage(props: {
+  searchParams: Promise<{ [key: string]: string | string[] | undefined }>;
 }) {
+  const searchParams = await props.searchParams;
   await requireAuth();
   const tenantId = await requireTenant();
   // Ensure only admins can view audit logs

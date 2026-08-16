@@ -18,6 +18,12 @@ export function validateEnvironment(): void {
     throw new Error(`CRITICAL STARTUP FAILURE: Missing required environment variables: ${missing.join(', ')}`);
   }
   
+  const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+  if (!uuidRegex.test(process.env.COMPANY_TENANT_ID!.trim())) {
+    throw new Error(`CRITICAL STARTUP FAILURE: COMPANY_TENANT_ID must be a valid UUID.`);
+  }
+
+
   // Twilio constraints
   if (isProduction) {
     if (!process.env.TWILIO_ACCOUNT_SID || !process.env.TWILIO_AUTH_TOKEN || !process.env.TWILIO_WEBHOOK_SECRET) {
@@ -61,8 +67,8 @@ export const ENV = {
   get isProduction() { return process.env.NODE_ENV === 'production'; },
   get databaseUrl() { return process.env.DATABASE_URL!; },
   get redisUrl() { return process.env.REDIS_URL || 'redis://localhost:6379'; },
-  get companyTenantId() { return process.env.COMPANY_TENANT_ID!; },
-  get adminEmail() { return process.env.ADMIN_EMAIL!; },
+  get companyTenantId() { return process.env.COMPANY_TENANT_ID?.trim()!; },
+  get adminEmail() { return process.env.ADMIN_EMAIL?.trim().toLowerCase()!; },
   
   // Storage
   get awsAccessKeyId() { return process.env.AWS_ACCESS_KEY_ID; },

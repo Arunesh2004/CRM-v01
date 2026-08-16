@@ -111,32 +111,22 @@ export async function getCustomerById(id: string) {
 
   const prisma = withTenant(tenantId);
   
-  const [customer, activities] = await Promise.all([
-    prisma.customer.findFirst({
-      where: { id, tenantId, deletedAt: null },
-      include: {
-        locations: { where: { deletedAt: null }, take: 100 },
-        contacts: { where: { deletedAt: null }, take: 100 },
-        tasks: { where: { deletedAt: null }, orderBy: { createdAt: 'desc' }, take: 20 },
-        emailThreads: { orderBy: { createdAt: 'desc' }, take: 20 },
-        conversations: { orderBy: { createdAt: 'desc' }, include: { messages: { take: 20, orderBy: { createdAt: 'desc' } } }, take: 20 },
-        assignedUser: { select: { id: true, email: true } },
-        _count: {
-          select: {
-            tasks: { where: { status: { not: 'COMPLETED' }, deletedAt: null } },
-            contacts: { where: { deletedAt: null } },
-            locations: { where: { deletedAt: null } }
-          }
+  const customer = await prisma.customer.findFirst({
+    where: { id, tenantId, deletedAt: null },
+    include: {
+      locations: { where: { deletedAt: null }, take: 100 },
+      contacts: { where: { deletedAt: null }, take: 100 },
+      tasks: { where: { deletedAt: null }, orderBy: { createdAt: 'desc' }, take: 20 },
+      assignedUser: { select: { id: true, email: true } },
+      _count: {
+        select: {
+          tasks: { where: { status: { not: 'COMPLETED' }, deletedAt: null } },
+          contacts: { where: { deletedAt: null } },
+          locations: { where: { deletedAt: null } }
         }
       }
-    }),
-    prisma.activityTimeline.findMany({
-      where: { tenantId, entityType: 'CUSTOMER', entityId: id },
-      orderBy: { createdAt: 'desc' },
-      take: 20,
-      include: { actor: { select: { id: true, email: true } } }
-    })
-  ]);
+    }
+  });
 
   if (!customer) return null;
 
@@ -146,7 +136,7 @@ export async function getCustomerById(id: string) {
     take: 10
   });
 
-  return { ...customer, activities, relatedLeads };
+  return { ...customer, relatedLeads };
 }
 
 export async function updateCustomer(input: UpdateCustomerInput) {

@@ -11,11 +11,10 @@ import { FilterBar } from '@/components/crm/FilterBar';
 import { PaginationButton } from '@/components/crm/PaginationButton';
 import { Skeleton } from '@/components/ui/Skeleton';
 
-export default async function CustomersPage({
-  searchParams,
-}: {
-  searchParams: { [key: string]: string | string[] | undefined };
+export default async function CustomersPage(props: {
+  searchParams: Promise<{ [key: string]: string | string[] | undefined }>;
 }) {
+  const searchParams = await props.searchParams;
   const search   = typeof searchParams.search   === 'string' ? searchParams.search   : undefined;
   const status   = typeof searchParams.status   === 'string' ? searchParams.status   : undefined;
   const industry = typeof searchParams.industry === 'string' ? searchParams.industry : undefined;

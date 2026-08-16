@@ -1,70 +1,78 @@
-'use client';
+"use client";
 
-import React, { useState } from 'react';
-import { uploadDocumentAction } from '@/modules/crm/document/document.actions';
+import React, { useState, useRef } from "react";
+import { uploadDocumentAction } from "@/modules/crm/document/document.actions";
+import { Button } from "@/components/ui/button";
+import { UploadCloud, Loader2 } from "lucide-react";
+import { toast } from "sonner";
 
 export function DocumentUploader({
   customerId,
   taskId,
   onUploadSuccess,
+  className,
 }: {
   customerId?: string;
   taskId?: string;
   onUploadSuccess?: () => void;
+  className?: string;
 }) {
   const [isUploading, setIsUploading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
 
-    setError(null);
     setIsUploading(true);
 
     const formData = new FormData();
-    formData.append('file', file);
-    if (customerId) formData.append('customerId', customerId);
-    if (taskId) formData.append('taskId', taskId);
+    formData.append("file", file);
+    if (customerId) formData.append("customerId", customerId);
+    if (taskId) formData.append("taskId", taskId);
 
     try {
       const result = await uploadDocumentAction(formData);
       if (result.error) {
-        setError(result.error);
+        toast.error(result.error);
       } else {
+        toast.success("Document uploaded successfully");
         if (onUploadSuccess) onUploadSuccess();
       }
     } catch (err: any) {
-      setError(err.message || 'An unexpected error occurred during upload.');
+      toast.error(err.message || "An unexpected error occurred during upload.");
     } finally {
       setIsUploading(false);
-      // reset file input
-      e.target.value = '';
+      if (fileInputRef.current) {
+        fileInputRef.current.value = "";
+      }
     }
   };
 
   return (
-    <div className="flex flex-col gap-2 mt-4">
-      <div className="flex items-center gap-4">
-        <label
-          htmlFor="document-upload"
-          className={`cursor-pointer px-4 py-2 text-sm font-medium text-white bg-blue-600 rounded-md hover:bg-blue-700 transition-colors ${
-            isUploading ? 'opacity-50 pointer-events-none' : ''
-          }`}
-        >
-          {isUploading ? 'Uploading...' : 'Upload Document'}
-        </label>
-        <input
-          id="document-upload"
-          type="file"
-          className="hidden"
-          onChange={handleFileChange}
-          disabled={isUploading}
-          accept=".pdf,.doc,.docx,.xls,.xlsx,.ppt,.pptx,.txt,.csv,.jpg,.jpeg,.png,.webp"
-        />
-      </div>
-      {error && <p className="text-sm text-red-600">{error}</p>}
-      <p className="text-xs text-gray-500">Max file size: 3MB. Supported formats: PDF, Word, Excel, PowerPoint, Text, Images.</p>
+    <div className={className}>
+      <input
+        ref={fileInputRef}
+        type="file"
+        className="hidden"
+        onChange={handleFileChange}
+        disabled={isUploading}
+        accept=".pdf,.doc,.docx,.xls,.xlsx,.ppt,.pptx,.txt,.csv,.jpg,.jpeg,.png,.webp"
+      />
+      <Button
+        variant="secondary"
+        size="sm"
+        onClick={() => fileInputRef.current?.click()}
+        disabled={isUploading}
+        className="flex items-center gap-2"
+      >
+        {isUploading ? (
+          <Loader2 className="w-4 h-4 animate-spin text-[#8891B0]" />
+        ) : (
+          <UploadCloud className="w-4 h-4 text-violet-400" />
+        )}
+        {isUploading ? "Uploading..." : "Upload File"}
+      </Button>
     </div>
   );
 }

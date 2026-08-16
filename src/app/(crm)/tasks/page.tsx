@@ -14,11 +14,10 @@ import { format } from 'date-fns';
 import Link from 'next/link';
 import { TaskCalendarView } from '@/components/crm/TaskCalendarView';
 
-export default async function TasksPage({
-  searchParams,
-}: {
-  searchParams: { [key: string]: string | string[] | undefined };
+export default async function TasksPage(props: {
+  searchParams: Promise<{ [key: string]: string | string[] | undefined }>;
 }) {
+  const searchParams = await props.searchParams;
   const search = typeof searchParams.search === 'string' ? searchParams.search : undefined;
   const status = typeof searchParams.status === 'string' ? searchParams.status : undefined;
   const priority = typeof searchParams.priority === 'string' ? searchParams.priority : undefined;

@@ -358,13 +358,10 @@ export const secureTools: AITool[] = [
           counts: details._count,
           contacts: details.contacts.slice(0, 10).map(c => ({ name: c.firstName + ' ' + c.lastName, email: c.email, phone: c.phone, isPrimary: c.isPrimary })),
           locations: details.locations.slice(0, 5).map(l => ({ name: l.name, city: l.city, state: l.state })),
-          recentTasks: details.tasks.slice(0, 10).map(t => ({ id: t.id, title: t.title, status: t.status, priority: t.priority })),
-          relatedLeads: details.relatedLeads.slice(0, 10).map(l => ({ id: l.id, name: l.name, company: l.company, status: l.status })),
-          recentActivities: details.activities.slice(0, 10).map(a => ({ type: a.type, content: a.content, createdAt: a.createdAt })),
-          recentCommunications: [
-            ...details.emailThreads.slice(0, 5).map(e => ({ type: 'EMAIL', subject: e.subject, createdAt: e.createdAt })),
-            ...details.conversations.slice(0, 5).map(c => ({ type: 'CONVERSATION', channel: c.type, messagesCount: c.messages.length }))
-          ]
+          recentTasks: details.tasks.slice(0, 10).map((t: any) => ({ id: t.id, title: t.title, status: t.status, priority: t.priority })),
+          relatedLeads: details.relatedLeads.slice(0, 10).map((l: any) => ({ id: l.id, name: l.name, company: l.company, status: l.status })),
+          recentActivities: [], // Timeline loaded separately now to prevent large nested graphs
+          recentCommunications: [] // Timeline loaded separately now
         }
       };
     }
