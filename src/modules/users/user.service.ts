@@ -1,6 +1,6 @@
 import prisma from '@/../database/utils/prisma';
 import { withTenant } from '@/../database/utils/prisma-tenant';
-import { requireAuth, requireTenant, requirePermission } from '@/lib/auth';
+import { requireAuth, requireTenant, requirePermission, invalidateUserCache } from '@/lib/auth';
 import { clerkClient } from '@clerk/nextjs/server';
 
 import { EventBus } from '../core/events/event-bus';
@@ -63,7 +63,7 @@ export async function getEmployees(filters?: { search?: string, departmentId?: s
     where.status = filters.status;
   }
 
-  return await prisma.user.findMany({
+  const users = await prisma.user.findMany({
     where,
     include: {
       userRoles: {
@@ -73,6 +73,25 @@ export async function getEmployees(filters?: { search?: string, departmentId?: s
     },
     orderBy: { createdAt: 'desc' }
   });
+
+  return users.map(u => ({
+    ...u,
+    phone: u.id === actor.id ? u.phone : null,
+    // Add virtual callerId for frontend consistency
+    callerId: `${u.firstName || ''} ${u.lastName || ''} - ${u.employeeId || 'UNKNOWN'}`.trim()
+  }));
+}
+
+async function generateEmployeeId(tenantId: string): Promise<string> {
+  const crypto = require('crypto');
+  let empId = '';
+  let exists = true;
+  while (exists) {
+    empId = `EMP-${crypto.randomBytes(3).toString('hex').toUpperCase()}`; // 6 hex chars
+    const count = await prisma.user.count({ where: { employeeId: empId, tenantId } });
+    if (count === 0) exists = false;
+  }
+  return empId;
 }
 
 export async function inviteEmployee(emailStr: string, roleName: string = 'MEMBER', requestedDepartmentId?: string) {
@@ -117,9 +136,7 @@ export async function inviteEmployee(emailStr: string, roleName: string = 'MEMBE
     throw new Error(`Role ${roleName} does not exist for this tenant.`);
   }
 
-  // Create local user first
-  const crypto = require('crypto');
-  const empId = `EMP-${crypto.randomBytes(4).toString('hex').toUpperCase()}`;
+  const empId = await generateEmployeeId(tenantId);
 
   // This will fail safely if email is not unique
   const newUser = await prisma.user.create({
@@ -190,6 +207,7 @@ export async function disableEmployee(userId: string) {
     const client = await clerkClient();
     try {
       await client.users.deleteUser(userToRemove.clerkId);
+      await invalidateUserCache(userToRemove.clerkId);
     } catch (e) {
       console.warn("Failed to delete Clerk user or already deleted:", e);
     }
@@ -267,6 +285,10 @@ export async function updateEmployeeRole(userId: string, newRoleName: string) {
     metadata: { newRole: newRoleName }
   });
 
+  if (userToUpdate.clerkId) {
+    await invalidateUserCache(userToUpdate.clerkId);
+  }
+
   return { success: true };
 }
 
@@ -319,6 +341,10 @@ export async function reassignDepartment(userId: string, newDepartmentId: string
     resourceId: userId,
     metadata: { newDepartmentId }
   });
+
+  if (userToUpdate.clerkId) {
+    await invalidateUserCache(userToUpdate.clerkId);
+  }
   
   return { success: true };
 }

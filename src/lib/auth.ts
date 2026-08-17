@@ -5,6 +5,7 @@ import { ensureUserProvisioned, synchronizeClerkIdentity } from '@/modules/auth/
 import { Logger } from '@/lib/observability/logger';
 import { headers } from 'next/headers';
 import jwt from 'jsonwebtoken';
+import { redis } from '@/lib/cache/redis.client';
 
 import { cache } from 'react';
 
@@ -105,6 +106,11 @@ export const getCurrentUser = cache(async function getCurrentUser() {
     return null;
   }
 
+  if (redis) {
+    const cached = await redis.get(`user:${clerkId}`);
+    if (cached) return cached as any;
+  }
+
   const user = await prisma.user.findFirst({
     where: { clerkId },
     include: {
@@ -115,8 +121,18 @@ export const getCurrentUser = cache(async function getCurrentUser() {
     }
   });
 
+  if (redis && user) {
+    await redis.set(`user:${clerkId}`, JSON.stringify(user), { ex: 3600 });
+  }
+
   return user;
 });
+
+export async function invalidateUserCache(clerkId: string) {
+  if (redis) {
+    await redis.del(`user:${clerkId}`);
+  }
+}
 
 export async function getCurrentTenant() {
   const user = await getCurrentUser();

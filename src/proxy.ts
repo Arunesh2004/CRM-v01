@@ -1,5 +1,6 @@
 import { clerkMiddleware, createRouteMatcher } from '@clerk/nextjs/server';
 import { NextResponse } from 'next/server';
+import { rateLimiters } from '@/lib/cache/redis.client';
 
 const isPublicRoute = createRouteMatcher(['/sign-in(.*)', '/sign-up(.*)', '/api/webhooks/clerk', '/api/health']);
 
@@ -35,7 +36,28 @@ function isLoadTestRequest(req: Request): boolean {
   return true;
 }
 
-export const proxy = clerkMiddleware(async (auth, req) => {
+export default clerkMiddleware(async (auth, req) => {
+  // Rate limiting logic
+  const ip = req.headers.get('x-forwarded-for') || '127.0.0.1';
+  let limiter = null;
+
+  if (req.nextUrl.pathname.startsWith('/api/webhooks/')) {
+    limiter = rateLimiters.webhook;
+  } else if (req.nextUrl.pathname.startsWith('/api/ai') || req.nextUrl.pathname.startsWith('/assistant')) {
+    limiter = rateLimiters.ai;
+  } else if (req.nextUrl.pathname.startsWith('/api/')) {
+    limiter = rateLimiters.api;
+  } else if (req.nextUrl.pathname.startsWith('/sign-in') || req.nextUrl.pathname.startsWith('/sign-up')) {
+    limiter = rateLimiters.auth;
+  }
+
+  if (limiter) {
+    const { success } = await limiter.limit(ip);
+    if (!success) {
+      return new NextResponse('Too Many Requests', { status: 429 });
+    }
+  }
+
   // Allow the load-test request to bypass Clerk protection on staging only.
   // The actual token verification and user resolution happen in getCurrentUser().
   if (isLoadTestRequest(req)) {

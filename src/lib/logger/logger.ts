@@ -1,88 +1,36 @@
-export type LogLevel = 'debug' | 'info' | 'warn' | 'error' | 'fatal';
-export type ErrorCategory = 'network' | 'validation' | 'database' | 'auth' | 'internal' | 'external_api';
+import pino from 'pino';
 
-export interface LoggerContext {
-  tenantId?: string;
-  requestId?: string;
-  correlationId?: string;
-  userId?: string;
-  durationMs?: number;
-  [key: string]: any;
-}
+const isProduction = process.env.NODE_ENV === 'production';
 
-export interface ErrorContext extends LoggerContext {
-  category?: ErrorCategory;
-  isFatal?: boolean;
-}
-
-// Abstraction for future OTel/Sentry integrations
-export interface ObservabilityProvider {
-  captureException(error: Error, context?: ErrorContext): void;
-  captureMessage(message: string, level: LogLevel, context?: LoggerContext): void;
-}
-
-export class DefaultObservabilityProvider implements ObservabilityProvider {
-  captureException(error: Error, context?: ErrorContext): void {
-    // Scaffold for Sentry.captureException
-  }
-  
-  captureMessage(message: string, level: LogLevel, context?: LoggerContext): void {
-    // Scaffold for Sentry.captureMessage or OTel traces
-  }
-}
+export const logger = pino({
+  level: process.env.LOG_LEVEL || 'info',
+  ...(isProduction ? {} : {
+    transport: {
+      target: 'pino-pretty',
+      options: {
+        colorize: true,
+      },
+    },
+  }),
+});
 
 export class Logger {
-  private static observability: ObservabilityProvider = new DefaultObservabilityProvider();
-
-  private static sanitize(context: any): any {
-    if (!context) return undefined;
-    const sanitized = { ...context };
-    const secretKeys = ['password', 'token', 'secret', 'key', 'credential'];
-    
-    for (const key of Object.keys(sanitized)) {
-      if (secretKeys.some(sk => key.toLowerCase().includes(sk))) {
-        sanitized[key] = '[REDACTED]';
-      }
-    }
-    return sanitized;
+  static info(msg: string, ...args: any[]) { logger.info({ args }, msg); }
+  static error(msg: string, ...args: any[]) { logger.error({ args }, msg); }
+  static warn(msg: string, ...args: any[]) { logger.warn({ args }, msg); }
+  static debug(msg: string, ...args: any[]) { logger.debug({ args }, msg); }
+  static fatal(msg: string, ...args: any[]) { logger.fatal({ args }, msg); }
+  static time(label: string): () => number { 
+    const start = Date.now();
+    return () => Date.now() - start;
   }
-
-  private static log(level: LogLevel, message: string, context?: LoggerContext, error?: Error) {
-    const sanitizedContext = this.sanitize(context);
-    const logPayload: any = {
-      level,
-      message,
-      timestamp: new Date().toISOString(),
-      ...sanitizedContext
-    };
-
-    if (error) {
-      logPayload.error = error.message;
-      logPayload.stack = error.stack;
-    }
-
-    if (level === 'error' || level === 'fatal') {
-      console.error(JSON.stringify(logPayload));
-      if (error) this.observability.captureException(error, sanitizedContext);
-    } else if (level === 'warn') {
-      console.warn(JSON.stringify(logPayload));
-    } else {
-      console.log(JSON.stringify(logPayload));
-    }
-    
-    this.observability.captureMessage(message, level, sanitizedContext);
-  }
-
-  static debug(message: string, context?: LoggerContext) { this.log('debug', message, context); }
-  static info(message: string, context?: LoggerContext) { this.log('info', message, context); }
-  static warn(message: string, context?: LoggerContext) { this.log('warn', message, context); }
-  static error(message: string, error: Error, context?: ErrorContext) { this.log('error', message, context, error); }
-  static fatal(message: string, error: Error, context?: ErrorContext) { 
-    this.log('fatal', message, { ...context, isFatal: true }, error); 
-  }
-  
-  static time(operationName: string): () => number {
-    const start = performance.now();
-    return () => Math.round(performance.now() - start);
+  info(msg: string, ...args: any[]) { logger.info({ args }, msg); }
+  error(msg: string, ...args: any[]) { logger.error({ args }, msg); }
+  warn(msg: string, ...args: any[]) { logger.warn({ args }, msg); }
+  debug(msg: string, ...args: any[]) { logger.debug({ args }, msg); }
+  fatal(msg: string, ...args: any[]) { logger.fatal({ args }, msg); }
+  time(label: string): () => number {
+    const start = Date.now();
+    return () => Date.now() - start;
   }
 }

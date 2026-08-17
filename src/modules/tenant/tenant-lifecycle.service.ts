@@ -1,5 +1,6 @@
 import prisma from '@/../database/utils/prisma';
 import { requireAuth } from '@/lib/auth';
+import { invalidateTenantCache } from '@/modules/tenant/tenant.service';
 
 export async function requestTenantDeletion(tenantId: string, reason: string) {
   const user = await requireAuth();
@@ -39,6 +40,8 @@ export async function requestTenantDeletion(tenantId: string, reason: string) {
       metadata: { reason }
     }
   });
+
+  await invalidateTenantCache(tenantId);
 
   return updatedTenant;
 }
