@@ -112,6 +112,18 @@ export async function updateIncidentStatus(input: UpdateIncidentStatusInput) {
     const incident = await tx.incident.findFirst({ where: { id: input.id, tenantId }, include: { location: true } });
     if (!incident) throw new Error('Incident not found');
 
+    const validTransitions: Record<string, string[]> = {
+      'OPEN': ['ACKNOWLEDGED'],
+      'ACKNOWLEDGED': ['INVESTIGATING'],
+      'INVESTIGATING': ['RESOLVED'],
+      'RESOLVED': ['CLOSED'],
+      'CLOSED': []
+    };
+
+    if (!validTransitions[incident.status].includes(input.status)) {
+      throw new Error(`Invalid status transition from ${incident.status} to ${input.status}`);
+    }
+
     const updated = await tx.incident.update({
       where: { id: input.id },
       data: { 

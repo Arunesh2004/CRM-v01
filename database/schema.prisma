@@ -1129,6 +1129,7 @@ model WebhookEvent {
 
 enum IncidentStatus {
   OPEN
+  ACKNOWLEDGED
   INVESTIGATING
   RESOLVED
   CLOSED

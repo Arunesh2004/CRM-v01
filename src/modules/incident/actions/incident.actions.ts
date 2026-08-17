@@ -1,16 +1,18 @@
 'use server'
 import { sanitizeClientError } from '@/lib/errors/client-safe-error';
-
-import { requireAuth, requireTenant, requirePermission } from '@/lib/auth';
-import { UpdateIncidentStatusSchema, AssignIncidentSchema } from '../validators/incident.schema';
 import * as incidentService from '../incident.service';
-import { z } from 'zod';
+
+export async function createIncidentAction(payload: any) {
+  try {
+    const result = await incidentService.createIncident(payload);
+    return { success: true, data: result };
+  } catch (error: any) {
+    return { success: false, error: sanitizeClientError(error) };
+  }
+}
 
 export async function getIncidentsAction() {
   try {
-    await requireAuth();
-    await requireTenant();
-    
     const result = await incidentService.getIncidents();
     return { success: true, data: result };
   } catch (error: any) {
@@ -18,26 +20,27 @@ export async function getIncidentsAction() {
   }
 }
 
-export async function updateIncidentStatusAction(payload: z.infer<typeof UpdateIncidentStatusSchema>) {
+export async function getIncidentByIdAction(id: string) {
   try {
-    const validatedData = UpdateIncidentStatusSchema.parse(payload);
-    await requireAuth();
-    await requireTenant();
-    
-    const result = await incidentService.updateIncidentStatus(validatedData);
+    const result = await incidentService.getIncidentById(id);
     return { success: true, data: result };
   } catch (error: any) {
     return { success: false, error: sanitizeClientError(error) };
   }
 }
 
-export async function assignIncidentAction(payload: z.infer<typeof AssignIncidentSchema>) {
+export async function updateIncidentStatusAction(payload: any) {
   try {
-    const validatedData = AssignIncidentSchema.parse(payload);
-    await requireAuth();
-    await requireTenant();
-    
-    const result = await incidentService.assignIncident(validatedData);
+    const result = await incidentService.updateIncidentStatus(payload);
+    return { success: true, data: result };
+  } catch (error: any) {
+    return { success: false, error: sanitizeClientError(error) };
+  }
+}
+
+export async function assignIncidentAction(payload: any) {
+  try {
+    const result = await incidentService.assignIncident(payload);
     return { success: true, data: result };
   } catch (error: any) {
     return { success: false, error: sanitizeClientError(error) };
@@ -46,9 +49,6 @@ export async function assignIncidentAction(payload: z.infer<typeof AssignInciden
 
 export async function resolveIncidentAction(id: string) {
   try {
-    await requireAuth();
-    await requireTenant();
-    
     const result = await incidentService.resolveIncident(id);
     return { success: true, data: result };
   } catch (error: any) {
@@ -58,9 +58,6 @@ export async function resolveIncidentAction(id: string) {
 
 export async function deleteIncidentAction(id: string) {
   try {
-    await requireAuth();
-    await requireTenant();
-    
     const result = await incidentService.deleteIncident(id);
     return { success: true, data: result };
   } catch (error: any) {
