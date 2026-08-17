@@ -85,9 +85,9 @@ export default async function DashboardPage() {
     prisma.customer.count({ where: { tenantId, deletedAt: null } }),
     prisma.lead.count({ where: { tenantId, status: { notIn: ["LOST", "CONVERTED"] } } }),
     prisma.task.count({ where: { tenantId, status: "PENDING" } }),
-    prisma.call.count({ where: { tenantId } }),
-    prisma.message.count({ where: { tenantId } }),
-    prisma.emailMessage.count({ where: { tenantId } }),
+    prisma.callLog.count({ where: { tenantId } }),
+    prisma.chatMessage.count({ where: { tenantId } }),
+    prisma.mailMessage.count({ where: { tenantId } }),
     prisma.incident.count({ where: { tenantId } }),
     prisma.activityTimeline.findMany({
       where: { tenantId },
@@ -196,7 +196,7 @@ export default async function DashboardPage() {
               />
             ) : (
               <div className="space-y-1 flex-1 overflow-y-auto">
-                {recentActivities.map((activity, idx) => {
+                {recentActivities.map((activity: any, idx: number) => {
                   const colors = [colorMap.violet, colorMap.cyan, colorMap.emerald, colorMap.amber, colorMap.rose];
                   const hex = colors[idx % colors.length];
                   return (

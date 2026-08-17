@@ -220,8 +220,8 @@ export async function simulateAIEvent(input: SimulateAIEventInput) {
   });
 
   if (result.incidentId) {
-    import('../communication/notification.service').then(({ sendIncidentNotification }) => {
-      sendIncidentNotification(result.incidentId!, tenantId, user.id).catch(console.error);
+    import('../communication/notification.service').then(({ NotificationService }) => {
+      NotificationService.createNotification(tenantId, user.id, 'ALERT', 'Camera AI Event', 'AI detected a significant event.').catch(console.error);
     });
   }
 

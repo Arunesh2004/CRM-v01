@@ -6,7 +6,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } f
 import { Phone, PhoneCall, PhoneOff, Loader2, CheckCircle2 } from 'lucide-react';
 import { toast } from 'sonner';
 // Assume a server action exists in crm/actions/call.actions.ts
-import { initiateCallAction } from '@/modules/crm/actions/call.actions'; 
+import { initiateCallAction } from '@/app/(crm)/customers/[id]/actions'; 
 
 export function CallCustomerButton({ customerId, phoneNumber }: { customerId: string, phoneNumber?: string }) {
   const [open, setOpen] = useState(false);
@@ -21,7 +21,7 @@ export function CallCustomerButton({ customerId, phoneNumber }: { customerId: st
     setCallState('CALLING');
     
     try {
-      const res = await initiateCallAction({ customerId, to: phoneNumber });
+      const res = await initiateCallAction(customerId, phoneNumber);
       
       if (res.success) {
         // Simulate ring delay

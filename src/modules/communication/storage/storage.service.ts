@@ -8,10 +8,11 @@ export async function generateRecordingAccessUrl(recordingId: string) {
   await requirePermission('COMMUNICATION', 'READ');
   const prisma = withTenant(tenantId);
 
-  const recording = await prisma.callRecording.findFirst({
+  const recording = await prisma.communicationAttachment.findFirst({
     where: {
       id: recordingId,
-      tenantId: tenantId
+      tenantId: tenantId,
+      attachedToType: 'CALL'
     }
   });
 

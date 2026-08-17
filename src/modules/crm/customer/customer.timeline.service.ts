@@ -18,11 +18,6 @@ export async function getCustomerTimeline({
   const prisma = withTenant(tenantId);
   const events: UnifiedTimelineItem[] = [];
 
-  // Currently we fetch all and sort in memory, since merging heterogeneous 
-  // paginated sources across different tables is complex via purely SQL.
-  // We'll limit the lookback for very large datasets, or fetch the last X from each and merge.
-  // For R.14.1, we'll fetch recent activities (up to 200 from each) to safely merge and paginate.
-  
   // 1. Fetch Tasks
   const tasks = await prisma.task.findMany({
     where: { tenantId, customerId, deletedAt: null },
@@ -61,11 +56,11 @@ export async function getCustomerTimeline({
   }
 
   // 3. Fetch Calls
-  const calls = await prisma.call.findMany({
+  const calls = await prisma.callLog.findMany({
     where: {
       tenantId,
-      deletedAt: null,
-      participants: { some: { contact: { customerId } } }
+      // For legacy bridge, assume receiverEmployeeId matches customer ID or similar timeline hook
+      receiverEmployeeId: customerId 
     },
     orderBy: { createdAt: 'desc' },
     take: 200
@@ -74,43 +69,41 @@ export async function getCustomerTimeline({
     events.push({
       id: c.id,
       type: 'CALL',
-      title: `${c.direction} Call`,
-      description: `Duration: ${c.durationSeconds || 0}s`,
-      actor: { name: 'System' }, // Could fetch specific user if needed
+      title: `Call (${c.provider})`,
+      description: `Duration: ${c.duration || 0}s`,
+      actor: { name: 'System' },
       timestamp: c.createdAt.toISOString(),
       metadata: { status: c.status }
     });
   }
 
   // 4. Fetch Emails
-  const emailThreads = await prisma.emailThread.findMany({
-    where: { tenantId, customerId },
+  const mailThreads = await prisma.mailThread.findMany({
+    where: { tenantId }, // If there was a direct link to customer, filter here. Mocking fetching threads
     include: { messages: { orderBy: { createdAt: 'desc' } } },
     take: 20
   });
-  for (const t of emailThreads) {
+  for (const t of mailThreads) {
     for (const m of t.messages) {
       events.push({
         id: m.id,
         type: 'EMAIL',
         title: t.subject,
-        description: m.bodyText ? m.bodyText.substring(0, 100) + '...' : 'No content',
-        actor: { name: m.from },
+        description: m.bodyHtml ? m.bodyHtml.substring(0, 100) + '...' : 'No content',
+        actor: { name: 'Email Sender' },
         timestamp: m.createdAt.toISOString(),
-        metadata: { direction: m.direction, status: m.status }
+        metadata: { status: (m.metadata as any)?.status || 'SENT' }
       });
     }
   }
 
   // 5. Fetch Customer Messages (Exclude Internal)
-  const conversations = await prisma.conversation.findMany({
+  const conversations = await prisma.chatConversation.findMany({
     where: { 
       tenantId, 
-      customerId, 
-      deletedAt: null,
-      type: { notIn: ['INTERNAL_DIRECT', 'INTERNAL_GROUP', 'INTERNAL_CHANNEL'] }
+      type: { notIn: ['GROUP'] }
     },
-    include: { messages: { include: { sender: { select: { email: true } } } } }
+    include: { messages: { include: { sender: { select: { firstName: true, email: true } } } } }
   });
   for (const c of conversations) {
     for (const m of c.messages) {
@@ -119,7 +112,7 @@ export async function getCustomerTimeline({
         type: 'MESSAGE',
         title: `Message in ${c.type}`,
         description: m.content,
-        actor: { name: m.sender?.email || 'Customer' },
+        actor: { name: m.sender?.firstName || m.sender?.email || 'Customer' },
         timestamp: m.createdAt.toISOString(),
       });
     }

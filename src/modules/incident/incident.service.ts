@@ -60,8 +60,8 @@ export async function createIncident(input: CreateIncidentInput) {
   });
 
   // Trigger notification asynchronously
-  import('../communication/notification.service').then(({ sendIncidentNotification }) => {
-    sendIncidentNotification(incident.id, tenantId, user.id).catch(console.error);
+  import('../communication/notification.service').then(({ NotificationService }) => {
+    NotificationService.createNotification(tenantId, user.id, 'ALERT', `Incident Generated: ${incident.title}`, incident.description || 'New security incident requires attention').catch(console.error);
   });
 
   return incident;

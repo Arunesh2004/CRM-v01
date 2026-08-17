@@ -82,7 +82,7 @@ export async function getCommunicationMetrics(startDate?: Date, endDate?: Date) 
 
   const successRate = total > 0 ? (success / total) * 100 : 0;
 
-  const calls = await prisma.call.count({ where: { tenantId, ...dateFilter } });
+  const calls = await prisma.callLog.count({ where: { tenantId, ...dateFilter } });
 
   return { total, email, sms, whatsapp, calls, successRate: successRate.toFixed(1) };
 }

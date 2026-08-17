@@ -117,9 +117,14 @@ export async function exportTenant(tenantId: string, requestorUserId: string, ex
         await exportTable('customers', prismaAdmin.customer);
         await exportTable('leads', prismaAdmin.lead);
         await exportTable('tasks', prismaAdmin.task);
-        await exportTable('conversations', prismaAdmin.conversation);
-        await exportTable('messages', prismaAdmin.message);
-        await exportTable('calls', prismaAdmin.call);
+        await exportTable('chatConversation', prismaAdmin.chatConversation);
+        await exportTable('chatParticipant', prismaAdmin.chatParticipant);
+        await exportTable('chatMessage', prismaAdmin.chatMessage);
+        await exportTable('communicationAttachment', prismaAdmin.communicationAttachment);
+        await exportTable('mailThread', prismaAdmin.mailThread);
+        await exportTable('mailRecipient', prismaAdmin.mailRecipient);
+        await exportTable('mailMessage', prismaAdmin.mailMessage);
+        await exportTable('callLog', prismaAdmin.callLog);
         await exportTable('incidents', prismaAdmin.incident);
         await exportTable('auditLogs', prismaAdmin.auditLog, true);
 

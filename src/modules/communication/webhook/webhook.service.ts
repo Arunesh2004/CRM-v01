@@ -1,7 +1,7 @@
 import prisma from '../../../../database/utils/prisma';
 import { ProviderFactory } from '../../../lib/providers/provider.factory';
 import crypto from 'crypto';
-import { MessageStatus } from '@prisma/client';
+
 
 export class WebhookSignatureService {
   /**
@@ -77,27 +77,32 @@ export class WebhookSignatureService {
   private static async handleEvent(providerName: string, eventType: string, payload: any) {
     if (providerName === 'whatsapp' || providerName === 'twilio') {
       const providerMessageId = payload.messageId; // Mock mapping
-      const newStatus = eventType === 'delivered' ? MessageStatus.DELIVERED : (eventType === 'failed' ? MessageStatus.FAILED : MessageStatus.SENT);
+      const newStatus = eventType === 'delivered' ? 'DELIVERED' : (eventType === 'failed' ? 'FAILED' : 'SENT');
       
       if (!providerMessageId) return;
 
       // Find message by a provider message ID (mocked lookup or actual if stored in future)
-      // Since our Message model doesn't store providerMessageId directly on Message, we match via idempotency or fallback
-      // For the simulation script we might not need this exact mapping, but we must protect state transitions.
-      const msg = await prisma.message.findFirst({ where: { idempotencyKey: providerMessageId } });
+      const msg = await prisma.chatMessage.findFirst({ 
+        where: { 
+          metadata: { path: ['idempotencyKey'], equals: providerMessageId } 
+        } 
+      });
       
       if (msg) {
+        const metadata = (msg.metadata as any) || {};
+        const currentStatus = metadata.status;
+
         // Out of order transition check:
-        if (msg.status === MessageStatus.DELIVERED && newStatus !== MessageStatus.DELIVERED) {
+        if (currentStatus === 'DELIVERED' && newStatus !== 'DELIVERED') {
           throw new Error('Invalid state transition: Already delivered');
         }
-        if (msg.status === MessageStatus.FAILED) {
+        if (currentStatus === 'FAILED') {
            throw new Error('Invalid state transition: Already failed');
         }
 
-        await prisma.message.update({
+        await prisma.chatMessage.update({
           where: { id: msg.id },
-          data: { status: newStatus }
+          data: { metadata: { ...metadata, status: newStatus } }
         });
       }
     }

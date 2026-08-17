@@ -259,9 +259,14 @@ async function processRestore(job: any) {
             await insert(tx.customer, payload.customers);
             await insert(tx.lead, payload.leads);
             await insert(tx.task, payload.tasks);
-            await insert(tx.conversation, payload.conversations);
-            await insert(tx.message, payload.messages);
-            await insert(tx.call, payload.calls);
+            await insert(tx.chatConversation, payload.chatConversation);
+            await insert(tx.chatParticipant, payload.chatParticipant);
+            await insert(tx.chatMessage, payload.chatMessage);
+            await insert(tx.communicationAttachment, payload.communicationAttachment);
+            await insert(tx.mailThread, payload.mailThread);
+            await insert(tx.mailRecipient, payload.mailRecipient);
+            await insert(tx.mailMessage, payload.mailMessage);
+            await insert(tx.callLog, payload.callLog);
             await insert(tx.incident, payload.incidents);
             // Ignore audit logs from backup to avoid overwriting immutable triggers
           }, { maxWait: 10000, timeout: 300000 });

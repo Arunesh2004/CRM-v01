@@ -114,24 +114,23 @@ model Tenant {
   activityTimelines  ActivityTimeline[]
 
   // Communication
-  calls                   Call[]
-  callParticipants        CallParticipant[]
-  callRecordings          CallRecording[]
   meetings                Meeting[]
   meetingParticipants     MeetingParticipant[]
   demoStorageFiles        DemoStorage[]
   documents               Document[]
-  emailThreads            EmailThread[]
-  emailMessages           EmailMessage[]
-  emailAttachments        EmailAttachment[]
-  conversations           Conversation[]
-  conversationMembers     ConversationMember[]
-  messages                Message[]
-  messageMentions         MessageMention[]
-  messageAttachments      MessageAttachment[]
-  messageReadStatuses     MessageReadStatus[]
   notifications           Notification[]
   notificationPreferences NotificationPreference[]
+
+  chatConversations        ChatConversation[]
+  chatParticipants         ChatParticipant[]
+  chatMessages             ChatMessage[]
+  chatReadReceipts         ChatReadReceipt[]
+  mailThreads              MailThread[]
+  mailRecipients           MailRecipient[]
+  mailMessages             MailMessage[]
+  mailDrafts               MailDraft[]
+  communicationAttachments CommunicationAttachment[]
+  callLogs                 CallLog[]
 
   // CCTV
   cameras           Camera[]
@@ -141,8 +140,6 @@ model Tenant {
   cameraEvents      CameraEvent[]
   aiEvents          AIEvent[]
   incidents         Incident[]
-  callTranscripts   CallTranscript[]
-  aisummaries       AISummary[]
   webhookEvents     WebhookEvent[]
 
   // DR Lock
@@ -155,6 +152,7 @@ model Tenant {
   eventOutboxes          EventOutbox[]
   aiConversations        AIConversation[]
   aiConversationMessages AIConversationMessage[]
+  userPresences          UserPresence[]
 }
 
 model TenantBootstrap {
@@ -208,20 +206,24 @@ model User {
   createdDeals      Deal[]             @relation("DealCreatedUser")
 
   // Communication
-  callParticipants       CallParticipant[]
-  conversationMembers    ConversationMember[]
-  sentMessages           Message[]
-  messageMentions        MessageMention[]
-  messageReadStatuses    MessageReadStatus[]
-  notifications          Notification[]
-  notificationPreference NotificationPreference?
-  incidents              Incident[]
-  deletedAt              DateTime?
-  crmComments            CRMComment[]
-  dealStageHistories     DealStageHistory[]
-  meetingParticipants    MeetingParticipant[]
-  aiConversations        AIConversation[]
-  uploadedDocuments      Document[]
+  notifications            Notification[]
+  notificationPreference   NotificationPreference?
+  chatParticipants         ChatParticipant[]
+  sentChatMessages         ChatMessage[]
+  chatReadReceipts         ChatReadReceipt[]
+  mailRecipients           MailRecipient[]
+  sentMailMessages         MailMessage[]
+  mailDrafts               MailDraft[]
+  communicationAttachments CommunicationAttachment[]
+  userPresences            UserPresence[]
+
+  incidents           Incident[]
+  deletedAt           DateTime?
+  crmComments         CRMComment[]
+  dealStageHistories  DealStageHistory[]
+  meetingParticipants MeetingParticipant[]
+  aiConversations     AIConversation[]
+  uploadedDocuments   Document[]
 
   @@unique([tenantId, email])
   @@unique([tenantId, employeeId])
@@ -397,67 +399,10 @@ enum DealStatus {
 // COMMUNICATION ENUMS
 // -----------------------------------------------------------------------------
 
-enum CallDirection {
-  INBOUND
-  OUTBOUND
-}
-
-enum CallStatus {
-  QUEUED
-  RINGING
-  IN_PROGRESS
-  COMPLETED
-  FAILED
-  MISSED
-}
-
-enum EmailDirection {
-  INBOUND
-  OUTBOUND
-}
-
-enum EmailDeliveryStatus {
-  QUEUED
-  SENDING
-  SENT
-  DELIVERED
-  BOUNCED
-  COMPLAINED
-  FAILED
-}
-
-enum ConversationType {
-  INTERNAL_DIRECT
-  INTERNAL_GROUP
-  INTERNAL_CHANNEL
-  CUSTOMER_CHAT
-  WHATSAPP
-}
-
-enum ConversationMemberRole {
-  ADMIN
-  MEMBER
-}
-
-enum MessageType {
-  TEXT
-  FILE
-  SYSTEM
-}
-
 enum NotificationType {
   ALERT
   REMINDER
   SYSTEM
-}
-
-enum MessageStatus {
-  QUEUED
-  PROCESSING
-  SENT
-  DELIVERED
-  FAILED
-  CANCELLED
 }
 
 enum OutboxStatus {
@@ -516,8 +461,6 @@ model Customer {
   documents    Document[]
 
   // Communication
-  emailThreads  EmailThread[]
-  conversations Conversation[]
 
   @@unique([tenantId, normalizedName])
   @@index([tenantId])
@@ -541,7 +484,6 @@ model CustomerContact {
   customer Customer @relation(fields: [customerId], references: [id], onDelete: Cascade)
 
   // Communication
-  callParticipants    CallParticipant[]
   meetingParticipants MeetingParticipant[]
 
   @@index([tenantId, customerId])
@@ -641,99 +583,6 @@ model ActivityTimeline {
 // COMMUNICATION MODELS
 // -----------------------------------------------------------------------------
 
-model Call {
-  id              String        @id @default(uuid())
-  tenantId        String
-  providerId      String?
-  direction       CallDirection
-  status          CallStatus
-  durationSeconds Int?
-  startedAt       DateTime?
-  endedAt         DateTime?
-  createdAt       DateTime      @default(now())
-  updatedAt       DateTime      @updatedAt
-
-  tenant       Tenant            @relation(fields: [tenantId], references: [id])
-  participants CallParticipant[]
-  recordings   CallRecording[]
-  transcripts  CallTranscript[]
-  summaries    AISummary[]
-  deletedAt    DateTime?
-
-  @@index([tenantId, createdAt])
-  @@index([tenantId, startedAt])
-  @@index([tenantId, providerId])
-}
-
-model CallParticipant {
-  id          String   @id @default(uuid())
-  tenantId    String
-  callId      String
-  userId      String?
-  contactId   String?
-  phoneNumber String
-  createdAt   DateTime @default(now())
-
-  tenant  Tenant           @relation(fields: [tenantId], references: [id])
-  call    Call             @relation(fields: [callId], references: [id], onDelete: Cascade)
-  user    User?            @relation(fields: [userId], references: [id], onDelete: SetNull)
-  contact CustomerContact? @relation(fields: [contactId], references: [id], onDelete: SetNull)
-
-  @@index([tenantId, callId])
-  @@index([tenantId, userId])
-  @@index([tenantId, contactId])
-}
-
-model CallRecording {
-  id         String   @id @default(uuid())
-  tenantId   String
-  callId     String
-  storageKey String
-  storageUrl String?
-  duration   Int?
-  sizeBytes  Int?
-  metadata   Json?
-  createdAt  DateTime @default(now())
-
-  tenant    Tenant    @relation(fields: [tenantId], references: [id])
-  call      Call      @relation(fields: [callId], references: [id], onDelete: Cascade)
-  deletedAt DateTime?
-
-  @@index([tenantId, callId])
-  @@index([tenantId, createdAt])
-}
-
-model CallTranscript {
-  id        String   @id @default(uuid())
-  tenantId  String
-  callId    String
-  content   String?
-  status    String   @default("PROCESSING") // PROCESSING, COMPLETED, FAILED
-  createdAt DateTime @default(now())
-
-  tenant    Tenant    @relation(fields: [tenantId], references: [id])
-  call      Call      @relation(fields: [callId], references: [id], onDelete: Cascade)
-  deletedAt DateTime?
-
-  @@index([tenantId, callId])
-}
-
-model AISummary {
-  id        String   @id @default(uuid())
-  tenantId  String
-  callId    String
-  summary   String?
-  sentiment String?
-  status    String   @default("PROCESSING") // PROCESSING, COMPLETED, FAILED
-  createdAt DateTime @default(now())
-
-  tenant    Tenant    @relation(fields: [tenantId], references: [id])
-  call      Call      @relation(fields: [callId], references: [id], onDelete: Cascade)
-  deletedAt DateTime?
-
-  @@index([tenantId, callId])
-}
-
 // -----------------------------------------------------------------------------
 // VIDEO MEETING MODELS
 // -----------------------------------------------------------------------------
@@ -814,187 +663,6 @@ model Document {
 
   @@index([tenantId, customerId])
   @@index([tenantId, taskId])
-}
-
-model EmailThread {
-  id               String   @id @default(uuid())
-  tenantId         String
-  subject          String
-  externalThreadId String?
-  customerId       String?
-  createdAt        DateTime @default(now())
-  updatedAt        DateTime @updatedAt
-
-  tenant   Tenant         @relation(fields: [tenantId], references: [id])
-  customer Customer?      @relation(fields: [customerId], references: [id], onDelete: SetNull)
-  messages EmailMessage[]
-
-  @@index([tenantId, createdAt])
-  @@index([tenantId, customerId])
-}
-
-model EmailMessage {
-  id        String         @id @default(uuid())
-  tenantId  String
-  threadId  String
-  direction EmailDirection
-  from      String
-  to        String
-  cc        String?
-  bcc       String?
-  bodyHtml  String?
-  bodyText  String?
-
-  // Tracking
-  providerMessageId String?             @unique
-  status            EmailDeliveryStatus @default(QUEUED)
-  failureReason     String?
-  unsubscribeToken  String?
-  domainVerified    Boolean             @default(false)
-
-  // Threading metadata
-  messageIdHeader String?
-  inReplyTo       String?
-
-  // Timestamps
-  sentAt      DateTime?
-  deliveredAt DateTime?
-  failedAt    DateTime?
-  bouncedAt   DateTime?
-  createdAt   DateTime  @default(now())
-  updatedAt   DateTime  @updatedAt
-
-  tenant      Tenant            @relation(fields: [tenantId], references: [id])
-  thread      EmailThread       @relation(fields: [threadId], references: [id], onDelete: Cascade)
-  attachments EmailAttachment[]
-
-  @@index([tenantId, threadId])
-  @@index([tenantId, createdAt])
-}
-
-model EmailAttachment {
-  id         String   @id @default(uuid())
-  tenantId   String
-  messageId  String
-  fileName   String
-  mimeType   String
-  storageKey String
-  metadata   Json?
-  createdAt  DateTime @default(now())
-
-  tenant  Tenant       @relation(fields: [tenantId], references: [id])
-  message EmailMessage @relation(fields: [messageId], references: [id], onDelete: Cascade)
-
-  @@index([tenantId, messageId])
-}
-
-model Conversation {
-  id         String           @id @default(uuid())
-  tenantId   String
-  type       ConversationType
-  name       String?
-  customerId String?
-  createdBy  String?
-  createdAt  DateTime         @default(now())
-  updatedAt  DateTime         @updatedAt
-
-  tenant    Tenant               @relation(fields: [tenantId], references: [id])
-  customer  Customer?            @relation(fields: [customerId], references: [id], onDelete: SetNull)
-  messages  Message[]
-  members   ConversationMember[]
-  deletedAt DateTime?
-
-  @@index([tenantId, createdAt])
-  @@index([tenantId, customerId])
-}
-
-model ConversationMember {
-  id             String                 @id @default(uuid())
-  tenantId       String
-  conversationId String
-  userId         String
-  role           ConversationMemberRole @default(MEMBER)
-  joinedAt       DateTime               @default(now())
-
-  tenant       Tenant       @relation(fields: [tenantId], references: [id])
-  conversation Conversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
-  user         User         @relation(fields: [userId], references: [id], onDelete: Cascade)
-
-  @@unique([conversationId, userId])
-  @@index([tenantId, conversationId])
-  @@index([tenantId, userId])
-}
-
-model Message {
-  id             String        @id @default(uuid())
-  tenantId       String
-  conversationId String
-  senderId       String?
-  content        String
-  messageType    MessageType   @default(TEXT)
-  status         MessageStatus @default(QUEUED)
-  idempotencyKey String?
-  editedAt       DateTime?
-  deletedAt      DateTime?
-  createdAt      DateTime      @default(now())
-  updatedAt      DateTime      @updatedAt
-
-  tenant       Tenant              @relation(fields: [tenantId], references: [id])
-  conversation Conversation        @relation(fields: [conversationId], references: [id], onDelete: Cascade)
-  sender       User?               @relation(fields: [senderId], references: [id], onDelete: SetNull)
-  attachments  MessageAttachment[]
-  readStatuses MessageReadStatus[]
-  mentions     MessageMention[]
-
-  @@unique([tenantId, idempotencyKey])
-  @@index([tenantId, conversationId])
-  @@index([tenantId, createdAt])
-}
-
-model MessageMention {
-  id        String   @id @default(uuid())
-  tenantId  String
-  messageId String
-  userId    String
-  createdAt DateTime @default(now())
-
-  tenant  Tenant  @relation(fields: [tenantId], references: [id])
-  message Message @relation(fields: [messageId], references: [id], onDelete: Cascade)
-  user    User    @relation(fields: [userId], references: [id], onDelete: Cascade)
-
-  @@index([tenantId, messageId])
-  @@index([tenantId, userId])
-}
-
-model MessageAttachment {
-  id         String   @id @default(uuid())
-  tenantId   String
-  messageId  String
-  storageKey String
-  mimeType   String
-  metadata   Json?
-  createdAt  DateTime @default(now())
-
-  tenant  Tenant  @relation(fields: [tenantId], references: [id])
-  message Message @relation(fields: [messageId], references: [id], onDelete: Cascade)
-
-  @@index([tenantId, messageId])
-}
-
-model MessageReadStatus {
-  id        String   @id @default(uuid())
-  tenantId  String
-  messageId String
-  userId    String
-  readAt    DateTime @default(now())
-
-  tenant  Tenant  @relation(fields: [tenantId], references: [id])
-  message Message @relation(fields: [messageId], references: [id], onDelete: Cascade)
-  user    User    @relation(fields: [userId], references: [id], onDelete: Cascade)
-
-  @@unique([messageId, userId])
-  @@index([tenantId, messageId])
-  @@index([tenantId, userId])
 }
 
 model Notification {
@@ -1185,6 +853,251 @@ model AIEvent {
   deletedAt DateTime?
 
   @@index([tenantId, cameraId, timestamp])
+}
+
+// -----------------------------------------------------------------------------
+// NEW COMMUNICATION ENUMS & MODELS
+// -----------------------------------------------------------------------------
+
+enum ChatConversationType {
+  DIRECT
+  GROUP
+}
+
+enum ChatParticipantRole {
+  ADMIN
+  MEMBER
+}
+
+enum MailDraftStatus {
+  DRAFT
+}
+
+enum CallProvider {
+  INTERNAL
+  EXTERNAL
+}
+
+enum CallDirection {
+  INBOUND
+  OUTBOUND
+}
+
+enum CallStatus {
+  COMPLETED
+  MISSED
+  FAILED
+}
+
+enum UserPresenceStatus {
+  ONLINE
+  OFFLINE
+  AWAY
+  BUSY
+}
+
+enum AttachmentType {
+  CHAT
+  MAIL
+  CALL
+}
+
+model ChatConversation {
+  id        String               @id @default(uuid())
+  tenantId  String
+  type      ChatConversationType
+  name      String?
+  createdAt DateTime             @default(now())
+  updatedAt DateTime             @updatedAt
+  deletedAt DateTime?
+
+  tenant       Tenant            @relation(fields: [tenantId], references: [id])
+  participants ChatParticipant[]
+  messages     ChatMessage[]
+
+  @@index([tenantId, createdAt])
+}
+
+model ChatParticipant {
+  id             String              @id @default(uuid())
+  tenantId       String
+  conversationId String
+  userId         String
+  role           ChatParticipantRole @default(MEMBER)
+  isMuted        Boolean             @default(false)
+  archivedAt     DateTime?
+  joinedAt       DateTime            @default(now())
+
+  tenant       Tenant           @relation(fields: [tenantId], references: [id])
+  conversation ChatConversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+  user         User             @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([conversationId, userId])
+  @@index([tenantId, conversationId])
+  @@index([tenantId, userId])
+}
+
+model ChatMessage {
+  id             String    @id @default(uuid())
+  tenantId       String
+  conversationId String
+  senderId       String?
+  content        String
+  isDeleted      Boolean   @default(false)
+  deletedAt      DateTime?
+  editedAt       DateTime?
+  metadata       Json?
+  createdAt      DateTime  @default(now())
+  updatedAt      DateTime  @updatedAt
+
+  tenant       Tenant            @relation(fields: [tenantId], references: [id])
+  conversation ChatConversation  @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+  sender       User?             @relation(fields: [senderId], references: [id], onDelete: SetNull)
+  readReceipts ChatReadReceipt[]
+
+  @@index([tenantId, conversationId, createdAt])
+}
+
+model ChatReadReceipt {
+  id        String   @id @default(uuid())
+  tenantId  String
+  messageId String
+  userId    String
+  readAt    DateTime @default(now())
+
+  tenant  Tenant      @relation(fields: [tenantId], references: [id])
+  message ChatMessage @relation(fields: [messageId], references: [id], onDelete: Cascade)
+  user    User        @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([messageId, userId])
+  @@index([tenantId, messageId])
+}
+
+model MailThread {
+  id        String   @id @default(uuid())
+  tenantId  String
+  subject   String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  tenant   Tenant        @relation(fields: [tenantId], references: [id])
+  messages MailMessage[]
+  drafts   MailDraft[]
+
+  @@index([tenantId, createdAt])
+}
+
+model MailRecipient {
+  id         String    @id @default(uuid())
+  tenantId   String
+  messageId  String
+  userId     String
+  type       String    @default("TO") // TO, CC, BCC
+  isRead     Boolean   @default(false)
+  archivedAt DateTime?
+  createdAt  DateTime  @default(now())
+
+  tenant  Tenant      @relation(fields: [tenantId], references: [id])
+  message MailMessage @relation(fields: [messageId], references: [id], onDelete: Cascade)
+  user    User        @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([tenantId, messageId])
+  @@index([tenantId, userId])
+}
+
+model MailMessage {
+  id        String   @id @default(uuid())
+  tenantId  String
+  threadId  String
+  senderId  String
+  bodyHtml  String?
+  bodyText  String?
+  metadata  Json?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  tenant     Tenant          @relation(fields: [tenantId], references: [id])
+  thread     MailThread      @relation(fields: [threadId], references: [id], onDelete: Cascade)
+  sender     User            @relation(fields: [senderId], references: [id], onDelete: Restrict)
+  recipients MailRecipient[]
+
+  @@index([tenantId, threadId, createdAt])
+}
+
+model MailDraft {
+  id        String   @id @default(uuid())
+  tenantId  String
+  threadId  String?
+  senderId  String
+  subject   String?
+  bodyHtml  String?
+  bodyText  String?
+  toIds     Json? // Array of userIds
+  ccIds     Json?
+  bccIds    Json?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  tenant Tenant      @relation(fields: [tenantId], references: [id])
+  thread MailThread? @relation(fields: [threadId], references: [id], onDelete: SetNull)
+  sender User        @relation(fields: [senderId], references: [id], onDelete: Cascade)
+
+  @@index([tenantId, senderId])
+}
+
+model CommunicationAttachment {
+  id             String         @id @default(uuid())
+  tenantId       String
+  uploaderId     String
+  attachedToType AttachmentType
+  attachedToId   String
+  fileName       String
+  fileType       String
+  storageUrl     String
+  size           Int
+  createdAt      DateTime       @default(now())
+
+  tenant   Tenant @relation(fields: [tenantId], references: [id])
+  uploader User   @relation(fields: [uploaderId], references: [id], onDelete: Restrict)
+
+  @@index([tenantId, attachedToType, attachedToId])
+  @@index([tenantId, uploaderId])
+}
+
+model CallLog {
+  id                 String       @id @default(uuid())
+  tenantId           String
+  callerEmployeeId   String?
+  receiverEmployeeId String?
+  provider           CallProvider @default(INTERNAL)
+  providerCallId     String?
+  duration           Int?
+  status             CallStatus
+  recordingMetadata  Json?
+  metadata           Json?
+  createdAt          DateTime     @default(now())
+  updatedAt          DateTime     @updatedAt
+
+  tenant Tenant @relation(fields: [tenantId], references: [id])
+
+  @@index([tenantId, callerEmployeeId])
+  @@index([tenantId, receiverEmployeeId])
+  @@index([tenantId, createdAt])
+}
+
+model UserPresence {
+  id         String             @id @default(uuid())
+  tenantId   String
+  userId     String             @unique
+  status     UserPresenceStatus @default(OFFLINE)
+  lastSeenAt DateTime           @default(now())
+  createdAt  DateTime           @default(now())
+  updatedAt  DateTime           @updatedAt
+
+  tenant Tenant @relation(fields: [tenantId], references: [id])
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([tenantId, status])
 }
 
 // -----------------------------------------------------------------------------
