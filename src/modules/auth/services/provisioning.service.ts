@@ -129,6 +129,16 @@ export async function synchronizeClerkIdentity(clerkId: string, emailStr: string
 
      if (count === 1) {
        console.log(`[Provisioning] Successfully linked clerkId to invited user ${email}`);
+       
+       const { createAuditLog } = await import('../audit/audit.service');
+       await createAuditLog({
+         tenantId: user.tenantId,
+         actorId: user.id,
+         action: 'EMPLOYEE_ACTIVATED',
+         resource: 'USER',
+         resourceId: user.id
+       });
+
        return { ...user, clerkId, status: 'ACTIVE' };
      } else {
        // Race condition: someone else linked it, or status changed

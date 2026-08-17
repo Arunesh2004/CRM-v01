@@ -5,8 +5,8 @@ import { clerkClient } from '@clerk/nextjs/server';
 
 import { EventBus } from '../core/events/event-bus';
 
-export async function getEmployees(search?: string) {
-  await requireAuth();
+export async function getEmployees(filters?: { search?: string, departmentId?: string, roleName?: string, status?: string }) {
+  const actor = await requireAuth();
   const tenantId = await requireTenant();
   
   // Only owners/admins should manage employees, but members can view them (read permission)
@@ -16,11 +16,51 @@ export async function getEmployees(search?: string) {
 
   const where: any = { 
     tenantId, 
-    clerkId: { not: { startsWith: 'SYSTEM_' } }
+    clerkId: { not: { startsWith: 'SYSTEM_' } },
+    deletedAt: null // Never show hard-deleted
   };
 
-  if (search) {
-    where.email = { contains: search, mode: 'insensitive' };
+  // Role Based Visibility
+  let isTenantAdmin = false;
+  let isDepartmentHead = false;
+  for (const ur of actor.userRoles) {
+    if (ur.role.name === 'TENANT_ADMIN') isTenantAdmin = true;
+    if (ur.role.name === 'DEPARTMENT_HEAD') isDepartmentHead = true;
+  }
+
+  if (!isTenantAdmin && isDepartmentHead) {
+    // Dept Head only sees their department
+    if (!actor.departmentId) {
+       return []; // If they have no department, they see nothing
+    }
+    where.departmentId = actor.departmentId;
+  } else if (!isTenantAdmin && !isDepartmentHead) {
+    // MEMBER sees all allowed employees, but without sensitive fields (handled in UI mapping)
+    // No specific database-level filter needed for members to view the directory
+  }
+
+  if (filters?.search) {
+    where.OR = [
+      { email: { contains: filters.search, mode: 'insensitive' } },
+      { firstName: { contains: filters.search, mode: 'insensitive' } },
+      { lastName: { contains: filters.search, mode: 'insensitive' } },
+      { employeeId: { contains: filters.search, mode: 'insensitive' } },
+    ];
+  }
+  
+  if (filters?.departmentId) {
+    // If Dept Head, they can't override their own department filter (handled by the if block above)
+    if (isTenantAdmin) {
+       where.departmentId = filters.departmentId;
+    }
+  }
+
+  if (filters?.roleName) {
+    where.userRoles = { some: { role: { name: filters.roleName } } };
+  }
+
+  if (filters?.status) {
+    where.status = filters.status;
   }
 
   return await prisma.user.findMany({
@@ -28,7 +68,8 @@ export async function getEmployees(search?: string) {
     include: {
       userRoles: {
         include: { role: true }
-      }
+      },
+      department: true
     },
     orderBy: { createdAt: 'desc' }
   });
@@ -107,29 +148,27 @@ export async function inviteEmployee(emailStr: string, roleName: string = 'MEMBE
   });
 
   // Log Audit
-  await prisma.auditLog.create({
-    data: {
-      tenantId,
-      actorId: actor.id,
-      actorType: 'USER',
-      action: 'USER_INVITED',
-      resource: 'USER',
-      resourceId: newUser.id,
-      metadata: { email, roleName, departmentId: finalDepartmentId }
-    }
+  const { createAuditLog } = await import('../audit/audit.service');
+  await createAuditLog({
+    tenantId,
+    actorId: actor.id,
+    action: 'EMPLOYEE_INVITED',
+    resource: 'USER',
+    resourceId: newUser.id,
+    metadata: { email, roleName, departmentId: finalDepartmentId }
   });
 
   return invitation;
 }
 
-export async function removeEmployee(userId: string) {
+export async function disableEmployee(userId: string) {
   const actor = await requireAuth();
   const tenantId = await requireTenant();
   
   await requirePermission('USER', 'DELETE');
 
   const userToRemove = await prisma.user.findFirst({
-    where: { id: userId, tenantId, deletedAt: null }
+    where: { id: userId, tenantId }
   });
 
   if (!userToRemove) {
@@ -137,32 +176,33 @@ export async function removeEmployee(userId: string) {
   }
 
   if (userToRemove.id === actor.id) {
-    throw new Error('You cannot remove yourself.');
+    throw new Error('You cannot disable yourself.');
   }
 
-  // Soft delete in our DB
+  // Soft disable in our DB
   await prisma.user.update({
     where: { id: userId },
-    data: { deletedAt: new Date(), status: 'INACTIVE' }
+    data: { status: 'INACTIVE' }
   });
 
-  // Remove from Clerk (optional depending on if the user belongs to multiple tenants, 
-  // but in our isolated SaaS model, we can just delete the Clerk identity or strip their metadata)
+  // Remove from Clerk identity (forces logout/blocks login)
   if (userToRemove.clerkId) {
     const client = await clerkClient();
-    await client.users.deleteUser(userToRemove.clerkId);
+    try {
+      await client.users.deleteUser(userToRemove.clerkId);
+    } catch (e) {
+      console.warn("Failed to delete Clerk user or already deleted:", e);
+    }
   }
 
-  // Log Audit
-  await prisma.auditLog.create({
-    data: {
-      tenantId,
-      actorId: actor.id,
-      actorType: 'USER',
-      action: 'USER_DELETED',
-      resource: 'USER',
-      resourceId: userId,
-    }
+  // Log Audit using the new service format
+  const { createAuditLog } = await import('../audit/audit.service');
+  await createAuditLog({
+    tenantId,
+    actorId: actor.id,
+    action: 'EMPLOYEE_DISABLED',
+    resource: 'USER',
+    resourceId: userId,
   });
 
   return { success: true };
@@ -173,6 +213,16 @@ export async function updateEmployeeRole(userId: string, newRoleName: string) {
   const tenantId = await requireTenant();
   
   await requirePermission('USER', 'UPDATE');
+
+  // RBAC checks
+  let isTenantAdmin = false;
+  for (const ur of actor.userRoles) {
+    if (ur.role.name === 'TENANT_ADMIN') isTenantAdmin = true;
+  }
+
+  if (!isTenantAdmin) {
+    throw new Error("Only TENANT_ADMIN can change roles.");
+  }
 
   const userToUpdate = await prisma.user.findFirst({
     where: { id: userId, tenantId, deletedAt: null }
@@ -204,19 +254,108 @@ export async function updateEmployeeRole(userId: string, newRoleName: string) {
         roleId: role.id
       }
     });
+  });
+  
+  // Log Audit
+  const { createAuditLog } = await import('../audit/audit.service');
+  await createAuditLog({
+    tenantId,
+    actorId: actor.id,
+    action: 'ROLE_CHANGED',
+    resource: 'USER',
+    resourceId: userId,
+    metadata: { newRole: newRoleName }
+  });
 
-    // Log Audit
-    await tx.auditLog.create({
-      data: {
-        tenantId,
-        actorId: actor.id,
-        actorType: 'USER',
-        action: 'USER_ROLE_UPDATED',
-        resource: 'USER',
-        resourceId: userId,
-        metadata: { newRole: newRoleName }
-      }
-    });
+  return { success: true };
+}
+
+export async function reassignDepartment(userId: string, newDepartmentId: string) {
+  const actor = await requireAuth();
+  const tenantId = await requireTenant();
+  
+  await requirePermission('USER', 'UPDATE');
+
+  let isTenantAdmin = false;
+  let isDepartmentHead = false;
+  for (const ur of actor.userRoles) {
+    if (ur.role.name === 'TENANT_ADMIN') isTenantAdmin = true;
+    if (ur.role.name === 'DEPARTMENT_HEAD') isDepartmentHead = true;
+  }
+
+  if (!isTenantAdmin && !isDepartmentHead) {
+    throw new Error("You do not have permission to reassign departments.");
+  }
+
+  const userToUpdate = await prisma.user.findFirst({
+    where: { id: userId, tenantId }
+  });
+
+  if (!userToUpdate) {
+    throw new Error('User not found.');
+  }
+
+  // Department Head restriction
+  if (isDepartmentHead && !isTenantAdmin) {
+    if (userToUpdate.departmentId !== actor.departmentId) {
+      throw new Error("You can only reassign employees within your own department.");
+    }
+    if (newDepartmentId !== actor.departmentId) {
+      throw new Error("You cannot move employees outside your department.");
+    }
+  }
+
+  await prisma.user.update({
+    where: { id: userId },
+    data: { departmentId: newDepartmentId }
+  });
+
+  const { createAuditLog } = await import('../audit/audit.service');
+  await createAuditLog({
+    tenantId,
+    actorId: actor.id,
+    action: 'DEPARTMENT_CHANGED',
+    resource: 'USER',
+    resourceId: userId,
+    metadata: { newDepartmentId }
+  });
+  
+  return { success: true };
+}
+
+export async function updateProfile(userId: string, data: { firstName?: string, lastName?: string, phone?: string, designation?: string, profilePhotoUrl?: string }) {
+  const actor = await requireAuth();
+  const tenantId = await requireTenant();
+
+  // Employee can edit their own profile, or Tenant Admin can edit. Dept Head cannot edit other's profiles based on rules ("Employee: Can edit own profile. Dept Head: Can view. Admin: Can manage all.")
+  let isTenantAdmin = false;
+  for (const ur of actor.userRoles) {
+    if (ur.role.name === 'TENANT_ADMIN') isTenantAdmin = true;
+  }
+
+  if (actor.id !== userId && !isTenantAdmin) {
+    throw new Error("You do not have permission to edit this profile.");
+  }
+
+  await prisma.user.update({
+    where: { id: userId, tenantId },
+    data: {
+      firstName: data.firstName,
+      lastName: data.lastName,
+      phone: data.phone,
+      designation: data.designation,
+      profilePhotoUrl: data.profilePhotoUrl
+    }
+  });
+
+  const { createAuditLog } = await import('../audit/audit.service');
+  await createAuditLog({
+    tenantId,
+    actorId: actor.id,
+    action: 'PROFILE_UPDATED',
+    resource: 'USER',
+    resourceId: userId,
+    metadata: { updatedFields: Object.keys(data).filter(k => (data as any)[k] !== undefined) }
   });
 
   return { success: true };
