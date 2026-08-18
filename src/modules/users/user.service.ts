@@ -1,9 +1,10 @@
 import prisma from '@/../database/utils/prisma';
-import { withTenant } from '@/../database/utils/prisma-tenant';
+import { withTenant, withTenantTransaction } from '@/../database/utils/prisma-tenant';
 import { requireAuth, requireTenant, requirePermission, invalidateUserCache } from '@/lib/auth';
 import { clerkClient } from '@clerk/nextjs/server';
 
 import { EventBus } from '../core/events/event-bus';
+import globalPrisma from '@/../database/utils/prisma';
 
 export async function getEmployees(filters?: { search?: string, departmentId?: string, roleName?: string, status?: string }) {
   const actor = await requireAuth();
@@ -259,7 +260,8 @@ export async function updateEmployeeRole(userId: string, newRoleName: string) {
   }
 
   // Transaction to update role
-  await prisma.$transaction(async (tx) => {
+  await globalPrisma.$transaction(async (baseTx: any) => {
+    const tx = await withTenantTransaction(baseTx, tenantId);
     // Delete existing roles
     await tx.userRole.deleteMany({
       where: { userId }

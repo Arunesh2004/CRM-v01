@@ -47,6 +47,8 @@ const NAV_GROUPS = [
       { name: "Leads", href: "/leads", icon: Target },
       { name: "Customers", href: "/customers", icon: Users },
       { name: "Deals", href: "/deals", icon: BarChart3 },
+      { name: "Quotes", href: "/quotes", icon: BarChart3 },
+      { name: "Territories", href: "/territories", icon: MapPin },
       { name: "Locations", href: "/locations", icon: MapPin },
     ],
   },
@@ -54,6 +56,7 @@ const NAV_GROUPS = [
     section: "Workspace",
     items: [
       { name: "Tasks", href: "/tasks", icon: CheckSquare },
+      { name: "Tickets", href: "/tickets", icon: MessageSquare },
       { name: "Chat", href: "/chat", icon: MessageSquare },
       { name: "Communications", href: "/communications", icon: Phone },
     ],
@@ -77,6 +80,7 @@ const NAV_GROUPS = [
   {
     section: "System",
     items: [
+      { name: "Approvals", href: "/admin/approvals", icon: Shield },
       { name: "Settings", href: "/settings/employees", icon: Settings },
       { name: "Admin", href: "/admin", icon: Shield, adminOnly: true },
     ],

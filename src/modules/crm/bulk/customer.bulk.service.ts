@@ -1,6 +1,8 @@
 import prisma from '@/../database/utils/prisma';
 import { requireTenant, requirePermission } from '@/lib/auth';
 import { CustomerStatus } from '@prisma/client';
+import globalPrisma from '@/../database/utils/prisma';
+import { withTenantTransaction } from '@/../database/utils/prisma-tenant';
 
 export const MAX_SYNC_BULK_SIZE = 500;
 
@@ -23,13 +25,14 @@ export class CustomerBulkService {
       return { count: customerIds.length, queued: true };
     }
 
-    const result = await prisma.$transaction(async (tx) => {
+    const result = await globalPrisma.$transaction(async (baseTx: any) => {
+    const tx = await withTenantTransaction(baseTx, tenantId);
       // 1. Verify tenant ownership
       const existing = await tx.customer.findMany({
         where: { id: { in: customerIds }, tenantId },
         select: { id: true }
       });
-      const validIds = existing.map(e => e.id);
+      const validIds = existing.map((e: any) => e.id);
 
       if (validIds.length === 0) return { count: 0 };
 
@@ -53,7 +56,7 @@ export class CustomerBulkService {
       });
 
       // 4. Activity Timeline for each (atomic batch)
-      const timelineData = validIds.map(id => ({
+      const timelineData = validIds.map((id: string) => ({
         tenantId,
         entityId: id,
         entityType: 'CUSTOMER' as any,

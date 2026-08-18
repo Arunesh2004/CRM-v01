@@ -1,7 +1,5 @@
 import prisma from '@/../database/utils/prisma';
 import type { User as ClerkUser } from '@clerk/nextjs/server';
-import { ENV } from '@/lib/config/env';
-import crypto from 'crypto';
 
 export async function ensureUserProvisioned(clerkUser: ClerkUser | any) {
   // Normalize user data handling both Clerk SDK User object and Webhook payload
@@ -25,86 +23,16 @@ export async function ensureUserProvisioned(clerkUser: ClerkUser | any) {
 
 export async function synchronizeClerkIdentity(clerkId: string, emailStr: string) {
   const email = emailStr.toLowerCase().trim();
-  const canonicalTenantId = ENV.companyTenantId;
 
-  // 1. Find the user locally
+  // 1. Find the user locally by exact email lookup (ignoring tenant context as emails are unique in this deployment)
   const user = await prisma.user.findFirst({
-    where: {
-      tenantId: canonicalTenantId,
-      email: email
-    }
+    where: { email: email }
   });
 
-  // 2. If no user, check for Atomic Bootstrap
+  // 2. Reject unknown accounts
   if (!user) {
-    if (email === ENV.initialAdminEmail) {
-       console.log(`[Provisioning] Evaluating Initial Admin Bootstrap for ${email}`);
-       try {
-         await prisma.$transaction(async (tx) => {
-            // Lock the tenant row serially
-            const tenants: any[] = await tx.$queryRaw`SELECT id FROM "Tenant" WHERE id = ${canonicalTenantId} FOR UPDATE`;
-            if (tenants.length === 0) {
-               throw new Error(`CRITICAL: Canonical tenant ${canonicalTenantId} not found.`);
-            }
-
-            // Check if bootstrap exists
-            const bootstrap = await tx.tenantBootstrap.findUnique({
-              where: { tenantId: canonicalTenantId }
-            });
-
-            // Check if any users exist
-            const userCount = await tx.user.count({
-              where: { tenantId: canonicalTenantId }
-            });
-
-            if (!bootstrap && userCount === 0) {
-               console.log(`[Provisioning] Executing Initial Admin Bootstrap for ${email}`);
-               // Create bootstrap record
-               await tx.tenantBootstrap.create({
-                 data: { tenantId: canonicalTenantId }
-               });
-
-               const empId = `EMP-${crypto.randomBytes(4).toString('hex').toUpperCase()}`;
-
-               // Ensure TENANT_ADMIN role exists
-               let adminRole = await tx.role.findFirst({
-                 where: { name: 'TENANT_ADMIN', tenantId: canonicalTenantId }
-               });
-               if (!adminRole) {
-                  adminRole = await tx.role.create({
-                    data: { name: 'TENANT_ADMIN', tenantId: canonicalTenantId }
-                  });
-               }
-
-               await tx.user.create({
-                 data: {
-                   clerkId,
-                   email,
-                   employeeId: empId,
-                   tenantId: canonicalTenantId,
-                   status: 'ACTIVE',
-                   onboardingStatus: 'PENDING',
-                   userRoles: {
-                     create: { roleId: adminRole.id }
-                   }
-                 }
-               });
-            }
-         });
-         
-         const bootstrappedUser = await prisma.user.findFirst({
-           where: { tenantId: canonicalTenantId, email }
-         });
-         if (bootstrappedUser) return bootstrappedUser;
-
-       } catch (error) {
-         console.error('[Provisioning] Bootstrap transaction failed/aborted:', error);
-       }
-    }
-    
-    // If not bootstrap, DENY
-    console.warn(`[Provisioning] Unknown Gmail ${email} attempted to login. Denied.`);
-    return null;
+    console.warn(`[Provisioning] Unknown Google Account ${email} attempted to login. Denied.`);
+    return null; // Deny entry
   }
 
   // 3. User exists. Check status
@@ -130,7 +58,7 @@ export async function synchronizeClerkIdentity(clerkId: string, emailStr: string
      if (count === 1) {
        console.log(`[Provisioning] Successfully linked clerkId to invited user ${email}`);
        
-       const { createAuditLog } = await import('../audit/audit.service');
+       const { createAuditLog } = await import('../../audit/audit.service');
        await createAuditLog({
          tenantId: user.tenantId,
          actorId: user.id,

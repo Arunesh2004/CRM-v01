@@ -17,6 +17,7 @@ import { DocumentList } from '@/components/crm/DocumentList';
 import { DocumentUploader } from '@/components/crm/DocumentUploader';
 import { TimelineTabWrapper } from './TimelineTabWrapper';
 import { DocumentsTabWrapper } from './DocumentsTabWrapper';
+import { EditCustomerForm } from '@/components/crm/EditCustomerForm';
 
 export default async function CustomerDetailsPage({ params }: { params: { id: string } }) {
   const result = await getCustomerByIdAction(params.id);
@@ -56,14 +57,8 @@ export default async function CustomerDetailsPage({ params }: { params: { id: st
           </div>
         </div>
         <div className="relative z-10 shrink-0 flex gap-2">
-          <Button variant="ghost" className="bg-white/5 hover:bg-white/10">
-            <Activity className="w-4 h-4 mr-2" />
-            Log Activity
-          </Button>
-          <Button variant="ghost" className="bg-white/5 hover:bg-white/10">
-            <PenSquare className="w-4 h-4 mr-2" />
-            Edit Customer
-          </Button>
+
+          <EditCustomerForm customer={customer} />
         </div>
       </div>
       

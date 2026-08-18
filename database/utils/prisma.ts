@@ -20,17 +20,32 @@ const prismaClientSingleton = () => {
       $allModels: {
         async $allOperations({ model, operation, args, query }) {
           if (softDeleteModels.includes(model as string)) {
-             // We do NOT intercept findUnique here because it breaks the extension chain
-             // for dynamic extensions like withTenant.
-             // withTenant handles converting findUnique to findFirst.
              if (['findMany', 'findFirst', 'findFirstOrThrow', 'count', 'aggregate'].includes(operation)) {
               let mutableArgs = (args as any) || {};
               if (!mutableArgs.where) mutableArgs.where = {};
               mutableArgs.where.deletedAt = null;
-              return query(mutableArgs);
+              
+              const result = await query(mutableArgs);
+              if (model === 'AIProviderConfig') {
+                if (Array.isArray(result)) {
+                  result.forEach((r: any) => { if (r) delete r.encryptedApiKey; });
+                } else if (result && typeof result === 'object') {
+                  delete (result as any).encryptedApiKey;
+                }
+              }
+              return result;
             }
           }
-          return query(args);
+          
+          const result = await query(args);
+          if (model === 'AIProviderConfig') {
+            if (Array.isArray(result)) {
+              result.forEach((r: any) => { if (r) delete r.encryptedApiKey; });
+            } else if (result && typeof result === 'object') {
+              delete (result as any).encryptedApiKey;
+            }
+          }
+          return result;
         }
       }
     }
@@ -38,11 +53,11 @@ const prismaClientSingleton = () => {
 };
 
 declare global {
-  var prismaGlobal: undefined | ReturnType<typeof prismaClientSingleton>;
+  var prismaGlobal: undefined | PrismaClient;
   var prismaAdminGlobal: undefined | PrismaClient;
 }
 
-const prisma = globalThis.prismaGlobal ?? prismaClientSingleton();
+const prisma = (globalThis.prismaGlobal ?? prismaClientSingleton()) as unknown as PrismaClient;
 
 // Unfiltered client exclusively for Recovery / Admin / Background tasks
 export const prismaAdmin = globalThis.prismaAdminGlobal ?? basePrismaClient;

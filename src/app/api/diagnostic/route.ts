@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import { PrismaClient } from '@prisma/client';
+import { requireAuth } from '@/lib/auth';
 import { createCustomer } from '@/modules/crm/customer/customer.service';
 import prisma from '@/../database/utils/prisma';
 
@@ -9,6 +10,7 @@ export async function POST(request: Request) {
   }
 
   try {
+    await requireAuth();
     const body = await request.json();
     const action = body.action;
     const token = request.headers.get('authorization');

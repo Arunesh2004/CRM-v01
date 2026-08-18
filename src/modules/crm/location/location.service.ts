@@ -1,6 +1,7 @@
 import { requireAuth, requireTenant, requirePermission } from '@/lib/auth';
-import { withTenant } from '@/../database/utils/prisma-tenant';
+import { withTenant, withTenantTransaction } from '@/../database/utils/prisma-tenant';
 import { CreateLocationInput, UpdateLocationInput } from '../crm.types';
+import globalPrisma from '@/../database/utils/prisma';
 
 export async function createLocation(input: CreateLocationInput) {
   const user = await requireAuth();
@@ -14,7 +15,8 @@ export async function createLocation(input: CreateLocationInput) {
 
   const prisma = withTenant(tenantId);
 
-  return await prisma.$transaction(async (tx) => {
+  return await globalPrisma.$transaction(async (baseTx: any) => {
+    const tx = await withTenantTransaction(baseTx, tenantId);
     // Verify customer exists and belongs to tenant
     const customer = await tx.customer.findFirst({ where: { id: input.customerId, tenantId } });
     if (!customer) throw new Error('Customer not found');
@@ -90,7 +92,8 @@ export async function updateLocation(input: UpdateLocationInput) {
 
   const prisma = withTenant(tenantId);
 
-  return await prisma.$transaction(async (tx) => {
+  return await globalPrisma.$transaction(async (baseTx: any) => {
+    const tx = await withTenantTransaction(baseTx, tenantId);
     const location = await tx.location.findFirst({ where: { id: input.id, tenantId }});
     if (!location) throw new Error('Location not found');
 
@@ -144,7 +147,8 @@ export async function deleteLocation(id: string) {
 
   const prisma = withTenant(tenantId);
 
-  return await prisma.$transaction(async (tx) => {
+  return await globalPrisma.$transaction(async (baseTx: any) => {
+    const tx = await withTenantTransaction(baseTx, tenantId);
     const location = await tx.location.findFirst({ where: { id, tenantId }});
     if (!location) throw new Error('Location not found');
 

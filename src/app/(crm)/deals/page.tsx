@@ -11,6 +11,7 @@ import {
 import { requireTenant } from "@/lib/auth";
 import { DealKanbanBoardClientWrapper as DealKanbanBoard } from "./DealKanbanBoardClientWrapper";
 import { DollarSign, Percent, TrendingUp, AlertCircle } from "lucide-react";
+import { DealForm } from "@/components/crm/DealForm";
 
 export default async function DealsPage(props: {
   searchParams: Promise<{ [key: string]: string | string[] | undefined }>;
@@ -60,7 +61,7 @@ export default async function DealsPage(props: {
               </option>
             ))}
           </select>
-          <Button>Create Deal</Button>
+          <DealForm pipelines={pipelines} />
         </div>
       </div>
 

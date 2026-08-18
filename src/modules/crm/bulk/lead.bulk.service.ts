@@ -1,6 +1,8 @@
 import prisma from '@/../database/utils/prisma';
 import { requireTenant, requirePermission } from '@/lib/auth';
 import { LeadStatus } from '@prisma/client';
+import globalPrisma from '@/../database/utils/prisma';
+import { withTenantTransaction } from '@/../database/utils/prisma-tenant';
 
 export const MAX_SYNC_BULK_SIZE = 500;
 
@@ -18,9 +20,10 @@ export class LeadBulkService {
       return { count: leadIds.length, queued: true };
     }
 
-    const result = await prisma.$transaction(async (tx) => {
+    const result = await globalPrisma.$transaction(async (baseTx: any) => {
+    const tx = await withTenantTransaction(baseTx, tenantId);
       const existing = await tx.lead.findMany({ where: { id: { in: leadIds }, tenantId }, select: { id: true } });
-      const validIds = existing.map(e => e.id);
+      const validIds = existing.map((e: any) => e.id);
       if (validIds.length === 0) return { count: 0 };
 
       const updateResult = await tx.lead.updateMany({
@@ -40,7 +43,7 @@ export class LeadBulkService {
         }
       });
 
-      const timelineData = validIds.map(id => ({
+      const timelineData = validIds.map((id: string) => ({
         tenantId,
         entityId: id,
         entityType: 'LEAD' as any,
@@ -73,9 +76,10 @@ export class LeadBulkService {
     const targetUser = await prisma.user.findFirst({ where: { id: assignedUserId, tenantId } });
     if (!targetUser) throw new Error("Assigned user not found in tenant.");
 
-    const result = await prisma.$transaction(async (tx) => {
+    const result = await globalPrisma.$transaction(async (baseTx: any) => {
+    const tx = await withTenantTransaction(baseTx, tenantId);
       const existing = await tx.lead.findMany({ where: { id: { in: leadIds }, tenantId }, select: { id: true } });
-      const validIds = existing.map(e => e.id);
+      const validIds = existing.map((e: any) => e.id);
       if (validIds.length === 0) return { count: 0 };
 
       const updateResult = await tx.lead.updateMany({

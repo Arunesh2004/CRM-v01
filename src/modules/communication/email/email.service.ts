@@ -1,8 +1,9 @@
 import { requireAuth, requireTenant, requirePermission } from '@/lib/auth';
-import { withTenant } from '../../../../database/utils/prisma-tenant';
+import { withTenant, withTenantTransaction } from '../../../../database/utils/prisma-tenant';
 import { ProviderFactory } from '@/lib/providers/provider.factory';
 import { CreateEmailInput } from '../communication.types';
 import { getCurrentUserContext } from '@/lib/tenant-context';
+import globalPrisma from '@/../database/utils/prisma';
 
 export async function sendEmail(input: CreateEmailInput) {
   await requireAuth();
@@ -22,7 +23,8 @@ export async function sendEmail(input: CreateEmailInput) {
     throw new Error('Email provider failed');
   }
   
-  return await prisma.$transaction(async (tx: any) => {
+  return await globalPrisma.$transaction(async (baseTx: any) => {
+    const tx = await withTenantTransaction(baseTx, tenantId);
     const thread = await tx.emailThread.create({
       data: {
         tenantId,

@@ -10,6 +10,9 @@ import { AlertCircle, Calendar, CheckSquare, Clock, User, Building, PhoneCall, A
 import Link from 'next/link';
 import { TaskComments } from '@/components/crm/TaskComments';
 import { TaskDocumentsWrapper } from './TaskDocumentsWrapper';
+import { EditTaskForm } from '@/components/crm/EditTaskForm';
+import { withTenant } from '@/../database/utils/prisma-tenant';
+import { requireTenant } from '@/lib/auth';
 
 export default async function TaskDetailPage({ params }: { params: { id: string } }) {
   const result = await getTaskByIdAction(params.id);
@@ -19,6 +22,15 @@ export default async function TaskDetailPage({ params }: { params: { id: string 
   }
 
   const task = result.data;
+  const tenantId = await requireTenant();
+  const prisma = withTenant(tenantId);
+  const users = await prisma.user.findMany({ 
+    where: { 
+      tenantId,
+      clerkId: { not: { startsWith: 'SYSTEM_' } }
+    }, 
+    select: { id: true, email: true } 
+  });
 
   // Map activities and comments to UnifiedTimelineItem
   const timelineEvents: UnifiedTimelineItem[] = [
@@ -104,6 +116,7 @@ export default async function TaskDetailPage({ params }: { params: { id: string 
           <Badge variant={getPriorityColor(task.priority).includes('red') || getPriorityColor(task.priority).includes('orange') ? 'rose' : getPriorityColor(task.priority).includes('blue') ? 'violet' : 'slate'} className="px-3 py-1 text-xs uppercase font-semibold h-auto">
             {task.priority}
           </Badge>
+          <EditTaskForm task={task} users={users} />
         </div>
       </div>
 

@@ -4,7 +4,7 @@ import path from 'path';
 async function runTests() {
   console.log('--- Running Billing UI Tests ---');
 
-  const baseDir = path.join(process.cwd(), 'src/app/(dashboard)/billing');
+  const baseDir = path.join(process.cwd(), 'src/app/(crm)/billing');
   const compDir = path.join(process.cwd(), 'src/components/billing');
 
   // 1. Verify Routes

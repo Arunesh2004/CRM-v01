@@ -13,6 +13,7 @@ import { requireTenant } from '@/lib/auth';
 import { format } from 'date-fns';
 import Link from 'next/link';
 import { TaskCalendarView } from '@/components/crm/TaskCalendarView';
+import { TaskForm } from '@/components/crm/TaskForm';
 
 export default async function TasksPage(props: {
   searchParams: Promise<{ [key: string]: string | string[] | undefined }>;
@@ -118,10 +119,7 @@ export default async function TasksPage(props: {
               Calendar
             </Link>
           </div>
-          <Button>
-            <Plus className="w-4 h-4" />
-            New Task
-          </Button>
+          <TaskForm users={users} />
         </div>
       </div>
       

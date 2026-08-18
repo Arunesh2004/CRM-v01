@@ -22,13 +22,15 @@ async function main() {
 
   // Create Users
   const admin = await prisma.user.upsert({
-    where: { email: 'admin@acmesecurity.com' },
+    where: { tenantId_email: { tenantId: tenant.id, email: 'admin@acmesecurity.com' } },
     update: {},
     create: {
       email: 'admin@acmesecurity.com',
       clerkId: 'demo-clerk-admin',
+      employeeId: 'EMP-DEMO1234',
       tenantId: tenant.id,
-      status: 'ACTIVE'
+      status: 'ACTIVE',
+      onboardingStatus: 'COMPLETED'
     }
   });
 

@@ -10,7 +10,7 @@ export default async function CRMLayout({ children }: { children: ReactNode }) {
   
   if (user.onboardingStatus === 'PENDING') {
     const { redirect } = await import('next/navigation');
-    redirect('/onboarding');
+    redirect('/onboarding/profile');
   }
 
   // Extract tenant name from the authenticated user context

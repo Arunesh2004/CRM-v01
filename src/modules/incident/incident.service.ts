@@ -1,8 +1,9 @@
 import { requireAuth, requireTenant, requirePermission } from '@/lib/auth';
-import { withTenant } from '@/../database/utils/prisma-tenant';
+import { withTenant, withTenantTransaction } from '@/../database/utils/prisma-tenant';
 import { CreateIncidentInput, UpdateIncidentStatusInput, AssignIncidentInput } from './incident.types';
 
 import { assertRelationOwnership } from '@/lib/security/tenant-guard';
+import globalPrisma from '@/../database/utils/prisma';
 
 export async function createIncident(input: CreateIncidentInput) {
   const user = await requireAuth();
@@ -20,7 +21,8 @@ export async function createIncident(input: CreateIncidentInput) {
 
   const prisma = withTenant(tenantId);
 
-  const incident = await prisma.$transaction(async (tx) => {
+  const incident = await globalPrisma.$transaction(async (baseTx: any) => {
+    const tx = await withTenantTransaction(baseTx, tenantId);
     // 2. Validate Camera Consistency
     const camera = await tx.camera.findFirst({ where: { id: input.cameraId, tenantId }});
     if (camera && camera.locationId !== input.locationId) throw new Error("Relationship Consistency Error: Camera does not belong to Location");
@@ -108,7 +110,8 @@ export async function updateIncidentStatus(input: UpdateIncidentStatusInput) {
 
   const prisma = withTenant(tenantId);
 
-  return await prisma.$transaction(async (tx) => {
+  return await globalPrisma.$transaction(async (baseTx: any) => {
+    const tx = await withTenantTransaction(baseTx, tenantId);
     const incident = await tx.incident.findFirst({ where: { id: input.id, tenantId }, include: { location: true } });
     if (!incident) throw new Error('Incident not found');
 
@@ -156,7 +159,8 @@ export async function assignIncident(input: AssignIncidentInput) {
 
   const prisma = withTenant(tenantId);
 
-  return await prisma.$transaction(async (tx) => {
+  return await globalPrisma.$transaction(async (baseTx: any) => {
+    const tx = await withTenantTransaction(baseTx, tenantId);
     const incident = await tx.incident.findFirst({ where: { id: input.id, tenantId }, include: { location: true } });
     if (!incident) throw new Error('Incident not found');
 
@@ -197,7 +201,8 @@ export async function deleteIncident(id: string) {
 
   const prisma = withTenant(tenantId);
 
-  return await prisma.$transaction(async (tx) => {
+  return await globalPrisma.$transaction(async (baseTx: any) => {
+    const tx = await withTenantTransaction(baseTx, tenantId);
     const incident = await tx.incident.findFirst({ where: { id, tenantId, deletedAt: null }, include: { location: true } });
     if (!incident) throw new Error('Incident not found');
 

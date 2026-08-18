@@ -1,5 +1,6 @@
 import { requireAuth, requireTenant, requirePermission } from '@/lib/auth';
-import { withTenant } from '@/../database/utils/prisma-tenant';
+import globalPrisma from '@/../database/utils/prisma';
+import { withTenant, withTenantTransaction } from '@/../database/utils/prisma-tenant';
 import { EventBus } from '../core/events/event-bus';
 
 export async function getAIEvents(params?: {
@@ -52,7 +53,8 @@ export async function ingestAIEventWebhook(payload: {
     throw new Error('Camera not found or does not belong to tenant');
   }
 
-  return await prisma.$transaction(async (tx) => {
+  return await globalPrisma.$transaction(async (baseTx: any) => {
+    const tx = await withTenantTransaction(baseTx, payload.tenantId);
     // 1. Store the AI Event
     const aiEvent = await tx.aIEvent.create({
       data: {

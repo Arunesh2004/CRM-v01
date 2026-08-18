@@ -6,6 +6,8 @@ import { Mail, Phone, Target, User2, ArrowLeft, Clock } from 'lucide-react';
 import Link from 'next/link';
 import { CustomerActivityTimeline } from '@/components/crm/CustomerActivityTimeline';
 import { StatusUpdater } from '@/components/crm/StatusUpdater';
+import { EditLeadForm } from '@/components/crm/EditLeadForm';
+import { LeadActions } from '@/components/crm/LeadActions';
 
 export default async function LeadDetailsPage({ params }: { params: { id: string } }) {
   await requireAuth();
@@ -13,13 +15,17 @@ export default async function LeadDetailsPage({ params }: { params: { id: string
   await requirePermission('LEAD', 'READ');
 
   const prisma = withTenant(tenantId);
-  const [lead, activities] = await Promise.all([
+  const [lead, users, activities] = await Promise.all([
     prisma.lead.findFirst({
       where: { id: params.id, tenantId, deletedAt: null },
       include: {
-        assignedUser: { select: { email: true } },
+        assignedUser: { select: { id: true, email: true } },
         tasks: { orderBy: { createdAt: 'desc' }, where: { deletedAt: null }, take: 20 },
       }
+    }),
+    prisma.user.findMany({
+      where: { tenantId, clerkId: { not: { startsWith: 'SYSTEM_' } } },
+      select: { id: true, email: true }
     }),
     prisma.activityTimeline.findMany({
       where: { tenantId, entityType: 'LEAD', entityId: params.id },
@@ -54,7 +60,11 @@ export default async function LeadDetailsPage({ params }: { params: { id: string
               <span className="font-medium text-[#8891B0]">{lead.name}</span>
               <StatusUpdater leadId={lead.id} currentStatus={lead.status} />
             </div>
+            <LeadActions leadId={lead.id} users={users} />
           </div>
+        </div>
+        <div className="relative z-10 shrink-0 flex gap-2">
+          <EditLeadForm lead={lead} />
         </div>
       </div>
       

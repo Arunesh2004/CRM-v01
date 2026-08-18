@@ -1,5 +1,5 @@
 import { requireAuth, requireTenant, requirePermission, requireAuthIdentity, requirePermissionFast, requireTenantFromIdentity } from '@/lib/auth';
-import { withTenant } from '@/../database/utils/prisma-tenant';
+import { withTenant, withTenantTransaction } from '@/../database/utils/prisma-tenant';
 import { CreateCustomerInput, UpdateCustomerInput } from '../crm.types';
 
 import { createTenantCustomerFast } from '@/../database/utils/fast-tenant-queries';
@@ -48,6 +48,7 @@ export async function createCustomer(input: CreateCustomerInput) {
 }
 
 import { QueryParams, PaginatedResponse } from '../../core/types';
+import globalPrisma from '@/../database/utils/prisma';
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 export async function getCustomers(params?: QueryParams & { createdAtStart?: Date; createdAtEnd?: Date; }): Promise<PaginatedResponse<any>> {
@@ -146,7 +147,8 @@ export async function updateCustomer(input: UpdateCustomerInput) {
 
   const prisma = withTenant(tenantId);
 
-  return await prisma.$transaction(async (tx) => {
+  return await globalPrisma.$transaction(async (baseTx: any) => {
+    const tx = await withTenantTransaction(baseTx, tenantId);
     const customer = await tx.customer.findFirst({ where: { id: input.id, tenantId }});
     if (!customer) throw new Error('Customer not found');
 
@@ -227,7 +229,8 @@ export async function deleteCustomer(customerId: string) {
 
   const prisma = withTenant(tenantId);
 
-  return await prisma.$transaction(async (tx) => {
+  return await globalPrisma.$transaction(async (baseTx: any) => {
+    const tx = await withTenantTransaction(baseTx, tenantId);
     const customer = await tx.customer.findFirst({ where: { id: customerId, tenantId, deletedAt: null } });
     if (!customer) throw new Error('Customer not found');
 
@@ -279,7 +282,8 @@ export async function createContact(input: any) {
   await requirePermission('CUSTOMER', 'UPDATE');
 
   const prisma = withTenant(tenantId);
-  return await prisma.$transaction(async (tx) => {
+  return await globalPrisma.$transaction(async (baseTx: any) => {
+    const tx = await withTenantTransaction(baseTx, tenantId);
     if (input.isPrimary) {
       await tx.customerContact.updateMany({
         where: { customerId: input.customerId, tenantId },
@@ -321,7 +325,8 @@ export async function createLocation(input: any) {
   await requirePermission('CUSTOMER', 'UPDATE');
 
   const prisma = withTenant(tenantId);
-  return await prisma.$transaction(async (tx) => {
+  return await globalPrisma.$transaction(async (baseTx: any) => {
+    const tx = await withTenantTransaction(baseTx, tenantId);
 
     const location = await tx.location.create({
       data: {

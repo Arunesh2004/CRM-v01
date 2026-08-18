@@ -1,5 +1,5 @@
 import { requireAuth, requireTenant, requirePermission } from '@/lib/auth';
-import { withTenant } from '@/../database/utils/prisma-tenant';
+import { withTenant, withTenantTransaction } from '@/../database/utils/prisma-tenant';
 import { CreateLeadInput, UpdateLeadInput } from '../crm.types';
 import { EventBus } from '../../core/events/event-bus';
 
@@ -24,7 +24,8 @@ export async function createLead(input: CreateLeadInput) {
     if (!user) throw new Error('Assigned user does not belong to this tenant.');
   }
 
-  return await prisma.$transaction(async (tx) => {
+  return await globalPrisma.$transaction(async (baseTx: any) => {
+    const tx = await withTenantTransaction(baseTx, tenantId);
     const lead = await tx.lead.create({
       data: {
         name: input.name,
@@ -64,6 +65,7 @@ export async function createLead(input: CreateLeadInput) {
 }
 
 import { QueryParams, PaginatedResponse } from '../../core/types';
+import globalPrisma from '@/../database/utils/prisma';
 
 export async function getLeads(params?: QueryParams & { createdAtStart?: Date; createdAtEnd?: Date; }): Promise<PaginatedResponse<any>> {
   await requireAuth();
@@ -185,7 +187,8 @@ export async function updateLead(input: UpdateLeadInput) {
     if (!user) throw new Error('Assigned user does not belong to this tenant.');
   }
 
-  const result = await prisma.$transaction(async (tx) => {
+  const result = await globalPrisma.$transaction(async (baseTx: any) => {
+    const tx = await withTenantTransaction(baseTx, tenantId);
     const lead = await tx.lead.findFirst({ where: { id: input.id, tenantId }});
     if (!lead) throw new Error('Lead not found');
 
@@ -289,7 +292,8 @@ export async function convertLeadToCustomer(leadId: string) {
 
   const prisma = withTenant(tenantId);
 
-  return await prisma.$transaction(async (tx) => {
+  return await globalPrisma.$transaction(async (baseTx: any) => {
+    const tx = await withTenantTransaction(baseTx, tenantId);
     const lead = await tx.lead.findFirst({ where: { id: leadId, tenantId } });
     if (!lead) throw new Error('Lead not found');
 
@@ -371,7 +375,8 @@ export async function deleteLead(leadId: string) {
 
   const prisma = withTenant(tenantId);
 
-  return await prisma.$transaction(async (tx) => {
+  return await globalPrisma.$transaction(async (baseTx: any) => {
+    const tx = await withTenantTransaction(baseTx, tenantId);
     const lead = await tx.lead.findFirst({ where: { id: leadId, tenantId, deletedAt: null } });
     if (!lead) throw new Error('Lead not found');
 

@@ -1,5 +1,5 @@
 import { BullMQProvider } from '../src/lib/jobs/providers/bullmq.provider';
-import { RateLimiter } from '../src/lib/rate-limit/rate-limiter';
+import { DistributedRateLimiter } from '../src/lib/rate-limit/rate-limiter';
 import { Logger } from '../src/lib/logger/logger';
 
 async function runTests() {
@@ -37,13 +37,10 @@ async function runTests() {
   console.log('✔ Queue creation and job enqueue ok (with retry behavior options)');
 
   // 3. Rate Limit Blocking
-  const limiter = new RateLimiter();
-  const limitKey = 'tenant_123:api:send_email';
-  
   // limit 2 requests per 10 seconds
-  const res1 = await limiter.checkLimit(limitKey, 2, 10000);
-  const res2 = await limiter.checkLimit(limitKey, 2, 10000);
-  const res3 = await limiter.checkLimit(limitKey, 2, 10000); // Should fail
+  const res1 = await DistributedRateLimiter.checkLimit('tenant_123', 'api', 'send_email', 2, 10);
+  const res2 = await DistributedRateLimiter.checkLimit('tenant_123', 'api', 'send_email', 2, 10);
+  const res3 = await DistributedRateLimiter.checkLimit('tenant_123', 'api', 'send_email', 2, 10); // Should fail
 
   if (!res1.allowed || !res2.allowed) throw new Error('Legitimate requests blocked');
   if (res3.allowed) throw new Error('Rate limit blocking failed');

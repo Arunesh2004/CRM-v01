@@ -1,5 +1,6 @@
 import { requireAuth, requireTenant, requirePermission } from '@/lib/auth';
-import { withTenant } from '@/../database/utils/prisma-tenant';
+import globalPrisma from '@/../database/utils/prisma';
+import { withTenant, withTenantTransaction } from '@/../database/utils/prisma-tenant';
 import crypto from 'crypto';
 
 export async function getCameraRecordings(cameraId: string, limit: number = 50, cursor?: string) {
@@ -29,7 +30,8 @@ export async function generateRecordingDownloadUrl(recordingId: string) {
 
   const prisma = withTenant(tenantId);
   
-  return await prisma.$transaction(async (tx) => {
+  return await globalPrisma.$transaction(async (baseTx: any) => {
+    const tx = await withTenantTransaction(baseTx, tenantId);
     const recording = await tx.recording.findFirst({
       where: { id: recordingId, tenantId },
       include: { camera: true }

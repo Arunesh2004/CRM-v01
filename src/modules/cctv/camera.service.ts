@@ -1,7 +1,8 @@
 import { requireAuth, requireTenant, requirePermission } from '@/lib/auth';
-import { withTenant } from '@/../database/utils/prisma-tenant';
+import { withTenant, withTenantTransaction } from '@/../database/utils/prisma-tenant';
 import { CreateCameraInput, UpdateCameraInput, SimulateAIEventInput } from './cctv.types';
 import { assertRelationOwnership } from '@/lib/security/tenant-guard';
+import globalPrisma from '@/../database/utils/prisma';
 
 export async function createCamera(input: CreateCameraInput) {
   const user = await requireAuth();
@@ -14,7 +15,8 @@ export async function createCamera(input: CreateCameraInput) {
 
   const prisma = withTenant(tenantId);
 
-  return await prisma.$transaction(async (tx) => {
+  return await globalPrisma.$transaction(async (baseTx: any) => {
+    const tx = await withTenantTransaction(baseTx, tenantId);
     // Fetch location for logging
     const location = await tx.location.findFirst({ where: { id: input.locationId, tenantId }});
     if (!location) throw new Error("Location not found");
@@ -92,7 +94,8 @@ export async function updateCamera(input: UpdateCameraInput) {
 
   const prisma = withTenant(tenantId);
 
-  return await prisma.$transaction(async (tx) => {
+  return await globalPrisma.$transaction(async (baseTx: any) => {
+    const tx = await withTenantTransaction(baseTx, tenantId);
     const camera = await tx.camera.findFirst({ where: { id: input.id, tenantId }, include: { location: true }});
     if (!camera) throw new Error('Camera not found');
 
@@ -133,7 +136,8 @@ export async function deleteCamera(id: string) {
 
   const prisma = withTenant(tenantId);
 
-  return await prisma.$transaction(async (tx) => {
+  return await globalPrisma.$transaction(async (baseTx: any) => {
+    const tx = await withTenantTransaction(baseTx, tenantId);
     const camera = await tx.camera.findFirst({ where: { id, tenantId }, include: { location: true } });
     if (!camera) throw new Error('Camera not found');
 
@@ -163,7 +167,8 @@ export async function simulateAIEvent(input: SimulateAIEventInput) {
 
   const prisma = withTenant(tenantId);
 
-  const result = await prisma.$transaction(async (tx) => {
+  const result = await globalPrisma.$transaction(async (baseTx: any) => {
+    const tx = await withTenantTransaction(baseTx, tenantId);
     const camera = await tx.camera.findFirst({ where: { id: input.cameraId, tenantId }, include: { location: true } });
     if (!camera) throw new Error('Camera not found');
 

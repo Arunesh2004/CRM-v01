@@ -1,28 +1,7 @@
-import { DistributedRateLimiter, RedisClientLike } from '../src/lib/rate-limit/rate-limiter';
+import { DistributedRateLimiter } from '../src/lib/rate-limit/rate-limiter';
 import { Logger } from '../src/lib/logger/logger';
 import { BaseWorker } from '../src/lib/jobs/workers/worker.base';
 import { JobContext } from '../src/lib/jobs/queue.interface';
-
-// Mock Redis client for testing rate limiter
-class MockRedis implements RedisClientLike {
-  private store = new Map<string, number>();
-  
-  multi() { return this; }
-  
-  async incr(key: string): Promise<number> {
-    const val = (this.store.get(key) || 0) + 1;
-    this.store.set(key, val);
-    return val;
-  }
-  
-  async expire(key: string, seconds: number): Promise<number> {
-    return 1;
-  }
-
-  async ttl(key: string): Promise<number> {
-    return 10;
-  }
-}
 
 // Mock Worker for testing
 class TestWorker extends BaseWorker<JobContext> {
@@ -38,12 +17,10 @@ async function runTests() {
   console.log('--- Running Distributed Reliability Tests ---');
 
   // 1. Distributed Rate Limit Behaviour
-  const mockRedis = new MockRedis();
-  const limiter = new DistributedRateLimiter(mockRedis);
-  
-  const res1 = await limiter.checkLimit('tenant_1', 'api', 'login', 2, 60);
-  const res2 = await limiter.checkLimit('tenant_1', 'api', 'login', 2, 60);
-  const res3 = await limiter.checkLimit('tenant_1', 'api', 'login', 2, 60);
+  // Using a unique resource ID for the test so it doesn't collide
+  const res1 = await DistributedRateLimiter.checkLimit('tenant_1', 'api', 'login_test', 2, 60);
+  const res2 = await DistributedRateLimiter.checkLimit('tenant_1', 'api', 'login_test', 2, 60);
+  const res3 = await DistributedRateLimiter.checkLimit('tenant_1', 'api', 'login_test', 2, 60);
   
   if (!res1.allowed || !res2.allowed) throw new Error('Valid requests blocked');
   if (res3.allowed) throw new Error('Distributed rate limit failed to block');

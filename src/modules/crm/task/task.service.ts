@@ -1,9 +1,10 @@
 import { requireAuth, requireTenant, requirePermission } from '@/lib/auth';
-import { withTenant } from '@/../database/utils/prisma-tenant';
+import { withTenant, withTenantTransaction } from '@/../database/utils/prisma-tenant';
 import { CreateTaskInput, UpdateTaskInput } from '../crm.types';
 import { assertRelationOwnership } from '@/lib/security/tenant-guard';
 import { EventBus } from '../../core/events/event-bus';
 import { QueryParams, PaginatedResponse } from '../../core/types';
+import globalPrisma from '@/../database/utils/prisma';
 
 export async function createTask(input: CreateTaskInput) {
   const user = await requireAuth();
@@ -20,7 +21,8 @@ export async function createTask(input: CreateTaskInput) {
   }
 
   const prisma = withTenant(tenantId);
-  return await prisma.$transaction(async (tx) => {
+  return await globalPrisma.$transaction(async (baseTx: any) => {
+    const tx = await withTenantTransaction(baseTx, tenantId);
     const task = await tx.task.create({
       data: {
         title: input.title,
@@ -161,7 +163,8 @@ export async function updateTask(input: UpdateTaskInput) {
 
   const prisma = withTenant(tenantId);
   
-  return await prisma.$transaction(async (tx) => {
+  return await globalPrisma.$transaction(async (baseTx: any) => {
+    const tx = await withTenantTransaction(baseTx, tenantId);
     const task = await tx.task.findFirst({ where: { id: input.id, tenantId }});
     if (!task) throw new Error('Task not found');
     

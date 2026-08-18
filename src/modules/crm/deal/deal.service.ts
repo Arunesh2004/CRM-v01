@@ -1,7 +1,8 @@
-import { withTenant } from '@/../database/utils/prisma-tenant';
+import { withTenant, withTenantTransaction } from '@/../database/utils/prisma-tenant';
 import { requireAuth, requireTenant, requirePermission } from '@/lib/auth';
 import { Prisma } from '@prisma/client';
 import crypto from 'crypto';
+import globalPrisma from '@/../database/utils/prisma';
 
 export async function getDeals(params?: {
   pipelineId?: string;
@@ -111,7 +112,8 @@ export async function createDeal(data: {
   const prisma = withTenant(tenantId);
   await requirePermission('USER', 'CREATE');
 
-  return await prisma.$transaction(async (tx: any) => {
+  return await globalPrisma.$transaction(async (baseTx: any) => {
+    const tx = await withTenantTransaction(baseTx, tenantId);
     const deal = await tx.deal.create({
       data: {
         tenantId,
@@ -166,7 +168,8 @@ export async function convertLeadToDeal(leadId: string, assignedUserId: string, 
   const lead = await prisma.lead.findFirst({ where: { id: leadId, tenantId } });
   if (!lead) throw new Error('Lead not found');
 
-  return await prisma.$transaction(async (tx: any) => {
+  return await globalPrisma.$transaction(async (baseTx: any) => {
+    const tx = await withTenantTransaction(baseTx, tenantId);
     // Note: If customer already exists for this lead (it shouldn't normally if it's just a lead, 
     // but in case conversion happened partially), we can link or create customer.
     // For simplicity, we just create the deal linked to the Lead.
@@ -237,7 +240,8 @@ export async function moveDealStage(dealId: string, newStageId: string, lostReas
   const prisma = withTenant(tenantId);
   await requirePermission('USER', 'UPDATE');
 
-  return await prisma.$transaction(async (tx: any) => {
+  return await globalPrisma.$transaction(async (baseTx: any) => {
+    const tx = await withTenantTransaction(baseTx, tenantId);
     const deal = await tx.deal.findFirst({ where: { id: dealId, tenantId }, include: { stage: true } });
     if (!deal) throw new Error('Deal not found');
 

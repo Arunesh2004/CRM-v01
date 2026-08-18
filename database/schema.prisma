@@ -1,11 +1,13 @@
 generator client {
-  provider = "prisma-client-js"
+  provider        = "prisma-client-js"
+  previewFeatures = ["postgresqlExtensions", "extendedIndexes"]
 }
 
 datasource db {
-  provider  = "postgresql"
-  url       = env("DATABASE_URL")
-  directUrl = env("DIRECT_URL")
+  provider   = "postgresql"
+  url        = env("DATABASE_URL")
+  directUrl  = env("DIRECT_URL")
+  extensions = [vector]
 }
 
 // -----------------------------------------------------------------------------
@@ -66,6 +68,10 @@ enum Resource {
   STREAM
   RECORDING
   AI_EVENT
+  SECURITY_EVENT
+  REVENUE
+  SALES_INTEL
+  TICKET
 }
 
 enum WebhookStatus {
@@ -80,11 +86,59 @@ enum Action {
   UPDATE
   DELETE
   RESOLVE
+  APPROVE
+  MANAGE_TERRITORIES
+}
+
+enum SecurityEventType {
+  RLS_VIOLATION_ATTEMPT
+  UNAUTHORIZED_PII_ACCESS
+  AI_BLOCKED_ACTION
+  AI_PERMISSION_FAILURE
+  FAILED_LOGIN
+  SUSPICIOUS_ACTIVITY
+  WEBHOOK_SIGNATURE_FAILURE
+  RATE_LIMIT_TRIGGERED
+}
+
+enum SecurityEventSeverity {
+  LOW
+  MEDIUM
+  HIGH
+  CRITICAL
+}
+
+enum AIRiskLevel {
+  LOW
+  MODERATE
+  HIGH
+  CRITICAL
+}
+
+enum AIExecutionStatus {
+  PENDING
+  WAITING_APPROVAL
+  APPROVED
+  REJECTED
+  IN_PROGRESS
+  COMPLETED
+  FAILED
+  BLOCKED
 }
 
 // -----------------------------------------------------------------------------
 // MODELS
 // -----------------------------------------------------------------------------
+
+enum QuoteStatus {
+  DRAFT
+  PENDING_APPROVAL
+  APPROVED
+  SENT
+  ACCEPTED
+  REJECTED
+  EXPIRED
+}
 
 model Tenant {
   id             String       @id @default(uuid())
@@ -153,6 +207,46 @@ model Tenant {
   aiConversations        AIConversation[]
   aiConversationMessages AIConversationMessage[]
   userPresences          UserPresence[]
+  securityEvents         SecurityEvent[]
+  aiExecutions           AIExecution[]
+  documentEmbeddings     DocumentEmbedding[]
+  aimemories             AIMemory[]
+  aiagentExecutions      AIAgentExecution[]
+  aireferences           AIReference[]
+  aiproviderConfigs      AIProviderConfig[]
+  aitokenUsages          AITokenUsage[]
+  workflows              Workflow[]
+  productCategories      ProductCategory[]
+  productFamilies        ProductFamily[]
+  products               Product[]
+  priceBooks             PriceBook[]
+  priceBookEntries       PriceBookEntry[]
+  discountRules          DiscountRule[]
+  quotes                 Quote[]
+  quoteLineItems         QuoteLineItem[]
+  territories            Territory[]
+  userTerritories        UserTerritory[]
+  salesQuotas            SalesQuota[]
+  dealSnapshots          DealSnapshot[]
+  fieldSecurityPolicies  FieldSecurityPolicy[]
+  abacPolicies           ABACPolicy[]
+  approvalRequests       ApprovalRequest[]
+  approvalSteps          ApprovalStep[]
+
+  tickets                Ticket[]
+  ticketMessages         TicketMessage[]
+  slaConfigurations      SLAConfiguration[]
+  slaEvents              SLAEvent[]
+  
+  idempotencyKeys        IdempotencyKey[]
+  deadLetterQueues       DeadLetterQueue[]
+  subscriptions          Subscription[]
+  invoices               Invoice[]
+  documentPermissions    DocumentPermission[]
+  workflowTriggers       WorkflowTrigger[]
+  workflowActions        WorkflowAction[]
+  workflowExecutions     WorkflowExecution[]
+  workflowExecutionSteps WorkflowExecutionStep[]
 }
 
 model TenantBootstrap {
@@ -169,8 +263,9 @@ model Department {
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
 
-  tenant Tenant @relation(fields: [tenantId], references: [id], onDelete: Cascade)
-  users  User[]
+  tenant             Tenant              @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  users              User[]
+  documentEmbeddings DocumentEmbedding[]
 
   @@unique([tenantId, name])
   @@index([tenantId])
@@ -217,13 +312,30 @@ model User {
   communicationAttachments CommunicationAttachment[]
   userPresences            UserPresence[]
 
-  incidents           Incident[]
-  deletedAt           DateTime?
-  crmComments         CRMComment[]
-  dealStageHistories  DealStageHistory[]
-  meetingParticipants MeetingParticipant[]
-  aiConversations     AIConversation[]
-  uploadedDocuments   Document[]
+  incidents            Incident[]
+  deletedAt            DateTime?
+  crmComments          CRMComment[]
+  dealStageHistories   DealStageHistory[]
+  meetingParticipants  MeetingParticipant[]
+  aiConversations      AIConversation[]
+  uploadedDocuments    Document[]
+  securityEvents       SecurityEvent[]
+  aiExecutions         AIExecution[]
+  aiMemories           AIMemory[]           @relation("AIMemoryUser")
+  approvedAiMemories   AIMemory[]           @relation("AIMemoryApprover")
+  approvedAiExecutions AIExecution[]        @relation("AIExecutionApprover")
+  documentEmbeddings   DocumentEmbedding[]
+  documentPermissions  DocumentPermission[]
+  aiagentExecutions    AIAgentExecution[]
+  aitokenUsages        AITokenUsage[]
+  quotes               Quote[]
+  userTerritories      UserTerritory[]
+  salesQuotas          SalesQuota[]
+  approvalRequests     ApprovalRequest[]
+  approvalSteps        ApprovalStep[]
+
+  assignedTickets        Ticket[]          @relation("TicketAssignee")
+  sentTicketMessages     TicketMessage[]
 
   @@unique([tenantId, email])
   @@unique([tenantId, employeeId])
@@ -257,10 +369,11 @@ model Role {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  tenant      Tenant           @relation(fields: [tenantId], references: [id])
-  userRoles   UserRole[]
-  permissions RolePermission[]
-  deletedAt   DateTime?
+  tenant              Tenant               @relation(fields: [tenantId], references: [id])
+  userRoles           UserRole[]
+  permissions         RolePermission[]
+  deletedAt           DateTime?
+  documentPermissions DocumentPermission[]
 
   @@index([tenantId, id])
 }
@@ -431,6 +544,8 @@ model Lead {
 
   tenant       Tenant @relation(fields: [tenantId], references: [id])
   assignedUser User?  @relation(fields: [assignedUserId], references: [id], onDelete: SetNull)
+  score        Float? @default(0)
+  scoreFactors Json?
   tasks        Task[]
   deals        Deal[]
 
@@ -461,6 +576,8 @@ model Customer {
   documents    Document[]
 
   // Communication
+  quotes Quote[]
+  tickets Ticket[]
 
   @@unique([tenantId, normalizedName])
   @@index([tenantId])
@@ -656,10 +773,13 @@ model Document {
   createdAt    DateTime @default(now())
   updatedAt    DateTime @updatedAt
 
-  tenant     Tenant    @relation(fields: [tenantId], references: [id])
-  uploadedBy User      @relation(fields: [uploadedById], references: [id], onDelete: Restrict)
-  customer   Customer? @relation(fields: [customerId], references: [id], onDelete: Cascade)
-  task       Task?     @relation(fields: [taskId], references: [id], onDelete: Cascade)
+  tenant              Tenant               @relation(fields: [tenantId], references: [id])
+  uploadedBy          User                 @relation(fields: [uploadedById], references: [id], onDelete: Restrict)
+  customer            Customer?            @relation(fields: [customerId], references: [id], onDelete: Cascade)
+  task                Task?                @relation(fields: [taskId], references: [id], onDelete: Cascade)
+  documentEmbeddings  DocumentEmbedding[]
+  documentPermissions DocumentPermission[]
+  aireferences        AIReference[]
 
   @@index([tenantId, customerId])
   @@index([tenantId, taskId])
@@ -887,6 +1007,9 @@ enum CallStatus {
   COMPLETED
   MISSED
   FAILED
+  QUEUED
+  RINGING
+  IN_PROGRESS
 }
 
 enum UserPresenceStatus {
@@ -1303,33 +1426,35 @@ model PipelineStage {
   createdAt    DateTime @default(now())
   updatedAt    DateTime @updatedAt
 
-  tenant      Tenant             @relation(fields: [tenantId], references: [id])
-  pipeline    Pipeline           @relation(fields: [pipelineId], references: [id], onDelete: Cascade)
-  deals       Deal[]
-  historyFrom DealStageHistory[] @relation("HistoryFromStage")
-  historyTo   DealStageHistory[] @relation("HistoryToStage")
+  tenant        Tenant             @relation(fields: [tenantId], references: [id])
+  pipeline      Pipeline           @relation(fields: [pipelineId], references: [id], onDelete: Cascade)
+  deals         Deal[]
+  historyFrom   DealStageHistory[] @relation("HistoryFromStage")
+  historyTo     DealStageHistory[] @relation("HistoryToStage")
+  dealSnapshots DealSnapshot[]
 
   @@index([tenantId, pipelineId])
   @@index([pipelineId, order])
 }
 
 model Deal {
-  id                String     @id @default(uuid())
-  tenantId          String
-  title             String
-  description       String?
-  source            String?
-  value             Float      @default(0)
-  currency          String     @default("USD")
-  probability       Int?
-  expectedCloseDate DateTime?
-  actualCloseDate   DateTime?
-  status            DealStatus @default(OPEN)
-  lostReason        String?
-  lostCompetitor    String?
-  lostNotes         String?
-  lostAt            DateTime?
-  version           Int        @default(1)
+  id                 String     @id @default(uuid())
+  tenantId           String
+  title              String
+  description        String?
+  source             String?
+  value              Float      @default(0)
+  currency           String     @default("USD")
+  probability        Int?
+  probabilityFactors Json?
+  expectedCloseDate  DateTime?
+  actualCloseDate    DateTime?
+  status             DealStatus @default(OPEN)
+  lostReason         String?
+  lostCompetitor     String?
+  lostNotes          String?
+  lostAt             DateTime?
+  version            Int        @default(1)
 
   pipelineId     String
   stageId        String
@@ -1342,15 +1467,17 @@ model Deal {
   updatedAt DateTime  @updatedAt
   deletedAt DateTime?
 
-  tenant       Tenant             @relation(fields: [tenantId], references: [id])
-  pipeline     Pipeline           @relation(fields: [pipelineId], references: [id], onDelete: Restrict)
-  stage        PipelineStage      @relation(fields: [stageId], references: [id], onDelete: Restrict)
-  customer     Customer?          @relation(fields: [customerId], references: [id], onDelete: SetNull)
-  lead         Lead?              @relation(fields: [leadId], references: [id], onDelete: SetNull)
-  assignedUser User               @relation("DealAssignedUser", fields: [assignedUserId], references: [id])
-  createdUser  User               @relation("DealCreatedUser", fields: [createdById], references: [id])
-  stageHistory DealStageHistory[]
-  tasks        Task[]
+  tenant        Tenant             @relation(fields: [tenantId], references: [id])
+  pipeline      Pipeline           @relation(fields: [pipelineId], references: [id], onDelete: Restrict)
+  stage         PipelineStage      @relation(fields: [stageId], references: [id], onDelete: Restrict)
+  customer      Customer?          @relation(fields: [customerId], references: [id], onDelete: SetNull)
+  lead          Lead?              @relation(fields: [leadId], references: [id], onDelete: SetNull)
+  assignedUser  User               @relation("DealAssignedUser", fields: [assignedUserId], references: [id])
+  createdUser   User               @relation("DealCreatedUser", fields: [createdById], references: [id])
+  stageHistory  DealStageHistory[]
+  tasks         Task[]
+  quotes        Quote[]
+  dealSnapshots DealSnapshot[]
 
   @@index([tenantId, status])
   @@index([tenantId, stageId])
@@ -1442,4 +1569,784 @@ model AIConversationMessage {
   tenant       Tenant         @relation(fields: [tenantId], references: [id])
 
   @@index([tenantId, conversationId, createdAt])
+}
+
+model SecurityEvent {
+  id        String                @id @default(uuid())
+  tenantId  String
+  userId    String?
+  eventType SecurityEventType
+  severity  SecurityEventSeverity
+  source    String
+  ipAddress String?
+  userAgent String?
+  metadata  Json?
+  createdAt DateTime              @default(now())
+
+  tenant Tenant @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  user   User?  @relation(fields: [userId], references: [id], onDelete: SetNull)
+
+  @@index([tenantId, createdAt])
+  @@index([tenantId, eventType])
+  @@index([tenantId, severity])
+}
+
+model AITool {
+  id                 String      @id @default(uuid())
+  name               String      @unique
+  description        String?
+  requiredPermission String?
+  riskLevel          AIRiskLevel @default(LOW)
+  requiresApproval   Boolean     @default(false)
+  createdAt          DateTime    @default(now())
+
+  executions AIExecution[]
+}
+
+model AIExecution {
+  id         String            @id @default(uuid())
+  tenantId   String
+  userId     String
+  toolId     String
+  status     AIExecutionStatus @default(PENDING)
+  approvedBy String?
+  input      Json
+  output     Json?
+  createdAt  DateTime          @default(now())
+
+  tenant        Tenant         @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  user          User           @relation(fields: [userId], references: [id], onDelete: Cascade)
+  tool          AITool         @relation(fields: [toolId], references: [id], onDelete: Cascade)
+  approver      User?          @relation("AIExecutionApprover", fields: [approvedBy], references: [id], onDelete: SetNull)
+  aireferences  AIReference[]
+  aitokenUsages AITokenUsage[]
+
+  @@index([tenantId, userId])
+  @@index([tenantId, status])
+  @@index([tenantId, createdAt])
+}
+
+// =============================================================================
+// PHASE 9: AI PLATFORM & AUTOMATION ENGINE
+// =============================================================================
+
+enum AIMemoryType {
+  SHORT_TERM
+  LONG_TERM
+  EPISODIC
+}
+
+enum AIMemoryVisibility {
+  PRIVATE_USER
+  DEPARTMENT
+  TENANT
+}
+
+enum AIAgentExecutionStatus {
+  PENDING
+  RUNNING
+  COMPLETED
+  FAILED
+  WAITING_APPROVAL
+}
+
+enum WorkflowStatus {
+  DRAFT
+  ACTIVE
+  INACTIVE
+}
+
+enum WorkflowExecutionStatus {
+  PENDING
+  RUNNING
+  COMPLETED
+  FAILED
+}
+
+enum WorkflowExecutionStepStatus {
+  PENDING
+  RUNNING
+  COMPLETED
+  FAILED
+}
+
+model DocumentEmbedding {
+  id           String                       @id @default(uuid())
+  tenantId     String
+  documentId   String
+  accessLevel  String
+  departmentId String?
+  createdById  String
+  chunkText    String
+  metadata     Json?
+  embedding    Unsupported("vector(1536)")?
+  createdAt    DateTime                     @default(now())
+
+  tenant     Tenant      @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  document   Document    @relation(fields: [documentId], references: [id], onDelete: Cascade)
+  department Department? @relation(fields: [departmentId], references: [id], onDelete: SetNull)
+  createdBy  User        @relation(fields: [createdById], references: [id], onDelete: Cascade)
+
+  @@index([tenantId, documentId])
+  @@index([tenantId, departmentId])
+}
+
+model DocumentPermission {
+  id         String   @id @default(uuid())
+  documentId String
+  userId     String?
+  roleId     String?
+  permission String
+  createdAt  DateTime @default(now())
+  
+  tenantId   String
+  tenant     Tenant   @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+
+  document Document @relation(fields: [documentId], references: [id], onDelete: Cascade)
+  user     User?    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  role     Role?    @relation(fields: [roleId], references: [id], onDelete: Cascade)
+
+  @@index([documentId, userId])
+  @@index([documentId, roleId])
+}
+
+model AIMemory {
+  id              String                       @id @default(uuid())
+  tenantId        String
+  userId          String
+  type            AIMemoryType
+  visibility      AIMemoryVisibility
+  content         String
+  embedding       Unsupported("vector(1536)")?
+  importanceScore Float                        @default(0.0)
+  source          String
+  verified        Boolean                      @default(false)
+  approvedBy      String?
+  expiresAt       DateTime?
+  createdAt       DateTime                     @default(now())
+
+  tenant   Tenant @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  user     User   @relation("AIMemoryUser", fields: [userId], references: [id], onDelete: Cascade)
+  approver User?  @relation("AIMemoryApprover", fields: [approvedBy], references: [id], onDelete: SetNull)
+
+  @@index([tenantId, userId, type])
+}
+
+model AIAgentExecution {
+  id            String                 @id @default(uuid())
+  tenantId      String
+  userId        String
+  agentName     String
+  correlationId String
+  status        AIAgentExecutionStatus @default(PENDING)
+  input         Json
+  output        Json?
+  createdAt     DateTime               @default(now())
+  updatedAt     DateTime               @updatedAt
+
+  tenant Tenant @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([tenantId, correlationId])
+}
+
+model AIReference {
+  id            String   @id @default(uuid())
+  tenantId      String
+  aiExecutionId String
+  documentId    String
+  embeddingId   String?
+  citationText  String
+  createdAt     DateTime @default(now())
+
+  tenant    Tenant      @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  execution AIExecution @relation(fields: [aiExecutionId], references: [id], onDelete: Cascade)
+  document  Document    @relation(fields: [documentId], references: [id], onDelete: Cascade)
+
+  @@index([tenantId, aiExecutionId])
+}
+
+model AIProviderConfig {
+  id              String   @id @default(uuid())
+  tenantId        String
+  provider        String
+  model           String
+  encryptedApiKey String
+  isActive        Boolean  @default(true)
+  createdAt       DateTime @default(now())
+
+  tenant Tenant @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+
+  @@index([tenantId, provider])
+}
+
+model AITokenUsage {
+  id            String   @id @default(uuid())
+  tenantId      String
+  userId        String
+  workflowId    String?
+  aiExecutionId String?
+  model         String
+  inputTokens   Int
+  outputTokens  Int
+  latencyMs     Int
+  cost          Float
+  timestamp     DateTime @default(now())
+
+  tenant    Tenant       @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  user      User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+  workflow  Workflow?    @relation(fields: [workflowId], references: [id], onDelete: SetNull)
+  execution AIExecution? @relation(fields: [aiExecutionId], references: [id], onDelete: SetNull)
+
+  @@index([tenantId, userId, timestamp])
+}
+
+model Workflow {
+  id          String         @id @default(uuid())
+  tenantId    String
+  name        String
+  description String?
+  status      WorkflowStatus @default(DRAFT)
+  createdAt   DateTime       @default(now())
+  updatedAt   DateTime       @updatedAt
+
+  tenant      Tenant              @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  triggers    WorkflowTrigger[]
+  actions     WorkflowAction[]
+  executions  WorkflowExecution[]
+  tokenUsages AITokenUsage[]
+
+  @@index([tenantId, status])
+}
+
+model WorkflowTrigger {
+  id         String   @id @default(uuid())
+  workflowId String
+  eventType  String
+  conditions Json?
+  createdAt  DateTime @default(now())
+
+  tenantId   String
+  tenant     Tenant   @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+
+  workflow Workflow @relation(fields: [workflowId], references: [id], onDelete: Cascade)
+
+  @@index([workflowId])
+}
+
+model WorkflowAction {
+  id         String   @id @default(uuid())
+  workflowId String
+  actionType String
+  orderIndex Int      @default(0)
+  config     Json
+  createdAt  DateTime @default(now())
+
+  tenantId   String
+  tenant     Tenant   @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+
+  workflow Workflow                @relation(fields: [workflowId], references: [id], onDelete: Cascade)
+  steps    WorkflowExecutionStep[]
+
+  @@index([workflowId, orderIndex])
+}
+
+model WorkflowExecution {
+  id         String                  @id @default(uuid())
+  workflowId String
+  status     WorkflowExecutionStatus @default(PENDING)
+  context    Json?
+  createdAt  DateTime                @default(now())
+  updatedAt  DateTime                @updatedAt
+
+  tenantId   String
+  tenant     Tenant   @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+
+  workflow Workflow                @relation(fields: [workflowId], references: [id], onDelete: Cascade)
+  steps    WorkflowExecutionStep[]
+
+  @@index([workflowId, status])
+}
+
+model WorkflowExecutionStep {
+  id          String                      @id @default(uuid())
+  executionId String
+  actionId    String
+  status      WorkflowExecutionStepStatus @default(PENDING)
+  result      Json?
+  error       String?
+  timestamp   DateTime                    @default(now())
+
+  tenantId    String
+  tenant      Tenant   @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+
+  execution WorkflowExecution @relation(fields: [executionId], references: [id], onDelete: Cascade)
+  action    WorkflowAction    @relation(fields: [actionId], references: [id], onDelete: Cascade)
+
+  @@index([executionId])
+}
+
+// ==========================================
+// PHASE 10.1: REVENUE MANAGEMENT CORE
+// ==========================================
+
+model ProductCategory {
+  id          String   @id @default(uuid())
+  tenantId    String
+  name        String
+  description String?
+  isActive    Boolean  @default(true)
+  parentId    String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  tenant   Tenant            @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  parent   ProductCategory?  @relation("CategoryHierarchy", fields: [parentId], references: [id], onDelete: SetNull)
+  children ProductCategory[] @relation("CategoryHierarchy")
+  products Product[]
+
+  @@index([tenantId, parentId])
+}
+
+model ProductFamily {
+  id          String   @id @default(uuid())
+  tenantId    String
+  name        String
+  description String?
+  isActive    Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  tenant   Tenant    @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  products Product[]
+
+  @@index([tenantId])
+}
+
+model Product {
+  id          String   @id @default(uuid())
+  tenantId    String
+  categoryId  String?
+  familyId    String?
+  name        String
+  sku         String
+  description String?
+  metadata    Json?
+  isActive    Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  tenant           Tenant           @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  category         ProductCategory? @relation(fields: [categoryId], references: [id], onDelete: SetNull)
+  family           ProductFamily?   @relation(fields: [familyId], references: [id], onDelete: SetNull)
+  priceBookEntries PriceBookEntry[]
+
+  @@index([tenantId, sku])
+  @@index([tenantId, categoryId])
+  @@index([tenantId, familyId])
+}
+
+model PriceBook {
+  id            String    @id @default(uuid())
+  tenantId      String
+  name          String
+  description   String?
+  currencyCode  String    @default("USD")
+  isActive      Boolean   @default(true)
+  effectiveFrom DateTime?
+  effectiveTo   DateTime?
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+
+  tenant        Tenant           @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  entries       PriceBookEntry[]
+  quotes        Quote[]
+  discountRules DiscountRule[]
+
+  @@index([tenantId, isActive])
+}
+
+model PriceBookEntry {
+  id            String    @id @default(uuid())
+  tenantId      String
+  productId     String
+  priceBookId   String
+  unitPrice     Float
+  currencyCode  String    @default("USD")
+  isActive      Boolean   @default(true)
+  effectiveFrom DateTime?
+  effectiveTo   DateTime?
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+
+  tenant         Tenant          @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  product        Product         @relation(fields: [productId], references: [id], onDelete: Cascade)
+  priceBook      PriceBook       @relation(fields: [priceBookId], references: [id], onDelete: Cascade)
+  quoteLineItems QuoteLineItem[]
+
+  @@index([tenantId, priceBookId, productId])
+  @@index([tenantId, productId])
+}
+
+model DiscountRule {
+  id                String    @id @default(uuid())
+  tenantId          String
+  name              String
+  description       String?
+  priceBookId       String?
+  maxDiscount       Float // maximum allowable percentage
+  minMargin         Float?
+  approvalThreshold Float // threshold requiring approval
+  isActive          Boolean   @default(true)
+  effectiveFrom     DateTime?
+  effectiveTo       DateTime?
+  priority          Int       @default(0)
+  createdAt         DateTime  @default(now())
+  updatedAt         DateTime  @updatedAt
+
+  tenant    Tenant     @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  priceBook PriceBook? @relation(fields: [priceBookId], references: [id], onDelete: Cascade)
+
+  @@index([tenantId, isActive])
+  @@index([tenantId, priceBookId])
+}
+
+model Quote {
+  id                String      @id @default(uuid())
+  tenantId          String
+  customerId        String
+  dealId            String
+  ownerId           String
+  priceBookId       String
+  status            QuoteStatus @default(DRAFT)
+  expirationDate    DateTime?
+  subtotal          Float       @default(0)
+  discountTotal     Float       @default(0)
+  taxTotal          Float       @default(0)
+  grandTotal        Float       @default(0)
+  previousVersionId String?     @unique
+  createdAt         DateTime    @default(now())
+  updatedAt         DateTime    @updatedAt
+
+  tenant          Tenant          @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  customer        Customer        @relation(fields: [customerId], references: [id], onDelete: Cascade)
+  deal            Deal            @relation(fields: [dealId], references: [id], onDelete: Cascade)
+  owner           User            @relation(fields: [ownerId], references: [id], onDelete: Restrict)
+  priceBook       PriceBook       @relation(fields: [priceBookId], references: [id], onDelete: Restrict)
+  previousVersion Quote?          @relation("QuoteVersions", fields: [previousVersionId], references: [id], onDelete: SetNull)
+  nextVersion     Quote?          @relation("QuoteVersions")
+  lineItems       QuoteLineItem[]
+
+  @@index([tenantId, customerId])
+  @@index([tenantId, dealId])
+  @@index([tenantId, status])
+  @@index([tenantId, createdAt])
+}
+
+model QuoteLineItem {
+  id               String   @id @default(uuid())
+  tenantId         String
+  quoteId          String
+  priceBookEntryId String
+  productId        String // De-normalized for historical stability
+  quantity         Int      @default(1)
+  unitPrice        Float // Snapshot of the price at quote time
+  discount         Float    @default(0)
+  subtotal         Float
+  metadata         Json?
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
+
+  tenant         Tenant         @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  quote          Quote          @relation(fields: [quoteId], references: [id], onDelete: Cascade)
+  priceBookEntry PriceBookEntry @relation(fields: [priceBookEntryId], references: [id], onDelete: Restrict)
+
+  @@index([tenantId, quoteId])
+  @@index([tenantId, priceBookEntryId])
+}
+
+model Territory {
+  id          String   @id @default(uuid())
+  tenantId    String
+  name        String
+  description String?
+  parentId    String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  tenant          Tenant          @relation(fields: [tenantId], references: [id])
+  parent          Territory?      @relation("TerritoryHierarchy", fields: [parentId], references: [id], onDelete: Restrict)
+  children        Territory[]     @relation("TerritoryHierarchy")
+  userTerritories UserTerritory[]
+
+  @@index([tenantId])
+  @@index([tenantId, parentId])
+}
+
+model UserTerritory {
+  id          String   @id @default(uuid())
+  tenantId    String
+  userId      String
+  territoryId String
+  role        String   @default("REP")
+  createdAt   DateTime @default(now())
+
+  tenant    Tenant    @relation(fields: [tenantId], references: [id])
+  user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  territory Territory @relation(fields: [territoryId], references: [id], onDelete: Cascade)
+
+  @@index([tenantId, userId])
+  @@index([tenantId, territoryId])
+}
+
+model SalesQuota {
+  id           String   @id @default(uuid())
+  tenantId     String
+  userId       String
+  period       String
+  targetAmount Float
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  tenant Tenant @relation(fields: [tenantId], references: [id])
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([tenantId, userId])
+  @@index([tenantId, period])
+}
+
+model DealSnapshot {
+  id          String   @id @default(uuid())
+  tenantId    String
+  dealId      String
+  date        DateTime @default(now())
+  value       Float
+  probability Int?
+  stageId     String
+  createdAt   DateTime @default(now())
+
+  tenant Tenant        @relation(fields: [tenantId], references: [id])
+  deal   Deal          @relation(fields: [dealId], references: [id], onDelete: Cascade)
+  stage  PipelineStage @relation(fields: [stageId], references: [id], onDelete: Restrict)
+
+  @@index([tenantId, dealId, date])
+  @@index([tenantId, date])
+}
+
+// ==========================================
+// PHASE 10.3: ENTERPRISE CONTROLS
+// ==========================================
+
+model FieldSecurityPolicy {
+  id            String   @id @default(uuid())
+  tenantId      String
+  modelName     String
+  fieldName     String
+  securityLevel String
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+  
+  tenant Tenant @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  
+  @@unique([tenantId, modelName, fieldName])
+}
+
+model ABACPolicy {
+  id          String   @id @default(uuid())
+  tenantId    String
+  name        String
+  resource    String
+  action      String
+  conditions  Json
+  effect      String
+  isActive    Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  
+  tenant Tenant @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  
+  @@index([tenantId, resource, action])
+}
+
+model ApprovalRequest {
+  id             String   @id @default(uuid())
+  tenantId       String
+  requesterId    String
+  resource       String
+  resourceId     String
+  status         String   // PENDING, APPROVED, REJECTED, CANCELLED
+  workflowStepId String?  @unique
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+  
+  tenant    Tenant         @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  requester User           @relation(fields: [requesterId], references: [id])
+  steps     ApprovalStep[]
+  
+  @@index([tenantId, status])
+}
+
+model ApprovalStep {
+  id                String   @id @default(uuid())
+  tenantId          String
+  approvalRequestId String
+  approverId        String?
+  approverRoleId    String?
+  status            String   // PENDING, APPROVED, REJECTED
+  comments          String?
+  actedAt           DateTime?
+  createdAt         DateTime @default(now())
+  
+  tenant   Tenant         @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  request  ApprovalRequest @relation(fields: [approvalRequestId], references: [id], onDelete: Cascade)
+  approver User?    @relation(fields: [approverId], references: [id], onDelete: SetNull)
+
+  @@index([tenantId, approvalRequestId])
+  @@index([tenantId, status])
+}
+
+// -----------------------------------------------------------------------------
+// OMNI-CHANNEL SUPPORT MODELS (PHASE 10.4)
+// -----------------------------------------------------------------------------
+
+enum TicketStatus {
+  OPEN
+  PENDING
+  RESOLVED
+  CLOSED
+}
+
+model Ticket {
+  id             String       @id @default(uuid())
+  tenantId       String
+  customerId     String
+  assignedUserId String?
+  status         TicketStatus @default(OPEN)
+  priority       TaskPriority @default(MEDIUM)
+  subject        String
+  description    String
+  createdAt      DateTime     @default(now())
+  updatedAt      DateTime     @updatedAt
+  deletedAt      DateTime?
+  resolvedAt     DateTime?
+  closedAt       DateTime?
+  slaDeadline    DateTime?
+
+  tenant         Tenant          @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  customer       Customer        @relation(fields: [customerId], references: [id], onDelete: Cascade)
+  assignedUser   User?           @relation("TicketAssignee", fields: [assignedUserId], references: [id], onDelete: SetNull)
+  messages       TicketMessage[]
+  slaEvents      SLAEvent[]
+
+  @@index([tenantId, status])
+  @@index([tenantId, assignedUserId, status])
+  @@index([tenantId, slaDeadline])
+}
+
+model TicketMessage {
+  id           String    @id @default(uuid())
+  tenantId     String
+  ticketId     String
+  senderId     String?
+  senderType   ActorType
+  content      String
+  isInternal   Boolean   @default(false)
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+
+  tenant       Tenant    @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  ticket       Ticket    @relation(fields: [ticketId], references: [id], onDelete: Cascade)
+  senderUser   User?     @relation(fields: [senderId], references: [id], onDelete: SetNull) 
+
+  @@index([tenantId, ticketId, createdAt])
+}
+
+model SLAConfiguration {
+  id                    String       @id @default(uuid())
+  tenantId              String
+  priority              TaskPriority
+  responseMinutes       Int          @default(60)
+  resolutionTimeMinutes Int          @default(1440)
+  createdAt             DateTime     @default(now())
+  updatedAt             DateTime     @updatedAt
+
+  tenant                Tenant       @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+
+  @@unique([tenantId, priority])
+}
+
+model SLAEvent {
+  id           String    @id @default(uuid())
+  tenantId     String
+  ticketId     String
+  type         String    // e.g., RESPONSE_BREACH, RESOLUTION_BREACH
+  recordedAt   DateTime  @default(now())
+
+  tenant       Tenant    @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  ticket       Ticket    @relation(fields: [ticketId], references: [id], onDelete: Cascade)
+
+  @@unique([tenantId, ticketId, type])
+  @@index([tenantId, ticketId])
+}
+
+model IdempotencyKey {
+  id        String   @id @default(uuid())
+  tenantId  String
+  key       String
+  expiresAt DateTime
+  createdAt DateTime @default(now())
+
+  tenant    Tenant   @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+
+  @@unique([tenantId, key])
+  @@index([expiresAt])
+}
+
+model DeadLetterQueue {
+  id            String   @id @default(uuid())
+  tenantId      String
+  jobId         String
+  jobType       String
+  correlationId String?
+  payload       Json
+  lastError     String?
+  attemptCount  Int      @default(0)
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+  status        String   @default("PENDING") // PENDING, REPLAYED, DISCARDED
+
+  tenant        Tenant   @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+
+  @@index([tenantId, status])
+  @@index([createdAt])
+}
+
+model Subscription {
+  id               String   @id @default(uuid())
+  tenantId         String
+  stripeCustomerId String?
+  stripeSubId      String?
+  status           String   @default("INACTIVE")
+  planId           String?
+  currentPeriodEnd DateTime?
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
+
+  tenant Tenant @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+
+  @@index([tenantId])
+}
+
+model Invoice {
+  id            String   @id @default(uuid())
+  tenantId      String
+  stripeInvoiceId String?
+  amountDue     Float    @default(0)
+  amountPaid    Float    @default(0)
+  status        String   @default("DRAFT")
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  tenant Tenant @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+
+  @@index([tenantId])
 }

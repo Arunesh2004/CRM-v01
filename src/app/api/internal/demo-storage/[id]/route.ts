@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { requireTenant } from '@/lib/auth';
+import { requireTenant, requireAuth } from '@/lib/auth';
 import prisma from '@/../database/utils/prisma';
 
 export async function GET(
@@ -7,6 +7,7 @@ export async function GET(
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    await requireAuth();
     const tenantId = await requireTenant();
     const resolvedParams = await params;
     const { id } = resolvedParams;

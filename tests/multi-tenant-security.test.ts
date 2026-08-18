@@ -53,10 +53,10 @@ async function runTests() {
   const schemaPath = path.join(__dirname, '../database/schema.prisma');
   if (fs.existsSync(schemaPath)) {
     const schemaContent = fs.readFileSync(schemaPath, 'utf8');
-    const models = schemaContent.split('model ').slice(1);
+    const models = schemaContent.split('\nmodel ').slice(1);
     
     for (const modelDef of models) {
-      const modelName = modelDef.split(' ')[0];
+      const modelName = modelDef.split(' ')[0].trim();
       // Exclude global system models
       if (['Tenant', 'User', 'WebhookEvent', 'Permission', 'RolePermission', 'UserRole', 'Plan'].includes(modelName)) continue;
       

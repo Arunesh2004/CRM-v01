@@ -1,5 +1,5 @@
 import { PrismaClient } from '@prisma/client';
-import { EventBus } from '@/modules/core/events/event-bus';
+import { inngest } from '@/lib/queue/inngest.client';
 
 const prisma = new PrismaClient();
 const MAX_RETRIES = 5;
@@ -36,10 +36,18 @@ export async function processOutbox() {
     }
 
     try {
-      // Publish event
-      await EventBus.emit(event.eventType, {
-        tenantId: event.tenantId,
-        ...(event.payload as object)
+      // Publish event to Inngest distributed queue
+      await inngest.send({
+        name: 'outbox.process',
+        data: {
+          jobId: event.id,
+          tenantId: event.tenantId,
+          actorType: 'SYSTEM',
+          correlationId: event.id,
+          jobType: event.eventType,
+          payload: event.payload,
+          schemaVersion: '1.0'
+        }
       });
 
       // Mark as PROCESSED

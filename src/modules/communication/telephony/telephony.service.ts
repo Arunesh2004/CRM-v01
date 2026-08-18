@@ -1,5 +1,6 @@
 import { requireAuth, requireTenant, requirePermission } from '@/lib/auth';
-import { withTenant } from '../../../../database/utils/prisma-tenant';
+import globalPrisma from '@/../database/utils/prisma';
+import { withTenant, withTenantTransaction } from '../../../../database/utils/prisma-tenant';
 import { ProviderFactory } from '@/lib/providers/provider.factory';
 import { CreateCallInput } from '../communication.types';
 import { getCurrentUserContext } from '@/lib/tenant-context';
@@ -19,7 +20,8 @@ export async function createCall(input: CreateCallInput) {
     throw new Error('Telephony provider failed');
   }
   
-  return await prisma.$transaction(async (tx: any) => {
+  return await globalPrisma.$transaction(async (baseTx: any) => {
+    const tx = await withTenantTransaction(baseTx, tenantId);
     // We log the call directly without participant models
     // Defaulting to system employee if not known for this legacy mapping
     const callLog = await tx.callLog.create({
@@ -81,7 +83,8 @@ export async function processCallRecording(callId: string, storageUrl: string, d
   const callLog = await prisma.callLog.findFirst({ where: { id: callId, tenantId } });
   if (!callLog) throw new Error("Related entity does not belong to this tenant: Call");
 
-  return await prisma.$transaction(async (tx: any) => {
+  return await globalPrisma.$transaction(async (baseTx: any) => {
+    const tx = await withTenantTransaction(baseTx, tenantId);
     // Map to CommunicationAttachment
     const attachment = await tx.communicationAttachment.create({
       data: { 
