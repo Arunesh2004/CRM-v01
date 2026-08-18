@@ -5,7 +5,7 @@ const prisma = new PrismaClient();
 async function main() {
   console.log('--- Database Verification ---');
   try {
-    const user = await prisma.user.findUnique({
+    const user = await prisma.user.findFirst({
       where: { clerkId: 'test_123' },
     });
     console.log('Result:', user);
