@@ -109,6 +109,7 @@ export default async function DashboardPage() {
     { label: "Security Incidents", value: incidentCount, icon: AlertTriangle, color: "rose", href: "/incidents" },
   ];
 
+
   return (
     <div className="space-y-6 animate-in">
 

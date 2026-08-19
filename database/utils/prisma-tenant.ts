@@ -15,13 +15,14 @@ export const withTenant = (tenantId: string) => {
             'User', 'Customer', 'CustomerContact', 'Lead', 'Deal',
             'Task', 'Incident', 'Camera', 'AIEvent', 'ChatMessage',
             'MailMessage', 'Document', 'AuditLog', 'SecurityEvent',
-            'AIExecution', 'Ticket', 'TicketMessage', 'SLAConfiguration', 'SLAEvent'
+            'AIExecution', 'Ticket', 'TicketMessage', 'SLAConfiguration', 'SLAEvent',
+            'ActivityTimeline', 'CallLog'
           ];
           
           const tenantScopedModels = [
             'User', 'DeviceSession', 'Role', 'AuditLog', 'TenantIntegration',
             'Lead', 'Customer', 'CustomerContact', 'Location', 'Task',
-            'CRMComment', 'ActivityTimeline', 'Call', 'CallParticipant',
+            'CRMComment', 'ActivityTimeline', 'Call', 'CallParticipant', 'CallLog',
             'CallRecording', 'CallTranscript', 'AISummary', 'Meeting',
             'MeetingParticipant', 'DemoStorage', 'EmailThread', 'EmailMessage',
             'EmailAttachment', 'Conversation', 'ConversationMember', 'Message',
