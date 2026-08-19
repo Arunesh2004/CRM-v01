@@ -186,7 +186,15 @@ export async function requireAuth() {
       // Fast path failed (clerkId not found), so attempt synchronization (bootstrap or invite linking)
       const syncedUser = await ensureUserProvisionedFromClerk(clerkAuth.userId);
       if (syncedUser) {
-        user = await getCurrentUser();
+        user = await prisma.user.findFirst({
+          where: { clerkId: clerkAuth.userId },
+          include: {
+            tenant: true,
+            userRoles: {
+              include: { role: { include: { permissions: { include: { permission: true } } } } }
+            }
+          }
+        });
       }
     }
     if (!user) {
@@ -338,7 +346,10 @@ export async function requireAuthIdentity() {
     if (clerkAuth.userId) {
       const syncedUser = await ensureUserProvisionedFromClerk(clerkAuth.userId);
       if (syncedUser) {
-        user = await getCurrentUserIdentity();
+        user = await prisma.user.findFirst({
+          where: { clerkId: clerkAuth.userId },
+          select: { id: true, tenantId: true, email: true, status: true }
+        });
       }
     }
     if (!user) {
