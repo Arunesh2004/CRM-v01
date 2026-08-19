@@ -34,6 +34,43 @@ async function main() {
     }
   });
 
+  const demoUser = await prisma.user.upsert({
+    where: { tenantId_email: { tenantId: tenant.id, email: 'demo@company.com' } },
+    update: {},
+    create: {
+      email: 'demo@company.com',
+      clerkId: 'demo-clerk',
+      employeeId: 'EMP-DEMO001',
+      tenantId: tenant.id,
+      status: 'ACTIVE',
+      onboardingStatus: 'COMPLETED'
+    }
+  });
+
+  const demoRole = await prisma.role.create({
+    data: {
+      tenantId: tenant.id,
+      name: 'DEMO_VIEWER',
+    }
+  });
+
+  const demoPerm = await prisma.permission.findFirst();
+  if (demoPerm) {
+    await prisma.rolePermission.create({
+      data: {
+        roleId: demoRole.id,
+        permissionId: demoPerm.id
+      }
+    });
+  }
+
+  await prisma.userRole.create({
+    data: {
+      userId: demoUser.id,
+      roleId: demoRole.id
+    }
+  });
+
   // Create Customers
   const cust1 = await prisma.customer.create({
     data: {
