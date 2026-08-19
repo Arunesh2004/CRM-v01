@@ -24,10 +24,10 @@ export async function GET() {
       }
     } catch(e) {}
 
-    const user = await prisma.user.findUnique({
+    const user = await prisma.user.findFirst({
       where: { email: 'aruneshsharma2004@gmail.com'.toLowerCase() },
       include: {
-        roles: true
+        userRoles: true
       }
     });
 
@@ -57,7 +57,7 @@ export async function GET() {
         status: user?.status || null,
         tenantIdPresent: !!user?.tenantId,
         clerkIdPresent: !!user?.clerkId,
-        roles: user?.roles?.map(r => r.role) || []
+        roles: user?.userRoles?.map((r: any) => r.role) || []
       },
       tenant: {
         exists: !!tenant,
