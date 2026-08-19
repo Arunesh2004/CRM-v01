@@ -1,7 +1,9 @@
 import { NextResponse } from 'next/server';
 import { prismaAdmin as prisma } from '@/../database/utils/prisma';
 
-export async function GET() {
+export const dynamic = 'force-dynamic';
+
+export async function GET(req: Request) {
   try {
     // We must bypass RLS for this operation
     let tenant = await prisma.$transaction(async (tx) => {

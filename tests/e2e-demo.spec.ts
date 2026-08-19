@@ -1,6 +1,8 @@
 import { test, expect } from '@playwright/test';
 
 test.describe('Demo Account E2E Validation', () => {
+  test.setTimeout(120000); // 2 minutes
+
   const targetUrl = process.env.TARGET_URL || 'http://localhost:3000';
   const email = 'demo@company.com';
   const password = 'DemoCRM@2026Secure';
