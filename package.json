@@ -4,7 +4,7 @@
   "private": true,
   "scripts": {
     "dev": "next dev",
-    "build": "node -e \"const c=require('crypto');const u=process.env.DATABASE_URL;require('fs').writeFileSync('public/build-db.json', JSON.stringify({dbHash: u ? c.createHash('sha256').update(u).digest('hex') : 'null', host: u ? new URL(u).hostname : 'null'}));\" && prisma migrate deploy && next build",
+    "build": "node -e \"const c=require('crypto');const u=process.env.DATABASE_URL;require('fs').writeFileSync('public/build-db.json', JSON.stringify({dbHash: u ? c.createHash('sha256').update(u).digest('hex') : 'null', host: u ? new URL(u).hostname : 'null'}));\" && prisma migrate deploy && npx tsx prisma/temp-seed-verify.ts && next build",
     "start": "next start",
     "lint": "eslint",
     "format": "prettier --write .",
