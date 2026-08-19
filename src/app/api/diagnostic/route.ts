@@ -1,6 +1,8 @@
 import { NextResponse } from 'next/server';
 import { PrismaClient } from '@prisma/client';
 import crypto from 'crypto';
+import fs from 'fs';
+import path from 'path';
 
 const prisma = new PrismaClient();
 
@@ -35,17 +37,31 @@ export async function GET() {
       where: { name: 'Company Tenant' }
     });
 
-    let buildDb = null;
+    // Read build-time DB info
+    let buildConnection = null;
     try {
-      const fs = require('fs');
-      const path = require('path');
-      const buildDbPath = path.join(process.cwd(), 'public', 'build-db.json');
-      buildDb = JSON.parse(fs.readFileSync(buildDbPath, 'utf8'));
-    } catch(e) {}
+      const buildFile = path.join(process.cwd(), 'public', 'build-db.json');
+      if (fs.existsSync(buildFile)) {
+        buildConnection = JSON.parse(fs.readFileSync(buildFile, 'utf8'));
+      }
+    } catch (e) {
+      console.error('Error reading build-db.json:', e);
+    }
+
+    // Read seed-result.json
+    let seedResult = null;
+    try {
+      const seedFile = path.join(process.cwd(), 'public', 'seed-result.json');
+      if (fs.existsSync(seedFile)) {
+        seedResult = JSON.parse(fs.readFileSync(seedFile, 'utf8'));
+      }
+    } catch (e) {
+      console.error('Error reading seed-result.json:', e);
+    }
 
     return NextResponse.json({
       environment: vercelEnv,
-      buildConnection: buildDb,
+      buildConnection: buildConnection,
       runtimeConnection: {
         host,
         dbName,
@@ -62,7 +78,8 @@ export async function GET() {
       tenant: {
         exists: !!tenant,
         id: tenant?.id || null
-      }
+      },
+      seedResult
     });
   } catch (error: any) {
     return NextResponse.json({ error: error.message }, { status: 500 });
