@@ -3,11 +3,20 @@ import { PrismaClient } from '@prisma/client';
 import crypto from 'crypto';
 import fs from 'fs';
 import path from 'path';
+import { requireAuth, checkPermission } from '@/lib/auth';
 
 const prisma = new PrismaClient();
 
 export async function GET() {
   try {
+    const authUser = await requireAuth();
+    
+    // Enforce GLOBAL_ADMIN access only for diagnostic info
+    const isGlobalAdmin = authUser.userRoles.some((ur: any) => ur.role.name === 'GLOBAL_ADMIN');
+    if (!isGlobalAdmin) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 403 });
+    }
+
     const dbUrl = process.env.DATABASE_URL || '';
     const directUrl = process.env.DIRECT_URL || '';
     const vercelEnv = process.env.VERCEL_ENV || 'unknown';

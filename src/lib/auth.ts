@@ -337,9 +337,12 @@ export const getCurrentUserIdentity = cache(async function getCurrentUserIdentit
     return null;
   }
 
-  const user = await prisma.user.findFirst({
-    where: { clerkId },
-    select: { id: true, tenantId: true, email: true, status: true }
+  const user = await prisma.$transaction(async (tx) => {
+    await tx.$executeRawUnsafe(`SELECT set_config('app.bypass_rls', 'on', true)`);
+    return tx.user.findFirst({
+      where: { clerkId },
+      select: { id: true, tenantId: true, email: true, status: true }
+    });
   });
 
   return user;
