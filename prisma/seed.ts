@@ -95,7 +95,8 @@ async function main() {
   }
 
   // --- DEMO TENANT BOOTSTRAP ---
-  if (ENV.demoAccountEmail) {
+  const demoEmail = ENV.demoAccountEmail || 'demo@company.com';
+  if (demoEmail) {
     // We use a deterministic UUID for the demo tenant so it doesn't conflict with random IDs
     const demoTenantId = 'd3m00000-0000-4000-a000-000000000000';
     const demoTenant = await prisma.tenant.upsert({
@@ -144,11 +145,11 @@ async function main() {
     // Provision the Demo User
     const demoUser = await prisma.user.upsert({
       where: {
-        tenantId_email: { tenantId: demoTenant.id, email: ENV.demoAccountEmail }
+        tenantId_email: { tenantId: demoTenant.id, email: demoEmail }
       },
       update: {},
       create: {
-        email: ENV.demoAccountEmail,
+        email: demoEmail,
         tenantId: demoTenant.id,
         status: 'INVITED',
         onboardingStatus: 'COMPLETED', // Skip onboarding for demo
