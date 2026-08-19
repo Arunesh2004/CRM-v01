@@ -111,14 +111,17 @@ export const getCurrentUser = cache(async function getCurrentUser() {
     if (cached) return cached as any;
   }
 
-  const user = await prisma.user.findFirst({
-    where: { clerkId },
-    include: {
-      tenant: true,
-      userRoles: {
-        include: { role: { include: { permissions: { include: { permission: true } } } } }
+  const user = await prisma.$transaction(async (tx) => {
+    await tx.$executeRawUnsafe(`SELECT set_config('app.bypass_rls', 'on', true)`);
+    return tx.user.findFirst({
+      where: { clerkId },
+      include: {
+        tenant: true,
+        userRoles: {
+          include: { role: { include: { permissions: { include: { permission: true } } } } }
+        }
       }
-    }
+    });
   });
 
   if (redis && user) {
@@ -186,14 +189,17 @@ export async function requireAuth() {
       // Fast path failed (clerkId not found), so attempt synchronization (bootstrap or invite linking)
       const syncedUser = await ensureUserProvisionedFromClerk(clerkAuth.userId);
       if (syncedUser) {
-        user = await prisma.user.findFirst({
-          where: { clerkId: clerkAuth.userId },
-          include: {
-            tenant: true,
-            userRoles: {
-              include: { role: { include: { permissions: { include: { permission: true } } } } }
+        user = await prisma.$transaction(async (tx) => {
+          await tx.$executeRawUnsafe(`SELECT set_config('app.bypass_rls', 'on', true)`);
+          return tx.user.findFirst({
+            where: { clerkId: clerkAuth.userId },
+            include: {
+              tenant: true,
+              userRoles: {
+                include: { role: { include: { permissions: { include: { permission: true } } } } }
+              }
             }
-          }
+          });
         });
       }
     }
