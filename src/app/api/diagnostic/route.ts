@@ -1,78 +1,72 @@
 import { NextResponse } from 'next/server';
 import { PrismaClient } from '@prisma/client';
-import { requireAuth } from '@/lib/auth';
-import { createCustomer } from '@/modules/crm/customer/customer.service';
-import prisma from '@/../database/utils/prisma';
+import crypto from 'crypto';
 
-export async function POST(request: Request) {
-  if (process.env.NODE_ENV === 'production') {
-    return NextResponse.json({ error: 'Not allowed in production' }, { status: 403 });
-  }
+const prisma = new PrismaClient();
 
+export async function GET() {
   try {
-    await requireAuth();
-    const body = await request.json();
-    const action = body.action;
-    const token = request.headers.get('authorization');
-    
-    // Simulate Clerk Auth Header if provided for testing
-    if (token) {
-      // Very hacky but safe for diagnostic only: Clerk nextjs auth looks at cookies or headers
-      // We will rely on Next.js/Clerk middleware parsing the Authorization Bearer token.
-    }
+    const dbUrl = process.env.DATABASE_URL || '';
+    const directUrl = process.env.DIRECT_URL || '';
+    const vercelEnv = process.env.VERCEL_ENV || 'unknown';
 
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const results: any = {};
+    const dbHash = crypto.createHash('sha256').update(dbUrl).digest('hex');
+    const directHash = crypto.createHash('sha256').update(directUrl).digest('hex');
 
-    if (action === 'baseline') {
-      const p = new PrismaClient({ log: [] });
-      
-      const t0 = performance.now();
-      await p.$queryRawUnsafe('SELECT 1');
-      results.coldSelect = performance.now() - t0;
-      
-      results.warmSelects = [];
-      for (let i = 0; i < 3; i++) {
-        const t = performance.now();
-        await p.$queryRawUnsafe('SELECT 1');
-        results.warmSelects.push(performance.now() - t);
+    // Parse host and dbname from DB URL if possible
+    let host = 'unknown';
+    let dbName = 'unknown';
+    try {
+      if (dbUrl) {
+        const urlObj = new URL(dbUrl);
+        host = urlObj.hostname;
+        dbName = urlObj.pathname.slice(1);
       }
-      
-      await p.$disconnect();
-    }
-    
+    } catch(e) {}
 
-    
-    if (action === 'write') {
-      const startTotal = performance.now();
-      // This will use the auth token passed in headers
-      const res = await createCustomer({
-        name: body.name || `Vercel Diag ${Date.now()}`,
-        industry: 'Technology'
-      });
-      results.writeTimings = res._debugTimings;
-      results.totalExternal = performance.now() - startTotal;
-      results.customerId = res.id;
-    }
-    
-    if (action === 'cleanup') {
-      const customerIds = body.customerIds || [];
-      const tenantId = body.tenantId;
-      const t0 = performance.now();
-      
-      await prisma.$transaction(async (tx) => {
-        for (const cid of customerIds) {
-          await tx.customer.deleteMany({ where: { id: cid, tenantId } });
-          await tx.activityTimeline.deleteMany({ where: { entityId: cid, entityType: 'CUSTOMER' } });
-          await tx.auditLog.deleteMany({ where: { resourceId: cid, resource: 'CUSTOMER' } });
-        }
-      });
-      results.cleanupTime = performance.now() - t0;
-    }
+    const user = await prisma.user.findUnique({
+      where: { email: 'aruneshsharma2004@gmail.com'.toLowerCase() },
+      include: {
+        roles: true
+      }
+    });
 
-    return NextResponse.json(results);
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  } catch (err: any) {
-    return NextResponse.json({ error: err.message }, { status: 500 });
+    const tenant = await prisma.tenant.findFirst({
+      where: { name: 'Company Tenant' }
+    });
+
+    let buildDb = null;
+    try {
+      const fs = require('fs');
+      const path = require('path');
+      const buildDbPath = path.join(process.cwd(), 'public', 'build-db.json');
+      buildDb = JSON.parse(fs.readFileSync(buildDbPath, 'utf8'));
+    } catch(e) {}
+
+    return NextResponse.json({
+      environment: vercelEnv,
+      buildConnection: buildDb,
+      runtimeConnection: {
+        host,
+        dbName,
+        dbHash,
+        directHash
+      },
+      user: {
+        exists: !!user,
+        status: user?.status || null,
+        tenantIdPresent: !!user?.tenantId,
+        clerkIdPresent: !!user?.clerkId,
+        roles: user?.roles?.map(r => r.role) || []
+      },
+      tenant: {
+        exists: !!tenant,
+        id: tenant?.id || null
+      }
+    });
+  } catch (error: any) {
+    return NextResponse.json({ error: error.message }, { status: 500 });
+  } finally {
+    await prisma.$disconnect();
   }
 }
