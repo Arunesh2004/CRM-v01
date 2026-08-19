@@ -36,14 +36,39 @@ export async function GET() {
         });
       });
       
-      await prisma.$transaction(async (tx) => {
+      const newRole = await prisma.$transaction(async (tx) => {
         await tx.$executeRawUnsafe(`SELECT set_config('app.bypass_rls', 'on', true)`);
         return tx.role.create({
           data: {
             tenantId: tenant.id,
-            name: 'DEMO_VIEWER',
-            permissions: ['read:all'],
-            userIds: [user.id]
+            name: 'DEMO_VIEWER'
+          }
+        });
+      });
+
+      let perm = await prisma.$transaction(async (tx) => {
+        await tx.$executeRawUnsafe(`SELECT set_config('app.bypass_rls', 'on', true)`);
+        return tx.permission.findFirst();
+      });
+
+      if (perm) {
+        await prisma.$transaction(async (tx) => {
+          await tx.$executeRawUnsafe(`SELECT set_config('app.bypass_rls', 'on', true)`);
+          return tx.rolePermission.create({
+            data: {
+              roleId: newRole.id,
+              permissionId: perm.id
+            }
+          });
+        });
+      }
+
+      await prisma.$transaction(async (tx) => {
+        await tx.$executeRawUnsafe(`SELECT set_config('app.bypass_rls', 'on', true)`);
+        return tx.userRole.create({
+          data: {
+            userId: user!.id,
+            roleId: newRole.id
           }
         });
       });
