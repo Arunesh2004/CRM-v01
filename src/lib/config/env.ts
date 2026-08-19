@@ -77,6 +77,14 @@ export const ENV = {
     const emails = this.initialAdminEmails;
     return emails.length > 0 ? emails[0] : undefined;
   },
+  get demoAccountEmail() {
+    return process.env.DEMO_ACCOUNT_EMAIL?.trim().toLowerCase();
+  },
+  get internalTestEmails(): string[] {
+    const val = process.env.INTERNAL_TEST_EMAIL?.trim().toLowerCase();
+    if (!val) return [];
+    return val.split(',').map(e => e.trim()).filter(e => e.length > 0);
+  },
   
   // Storage
   get awsAccessKeyId() { return process.env.AWS_ACCESS_KEY_ID; },
