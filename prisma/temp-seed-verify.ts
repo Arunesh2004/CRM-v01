@@ -30,38 +30,77 @@ async function main() {
       throw new Error(`Tenant ${tenantId} is missing`);
     }
 
-    const adminEmail = ENV.initialAdminEmail;
-    if (!adminEmail || adminEmail !== 'aruneshsharma2004@gmail.com') {
-      throw new Error(`INITIAL_ADMIN_EMAIL is missing or not aruneshsharma2004@gmail.com, got: ${adminEmail}`);
+    const adminEmails = ENV.initialAdminEmails;
+    if (!adminEmails || adminEmails.length === 0) {
+      throw new Error(`INITIAL_ADMIN_EMAIL is missing or empty`);
+    }
+    
+    // Verify total expected admin count
+    if (adminEmails.length < 2) {
+      throw new Error(`Expected at least 2 admins configured, found ${adminEmails.length}: ${adminEmails.join(', ')}`);
     }
 
-    const user = await prisma.user.findFirst({
-      where: { email: adminEmail },
-      include: { userRoles: { include: { role: true } } }
-    });
+    console.log('\nSTAGING SEED VERIFICATION\n');
 
-    if (!user) {
-      throw new Error(`User ${adminEmail} is missing`);
+    const results = [];
+    let allPass = true;
+
+    for (let i = 0; i < adminEmails.length; i++) {
+      const email = adminEmails[i];
+      console.log(`Admin ${i + 1}:`);
+      console.log(`${email}`);
+
+      const user = await prisma.user.findFirst({
+        where: { email },
+        include: { userRoles: { include: { role: true } } }
+      });
+
+      let userPass = false;
+      let tenantPass = false;
+      let rolePass = false;
+      let statusPass = false;
+      let roleName = 'MISSING';
+
+      if (user) {
+        userPass = true;
+        if (user.tenantId === tenant.id) {
+          tenantPass = true;
+        }
+        if (user.status === 'INVITED' || user.status === 'ACTIVE') {
+          statusPass = true;
+        }
+        const hasTenantAdmin = user.userRoles.some((ur: any) => ur.role.name === 'TENANT_ADMIN');
+        if (hasTenantAdmin) {
+          rolePass = true;
+          roleName = 'TENANT_ADMIN';
+        }
+      }
+
+      console.log(`User: ${userPass ? 'PASS' : 'FAIL'}`);
+      console.log(`Tenant: ${tenantPass ? 'PASS' : 'FAIL'}`);
+      console.log(`Role: ${rolePass ? roleName : 'FAIL'}`);
+      console.log(`Status: ${statusPass ? 'PASS' : 'FAIL'}\n`);
+
+      if (!userPass || !tenantPass || !rolePass || !statusPass) {
+        allPass = false;
+      }
+
+      results.push({ email, userPass, tenantPass, rolePass, statusPass });
     }
 
-    if (user.tenantId !== tenant.id) {
-      throw new Error(`User ${adminEmail} has wrong tenantId: ${user.tenantId}`);
-    }
+    console.log(`Overall: ${allPass ? 'PASS' : 'FAIL'}`);
 
-    const hasTenantAdmin = user.userRoles.some((ur: any) => ur.role.name === 'TENANT_ADMIN');
-    if (!hasTenantAdmin) {
-      throw new Error(`User ${adminEmail} does not have TENANT_ADMIN role`);
+    if (!allPass) {
+      throw new Error(`One or more admins failed verification.`);
     }
 
     const successResult = {
       success: true,
       tenantExists: true,
-      userExists: true,
-      userStatus: user.status,
-      hasTenantAdmin: true,
+      adminsVerified: adminEmails.length,
+      results,
       message: 'STAGING SEED VERIFICATION PASSED'
     };
-    console.log(successResult.message);
     require('fs').writeFileSync('public/seed-result.json', JSON.stringify(successResult, null, 2));
 
   } catch (error: any) {
