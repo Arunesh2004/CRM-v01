@@ -1,4 +1,23 @@
-import { test, expect } from '@playwright/test';
+import { test, expect, type Page } from '@playwright/test';
+
+/** Navigate with retry — handles transient Vercel connection resets on cold preview starts. */
+async function gotoWithRetry(page: Page, url: string, maxAttempts = 3) {
+  for (let attempt = 1; attempt <= maxAttempts; attempt++) {
+    try {
+      await page.goto(url, { waitUntil: 'load', timeout: 30000 });
+      return;
+    } catch (err: any) {
+      const transient = ['ERR_CONNECTION_RESET', 'ERR_NAME_NOT_RESOLVED', 'ERR_ABORTED'].some(
+        (code) => String(err).includes(code)
+      );
+      if (transient && attempt < maxAttempts) {
+        await page.waitForTimeout(3000 * attempt);
+      } else {
+        throw err;
+      }
+    }
+  }
+}
 
 test.describe('Demo Account E2E Validation', () => {
   test.setTimeout(120000); // 2 minutes
@@ -10,7 +29,7 @@ test.describe('Demo Account E2E Validation', () => {
   test('Phases 1-5: Auth, Tenant Isolation, Demo Data, RBAC, Data Isolation', async ({ page, request }) => {
     // PHASE 1: Authentication
     console.log('--- PHASE 1: AUTHENTICATION ---');
-    await page.goto(`${targetUrl}/sign-in`, { waitUntil: 'networkidle' });
+    await gotoWithRetry(page, `${targetUrl}/sign-in`);
     
     await page.waitForSelector('input[name="identifier"]');
     await page.fill('input[name="identifier"]', email);
@@ -106,7 +125,7 @@ test.describe('Demo Account E2E Validation', () => {
     const contextA = await browser.newContext();
     const pageA = await contextA.newPage();
     
-    await pageA.goto(`${targetUrl}/sign-in`);
+    await gotoWithRetry(pageA, `${targetUrl}/sign-in`);
     await pageA.fill('input[name="identifier"]', email);
     await pageA.click('button.cl-formButtonPrimary');
     await pageA.waitForSelector('input[name="password"]');
@@ -119,7 +138,7 @@ test.describe('Demo Account E2E Validation', () => {
     const contextB = await browser.newContext();
     const pageB = await contextB.newPage();
     
-    await pageB.goto(`${targetUrl}/sign-in`);
+    await gotoWithRetry(pageB, `${targetUrl}/sign-in`);
     await pageB.fill('input[name="identifier"]', email);
     await pageB.click('button.cl-formButtonPrimary');
     await pageB.waitForSelector('input[name="password"]');
