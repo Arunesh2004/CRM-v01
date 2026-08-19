@@ -24,9 +24,13 @@ export async function ensureUserProvisioned(clerkUser: ClerkUser | any) {
 export async function synchronizeClerkIdentity(clerkId: string, emailStr: string) {
   const email = emailStr.toLowerCase().trim();
 
-  // 1. Find the user locally by exact email lookup (ignoring tenant context as emails are unique in this deployment)
-  const user = await prisma.user.findFirst({
-    where: { email: email }
+  // 1. Find the user locally by exact email lookup
+  // We must bypass RLS here because we do not know the tenant context yet
+  const user = await prisma.$transaction(async (tx) => {
+    await tx.$executeRawUnsafe(`SELECT set_config('app.bypass_rls', 'on', true)`);
+    return tx.user.findFirst({
+      where: { email: email }
+    });
   });
 
   // 2. Reject unknown accounts
