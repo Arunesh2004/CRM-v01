@@ -68,7 +68,15 @@ export const ENV = {
   get databaseUrl() { return process.env.DATABASE_URL!; },
   get redisUrl() { return process.env.REDIS_URL || 'redis://localhost:6379'; },
   get companyTenantId() { return process.env.COMPANY_TENANT_ID?.trim()!; },
-  get initialAdminEmail() { return process.env.INITIAL_ADMIN_EMAIL?.trim().toLowerCase()!; },
+  get initialAdminEmails(): string[] { 
+    const val = process.env.INITIAL_ADMIN_EMAIL?.trim().toLowerCase();
+    if (!val) return [];
+    return val.split(',').map(e => e.trim()).filter(e => e.length > 0);
+  },
+  get initialAdminEmail() { 
+    const emails = this.initialAdminEmails;
+    return emails.length > 0 ? emails[0] : undefined;
+  },
   
   // Storage
   get awsAccessKeyId() { return process.env.AWS_ACCESS_KEY_ID; },

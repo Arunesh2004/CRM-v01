@@ -45,44 +45,46 @@ async function main() {
     }
   }
 
-  // Seed initial administrator
-  const adminEmail = ENV.initialAdminEmail;
-  if (adminEmail) {
-    const adminUser = await prisma.user.upsert({
-      where: {
-        tenantId_email: { tenantId: tenant.id, email: adminEmail }
-      },
-      update: {}, // Idempotent: don't overwrite if exists
-      create: {
-        email: adminEmail,
-        tenantId: tenant.id,
-        status: 'INVITED',
-        onboardingStatus: 'PENDING',
-        firstName: 'System',
-        lastName: 'Administrator',
-      }
-    });
-    console.log(`Verified Admin User exists: ${adminUser.email}`);
-
-    // Fetch TENANT_ADMIN role and link to adminUser
-    const adminRole = await prisma.role.findFirst({
-      where: { name: 'TENANT_ADMIN', tenantId: tenant.id }
-    });
-
-    if (adminRole) {
-      await prisma.userRole.upsert({
+  // Seed initial administrators
+  const adminEmails = ENV.initialAdminEmails;
+  if (adminEmails && adminEmails.length > 0) {
+    for (const adminEmail of adminEmails) {
+      const adminUser = await prisma.user.upsert({
         where: {
-          userId_roleId: { userId: adminUser.id, roleId: adminRole.id }
+          tenantId_email: { tenantId: tenant.id, email: adminEmail }
         },
-        update: {},
+        update: {}, // Idempotent: don't overwrite if exists
         create: {
-          userId: adminUser.id,
-          roleId: adminRole.id
+          email: adminEmail,
+          tenantId: tenant.id,
+          status: 'INVITED',
+          onboardingStatus: 'PENDING',
+          firstName: 'System',
+          lastName: 'Administrator',
         }
       });
-      console.log(`Verified Admin User has TENANT_ADMIN role`);
-    } else {
-      console.error(`ERROR: Could not find TENANT_ADMIN role to assign to ${adminEmail}`);
+      console.log(`Verified Admin User exists: ${adminUser.email}`);
+
+      // Fetch TENANT_ADMIN role and link to adminUser
+      const adminRole = await prisma.role.findFirst({
+        where: { name: 'TENANT_ADMIN', tenantId: tenant.id }
+      });
+
+      if (adminRole) {
+        await prisma.userRole.upsert({
+          where: {
+            userId_roleId: { userId: adminUser.id, roleId: adminRole.id }
+          },
+          update: {},
+          create: {
+            userId: adminUser.id,
+            roleId: adminRole.id
+          }
+        });
+        console.log(`Verified Admin User has TENANT_ADMIN role: ${adminEmail}`);
+      } else {
+        console.error(`ERROR: Could not find TENANT_ADMIN role to assign to ${adminEmail}`);
+      }
     }
   } else {
     console.log('NOTICE: INITIAL_ADMIN_EMAIL not set. Skipping admin user creation.');
