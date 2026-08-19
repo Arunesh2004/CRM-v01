@@ -4,7 +4,7 @@
   "private": true,
   "scripts": {
     "dev": "next dev",
-    "build": "node -e \"if(process.env.VERCEL_ENV==='preview') require('child_process').execSync('npx tsx prisma/seed.ts', {stdio:'inherit'})\" && prisma migrate deploy && next build",
+    "build": "prisma migrate deploy && next build",
     "start": "next start",
     "lint": "eslint",
     "format": "prettier --write .",
