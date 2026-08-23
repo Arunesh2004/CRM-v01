@@ -1,49 +1,59 @@
-import { PrismaClient } from '@prisma/client';
+import { describe, it, expect, beforeAll, afterAll } from 'vitest';
+import { executeAsSystem, SystemOperation } from '../../../database/utils/prisma-system';
+import { checkPermissionFast, requirePermissionFast } from '../../lib/auth';
+import prisma from '../../../database/utils/prisma';
 import * as crypto from 'crypto';
-import globalPrisma from '../../../database/utils/prisma';
-import { requirePermission } from '../../lib/auth';
 
-async function runRBACEscalationTests() {
-  console.log('--- Running RBAC Privilege Escalation Tests ---');
+describe('RBAC Privilege Escalation Security Tests', () => {
+  const tenantId = crypto.randomUUID();
+  const employeeUserId = crypto.randomUUID();
+  const roleId = crypto.randomUUID();
 
-  const tenantAId = crypto.randomUUID();
-  await globalPrisma.tenant.create({ data: { id: tenantAId, name: 'Tenant A' } });
+  beforeAll(async () => {
+    // Provision fixtures securely
+    await executeAsSystem(SystemOperation.SECURITY_AUDIT, async (tx) => {
+      await tx.$executeRawUnsafe(`INSERT INTO "Tenant" (id, name, "createdAt", "updatedAt") VALUES ('${tenantId}', 'Tenant A', now(), now())`);
+      await tx.$executeRawUnsafe(`INSERT INTO "User" (id, "tenantId", email, status, "createdAt", "updatedAt") 
+        VALUES ('${employeeUserId}', '${tenantId}', 'employee@test.com', 'ACTIVE', now(), now())`);
+      await tx.$executeRawUnsafe(`INSERT INTO "Role" (id, "tenantId", name, "createdAt", "updatedAt")
+        VALUES ('${roleId}', '${tenantId}', 'Employee', now(), now())`);
+      await tx.$executeRawUnsafe(`-- Assign Role to User
+        INSERT INTO "UserRole" (id, "userId", "roleId", "tenantId", "createdAt")
+        VALUES ('${crypto.randomUUID()}', '${employeeUserId}', '${roleId}', '${tenantId}', now())`);
 
-  const employeeUser = {
-    id: crypto.randomUUID(),
-    tenantId: tenantAId,
-    email: 'employee@test.com',
-    roles: [{
-      role: {
-        permissions: [
-          { permission: { resource: 'CUSTOMER', action: 'READ' } }
-        ]
-      }
-    }]
-  };
+      // We need to use Prisma to create the RolePermission since it handles the permission relation
+      // Actually, since this is testing `checkPermissionFast` which caches in Redis, we need real data.
+      let perm = await tx.permission.findFirst({ where: { resource: 'CUSTOMER', action: 'READ' } });
+      if (!perm) perm = await tx.permission.create({ data: { resource: 'CUSTOMER', action: 'READ' } });
+      const permIdToUse = perm.id;
 
-  try {
-    // TEST 1: Normal employee attempts to perform Admin action
-    console.log('TEST 1: Employee attempts Admin action (Expect: Blocked)');
-    try {
-      requirePermission('SYSTEM', 'UPDATE');
-      throw new Error('Test 1 Failed: Employee was allowed to perform SYSTEM:UPDATE');
-    } catch (e: any) {
-      if (e.message.includes('Test 1 Failed')) throw e;
-      console.log('✅ Success: Employee blocked from SYSTEM:UPDATE (' + e.message + ')');
-    }
+      await tx.$executeRawUnsafe(`
+        INSERT INTO "RolePermission" (id, "roleId", "permissionId", "tenantId", "createdAt")
+        VALUES ('${crypto.randomUUID()}', '${roleId}', '${permIdToUse}', '${tenantId}', now());
+      `);
+    });
+  });
 
-    // TEST 2: Admin action allowed
-    console.log('TEST 2: Employee attempts Customer Read (Expect: Allowed)');
-    requirePermission('CUSTOMER', 'READ');
-    console.log('✅ Success: Employee allowed to perform CUSTOMER:READ');
-  } finally {
-    // Cleanup
-    await globalPrisma.tenant.deleteMany({ where: { id: tenantAId } });
-  }
-}
+  afterAll(async () => {
+    await executeAsSystem(SystemOperation.SECURITY_AUDIT, async (tx) => {
+      // Cannot delete tenant because of FK
+    });
+  });
 
-runRBACEscalationTests().catch(e => {
-  console.error('Fatal Error:', e);
-  process.exit(1);
+  it('allows an employee to perform CUSTOMER:READ', async () => {
+    // Assert actual allowed behavior
+    const hasPerm = await checkPermissionFast(employeeUserId, 'CUSTOMER', 'READ');
+    expect(hasPerm).toBe(true);
+  });
+
+  it('blocks an employee from performing SYSTEM:UPDATE', async () => {
+    // Attack: Employee attempts Admin action
+    const hasPerm = await checkPermissionFast(employeeUserId, 'SYSTEM', 'UPDATE');
+    expect(hasPerm).toBe(false);
+
+    // Using requirePermissionFast should throw
+    await expect(
+      requirePermissionFast(employeeUserId, 'SYSTEM', 'UPDATE')
+    ).rejects.toThrow(/Forbidden/);
+  });
 });

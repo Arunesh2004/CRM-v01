@@ -1,5 +1,6 @@
 import { describe, it, expect, beforeAll, afterAll, vi } from 'vitest';
 import { PrismaClient } from '@prisma/client';
+import { executeAsSystem, SystemOperation } from '@/../database/utils/prisma-system';
 import crypto from 'crypto';
 
 process.env.INNGEST_EVENT_KEY = 'test-key';
@@ -91,9 +92,11 @@ describe('Phase 11: Async Infrastructure & Scalability Security', () => {
       const res2 = await POST(req2);
       expect(res2.status).toBe(200); // Already processed
 
-      const dbEvents = await prisma.webhookEvent.findMany({
-        where: { eventId: payloadId }
-      });
+      const dbEvents = await executeAsSystem(SystemOperation.SECURITY_AUDIT, async (tx) => 
+        tx.webhookEvent.findMany({
+          where: { eventId: payloadId }
+        })
+      );
       expect(dbEvents.length).toBe(1);
       expect(dbEvents[0].signatureVerified).toBe(true);
     });

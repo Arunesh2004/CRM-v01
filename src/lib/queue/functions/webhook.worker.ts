@@ -1,9 +1,7 @@
 import { inngest } from '../inngest.client';
 import { SecureJobEnvelope } from '../types';
 import { withJobContext } from '../worker';
-import { PrismaClient } from '@prisma/client';
 
-const globalPrisma = new PrismaClient();
 
 export const webhookWorker = inngest.createFunction(
   { 

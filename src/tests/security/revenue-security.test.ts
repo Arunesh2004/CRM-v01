@@ -1,5 +1,6 @@
 import { describe, it, expect, beforeAll, afterAll } from 'vitest';
 import prisma from '../../../database/utils/prisma';
+import { executeAsSystem, SystemOperation } from '../../../database/utils/prisma-system';
 import { RevenueService } from '../../modules/revenue/revenue.service';
 import { AIPermissionService } from '../../modules/ai-permissions/ai-permission.service';
 
@@ -26,8 +27,10 @@ describe('Phase 10.1: Revenue Security & Adversarial Tests', () => {
 
     it('Cross-tenant PriceBook access should fail', async () => {
        // Setup PriceBook in Tenant A
-       const pb = await prisma.priceBook.create({
-         data: { tenantId: tenantA, name: 'Tenant A PB' }
+       const pb = await executeAsSystem(SystemOperation.SECURITY_AUDIT, async (tx) => {
+         return tx.priceBook.create({
+           data: { tenantId: tenantA, name: 'Tenant A PB' }
+         });
        });
        
        const pbQuery = await prisma.priceBook.findFirst({ where: { id: pb.id, tenantId: tenantB } });
@@ -74,21 +77,25 @@ describe('Phase 10.1: Revenue Security & Adversarial Tests', () => {
 
   describe('Audit Logging', () => {
     it('Audit immutability is maintained', async () => {
-       const log = await prisma.auditLog.create({
-         data: {
-           tenantId: tenantA,
-           actorId: adminUserId,
-           actorType: 'USER',
-           action: 'TEST_REVENUE_AUDIT',
-           resource: 'Test',
-           resourceId: 'test-1'
-         }
+       const log = await executeAsSystem(SystemOperation.SECURITY_AUDIT, async (tx) => {
+         return tx.auditLog.create({
+           data: {
+             tenantId: tenantA,
+             actorId: adminUserId,
+             actorType: 'USER',
+             action: 'TEST_REVENUE_AUDIT',
+             resource: 'Test',
+             resourceId: 'test-1'
+           }
+         });
        });
        expect(log.id).toBeDefined();
 
        // Verify we cannot update audit logs
        await expect(
-         prisma.auditLog.update({ where: { id: log.id }, data: { action: 'HACKED' } })
+         executeAsSystem(SystemOperation.SECURITY_AUDIT, async (tx) => {
+           await tx.auditLog.update({ where: { id: log.id }, data: { action: 'HACKED' } });
+         })
        ).rejects.toThrow(); // The DB trigger throws
     });
   });

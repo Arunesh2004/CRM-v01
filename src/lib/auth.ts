@@ -6,6 +6,7 @@ import { Logger } from '@/lib/observability/logger';
 import { headers } from 'next/headers';
 import jwt from 'jsonwebtoken';
 import { redis } from '@/lib/cache/redis.client';
+import { executeAsSystem, SystemOperation } from '@/../database/utils/prisma-system';
 
 import { cache } from 'react';
 
@@ -111,8 +112,7 @@ export const getCurrentUser = cache(async function getCurrentUser() {
     if (cached) return cached as any;
   }
 
-  const user = await prisma.$transaction(async (tx) => {
-    await tx.$executeRawUnsafe(`SELECT set_config('app.bypass_rls', 'on', true)`);
+  const user = await executeAsSystem(SystemOperation.AUTH_BOOTSTRAP, async (tx) => {
     return tx.user.findFirst({
       where: { clerkId },
       include: {
@@ -189,8 +189,7 @@ export async function requireAuth() {
       // Fast path failed (clerkId not found), so attempt synchronization (bootstrap or invite linking)
       const syncedUser = await ensureUserProvisionedFromClerk(clerkAuth.userId);
       if (syncedUser) {
-        user = await prisma.$transaction(async (tx) => {
-          await tx.$executeRawUnsafe(`SELECT set_config('app.bypass_rls', 'on', true)`);
+        user = await executeAsSystem(SystemOperation.AUTH_BOOTSTRAP, async (tx) => {
           return tx.user.findFirst({
             where: { clerkId: clerkAuth.userId },
             include: {
@@ -242,19 +241,27 @@ export async function requirePermission(resource: Resource, action: Action) {
 
 export async function checkPermissionFast(userId: string, resource: Resource, action: Action): Promise<boolean> {
   // Query only what we need to determine if the user has the permission or is an admin.
-  // Equivalent logic: User must have a role named TENANT_ADMIN/GLOBAL_ADMIN OR a role with the specific resource/action.
-  const userRoles = await prisma.userRole.findMany({
-    where: { userId },
-    include: {
-      role: {
-        include: {
-          permissions: {
-            include: { permission: true }
+  // We use executeAsSystem here because reading UserRole and RolePermission requires 
+  // system privileges when no tenant context is yet active (RLS would otherwise block it).
+  const userRoles = await executeAsSystem(SystemOperation.SECURITY_AUDIT, async (tx) => {
+    return tx.userRole.findMany({
+      where: { userId },
+      include: {
+        role: {
+          include: {
+            permissions: {
+              include: { permission: true }
+            }
           }
         }
       }
-    }
+    });
   });
+
+  console.log(`[DEBUG] checkPermissionFast: userId=${userId}, resource=${resource}, action=${action}, rolesFound=${userRoles.length}`);
+  if (userRoles.length > 0) {
+    console.log(`[DEBUG] Role 0 name=${userRoles[0].role.name}, permissions count=${userRoles[0].role.permissions.length}`);
+  }
 
   for (const userRole of userRoles) {
     if (userRole.role.name === 'TENANT_ADMIN' || userRole.role.name === 'GLOBAL_ADMIN') {
@@ -337,8 +344,7 @@ export const getCurrentUserIdentity = cache(async function getCurrentUserIdentit
     return null;
   }
 
-  const user = await prisma.$transaction(async (tx) => {
-    await tx.$executeRawUnsafe(`SELECT set_config('app.bypass_rls', 'on', true)`);
+  const user = await executeAsSystem(SystemOperation.AUTH_BOOTSTRAP, async (tx) => {
     return tx.user.findFirst({
       where: { clerkId },
       select: { id: true, tenantId: true, email: true, status: true }
@@ -355,9 +361,11 @@ export async function requireAuthIdentity() {
     if (clerkAuth.userId) {
       const syncedUser = await ensureUserProvisionedFromClerk(clerkAuth.userId);
       if (syncedUser) {
-        user = await prisma.user.findFirst({
-          where: { clerkId: clerkAuth.userId },
-          select: { id: true, tenantId: true, email: true, status: true }
+        user = await executeAsSystem(SystemOperation.AUTH_BOOTSTRAP, async (tx) => {
+          return tx.user.findFirst({
+            where: { clerkId: clerkAuth.userId },
+            select: { id: true, tenantId: true, email: true, status: true }
+          });
         });
       }
     }

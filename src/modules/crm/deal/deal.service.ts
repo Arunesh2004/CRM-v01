@@ -15,7 +15,7 @@ export async function getDeals(params?: {
 }) {
   const tenantId = await requireTenant();
   const prisma = withTenant(tenantId);
-  await requirePermission('USER', 'READ'); // Basic access
+  await requirePermission('CUSTOMER', 'READ'); // Basic access
 
   const where: Prisma.DealWhereInput = {
     tenantId,
@@ -66,7 +66,7 @@ export async function getDeals(params?: {
 export async function getDealById(id: string) {
   const tenantId = await requireTenant();
   const prisma = withTenant(tenantId);
-  await requirePermission('USER', 'READ');
+  await requirePermission('CUSTOMER', 'READ');
 
   const deal = await prisma.deal.findFirst({
     where: { id, tenantId, deletedAt: null },
@@ -110,10 +110,22 @@ export async function createDeal(data: {
   const user = await requireAuth();
   const tenantId = await requireTenant();
   const prisma = withTenant(tenantId);
-  await requirePermission('USER', 'CREATE');
+  await requirePermission('CUSTOMER', 'CREATE');
 
   return await globalPrisma.$transaction(async (baseTx: any) => {
     const tx = await withTenantTransaction(baseTx, tenantId);
+    
+    // Explicit tenant boundary checks to prevent BOLA via nested foreign key assignment
+    if (data.customerId) {
+       const customer = await tx.customer.findFirst({ where: { id: data.customerId, tenantId } });
+       if (!customer) throw new Error('Customer not found in current tenant');
+    }
+    const pipeline = await tx.pipeline.findFirst({ where: { id: data.pipelineId, tenantId } });
+    if (!pipeline) throw new Error('Pipeline not found in current tenant');
+    
+    const stage = await tx.pipelineStage.findFirst({ where: { id: data.stageId, tenantId } });
+    if (!stage) throw new Error('Stage not found in current tenant');
+
     const deal = await tx.deal.create({
       data: {
         tenantId,
@@ -163,7 +175,7 @@ export async function convertLeadToDeal(leadId: string, assignedUserId: string, 
   const user = await requireAuth();
   const tenantId = await requireTenant();
   const prisma = withTenant(tenantId);
-  await requirePermission('USER', 'UPDATE');
+  await requirePermission('CUSTOMER', 'UPDATE');
 
   const lead = await prisma.lead.findFirst({ where: { id: leadId, tenantId } });
   if (!lead) throw new Error('Lead not found');
@@ -238,7 +250,7 @@ export async function moveDealStage(dealId: string, newStageId: string, lostReas
   const user = await requireAuth();
   const tenantId = await requireTenant();
   const prisma = withTenant(tenantId);
-  await requirePermission('USER', 'UPDATE');
+  await requirePermission('CUSTOMER', 'UPDATE');
 
   return await globalPrisma.$transaction(async (baseTx: any) => {
     const tx = await withTenantTransaction(baseTx, tenantId);
@@ -325,7 +337,7 @@ export async function moveDealStage(dealId: string, newStageId: string, lostReas
 export async function getDealAnalytics() {
   const tenantId = await requireTenant();
   const prisma = withTenant(tenantId);
-  await requirePermission('USER', 'READ');
+  await requirePermission('CUSTOMER', 'READ');
 
   const deals = await prisma.deal.findMany({
     where: { tenantId, deletedAt: null },
@@ -385,7 +397,7 @@ export async function getDealTimeline(
 ) {
   const tenantId = await requireTenant();
   const prisma = withTenant(tenantId);
-  await requirePermission('USER', 'READ');
+  await requirePermission('CUSTOMER', 'READ');
 
   const deal = await prisma.deal.findFirst({ where: { id: dealId, tenantId, deletedAt: null } });
   if (!deal) throw new Error('Deal not found');

@@ -1,20 +1,23 @@
-import { PrismaClient } from '@prisma/client';
 import { inngest } from '@/lib/queue/inngest.client';
+import { executeAsSystem, SystemOperation } from '@/../database/utils/prisma-system';
+import { withTenant } from '@/../database/utils/prisma-tenant';
 
-const prisma = new PrismaClient();
 const MAX_RETRIES = 5;
 
 export async function processOutbox() {
   console.log('Processing EventOutbox...');
 
-  const pendingEvents = await prisma.eventOutbox.findMany({
-    where: {
-      status: { in: ['PENDING', 'FAILED'] },
-      nextRetryAt: { lte: new Date() },
-      retryCount: { lt: MAX_RETRIES }
-    },
-    take: 100, // Process in batches
-    orderBy: { createdAt: 'asc' }
+  // Minimum required system bypass to scan pending jobs across all tenants
+  const pendingEvents = await executeAsSystem(SystemOperation.PLATFORM_CRON, async (tx) => {
+    return tx.eventOutbox.findMany({
+      where: {
+        status: { in: ['PENDING', 'FAILED'] },
+        nextRetryAt: { lte: new Date() },
+        retryCount: { lt: MAX_RETRIES }
+      },
+      take: 100, // Process in batches
+      orderBy: { createdAt: 'asc' }
+    });
   });
 
   if (pendingEvents.length === 0) {
@@ -24,8 +27,11 @@ export async function processOutbox() {
   let processedCount = 0;
 
   for (const event of pendingEvents) {
+    // Switch to tenant-scoped execution for processing specific events
+    const tenantPrisma = withTenant(event.tenantId);
+
     // Optimistic locking using 'status' to prevent concurrent worker execution
-    const lock = await prisma.eventOutbox.updateMany({
+    const lock = await tenantPrisma.eventOutbox.updateMany({
       where: { id: event.id, status: event.status },
       data: { status: 'PROCESSING' }
     });
@@ -51,7 +57,7 @@ export async function processOutbox() {
       });
 
       // Mark as PROCESSED
-      await prisma.eventOutbox.update({
+      await tenantPrisma.eventOutbox.update({
         where: { id: event.id },
         data: { status: 'PROCESSED', processedAt: new Date() }
       });
@@ -59,7 +65,7 @@ export async function processOutbox() {
     } catch (error: any) {
       // Handle failure
       const nextRetry = new Date(Date.now() + Math.pow(2, event.retryCount) * 60000); // Exp backoff in minutes
-      await prisma.eventOutbox.update({
+      await tenantPrisma.eventOutbox.update({
         where: { id: event.id },
         data: {
           status: 'FAILED',
@@ -86,38 +92,40 @@ export async function cleanupOutbox() {
   let hasMore = true;
 
   while (hasMore) {
-    // 1. Find candidates to delete. Using nextRetryAt as a stable timestamp for terminal failures.
-    const candidates = await prisma.eventOutbox.findMany({
-      where: {
-        OR: [
-          { status: 'PROCESSED', processedAt: { lt: sevenDaysAgo } },
-          { status: 'FAILED', retryCount: { gte: MAX_RETRIES }, nextRetryAt: { lt: thirtyDaysAgo } }
-        ]
-      },
-      select: { id: true },
-      take: 200 // Bound batch size
-    });
+    const deletedCountInBatch = await executeAsSystem(SystemOperation.PLATFORM_CRON, async (tx) => {
+      // 1. Find candidates to delete. Using nextRetryAt as a stable timestamp for terminal failures.
+      const candidates = await tx.eventOutbox.findMany({
+        where: {
+          OR: [
+            { status: 'PROCESSED', processedAt: { lt: sevenDaysAgo } },
+            { status: 'FAILED', retryCount: { gte: MAX_RETRIES }, nextRetryAt: { lt: thirtyDaysAgo } }
+          ]
+        },
+        select: { id: true },
+        take: 200 // Bound batch size
+      });
 
-    if (candidates.length === 0) {
-      hasMore = false;
-      break;
-    }
-
-    const idsToDelete = candidates.map(c => c.id);
-
-    // 2. Delete candidates using PK to avoid massive locking
-    const deleteResult = await prisma.eventOutbox.deleteMany({
-      where: {
-        id: { in: idsToDelete },
-        // Double check status to prevent race conditions just in case
-        status: { in: ['PROCESSED', 'FAILED'] }
+      if (candidates.length === 0) {
+        return 0;
       }
+
+      const idsToDelete = candidates.map((c: any) => c.id);
+
+      // 2. Delete candidates using PK to avoid massive locking
+      const deleteResult = await tx.eventOutbox.deleteMany({
+        where: {
+          id: { in: idsToDelete },
+          // Double check status to prevent race conditions just in case
+          status: { in: ['PROCESSED', 'FAILED'] }
+        }
+      });
+
+      return deleteResult.count;
     });
 
-    deletedCount += deleteResult.count;
+    deletedCount += deletedCountInBatch;
 
-    // Safety break if deleteMany deletes fewer than candidates found to avoid infinite loop
-    if (deleteResult.count === 0) {
+    if (deletedCountInBatch === 0) {
       hasMore = false;
     }
   }

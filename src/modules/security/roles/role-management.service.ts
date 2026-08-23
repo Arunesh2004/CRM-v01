@@ -1,4 +1,5 @@
 import prisma from '../../../../database/utils/prisma';
+import { withTenantTransaction } from '../../../../database/utils/prisma-tenant';
 import { SecurityEventService } from '../../security-events/security-event.service';
 import { checkPermissionFast } from '../../../lib/auth';
 import { Action, Resource } from '@prisma/client';
@@ -54,24 +55,26 @@ export class RoleManagementService {
       throw new Error('Invalid permissions specified');
     }
 
-    // 3. Mutation
-    const role = await prisma.role.create({
-      data: {
-        tenantId,
-        name,
-        permissions: {
-          create: permRecords.map(p => ({ permissionId: p.id }))
+    // 3. Mutation & Audit
+    const role = await prisma.$transaction(async (baseTx) => {
+      const tx = await withTenantTransaction(baseTx, tenantId);
+      const newRole = await tx.role.create({
+        data: {
+          tenantId,
+          name,
+          permissions: {
+            create: permRecords.map(p => ({ permissionId: p.id, tenantId }))
+          }
         }
-      }
-    });
-
-    // 4. Audit
-    await prisma.auditLog.create({
-      data: {
-        tenantId, actorId: adminId, actorType: 'USER', action: 'CREATE_ROLE',
-        resource: 'SYSTEM', resourceId: role.id,
-        metadata: { name, permissions }
-      }
+      });
+      await tx.auditLog.create({
+        data: {
+          tenantId, actorId: adminId, actorType: 'USER', action: 'CREATE_ROLE',
+          resource: 'SYSTEM', resourceId: newRole.id,
+          metadata: { name, permissions }
+        }
+      });
+      return newRole;
     });
 
     return role;
@@ -97,18 +100,19 @@ export class RoleManagementService {
       if (!hasAuth) throw new Error('Forbidden: Requires role management permission');
     }
 
-    // 3. Mutation
-    await prisma.userRole.create({
-      data: { userId: targetUserId, roleId }
-    });
-
-    // 4. Audit
-    await prisma.auditLog.create({
-      data: {
-        tenantId, actorId: adminId, actorType: 'USER', action: 'ASSIGN_ROLE',
-        resource: 'USER', resourceId: targetUserId,
-        metadata: { roleId }
-      }
+    // 3. Mutation & Audit
+    await prisma.$transaction(async (baseTx) => {
+      const tx = await withTenantTransaction(baseTx, tenantId);
+      await tx.userRole.create({
+        data: { tenantId, userId: targetUserId, roleId }
+      });
+      await tx.auditLog.create({
+        data: {
+          tenantId, actorId: adminId, actorType: 'USER', action: 'ASSIGN_ROLE',
+          resource: 'USER', resourceId: targetUserId,
+          metadata: { roleId }
+        }
+      });
     });
   }
 }

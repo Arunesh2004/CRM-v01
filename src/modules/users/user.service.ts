@@ -149,7 +149,7 @@ export async function inviteEmployee(emailStr: string, roleName: string = 'MEMBE
       status: 'INVITED',
       onboardingStatus: 'PENDING',
       userRoles: {
-        create: { roleId: role.id }
+        create: { roleId: role.id, tenantId }
       }
     }
   });

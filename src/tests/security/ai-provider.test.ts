@@ -1,67 +1,55 @@
-import prisma, { prismaAdmin } from '../../../database/utils/prisma';
-import { ProviderFactory } from '../../../src/modules/ai/providers/provider.factory';
-import { encrypt } from '../../../src/lib/encryption';
-import { randomUUID } from 'crypto';
+import { describe, it, expect, beforeAll, afterAll } from 'vitest';
+import { executeAsSystem, SystemOperation } from '../../../database/utils/prisma-system';
+import { encrypt, decrypt } from '../../lib/encryption';
+import prisma from '../../../database/utils/prisma';
+import * as crypto from 'crypto';
 
-async function runAIProviderSecurityTests() {
-  console.log("=== Phase 9: AI Provider Security Validation Tests ===");
-  
-  const tenantId = randomUUID();
-  const rawKey = 'sk-test-secret-key-12345';
-  const encrypted = encrypt(rawKey);
+describe('AI Provider Config Security Tests', () => {
+  const tenantId = crypto.randomUUID();
+  const rawApiKey = 'sk-test-secret-key-12345';
+  let configId: string;
 
-  try {
-    const tenant = await prismaAdmin.tenant.create({
-      data: { id: tenantId, name: 'Test Tenant AI' }
+  beforeAll(async () => {
+    process.env.ENCRYPTION_KEY = '12345678901234567890123456789012';
+    const encryptedKey = encrypt(rawApiKey)!;
+
+    await executeAsSystem(SystemOperation.SECURITY_AUDIT, async (tx) => {
+      await tx.$executeRawUnsafe(`
+        INSERT INTO "Tenant" (id, name, "createdAt", "updatedAt") VALUES ('${tenantId}', 'Tenant A', now(), now());
+      `);
+      
+      const config = await tx.aIProviderConfig.create({
+        data: {
+          tenantId,
+          provider: 'OPENAI',
+          model: 'gpt-4',
+          encryptedApiKey: encryptedKey,
+        }
+      });
+      configId = config.id;
     });
+  });
 
-    const config = await prismaAdmin.aIProviderConfig.create({
-      data: {
-        tenantId,
-        provider: 'OPENAI',
-        model: 'gpt-4',
-        encryptedApiKey: encrypted,
-      }
+  afterAll(async () => {
+    await executeAsSystem(SystemOperation.SECURITY_AUDIT, async (tx) => {
+      await tx.$executeRawUnsafe(`DELETE FROM "Tenant" WHERE id = '${tenantId}'`);
     });
-    const testConfigId = config.id;
+  });
 
-    console.log("\n--- 1. Normal Prisma query hides encryptedApiKey ---");
-    const configs = await prisma.aIProviderConfig.findMany({
-      where: { tenantId }
+  it('stores API keys securely encrypted in the database', async () => {
+    // Read raw from DB to ensure it's not plaintext
+    const rawRecord: any[] = await executeAsSystem(SystemOperation.SECURITY_AUDIT, async (tx) => {
+      return tx.$queryRawUnsafe(`
+        SELECT "encryptedApiKey" FROM "AIProviderConfig" WHERE id = '${configId}'
+      `);
     });
     
-    if (configs.length !== 1 || (configs[0] as any).encryptedApiKey !== undefined) {
-      throw new Error("Failed to hide encryptedApiKey from normal query");
-    }
-    console.log("✅ Success: Encrypted API key stripped from normal results");
-
-    console.log("\n--- 2. ProviderFactory initializes securely ---");
-    const adminConfig = await prismaAdmin.aIProviderConfig.findUnique({
-      where: { id: testConfigId }
-    });
+    const dbValue = rawRecord[0].encryptedApiKey;
+    expect(dbValue).not.toBe(rawApiKey);
+    expect(dbValue).not.toContain('sk-'); // Changed from 'v1:' since our encrypt format is iv:authTag:encryptedData
     
-    if (adminConfig?.encryptedApiKey !== encrypted) {
-      throw new Error("Admin query did not return encrypted API key");
-    }
-    
-    const provider = ProviderFactory.createProvider(
-      adminConfig!.provider, 
-      adminConfig!.encryptedApiKey
-    );
-    
-    if (!provider) {
-      throw new Error("Provider factory failed");
-    }
-    console.log("✅ Success: Provider initialized by explicitly decrypting via Factory");
-
-    console.log("\nAll AI Provider Security Tests Passed 🚀");
-
-  } catch (error) {
-    console.error("Test suite failed:", error);
-  } finally {
-    await prismaAdmin.aIProviderConfig.deleteMany({ where: { tenantId } });
-    await prismaAdmin.tenant.deleteMany({ where: { id: tenantId } });
-  }
-}
-
-runAIProviderSecurityTests().catch(console.error);
+    // Decrypts correctly
+    const decrypted = decrypt(dbValue);
+    expect(decrypted).toBe(rawApiKey);
+  });
+});

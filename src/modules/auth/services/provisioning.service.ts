@@ -1,5 +1,6 @@
 import prisma from '@/../database/utils/prisma';
 import type { User as ClerkUser } from '@clerk/nextjs/server';
+import { executeAsSystem, SystemOperation } from '@/../database/utils/prisma-system';
 
 export async function ensureUserProvisioned(clerkUser: ClerkUser | any) {
   // Normalize user data handling both Clerk SDK User object and Webhook payload
@@ -26,8 +27,7 @@ export async function synchronizeClerkIdentity(clerkId: string, emailStr: string
 
   // 1. Find the user locally by exact email lookup
   // We must bypass RLS here because we do not know the tenant context yet
-  const user = await prisma.$transaction(async (tx) => {
-    await tx.$executeRawUnsafe(`SELECT set_config('app.bypass_rls', 'on', true)`);
+  const user = await executeAsSystem(SystemOperation.CLERK_PROVISIONING, async (tx) => {
     return tx.user.findFirst({
       where: { email: email }
     });

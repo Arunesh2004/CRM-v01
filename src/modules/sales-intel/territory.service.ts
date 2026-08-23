@@ -1,4 +1,5 @@
 import prisma from '@/../database/utils/prisma';
+import { withTenant, withTenantTransaction } from '@/../database/utils/prisma-tenant';
 import { requirePermissionFast } from '@/lib/auth';
 import { Action, Resource } from '@prisma/client';
 import { FieldSecurityService } from '../security/field-security/field-security.service';
@@ -6,11 +7,14 @@ import { FieldSecurityService } from '../security/field-security/field-security.
 export class TerritoryService {
   static async getTerritories(tenantId: string, userId: string) {
     await requirePermissionFast(userId, Resource.SALES_INTEL, Action.READ);
-    const territories = await prisma.territory.findMany({
-      where: { tenantId },
-      orderBy: { createdAt: 'desc' }
+    return prisma.$transaction(async (baseTx) => {
+      const tx = await withTenantTransaction(baseTx, tenantId);
+      const territories = await tx.territory.findMany({
+        where: { tenantId },
+        orderBy: { createdAt: 'desc' }
+      });
+      return Promise.all(territories.map((t: any) => FieldSecurityService.maskFields(tenantId, userId, 'Territory', t)));
     });
-    return Promise.all(territories.map(t => FieldSecurityService.maskFields(tenantId, userId, 'Territory', t)));
   }
 
   /**
@@ -19,37 +23,39 @@ export class TerritoryService {
   static async createTerritory(userId: string, tenantId: string, data: { name: string; description?: string; parentId?: string }) {
     await requirePermissionFast(userId, Resource.SALES_INTEL, Action.MANAGE_TERRITORIES);
 
-    // Validate hierarchy loop if parentId is provided
-    if (data.parentId) {
-      const parent = await prisma.territory.findUnique({ where: { id: data.parentId } });
-      if (!parent || parent.tenantId !== tenantId) {
-        throw new Error('Invalid parent territory');
+    return prisma.$transaction(async (baseTx) => {
+      const tx = await withTenantTransaction(baseTx, tenantId);
+
+      if (data.parentId) {
+        const parent = await tx.territory.findUnique({ where: { id: data.parentId } });
+        if (!parent || parent.tenantId !== tenantId) {
+          throw new Error('Invalid parent territory');
+        }
       }
-    }
 
-    const territory = await prisma.territory.create({
-      data: {
-        tenantId,
-        name: data.name,
-        description: data.description,
-        parentId: data.parentId,
-      },
+      const territory = await tx.territory.create({
+        data: {
+          tenantId,
+          name: data.name,
+          description: data.description,
+          parentId: data.parentId,
+        },
+      });
+
+      await tx.auditLog.create({
+        data: {
+          tenantId,
+          actorId: userId,
+          actorType: 'USER',
+          action: 'TERRITORY_CREATED',
+          resource: 'Territory',
+          resourceId: territory.id,
+          metadata: { name: territory.name, parentId: territory.parentId },
+        },
+      });
+
+      return territory;
     });
-
-    // Write audit
-    await prisma.auditLog.create({
-      data: {
-        tenantId,
-        actorId: userId,
-        actorType: 'USER',
-        action: 'TERRITORY_CREATED',
-        resource: 'Territory',
-        resourceId: territory.id,
-        metadata: { name: territory.name, parentId: territory.parentId },
-      },
-    });
-
-    return territory;
   }
 
   /**
@@ -58,46 +64,45 @@ export class TerritoryService {
   static async updateTerritory(userId: string, tenantId: string, territoryId: string, data: { name?: string; description?: string; parentId?: string }) {
     await requirePermissionFast(userId, Resource.SALES_INTEL, Action.MANAGE_TERRITORIES);
 
-    const territory = await prisma.territory.findUnique({ where: { id: territoryId } });
-    if (!territory || territory.tenantId !== tenantId) {
-      throw new Error('Territory not found');
-    }
+    return prisma.$transaction(async (baseTx) => {
+      const tx = await withTenantTransaction(baseTx, tenantId);
 
-    // Prevent circular reference
-    if (data.parentId) {
-      if (data.parentId === territoryId) {
-         throw new Error('Circular hierarchy not allowed');
+      const territory = await tx.territory.findUnique({ where: { id: territoryId } });
+      if (!territory || territory.tenantId !== tenantId) {
+        throw new Error('Territory not found');
       }
-      const parent = await prisma.territory.findUnique({ where: { id: data.parentId } });
-      if (!parent || parent.tenantId !== tenantId) {
-        throw new Error('Invalid parent territory');
-      }
-      // Simple loop check: ensure the new parent isn't a child of this territory
-      let currentParentId = parent.parentId;
-      while (currentParentId) {
-        if (currentParentId === territoryId) throw new Error('Circular hierarchy not allowed');
-        const nextParent = await prisma.territory.findUnique({ where: { id: currentParentId } });
-        currentParentId = nextParent?.parentId || null;
-      }
-    }
 
-    const updated = await prisma.territory.update({
-      where: { id: territoryId },
-      data,
+      if (data.parentId) {
+        if (data.parentId === territoryId) throw new Error('Circular hierarchy not allowed');
+        const parent = await tx.territory.findUnique({ where: { id: data.parentId } });
+        if (!parent || parent.tenantId !== tenantId) throw new Error('Invalid parent territory');
+        
+        let currentParentId = parent.parentId;
+        while (currentParentId) {
+          if (currentParentId === territoryId) throw new Error('Circular hierarchy not allowed');
+          const nextParent = await tx.territory.findUnique({ where: { id: currentParentId } });
+          currentParentId = nextParent?.parentId || null;
+        }
+      }
+
+      const updated = await tx.territory.update({
+        where: { id: territoryId },
+        data,
+      });
+
+      await tx.auditLog.create({
+        data: {
+          tenantId,
+          actorId: userId,
+          actorType: 'USER',
+          action: 'TERRITORY_UPDATED',
+          resource: 'Territory',
+          resourceId: territory.id,
+        },
+      });
+
+      return updated;
     });
-
-    await prisma.auditLog.create({
-      data: {
-        tenantId,
-        actorId: userId,
-        actorType: 'USER',
-        action: 'TERRITORY_UPDATED',
-        resource: 'Territory',
-        resourceId: territory.id,
-      },
-    });
-
-    return updated;
   }
 
   /**
@@ -106,33 +111,35 @@ export class TerritoryService {
   static async assignUser(userId: string, tenantId: string, data: { targetUserId: string; territoryId: string; role?: string }) {
     await requirePermissionFast(userId, Resource.SALES_INTEL, Action.MANAGE_TERRITORIES);
 
-    const territory = await prisma.territory.findUnique({ where: { id: data.territoryId } });
-    if (!territory || territory.tenantId !== tenantId) {
-      throw new Error('Territory not found');
-    }
+    return prisma.$transaction(async (baseTx) => {
+      const tx = await withTenantTransaction(baseTx, tenantId);
 
-    const assignment = await prisma.userTerritory.create({
-      data: {
-        tenantId,
-        userId: data.targetUserId,
-        territoryId: data.territoryId,
-        role: data.role || 'REP',
-      },
+      const territory = await tx.territory.findUnique({ where: { id: data.territoryId } });
+      if (!territory || territory.tenantId !== tenantId) throw new Error('Territory not found');
+
+      const assignment = await tx.userTerritory.create({
+        data: {
+          tenantId,
+          userId: data.targetUserId,
+          territoryId: data.territoryId,
+          role: data.role || 'REP',
+        },
+      });
+
+      await tx.auditLog.create({
+        data: {
+          tenantId,
+          actorId: userId,
+          actorType: 'USER',
+          action: 'TERRITORY_ASSIGNMENT_CREATED',
+          resource: 'UserTerritory',
+          resourceId: assignment.id,
+          metadata: { assignedUserId: data.targetUserId, territoryId: data.territoryId },
+        },
+      });
+
+      return assignment;
     });
-
-    await prisma.auditLog.create({
-      data: {
-        tenantId,
-        actorId: userId,
-        actorType: 'USER',
-        action: 'TERRITORY_ASSIGNMENT_CREATED',
-        resource: 'UserTerritory',
-        resourceId: assignment.id,
-        metadata: { assignedUserId: data.targetUserId, territoryId: data.territoryId },
-      },
-    });
-
-    return assignment;
   }
 
   /**
@@ -141,25 +148,27 @@ export class TerritoryService {
   static async removeAssignment(userId: string, tenantId: string, assignmentId: string) {
     await requirePermissionFast(userId, Resource.SALES_INTEL, Action.MANAGE_TERRITORIES);
 
-    const assignment = await prisma.userTerritory.findUnique({ where: { id: assignmentId } });
-    if (!assignment || assignment.tenantId !== tenantId) {
-      throw new Error('Assignment not found');
-    }
+    return prisma.$transaction(async (baseTx) => {
+      const tx = await withTenantTransaction(baseTx, tenantId);
 
-    await prisma.userTerritory.delete({ where: { id: assignmentId } });
+      const assignment = await tx.userTerritory.findUnique({ where: { id: assignmentId } });
+      if (!assignment || assignment.tenantId !== tenantId) throw new Error('Assignment not found');
 
-    await prisma.auditLog.create({
-      data: {
-        tenantId,
-        actorId: userId,
-        actorType: 'USER',
-        action: 'TERRITORY_ASSIGNMENT_DELETED',
-        resource: 'UserTerritory',
-        resourceId: assignmentId,
-      },
+      await tx.userTerritory.delete({ where: { id: assignmentId } });
+
+      await tx.auditLog.create({
+        data: {
+          tenantId,
+          actorId: userId,
+          actorType: 'USER',
+          action: 'TERRITORY_ASSIGNMENT_DELETED',
+          resource: 'UserTerritory',
+          resourceId: assignmentId,
+        },
+      });
+
+      return true;
     });
-
-    return true;
   }
 
   /**
@@ -167,9 +176,27 @@ export class TerritoryService {
    */
   static async getTerritory(userId: string, tenantId: string, territoryId: string) {
     await requirePermissionFast(userId, Resource.SALES_INTEL, Action.READ);
-    return prisma.territory.findFirst({
-      where: { id: territoryId, tenantId },
-      include: { children: true, userTerritories: true }
+    return prisma.$transaction(async (baseTx) => {
+      const tx = await withTenantTransaction(baseTx, tenantId);
+      return tx.territory.findFirst({
+        where: { id: territoryId, tenantId },
+        include: { children: true, userTerritories: true }
+      });
+    });
+  }
+
+  static async assignTerritory(userId: string, tenantId: string, territoryId: string, targetUserId: string) {
+    await requirePermissionFast(userId, Resource.SALES_INTEL, Action.MANAGE_TERRITORIES);
+
+    return prisma.$transaction(async (baseTx) => {
+      const tx = await withTenantTransaction(baseTx, tenantId);
+      return tx.userTerritory.create({
+        data: {
+          tenantId,
+          userId: targetUserId,
+          territoryId
+        }
+      });
     });
   }
 }

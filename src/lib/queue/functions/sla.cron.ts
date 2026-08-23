@@ -1,10 +1,8 @@
 import { inngest } from '../inngest.client';
 import { SecureJobEnvelope } from '../types';
-import { PrismaClient } from '@prisma/client';
 import { withJobContext } from '../worker';
+import { executeAsSystem, SystemOperation } from '@/../database/utils/prisma-system';
 import { SLAService } from '@/modules/support/sla.service';
-
-const globalPrisma = new PrismaClient();
 
 // Cron job to trigger SLA evaluation across all active tenants
 export const slaEvaluateCron = inngest.createFunction(
@@ -16,9 +14,11 @@ export const slaEvaluateCron = inngest.createFunction(
     // Note: This cron job executes WITHOUT a tenant context.
     // It is strictly a dispatcher. It must not touch customer data.
     const tenants = await step.run('fetch-active-tenants', async () => {
-      return globalPrisma.tenant.findMany({
-        where: { deletedAt: null },
-        select: { id: true }
+      return executeAsSystem(SystemOperation.PLATFORM_CRON, async (tx) => {
+        return tx.tenant.findMany({
+          where: { deletedAt: null },
+          select: { id: true }
+        });
       });
     });
 

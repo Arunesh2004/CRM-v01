@@ -1,4 +1,5 @@
 import prisma from '../../../../database/utils/prisma';
+import { withTenantTransaction } from '../../../../database/utils/prisma-tenant';
 import { SecurityEventService } from '../../security-events/security-event.service';
 import { checkPermissionFast } from '../../../lib/auth';
 import { redis } from '../../../lib/cache/redis.client';
@@ -19,8 +20,11 @@ export class ABACPolicyService {
     }
 
     if (!policies.length) {
-      policies = await prisma.aBACPolicy.findMany({
-        where: { tenantId, resource, action, isActive: true }
+      policies = await prisma.$transaction(async (baseTx) => {
+        const tx = await withTenantTransaction(baseTx, tenantId);
+        return await tx.aBACPolicy.findMany({
+          where: { tenantId, resource, action, isActive: true }
+        });
       });
       if (redis) await redis.set(cacheKey, JSON.stringify(policies), { ex: 3600 });
     }
@@ -65,21 +69,20 @@ export class ABACPolicyService {
       throw new Error('Forbidden: Only admins can manage ABAC policies');
     }
 
-    // 2. Mutation
-    const policy = await prisma.aBACPolicy.create({
-      data: { tenantId, name, resource, action, conditions, effect }
-    });
-
-    // 3. Cache invalidation
-    if (redis) await redis.del(`abac:${tenantId}:${resource}:${action}`);
-
-    // 4. Audit
-    await prisma.auditLog.create({
-      data: {
-        tenantId, actorId: adminId, actorType: 'USER', action: 'CREATE_ABAC_POLICY',
-        resource: 'SYSTEM', resourceId: policy.id,
-        metadata: { name, resource, action, effect }
-      }
+    // 2. Mutation & Audit
+    const policy = await prisma.$transaction(async (baseTx) => {
+      const tx = await withTenantTransaction(baseTx, tenantId);
+      const pol = await tx.aBACPolicy.create({
+        data: { tenantId, name, resource, action, conditions, effect }
+      });
+      await tx.auditLog.create({
+        data: {
+          tenantId, actorId: adminId, actorType: 'USER', action: 'CREATE_ABAC_POLICY',
+          resource: 'SYSTEM', resourceId: pol.id,
+          metadata: { name, resourceTarget: resource, actionTarget: action, conditions, effect }
+        }
+      });
+      return pol;
     });
 
     return policy;

@@ -1,5 +1,6 @@
 import { requireTenant, requireAuthIdentity, requirePermissionFast, requireTenantFromIdentity } from '@/lib/auth';
 import prisma from '@/../database/utils/prisma';
+import { withTenant } from '@/../database/utils/prisma-tenant';
 import { ProviderFactory } from '../../../infrastructure/provider.factory';
 import { StorageProvider } from '../../../infrastructure/storage/storage.interface';
 
@@ -14,11 +15,29 @@ export interface CreateDocumentInput {
 
 export async function createDocument(input: CreateDocumentInput) {
   const identity = await requireAuthIdentity();
+  // 1. STAGE 8: FILE SECURITY VALIDATION
+  const MAX_FILE_SIZE = 10 * 1024 * 1024; // 10 MB
+  if (input.sizeBytes > MAX_FILE_SIZE) {
+    throw new Error('File exceeds maximum allowed size of 10MB');
+  }
+
+  const allowedMimeTypes = ['application/pdf', 'application/msword', 'application/vnd.openxmlformats-officedocument.wordprocessingml.document', 'image/jpeg', 'image/png', 'image/webp'];
+  if (!allowedMimeTypes.includes(input.mimeType)) {
+    throw new Error('Invalid file type. Only PDF, Word, and common image formats are allowed.');
+  }
+
+  const dangerousExtensions = ['.exe', '.dll', '.bat', '.sh', '.js', '.mjs', '.php', '.py', '.rb'];
+  const lowerFileName = input.fileName.toLowerCase();
+  if (dangerousExtensions.some(ext => lowerFileName.endsWith(ext))) {
+    throw new Error('Dangerous file extension detected.');
+  }
+
   const tenantId = await requireTenantFromIdentity(identity);
   
   // Validate parent ownership and authorization
+  const prismaTenant = withTenant(tenantId);
   if (input.customerId) {
-    const customer = await prisma.customer.findFirst({
+    const customer = await prismaTenant.customer.findFirst({
       where: { id: input.customerId, tenantId, deletedAt: null },
       select: { id: true }
     });
@@ -27,7 +46,7 @@ export async function createDocument(input: CreateDocumentInput) {
   }
 
   if (input.taskId) {
-    const task = await prisma.task.findFirst({
+    const task = await prismaTenant.task.findFirst({
       where: { id: input.taskId, tenantId, deletedAt: null },
       select: { id: true }
     });
@@ -45,7 +64,7 @@ export async function createDocument(input: CreateDocumentInput) {
 
   // Create document metadata
   try {
-    const document = await prisma.document.create({
+    const document = await prismaTenant.document.create({
       data: {
         tenantId,
         fileName: input.fileName,
@@ -59,7 +78,7 @@ export async function createDocument(input: CreateDocumentInput) {
     });
     
     // Log audit
-    await prisma.auditLog.create({
+    await prismaTenant.auditLog.create({
       data: {
         tenantId,
         actorId: identity.id,

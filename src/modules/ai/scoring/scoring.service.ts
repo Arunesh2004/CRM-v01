@@ -1,4 +1,5 @@
 import prisma from '@/../database/utils/prisma';
+import { withTenant } from '@/../database/utils/prisma-tenant';
 import { Logger } from '@/lib/logger/logger';
 import { AIProviderFactory } from '@/lib/providers/ai/ai-provider.factory';
 import { requirePermissionFast } from '@/lib/auth';
@@ -13,7 +14,8 @@ export class ScoringService {
     await requirePermissionFast(userId, 'REVENUE', 'UPDATE');
 
     // 2. Fetch the Deal with context
-    const deal = await prisma.deal.findFirst({
+    const tenantPrisma = withTenant(tenantId);
+    const deal = await tenantPrisma.deal.findFirst({
       where: { id: dealId, tenantId },
       include: {
         customer: true,
@@ -71,7 +73,7 @@ export class ScoringService {
     }
 
     // 6. Update the Deal (using SYSTEM/AI context implicitly via backend service)
-    await prisma.deal.update({
+    await tenantPrisma.deal.update({
       where: { id: dealId },
       data: {
         probability,
@@ -80,7 +82,7 @@ export class ScoringService {
     });
 
     // 7. Immutable Audit Log for AI Actor
-    await prisma.auditLog.create({
+    await tenantPrisma.auditLog.create({
       data: {
         tenantId,
         actorId: 'AI_SYSTEM',

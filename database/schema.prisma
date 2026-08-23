@@ -233,11 +233,11 @@ model Tenant {
   approvalRequests       ApprovalRequest[]
   approvalSteps          ApprovalStep[]
 
-  tickets                Ticket[]
-  ticketMessages         TicketMessage[]
-  slaConfigurations      SLAConfiguration[]
-  slaEvents              SLAEvent[]
-  
+  tickets           Ticket[]
+  ticketMessages    TicketMessage[]
+  slaConfigurations SLAConfiguration[]
+  slaEvents         SLAEvent[]
+
   idempotencyKeys        IdempotencyKey[]
   deadLetterQueues       DeadLetterQueue[]
   subscriptions          Subscription[]
@@ -247,6 +247,8 @@ model Tenant {
   workflowActions        WorkflowAction[]
   workflowExecutions     WorkflowExecution[]
   workflowExecutionSteps WorkflowExecutionStep[]
+  rolePermissions        RolePermission[]
+  userRoles              UserRole[]
 }
 
 model TenantBootstrap {
@@ -334,8 +336,8 @@ model User {
   approvalRequests     ApprovalRequest[]
   approvalSteps        ApprovalStep[]
 
-  assignedTickets        Ticket[]          @relation("TicketAssignee")
-  sentTicketMessages     TicketMessage[]
+  assignedTickets    Ticket[]        @relation("TicketAssignee")
+  sentTicketMessages TicketMessage[]
 
   @@unique([tenantId, email])
   @@unique([tenantId, employeeId])
@@ -393,10 +395,12 @@ model RolePermission {
   id           String   @id @default(uuid())
   roleId       String
   permissionId String
+  tenantId     String
   createdAt    DateTime @default(now())
 
   role       Role       @relation(fields: [roleId], references: [id], onDelete: Cascade)
   permission Permission @relation(fields: [permissionId], references: [id], onDelete: Cascade)
+  tenant     Tenant     @relation(fields: [tenantId], references: [id], onDelete: Cascade)
 
   @@unique([roleId, permissionId])
   @@index([roleId])
@@ -406,10 +410,12 @@ model UserRole {
   id        String   @id @default(uuid())
   userId    String
   roleId    String
+  tenantId  String
   createdAt DateTime @default(now())
 
-  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
-  role Role @relation(fields: [roleId], references: [id], onDelete: Cascade)
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  role   Role   @relation(fields: [roleId], references: [id], onDelete: Cascade)
+  tenant Tenant @relation(fields: [tenantId], references: [id], onDelete: Cascade)
 
   @@unique([userId, roleId])
   @@index([userId])
@@ -576,7 +582,7 @@ model Customer {
   documents    Document[]
 
   // Communication
-  quotes Quote[]
+  quotes  Quote[]
   tickets Ticket[]
 
   @@unique([tenantId, normalizedName])
@@ -1698,9 +1704,9 @@ model DocumentPermission {
   roleId     String?
   permission String
   createdAt  DateTime @default(now())
-  
-  tenantId   String
-  tenant     Tenant   @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+
+  tenantId String
+  tenant   Tenant @relation(fields: [tenantId], references: [id], onDelete: Cascade)
 
   document Document @relation(fields: [documentId], references: [id], onDelete: Cascade)
   user     User?    @relation(fields: [userId], references: [id], onDelete: Cascade)
@@ -1826,8 +1832,8 @@ model WorkflowTrigger {
   conditions Json?
   createdAt  DateTime @default(now())
 
-  tenantId   String
-  tenant     Tenant   @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  tenantId String
+  tenant   Tenant @relation(fields: [tenantId], references: [id], onDelete: Cascade)
 
   workflow Workflow @relation(fields: [workflowId], references: [id], onDelete: Cascade)
 
@@ -1842,8 +1848,8 @@ model WorkflowAction {
   config     Json
   createdAt  DateTime @default(now())
 
-  tenantId   String
-  tenant     Tenant   @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  tenantId String
+  tenant   Tenant @relation(fields: [tenantId], references: [id], onDelete: Cascade)
 
   workflow Workflow                @relation(fields: [workflowId], references: [id], onDelete: Cascade)
   steps    WorkflowExecutionStep[]
@@ -1859,8 +1865,8 @@ model WorkflowExecution {
   createdAt  DateTime                @default(now())
   updatedAt  DateTime                @updatedAt
 
-  tenantId   String
-  tenant     Tenant   @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  tenantId String
+  tenant   Tenant @relation(fields: [tenantId], references: [id], onDelete: Cascade)
 
   workflow Workflow                @relation(fields: [workflowId], references: [id], onDelete: Cascade)
   steps    WorkflowExecutionStep[]
@@ -1877,8 +1883,8 @@ model WorkflowExecutionStep {
   error       String?
   timestamp   DateTime                    @default(now())
 
-  tenantId    String
-  tenant      Tenant   @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  tenantId String
+  tenant   Tenant @relation(fields: [tenantId], references: [id], onDelete: Cascade)
 
   execution WorkflowExecution @relation(fields: [executionId], references: [id], onDelete: Cascade)
   action    WorkflowAction    @relation(fields: [actionId], references: [id], onDelete: Cascade)
@@ -2145,25 +2151,25 @@ model FieldSecurityPolicy {
   securityLevel String
   createdAt     DateTime @default(now())
   updatedAt     DateTime @updatedAt
-  
+
   tenant Tenant @relation(fields: [tenantId], references: [id], onDelete: Cascade)
-  
+
   @@unique([tenantId, modelName, fieldName])
 }
 
 model ABACPolicy {
-  id          String   @id @default(uuid())
-  tenantId    String
-  name        String
-  resource    String
-  action      String
-  conditions  Json
-  effect      String
-  isActive    Boolean  @default(true)
-  createdAt   DateTime @default(now())
-  
+  id         String   @id @default(uuid())
+  tenantId   String
+  name       String
+  resource   String
+  action     String
+  conditions Json
+  effect     String
+  isActive   Boolean  @default(true)
+  createdAt  DateTime @default(now())
+
   tenant Tenant @relation(fields: [tenantId], references: [id], onDelete: Cascade)
-  
+
   @@index([tenantId, resource, action])
 }
 
@@ -2173,32 +2179,32 @@ model ApprovalRequest {
   requesterId    String
   resource       String
   resourceId     String
-  status         String   // PENDING, APPROVED, REJECTED, CANCELLED
+  status         String // PENDING, APPROVED, REJECTED, CANCELLED
   workflowStepId String?  @unique
   createdAt      DateTime @default(now())
   updatedAt      DateTime @updatedAt
-  
+
   tenant    Tenant         @relation(fields: [tenantId], references: [id], onDelete: Cascade)
   requester User           @relation(fields: [requesterId], references: [id])
   steps     ApprovalStep[]
-  
+
   @@index([tenantId, status])
 }
 
 model ApprovalStep {
-  id                String   @id @default(uuid())
+  id                String    @id @default(uuid())
   tenantId          String
   approvalRequestId String
   approverId        String?
   approverRoleId    String?
-  status            String   // PENDING, APPROVED, REJECTED
+  status            String // PENDING, APPROVED, REJECTED
   comments          String?
   actedAt           DateTime?
-  createdAt         DateTime @default(now())
-  
-  tenant   Tenant         @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  createdAt         DateTime  @default(now())
+
+  tenant   Tenant          @relation(fields: [tenantId], references: [id], onDelete: Cascade)
   request  ApprovalRequest @relation(fields: [approvalRequestId], references: [id], onDelete: Cascade)
-  approver User?    @relation(fields: [approverId], references: [id], onDelete: SetNull)
+  approver User?           @relation(fields: [approverId], references: [id], onDelete: SetNull)
 
   @@index([tenantId, approvalRequestId])
   @@index([tenantId, status])
@@ -2231,11 +2237,11 @@ model Ticket {
   closedAt       DateTime?
   slaDeadline    DateTime?
 
-  tenant         Tenant          @relation(fields: [tenantId], references: [id], onDelete: Cascade)
-  customer       Customer        @relation(fields: [customerId], references: [id], onDelete: Cascade)
-  assignedUser   User?           @relation("TicketAssignee", fields: [assignedUserId], references: [id], onDelete: SetNull)
-  messages       TicketMessage[]
-  slaEvents      SLAEvent[]
+  tenant       Tenant          @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  customer     Customer        @relation(fields: [customerId], references: [id], onDelete: Cascade)
+  assignedUser User?           @relation("TicketAssignee", fields: [assignedUserId], references: [id], onDelete: SetNull)
+  messages     TicketMessage[]
+  slaEvents    SLAEvent[]
 
   @@index([tenantId, status])
   @@index([tenantId, assignedUserId, status])
@@ -2243,19 +2249,19 @@ model Ticket {
 }
 
 model TicketMessage {
-  id           String    @id @default(uuid())
-  tenantId     String
-  ticketId     String
-  senderId     String?
-  senderType   ActorType
-  content      String
-  isInternal   Boolean   @default(false)
-  createdAt    DateTime  @default(now())
-  updatedAt    DateTime  @updatedAt
+  id         String    @id @default(uuid())
+  tenantId   String
+  ticketId   String
+  senderId   String?
+  senderType ActorType
+  content    String
+  isInternal Boolean   @default(false)
+  createdAt  DateTime  @default(now())
+  updatedAt  DateTime  @updatedAt
 
-  tenant       Tenant    @relation(fields: [tenantId], references: [id], onDelete: Cascade)
-  ticket       Ticket    @relation(fields: [ticketId], references: [id], onDelete: Cascade)
-  senderUser   User?     @relation(fields: [senderId], references: [id], onDelete: SetNull) 
+  tenant     Tenant @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  ticket     Ticket @relation(fields: [ticketId], references: [id], onDelete: Cascade)
+  senderUser User?  @relation(fields: [senderId], references: [id], onDelete: SetNull)
 
   @@index([tenantId, ticketId, createdAt])
 }
@@ -2269,20 +2275,20 @@ model SLAConfiguration {
   createdAt             DateTime     @default(now())
   updatedAt             DateTime     @updatedAt
 
-  tenant                Tenant       @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  tenant Tenant @relation(fields: [tenantId], references: [id], onDelete: Cascade)
 
   @@unique([tenantId, priority])
 }
 
 model SLAEvent {
-  id           String    @id @default(uuid())
-  tenantId     String
-  ticketId     String
-  type         String    // e.g., RESPONSE_BREACH, RESOLUTION_BREACH
-  recordedAt   DateTime  @default(now())
+  id         String   @id @default(uuid())
+  tenantId   String
+  ticketId   String
+  type       String // e.g., RESPONSE_BREACH, RESOLUTION_BREACH
+  recordedAt DateTime @default(now())
 
-  tenant       Tenant    @relation(fields: [tenantId], references: [id], onDelete: Cascade)
-  ticket       Ticket    @relation(fields: [ticketId], references: [id], onDelete: Cascade)
+  tenant Tenant @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  ticket Ticket @relation(fields: [ticketId], references: [id], onDelete: Cascade)
 
   @@unique([tenantId, ticketId, type])
   @@index([tenantId, ticketId])
@@ -2295,7 +2301,7 @@ model IdempotencyKey {
   expiresAt DateTime
   createdAt DateTime @default(now())
 
-  tenant    Tenant   @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  tenant Tenant @relation(fields: [tenantId], references: [id], onDelete: Cascade)
 
   @@unique([tenantId, key])
   @@index([expiresAt])
@@ -2314,22 +2320,22 @@ model DeadLetterQueue {
   updatedAt     DateTime @updatedAt
   status        String   @default("PENDING") // PENDING, REPLAYED, DISCARDED
 
-  tenant        Tenant   @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  tenant Tenant @relation(fields: [tenantId], references: [id], onDelete: Cascade)
 
   @@index([tenantId, status])
   @@index([createdAt])
 }
 
 model Subscription {
-  id               String   @id @default(uuid())
+  id               String    @id @default(uuid())
   tenantId         String
   stripeCustomerId String?
   stripeSubId      String?
-  status           String   @default("INACTIVE")
+  status           String    @default("INACTIVE")
   planId           String?
   currentPeriodEnd DateTime?
-  createdAt        DateTime @default(now())
-  updatedAt        DateTime @updatedAt
+  createdAt        DateTime  @default(now())
+  updatedAt        DateTime  @updatedAt
 
   tenant Tenant @relation(fields: [tenantId], references: [id], onDelete: Cascade)
 
@@ -2337,14 +2343,14 @@ model Subscription {
 }
 
 model Invoice {
-  id            String   @id @default(uuid())
-  tenantId      String
+  id              String   @id @default(uuid())
+  tenantId        String
   stripeInvoiceId String?
-  amountDue     Float    @default(0)
-  amountPaid    Float    @default(0)
-  status        String   @default("DRAFT")
-  createdAt     DateTime @default(now())
-  updatedAt     DateTime @updatedAt
+  amountDue       Float    @default(0)
+  amountPaid      Float    @default(0)
+  status          String   @default("DRAFT")
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
 
   tenant Tenant @relation(fields: [tenantId], references: [id], onDelete: Cascade)
 

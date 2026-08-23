@@ -1,4 +1,5 @@
 import prisma from '../../../database/utils/prisma';
+import { withTenantTransaction } from '../../../database/utils/prisma-tenant';
 import { SecurityEventService } from '../security-events/security-event.service';
 import { checkPermissionFast } from '../../lib/auth';
 import { Action, Resource } from '@prisma/client';
@@ -6,15 +7,18 @@ import { FieldSecurityService } from '../security/field-security/field-security.
 
 export class ApprovalService {
   static async getPendingApprovals(tenantId: string, userId: string) {
-    const approvals = await prisma.approvalRequest.findMany({
-      where: { 
-        tenantId, 
-        steps: { some: { approverId: userId, status: 'PENDING' } }
-      },
-      include: {
-        requester: true,
-      },
-      orderBy: { createdAt: 'desc' }
+    const approvals = await prisma.$transaction(async (baseTx) => {
+      const tx = await withTenantTransaction(baseTx, tenantId);
+      return await tx.approvalRequest.findMany({
+        where: { 
+          tenantId, 
+          steps: { some: { approverId: userId, status: 'PENDING' } }
+        },
+        include: {
+          requester: true,
+        },
+        orderBy: { createdAt: 'desc' }
+      });
     });
     return Promise.all(approvals.map(a => FieldSecurityService.maskFields(tenantId, userId, 'ApprovalRequest', a)));
   }
@@ -23,34 +27,37 @@ export class ApprovalService {
    * Creates an approval request and initial step.
    */
   static async createRequest(tenantId: string, requesterId: string, resource: string, resourceId: string, requiredApproverId?: string, requiredRoleId?: string) {
-    const request = await prisma.approvalRequest.create({
-      data: {
-        tenantId,
-        requesterId,
-        resource,
-        resourceId,
-        status: 'PENDING',
-        steps: {
-          create: {
-            tenantId,
-            approverId: requiredApproverId,
-            approverRoleId: requiredRoleId,
-            status: 'PENDING'
+    return await prisma.$transaction(async (baseTx) => {
+      const tx = await withTenantTransaction(baseTx, tenantId);
+      const request = await tx.approvalRequest.create({
+        data: {
+          tenantId,
+          requesterId,
+          resource,
+          resourceId,
+          status: 'PENDING',
+          steps: {
+            create: {
+              tenantId,
+              approverId: requiredApproverId,
+              approverRoleId: requiredRoleId,
+              status: 'PENDING'
+            }
           }
+        },
+        include: { steps: true }
+      });
+
+      await tx.auditLog.create({
+        data: {
+          tenantId, actorId: requesterId, actorType: 'USER', action: 'CREATE_APPROVAL_REQUEST',
+          resource, resourceId,
+          metadata: { requestId: request.id }
         }
-      },
-      include: { steps: true }
-    });
+      });
 
-    await prisma.auditLog.create({
-      data: {
-        tenantId, actorId: requesterId, actorType: 'USER', action: 'CREATE_APPROVAL_REQUEST',
-        resource, resourceId,
-        metadata: { requestId: request.id }
-      }
+      return request;
     });
-
-    return request;
   }
 
   /**
@@ -58,7 +65,8 @@ export class ApprovalService {
    */
   static async approveStep(tenantId: string, approverId: string, stepId: string) {
     // We use a transaction to prevent duplicate approvals (race conditions)
-    return await prisma.$transaction(async (tx) => {
+    return await prisma.$transaction(async (baseTx) => {
+      const tx = await withTenantTransaction(baseTx, tenantId);
       // 1. Fetch step and lock the row using a raw query for FOR UPDATE (or rely on Prisma's sequential serializability if applicable, but explicit locking is safer).
       // Prisma doesn't support SELECT FOR UPDATE directly on generic queries without $queryRaw.
       const lockedStep = await tx.$queryRaw<any[]>`

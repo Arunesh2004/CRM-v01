@@ -82,7 +82,8 @@ async function main() {
           update: {},
           create: {
             userId: adminUser.id,
-            roleId: adminRole.id
+            roleId: adminRole.id,
+            tenantId: tenant.id
           }
         });
         console.log(`Verified Admin/Test User has TENANT_ADMIN role: ${adminEmail}`);
@@ -137,7 +138,7 @@ async function main() {
       await prisma.rolePermission.upsert({
         where: { roleId_permissionId: { roleId: demoRole.id, permissionId: perm.id } },
         update: {},
-        create: { roleId: demoRole.id, permissionId: perm.id }
+        create: { roleId: demoRole.id, permissionId: perm.id, tenantId: demoTenant.id }
       });
     }
     console.log(`Assigned READ permissions to DEMO_VIEWER role.`);
@@ -167,7 +168,8 @@ async function main() {
       update: {},
       create: {
         userId: demoUser.id,
-        roleId: demoRole.id
+        roleId: demoRole.id,
+        tenantId: demoTenant.id
       }
     });
 

@@ -1,5 +1,6 @@
 import { describe, it, expect, beforeAll, afterAll } from 'vitest';
 import prisma from '../../../database/utils/prisma';
+import { executeAsSystem, SystemOperation } from '../../../database/utils/prisma-system';
 import { withTenant } from '../../../database/utils/prisma-tenant';
 import { TicketService } from '../../modules/support/ticket.service';
 import { SLAService } from '../../modules/support/sla.service';
@@ -16,92 +17,102 @@ describe('Phase 10.4 - Omni-channel Support - Adversarial Security Tests', () =>
   let ticketA: string;
 
   beforeAll(async () => {
-    // Teardown first in case of previous runs
-    await prisma.ticketMessage.deleteMany();
-    await prisma.sLAEvent.deleteMany();
-    await prisma.sLAConfiguration.deleteMany();
-    await prisma.ticket.deleteMany();
-    
-    // Create Tenants
-    const tA = await prisma.tenant.create({ data: { name: 'Omni Tenant A' } });
-    const tB = await prisma.tenant.create({ data: { name: 'Omni Tenant B' } });
-    tenantA = tA.id;
-    tenantB = tB.id;
+    await executeAsSystem(SystemOperation.SECURITY_AUDIT, async (tx) => {
+      // Teardown first in case of previous runs
+      await tx.ticketMessage.deleteMany();
+      await tx.sLAEvent.deleteMany();
+      await tx.sLAConfiguration.deleteMany();
+      await tx.ticket.deleteMany();
+      
+      // Create Tenants
+      const tA = await tx.tenant.create({ data: { name: 'Omni Tenant A' } });
+      const tB = await tx.tenant.create({ data: { name: 'Omni Tenant B' } });
+      tenantA = tA.id;
+      tenantB = tB.id;
 
-    // Create Customer
-    const cA = await prisma.customer.create({
-      data: { tenantId: tenantA, name: 'Support Cust A', normalizedName: 'support_cust_a' }
+      // Create Customer
+      const cA = await tx.customer.create({
+        data: { tenantId: tenantA, name: 'Support Cust A', normalizedName: 'support_cust_a' }
+      });
+      customerA = cA.id;
+
+      // Roles and Permissions
+      const adminRoleA = await tx.role.create({ data: { tenantId: tenantA, name: 'ADMIN' } });
+      const supportRoleA = await tx.role.create({ data: { tenantId: tenantA, name: 'SUPPORT' } });
+      const repRoleA = await tx.role.create({ data: { tenantId: tenantA, name: 'REP' } });
+
+      // Admin Permissions
+      const permSysUpd = await tx.permission.upsert({
+        where: { resource_action: { resource: 'SYSTEM', action: 'UPDATE' } },
+        create: { resource: 'SYSTEM', action: 'UPDATE' },
+        update: {}
+      });
+      await tx.rolePermission.create({ data: { tenantId: tenantA, roleId: adminRoleA.id, permissionId: permSysUpd.id } });
+
+      // Support Permissions
+      const permTktCreate = await tx.permission.upsert({
+        where: { resource_action: { resource: 'TICKET', action: 'CREATE' } },
+        create: { resource: 'TICKET', action: 'CREATE' },
+        update: {}
+      });
+      const permTktUpdate = await tx.permission.upsert({
+        where: { resource_action: { resource: 'TICKET', action: 'UPDATE' } },
+        create: { resource: 'TICKET', action: 'UPDATE' },
+        update: {}
+      });
+      
+      await tx.rolePermission.create({ data: { tenantId: tenantA, roleId: supportRoleA.id, permissionId: permTktCreate.id } });
+      await tx.rolePermission.create({ data: { tenantId: tenantA, roleId: supportRoleA.id, permissionId: permTktUpdate.id } });
+
+      // Rep Permissions (None for Ticket)
+
+      // Users
+      const uAdminA = await tx.user.create({ data: { tenantId: tenantA, email: 'adminA@omni.com' } });
+      await tx.userRole.create({ data: { tenantId: tenantA, userId: uAdminA.id, roleId: adminRoleA.id } });
+      adminA = uAdminA.id;
+
+      const uSupportA = await tx.user.create({ data: { tenantId: tenantA, email: 'supportA@omni.com' } });
+      await tx.userRole.create({ data: { tenantId: tenantA, userId: uSupportA.id, roleId: supportRoleA.id } });
+      supportAgentA = uSupportA.id;
+
+      const uRepA = await tx.user.create({ data: { tenantId: tenantA, email: 'repA@omni.com' } });
+      await tx.userRole.create({ data: { tenantId: tenantA, userId: uRepA.id, roleId: repRoleA.id } });
+      repA = uRepA.id;
+
+      const uAdminB = await tx.user.create({ data: { tenantId: tenantB, email: 'adminB@omni.com' } });
+      const supportRoleB = await tx.role.create({ data: { tenantId: tenantB, name: 'SUPPORT_B' } });
+      await tx.rolePermission.create({ data: { tenantId: tenantB, roleId: supportRoleB.id, permissionId: permTktUpdate.id } });
+      await tx.userRole.create({ data: { tenantId: tenantB, userId: uAdminB.id, roleId: supportRoleB.id } });
+      adminB = uAdminB.id;
+
+      // Create Initial Ticket
+      const ticket = await tx.ticket.create({
+        data: {
+          tenantId: tenantA, customerId: customerA,
+          subject: 'My Issue', description: 'Help me',
+          priority: 'HIGH', status: 'OPEN'
+        }
+      });
+      ticketA = ticket.id;
     });
-    customerA = cA.id;
-
-    // Roles and Permissions
-    const adminRoleA = await prisma.role.create({ data: { tenantId: tenantA, name: 'ADMIN' } });
-    const supportRoleA = await prisma.role.create({ data: { tenantId: tenantA, name: 'SUPPORT' } });
-    const repRoleA = await prisma.role.create({ data: { tenantId: tenantA, name: 'REP' } });
-
-    // Admin Permissions
-    const permSysUpd = await prisma.permission.create({ data: { resource: 'SYSTEM', action: 'UPDATE' } });
-    await prisma.rolePermission.create({ data: { roleId: adminRoleA.id, permissionId: permSysUpd.id } });
-
-    // Support Permissions
-    const permTktCreate = await prisma.permission.create({ data: { resource: 'TICKET', action: 'CREATE' } });
-    const permTktUpdate = await prisma.permission.create({ data: { resource: 'TICKET', action: 'UPDATE' } });
-    
-    await prisma.rolePermission.create({ data: { roleId: supportRoleA.id, permissionId: permTktCreate.id } });
-    await prisma.rolePermission.create({ data: { roleId: supportRoleA.id, permissionId: permTktUpdate.id } });
-
-    // Rep Permissions (None for Ticket)
-
-    // Users
-    const uAdminA = await prisma.user.create({ data: { tenantId: tenantA, email: 'adminA@omni.com' } });
-    await prisma.userRole.create({ data: { userId: uAdminA.id, roleId: adminRoleA.id } });
-    adminA = uAdminA.id;
-
-    const uSupportA = await prisma.user.create({ data: { tenantId: tenantA, email: 'supportA@omni.com' } });
-    await prisma.userRole.create({ data: { userId: uSupportA.id, roleId: supportRoleA.id } });
-    supportAgentA = uSupportA.id;
-
-    const uRepA = await prisma.user.create({ data: { tenantId: tenantA, email: 'repA@omni.com' } });
-    await prisma.userRole.create({ data: { userId: uRepA.id, roleId: repRoleA.id } });
-    repA = uRepA.id;
-
-    const uAdminB = await prisma.user.create({ data: { tenantId: tenantB, email: 'adminB@omni.com' } });
-    await prisma.userRole.create({ data: { userId: uAdminB.id, roleId: supportRoleA.id } }); // Note: Using supportRoleA is cross-tenant role binding but it's ok for test setup, wait, supportRoleA is bound to tenantA.
-    // Better to create a support role for tenantB:
-    const supportRoleB = await prisma.role.create({ data: { tenantId: tenantB, name: 'SUPPORT_B' } });
-    await prisma.rolePermission.create({ data: { roleId: supportRoleB.id, permissionId: permTktUpdate.id } });
-    await prisma.userRole.create({ data: { userId: uAdminB.id, roleId: supportRoleB.id } });
-    adminB = uAdminB.id;
-
-    // Create Initial Ticket
-    const ticket = await prisma.ticket.create({
-      data: {
-        tenantId: tenantA, customerId: customerA,
-        subject: 'My Issue', description: 'Help me',
-        priority: 'HIGH', status: 'OPEN'
-      }
-    });
-    ticketA = ticket.id;
   });
 
   afterAll(async () => {
-    await prisma.$executeRawUnsafe('SET session_replication_role = replica;');
-    await prisma.ticketMessage.deleteMany();
-    await prisma.sLAEvent.deleteMany();
-    await prisma.sLAConfiguration.deleteMany();
-    await prisma.ticket.deleteMany();
-    await prisma.customer.deleteMany({ where: { id: customerA } });
-    await prisma.userRole.deleteMany();
-    await prisma.rolePermission.deleteMany();
-    await prisma.permission.deleteMany({ where: { resource: { in: ['TICKET', 'SYSTEM'] } } });
-    await prisma.role.deleteMany();
-    await prisma.approvalRequest.deleteMany();
-    await prisma.deal.deleteMany();
-    await prisma.user.deleteMany();
-    await prisma.auditLog.deleteMany();
-    await prisma.securityEvent.deleteMany();
-    await prisma.tenant.deleteMany({ where: { id: { in: [tenantA, tenantB] } } });
-    await prisma.$executeRawUnsafe('SET session_replication_role = DEFAULT;');
+    await executeAsSystem(SystemOperation.SECURITY_AUDIT, async (tx) => {
+      await tx.ticketMessage.deleteMany();
+      await tx.sLAEvent.deleteMany();
+      await tx.sLAConfiguration.deleteMany();
+      await tx.ticket.deleteMany();
+      await tx.customer.deleteMany({ where: { id: customerA } });
+      await tx.userRole.deleteMany();
+      await tx.rolePermission.deleteMany();
+      await tx.permission.deleteMany({ where: { resource: { in: ['TICKET', 'SYSTEM'] } } });
+      await tx.role.deleteMany();
+      await tx.approvalRequest.deleteMany();
+      await tx.deal.deleteMany();
+      // Users and Tenants cannot be deleted easily if there are AuditLog records pointing to them.
+      // We leave them alone.
+    });
   });
 
   it('1. Cross-tenant Ticket read via RLS', async () => {
@@ -157,9 +168,11 @@ describe('Phase 10.4 - Omni-channel Support - Adversarial Security Tests', () =>
 
   it('8. Duplicate SLA breach events (Idempotency)', async () => {
     // Force ticket deadline to past
-    await prisma.ticket.update({
-      where: { id: ticketA },
-      data: { slaDeadline: new Date(Date.now() - 10000) }
+    await executeAsSystem(SystemOperation.SECURITY_AUDIT, async (tx) => {
+      await tx.ticket.update({
+        where: { id: ticketA },
+        data: { slaDeadline: new Date(Date.now() - 10000) }
+      });
     });
 
     const breaches1 = await SLAService.processSLABreaches(tenantA);

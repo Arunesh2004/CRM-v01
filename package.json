@@ -4,7 +4,8 @@
   "private": true,
   "scripts": {
     "dev": "next dev",
-    "build": "node -e \"const c=require('crypto');const u=process.env.DATABASE_URL;require('fs').writeFileSync('public/build-db.json', JSON.stringify({dbHash: u ? c.createHash('sha256').update(u).digest('hex') : 'null', host: u ? new URL(u).hostname : 'null'}));\" && prisma migrate deploy && npx tsx prisma/temp-seed-verify.ts && next build",
+    "build": "node -e \"const c=require('crypto');const u=process.env.DATABASE_URL;require('fs').writeFileSync('public/build-db.json', JSON.stringify({dbHash: u ? c.createHash('sha256').update(u).digest('hex') : 'null', host: u ? new URL(u).hostname : 'null'}));\" && next build",
+    "migrate:deploy": "prisma migrate deploy && npx tsx prisma/temp-seed-verify.ts",
     "start": "next start",
     "lint": "eslint",
     "format": "prettier --write .",
@@ -35,6 +36,7 @@
     "ioredis": "^6.0.0",
     "jsonwebtoken": "^9.0.3",
     "lucide-react": "^1.30.0",
+    "nanoid": "^6.0.1",
     "next": "16.3.0",
     "pino": "^10.3.1",
     "pino-pretty": "^13.1.3",

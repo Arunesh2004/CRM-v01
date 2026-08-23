@@ -59,7 +59,8 @@ async function main() {
     await prisma.rolePermission.create({
       data: {
         roleId: demoRole.id,
-        permissionId: demoPerm.id
+        permissionId: demoPerm.id,
+        tenantId: tenant.id
       }
     });
   }
@@ -67,7 +68,8 @@ async function main() {
   await prisma.userRole.create({
     data: {
       userId: demoUser.id,
-      roleId: demoRole.id
+      roleId: demoRole.id,
+      tenantId: tenant.id
     }
   });
 

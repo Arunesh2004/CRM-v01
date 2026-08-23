@@ -1,4 +1,5 @@
 import prisma from '../../../database/utils/prisma';
+import { withTenant, withTenantTransaction } from '../../../database/utils/prisma-tenant';
 import { checkPermissionFast } from '../../lib/auth';
 import { Action, ActorType, Resource, TicketStatus } from '@prisma/client';
 import { SecurityEventService } from '../security-events/security-event.service';
@@ -7,38 +8,45 @@ import { FieldSecurityService } from '../security/field-security/field-security.
 export class TicketService {
   static async getTickets(tenantId: string, userId: string) {
     await checkPermissionFast(userId, 'TICKET', 'READ');
-    const tickets = await prisma.ticket.findMany({
-      where: { tenantId },
-      include: {
-        customer: true,
-        assignedUser: true
-      },
-      orderBy: { createdAt: 'desc' }
+    
+    return prisma.$transaction(async (baseTx) => {
+      const tx = await withTenantTransaction(baseTx, tenantId);
+      const tickets = await tx.ticket.findMany({
+        where: { tenantId },
+        include: {
+          customer: true,
+          assignedUser: true
+        },
+        orderBy: { createdAt: 'desc' }
+      });
+      return Promise.all(tickets.map(t => FieldSecurityService.maskFields(tenantId, userId, 'Ticket', t)));
     });
-    return Promise.all(tickets.map(t => FieldSecurityService.maskFields(tenantId, userId, 'Ticket', t)));
   }
 
   static async getTicketById(tenantId: string, userId: string, ticketId: string) {
     await checkPermissionFast(userId, 'TICKET', 'READ');
-    const ticket = await prisma.ticket.findFirst({
-      where: { id: ticketId, tenantId },
-      include: {
-        customer: true,
-        assignedUser: true,
-        messages: {
-          orderBy: { createdAt: 'asc' }
+
+    return prisma.$transaction(async (baseTx) => {
+      const tx = await withTenantTransaction(baseTx, tenantId);
+      const ticket = await tx.ticket.findFirst({
+        where: { id: ticketId, tenantId },
+        include: {
+          customer: true,
+          assignedUser: true,
+          messages: {
+            orderBy: { createdAt: 'asc' }
+          }
         }
-      }
+      });
+      if (!ticket) return null;
+      return FieldSecurityService.maskFields(tenantId, userId, 'Ticket', ticket);
     });
-    if (!ticket) return null;
-    return FieldSecurityService.maskFields(tenantId, userId, 'Ticket', ticket);
   }
 
   /**
    * Creates a new support ticket.
    */
   static async createTicket(tenantId: string, userId: string, customerId: string, subject: string, description: string, priority: any) {
-    // Validate CREATE access for tickets
     const canCreate = await checkPermissionFast(userId, 'TICKET', 'CREATE');
     if (!canCreate) {
       await SecurityEventService.logEvent(tenantId, {
@@ -51,33 +59,44 @@ export class TicketService {
       throw new Error('Forbidden: Insufficient privileges to create ticket');
     }
 
-    const ticket = await prisma.ticket.create({
-      data: {
-        tenantId,
-        customerId,
-        subject,
-        description,
-        priority,
-        status: 'OPEN'
+    return prisma.$transaction(async (baseTx) => {
+      const tx = await withTenantTransaction(baseTx, tenantId);
+      
+      // Enforce parent ownership (BOLA prevention)
+      const customer = await tx.customer.findFirst({
+        where: { id: customerId } // RLS guarantees isolation
+      });
+      if (!customer) {
+        throw new Error('Customer not found or unauthorized');
       }
-    });
+      
+      const ticket = await tx.ticket.create({
+        data: {
+          tenantId,
+          customerId,
+          subject,
+          description,
+          priority,
+          status: 'OPEN'
+        }
+      });
 
-    await prisma.auditLog.create({
-      data: {
-        tenantId, actorId: userId, actorType: 'USER', action: 'CREATE',
-        resource: 'TICKET', resourceId: ticket.id,
-        metadata: { subject, priority }
-      }
-    });
+      await tx.auditLog.create({
+        data: {
+          tenantId, actorId: userId, actorType: 'USER', action: 'CREATE',
+          resource: 'TICKET', resourceId: ticket.id,
+          metadata: { subject, priority }
+        }
+      });
 
-    return ticket;
+      return ticket;
+    });
   }
 
   /**
    * Add a message to an existing ticket.
    */
   static async addMessage(tenantId: string, ticketId: string, senderId: string, senderType: ActorType, content: string, isInternal: boolean = false) {
-    // Determine required action based on sender type
     if (senderType === 'USER' || senderType === 'AI') {
       const canUpdate = await checkPermissionFast(senderId, 'TICKET', 'UPDATE');
       if (!canUpdate) {
@@ -92,43 +111,45 @@ export class TicketService {
       }
     }
 
-    // Verify ticket exists in this tenant (Cross-tenant check is handled automatically if RLS is on, but explicitly checked here for safety).
-    const ticket = await prisma.ticket.findFirst({
-      where: { id: ticketId, tenantId }
-    });
-    
-    if (!ticket) {
-        throw new Error('Ticket not found or cross-tenant access denied');
-    }
+    return prisma.$transaction(async (baseTx) => {
+      const tx = await withTenantTransaction(baseTx, tenantId);
 
-    const message = await prisma.ticketMessage.create({
-      data: {
-        tenantId,
-        ticketId,
-        senderId,
-        senderType,
-        content,
-        isInternal
+      const ticket = await tx.ticket.findFirst({
+        where: { id: ticketId, tenantId }
+      });
+      
+      if (!ticket) {
+          throw new Error('Ticket not found or cross-tenant access denied');
       }
-    });
 
-    // Automatically change status from RESOLVED/CLOSED to OPEN if a customer replies
-    if (senderType !== 'USER' && senderType !== 'AI' && (ticket.status === 'RESOLVED' || ticket.status === 'CLOSED')) {
-        await prisma.ticket.update({
-            where: { id: ticket.id },
-            data: { status: 'OPEN' }
-        });
-    }
+      const message = await tx.ticketMessage.create({
+        data: {
+          tenantId,
+          ticketId,
+          senderId,
+          senderType,
+          content,
+          isInternal
+        }
+      });
 
-    await prisma.auditLog.create({
-      data: {
-        tenantId, actorId: senderId, actorType: senderType, action: 'CREATE_MESSAGE',
-        resource: 'TICKET', resourceId: ticketId,
-        metadata: { isInternal }
+      if (senderType !== 'USER' && senderType !== 'AI' && (ticket.status === 'RESOLVED' || ticket.status === 'CLOSED')) {
+          await tx.ticket.update({
+              where: { id: ticket.id },
+              data: { status: 'OPEN' }
+          });
       }
-    });
 
-    return message;
+      await tx.auditLog.create({
+        data: {
+          tenantId, actorId: senderId, actorType: senderType, action: 'CREATE_MESSAGE',
+          resource: 'TICKET', resourceId: ticketId,
+          metadata: { isInternal }
+        }
+      });
+
+      return message;
+    });
   }
 
   /**
@@ -140,20 +161,23 @@ export class TicketService {
       throw new Error('Forbidden: Insufficient privileges to assign ticket');
     }
 
-    const ticket = await prisma.ticket.update({
-      where: { id: ticketId, tenantId },
-      data: { assignedUserId }
-    });
+    return prisma.$transaction(async (baseTx) => {
+      const tx = await withTenantTransaction(baseTx, tenantId);
+      const ticket = await tx.ticket.update({
+        where: { id: ticketId, tenantId },
+        data: { assignedUserId }
+      });
 
-    await prisma.auditLog.create({
-      data: {
-        tenantId, actorId: assignerId, actorType: 'USER', action: 'ASSIGN',
-        resource: 'TICKET', resourceId: ticketId,
-        metadata: { assignedUserId }
-      }
-    });
+      await tx.auditLog.create({
+        data: {
+          tenantId, actorId: assignerId, actorType: 'USER', action: 'ASSIGN',
+          resource: 'TICKET', resourceId: ticketId,
+          metadata: { assignedUserId }
+        }
+      });
 
-    return ticket;
+      return ticket;
+    });
   }
 
   /**
@@ -169,19 +193,22 @@ export class TicketService {
     if (status === 'RESOLVED') data.resolvedAt = new Date();
     if (status === 'CLOSED') data.closedAt = new Date();
 
-    const ticket = await prisma.ticket.update({
-      where: { id: ticketId, tenantId },
-      data
-    });
+    return prisma.$transaction(async (baseTx) => {
+      const tx = await withTenantTransaction(baseTx, tenantId);
+      const ticket = await tx.ticket.update({
+        where: { id: ticketId, tenantId },
+        data
+      });
 
-    await prisma.auditLog.create({
-      data: {
-        tenantId, actorId: userId, actorType: 'USER', action: 'UPDATE_STATUS',
-        resource: 'TICKET', resourceId: ticketId,
-        metadata: { status }
-      }
-    });
+      await tx.auditLog.create({
+        data: {
+          tenantId, actorId: userId, actorType: 'USER', action: 'UPDATE_STATUS',
+          resource: 'TICKET', resourceId: ticketId,
+          metadata: { status }
+        }
+      });
 
-    return ticket;
+      return ticket;
+    });
   }
 }

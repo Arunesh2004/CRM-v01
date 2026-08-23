@@ -1,4 +1,4 @@
-import prisma from '../../../../database/utils/prisma';
+import { withTenant } from '../../../../database/utils/prisma-tenant';
 import { SecurityEventService } from '../../../../src/modules/security-events/security-event.service';
 
 export interface AIContext {
@@ -21,8 +21,9 @@ export class ContextBuilderService {
    */
   static async buildUserContext(tenantId: string, userId: string): Promise<AIContext> {
     try {
+      const prisma = withTenant(tenantId);
       const user = await prisma.user.findUnique({
-        where: { id: userId, tenantId },
+        where: { id: userId },
         include: {
           department: true,
           userRoles: {

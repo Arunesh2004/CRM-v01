@@ -1,11 +1,10 @@
 import { NextResponse } from 'next/server';
-import { PrismaClient } from '@prisma/client';
+import { executeAsSystem, SystemOperation } from '@/../database/utils/prisma-system';
 import crypto from 'crypto';
 import fs from 'fs';
 import path from 'path';
 import { requireAuth, checkPermission } from '@/lib/auth';
 
-const prisma = new PrismaClient();
 
 export async function GET() {
   try {
@@ -35,16 +34,20 @@ export async function GET() {
       }
     } catch(e) {}
 
-    const user = await prisma.user.findFirst({
-      where: { email: 'aruneshsharma2004@gmail.com'.toLowerCase() },
-      include: {
-        userRoles: true
-      }
+    const diagnosticData = await executeAsSystem(SystemOperation.SECURITY_AUDIT, async (tx) => {
+      const u = await tx.user.findFirst({
+        where: { email: 'aruneshsharma2004@gmail.com'.toLowerCase() },
+        include: {
+          userRoles: true
+        }
+      });
+      const t = await tx.tenant.findFirst({
+        where: { name: 'Company Tenant' }
+      });
+      return { user: u, tenant: t };
     });
-
-    const tenant = await prisma.tenant.findFirst({
-      where: { name: 'Company Tenant' }
-    });
+    
+    const { user, tenant } = diagnosticData;
 
     // Read build-time DB info
     let buildConnection = null;
@@ -92,7 +95,5 @@ export async function GET() {
     });
   } catch (error: any) {
     return NextResponse.json({ error: error.message }, { status: 500 });
-  } finally {
-    await prisma.$disconnect();
   }
 }

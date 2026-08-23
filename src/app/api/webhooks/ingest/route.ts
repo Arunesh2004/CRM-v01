@@ -1,9 +1,8 @@
 import { NextResponse } from 'next/server';
-import { PrismaClient } from '@prisma/client';
-import { inngest } from '@/lib/queue/inngest.client';
+import { withTenant, withTenantTransaction } from '@/../database/utils/prisma-tenant';
+import prisma from '@/../database/utils/prisma';
 import crypto from 'crypto';
-
-const prisma = new PrismaClient();
+import { inngest } from '@/lib/queue/inngest.client';
 
 export async function POST(req: Request) {
   try {
@@ -35,18 +34,23 @@ export async function POST(req: Request) {
     const isValid = signature.length === expectedSignature.length && 
                     crypto.timingSafeEqual(Buffer.from(signature), Buffer.from(expectedSignature));
 
+    const tenantPrisma = withTenant(tenantId);
+
     if (!isValid) {
       // SECURITY: Log unauthorized attempts to SecurityEvent
-      await prisma.securityEvent.create({
-        data: {
-          tenantId,
-          eventType: 'WEBHOOK_SIGNATURE_FAILURE',
-          ipAddress: req.headers.get('x-forwarded-for') || 'unknown',
-          userAgent: req.headers.get('user-agent') || 'unknown',
-          metadata: { provider: 'GENERIC', eventId: payload.id },
-          severity: 'HIGH',
-          source: 'API'
-        }
+      await prisma.$transaction(async (baseTx) => {
+        const tx = await withTenantTransaction(baseTx, tenantId);
+        await tx.securityEvent.create({
+          data: {
+            tenantId,
+            eventType: 'WEBHOOK_SIGNATURE_FAILURE',
+            ipAddress: req.headers.get('x-forwarded-for') || 'unknown',
+            userAgent: req.headers.get('user-agent') || 'unknown',
+            metadata: { provider: 'GENERIC', eventId: payload.id },
+            severity: 'HIGH',
+            source: 'API'
+          }
+        });
       });
       return NextResponse.json({ error: 'Invalid signature' }, { status: 401 });
     }
@@ -54,25 +58,33 @@ export async function POST(req: Request) {
     const payloadHash = crypto.createHash('sha256').update(rawBody).digest('hex');
     const eventId = payload.id || crypto.randomUUID();
 
-    // Check for idempotency / replay
-    const existing = await prisma.webhookEvent.findUnique({
-      where: { provider_eventId: { provider: 'GENERIC', eventId } }
+    // Check for idempotency / replay and create securely
+    const existingOrNew = await prisma.$transaction(async (baseTx) => {
+      const tx = await withTenantTransaction(baseTx, tenantId);
+      const existing = await tx.webhookEvent.findFirst({
+        where: { provider: 'GENERIC', eventId }
+      });
+      if (existing) return { existing: true, event: existing };
+
+      const webhookEvent = await tx.webhookEvent.create({
+        data: {
+          tenantId,
+          provider: 'GENERIC',
+          eventId,
+          eventType: payload.type || 'unknown',
+          payloadHash,
+          signatureVerified: true,
+          status: 'PENDING'
+        }
+      });
+      return { existing: false, event: webhookEvent };
     });
-    if (existing) {
+
+    if (existingOrNew.existing) {
       return NextResponse.json({ success: true, message: 'Already processed' }, { status: 200 });
     }
-
-    const webhookEvent = await prisma.webhookEvent.create({
-      data: {
-        tenantId,
-        provider: 'GENERIC',
-        eventId,
-        eventType: payload.type || 'unknown',
-        payloadHash,
-        signatureVerified: true,
-        status: 'PENDING'
-      }
-    });
+    
+    const webhookEvent = existingOrNew.event;
 
     // Dispatch to async queue
     await inngest.send({

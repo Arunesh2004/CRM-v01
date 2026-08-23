@@ -1,53 +1,78 @@
 import { clerkMiddleware, createRouteMatcher } from '@clerk/nextjs/server';
 import { NextResponse } from 'next/server';
+import type { NextRequest } from 'next/server';
 import { rateLimiters } from '@/lib/cache/redis.client';
 
-const isPublicRoute = createRouteMatcher(['/sign-in(.*)', '/sign-up(.*)', '/api/webhooks/clerk', '/api/health']);
-
 /**
- * STAGING-ONLY LOAD-TEST GATE
+ * SECURITY MIDDLEWARE
  *
- * This gate is active ONLY when ALL of the following are true:
- *   1. NODE_ENV is NOT 'production'
- *   2. CRM_LOAD_TEST_AUTH_ENABLED is explicitly 'true'
- *   3. The request carries the x-load-test-token header
- *
- * If any condition is false, execution falls through to normal Clerk protection.
- * Production fails CLOSED — the gate is completely inert in production.
- *
- * NOTE: The token is NOT verified here (edge runtime does not support Node.js crypto).
- * Full cryptographic verification happens in getCurrentUser() in auth.ts (Node.js runtime).
- * This gate only allows the request to reach the Server Action for token verification.
+ * Phase 13 remediation for HDR-01 and HDR-02:
+ * - Sets all mandatory security headers on every response.
+ * - Removes the Vercel-default wildcard CORS header from non-API routes.
+ * - Integrates with Clerk authentication for protected routes.
+ * - Includes Upstash rate-limiting logic per-route.
  */
+
+const isPublicRoute = createRouteMatcher([
+  '/',
+  '/sign-in(.*)',
+  '/sign-up(.*)',
+  '/api/health',
+  '/api/webhooks/(.*)',
+  '/api/inngest',
+]);
+
 function isLoadTestAuthEnabled(): boolean {
-  // Gate condition 1: Only allow on Vercel Preview (blocks production and unknown envs)
   if (process.env.VERCEL_ENV !== 'preview') return false;
-  // Gate condition 2: Must have an explicit opt-in env var
   if (process.env.CRM_LOAD_TEST_AUTH_ENABLED !== 'true') return false;
-  // Gate condition 3: Must have the cryptographic secret configured
   if (!process.env.LOAD_TEST_SECRET) return false;
   return true;
 }
 
 function isLoadTestRequest(req: Request): boolean {
   if (!isLoadTestAuthEnabled()) return false;
-  // Gate condition 4: Must carry the dedicated header (presence check only; content verified later)
   if (!req.headers.get('x-load-test-token')) return false;
   return true;
 }
 
-export default clerkMiddleware(async (auth, req) => {
-  // Rate limiting logic
-  const ip = req.headers.get('x-forwarded-for') || '127.0.0.1';
+function applySecurityHeaders(response: NextResponse, request: NextRequest): NextResponse {
+  const csp = [
+    "default-src 'self'",
+    "script-src 'self' 'unsafe-eval' 'unsafe-inline' https://clerk.com https://*.clerk.com https://*.clerk.accounts.dev https://js.stripe.com",
+    "connect-src 'self' https://*.clerk.com https://*.clerk.accounts.dev https://api.stripe.com wss://*.clerk.com",
+    "frame-src 'self' https://js.stripe.com https://hooks.stripe.com",
+    "worker-src 'self' blob:",
+    "img-src 'self' data: https://img.clerk.com",
+    "style-src 'self' 'unsafe-inline'",
+  ].join('; ');
+
+  response.headers.set('X-Frame-Options', 'DENY');
+  response.headers.set('X-Content-Type-Options', 'nosniff');
+  response.headers.set('Referrer-Policy', 'strict-origin-when-cross-origin');
+  response.headers.set('Permissions-Policy', 'camera=(), microphone=(), geolocation=()');
+  response.headers.set('Content-Security-Policy', csp);
+  response.headers.set('Strict-Transport-Security', 'max-age=63072000; includeSubDomains; preload');
+  response.headers.set('X-DNS-Prefetch-Control', 'on');
+
+  const pathname = request.nextUrl.pathname;
+  if (!pathname.startsWith('/api/webhooks') && !pathname.startsWith('/api/health')) {
+    response.headers.delete('Access-Control-Allow-Origin');
+  }
+
+  return response;
+}
+
+export default clerkMiddleware(async (auth, request: NextRequest) => {
+  const ip = request.headers.get('x-forwarded-for') || '127.0.0.1';
   let limiter = null;
 
-  if (req.nextUrl.pathname.startsWith('/api/webhooks/')) {
+  if (request.nextUrl.pathname.startsWith('/api/webhooks/')) {
     limiter = rateLimiters.webhook;
-  } else if (req.nextUrl.pathname.startsWith('/api/ai') || req.nextUrl.pathname.startsWith('/assistant')) {
+  } else if (request.nextUrl.pathname.startsWith('/api/ai') || request.nextUrl.pathname.startsWith('/assistant')) {
     limiter = rateLimiters.ai;
-  } else if (req.nextUrl.pathname.startsWith('/api/')) {
+  } else if (request.nextUrl.pathname.startsWith('/api/')) {
     limiter = rateLimiters.api;
-  } else if (req.nextUrl.pathname.startsWith('/sign-in') || req.nextUrl.pathname.startsWith('/sign-up')) {
+  } else if (request.nextUrl.pathname.startsWith('/sign-in') || request.nextUrl.pathname.startsWith('/sign-up')) {
     limiter = rateLimiters.auth;
   }
 
@@ -58,23 +83,22 @@ export default clerkMiddleware(async (auth, req) => {
     }
   }
 
-  // Allow the load-test request to bypass Clerk protection on staging only.
-  // The actual token verification and user resolution happen in getCurrentUser().
-  if (isLoadTestRequest(req)) {
-    return NextResponse.next();
+  if (isLoadTestRequest(request)) {
+    const response = NextResponse.next();
+    return applySecurityHeaders(response, request);
   }
 
-  if (!isPublicRoute(req)) {
+  if (!isPublicRoute(request)) {
     await auth.protect();
   }
 
+  const response = NextResponse.next();
+  return applySecurityHeaders(response, request);
 });
 
 export const config = {
   matcher: [
-    // Skip Next.js internals and all static files, unless found in search params
     '/((?!_next|[^?]*\\.(?:html?|css|js(?!on)|jpe?g|webp|png|gif|svg|ttf|woff2?|ico|csv|docx?|xlsx?|zip|webmanifest)).*)',
-    // Always run for API routes
     '/(api|trpc)(.*)',
   ],
 };

@@ -1,7 +1,7 @@
 # syntax=docker/dockerfile:1
 
 # Stage 1: Base image
-FROM node:18-alpine AS base
+FROM node:20-alpine AS base
 WORKDIR /app
 # Install OpenSSL for Prisma
 RUN apk add --no-cache openssl libc6-compat
@@ -9,6 +9,7 @@ RUN apk add --no-cache openssl libc6-compat
 # Stage 2: Install dependencies
 FROM base AS deps
 COPY package.json package-lock.json ./
+COPY prisma.config.ts ./
 COPY database/schema.prisma ./database/schema.prisma
 RUN npm install
 
@@ -19,10 +20,14 @@ COPY . .
 
 # Environment variables needed during build for Prisma generation
 ENV NEXT_TELEMETRY_DISABLED=1
+ENV DATABASE_URL="postgresql://dummy:dummy@localhost:5432/dummy"
+ENV DIRECT_URL="postgresql://dummy:dummy@localhost:5432/dummy"
+ENV NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY="pk_test_dummy"
+ENV CLERK_SECRET_KEY="sk_test_dummy"
 
 # Generate Prisma Client and build Next.js
 RUN npx prisma generate
-RUN npm run build
+RUN npx next build
 
 # Stage 4: Production image
 FROM base AS runner

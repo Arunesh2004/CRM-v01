@@ -50,12 +50,7 @@ jobs:
         DATABASE_URL: postgresql://postgres:postgres@localhost:5432/postgres
       # Run all our CLI testing scripts
       run: |
-        npx tsx tests/auth-production.test.ts
-        npx tsx tests/webhook-infrastructure.test.ts
-        npx tsx tests/storage-infrastructure.test.ts
-        npx tsx tests/production-reliability.test.ts
-        npx tsx tests/distributed-reliability.test.ts
-        npx tsx tests/security-production-audit.test.ts
+        npx vitest run src/tests/security
         
     - name: Run Security Audit
       run: npm audit

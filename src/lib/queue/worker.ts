@@ -50,7 +50,8 @@ export async function sendToDeadLetterQueue(
   attemptCount: number
 ) {
   try {
-    await globalPrisma.deadLetterQueue.create({
+    const tenantPrisma = withTenant(envelope.tenantId);
+    await tenantPrisma.deadLetterQueue.create({
       data: {
         tenantId: envelope.tenantId,
         jobId: envelope.jobId,
