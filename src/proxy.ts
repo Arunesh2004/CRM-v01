@@ -62,10 +62,10 @@ function applySecurityHeaders(response: NextResponse, request: NextRequest): Nex
   return response;
 }
 
-export default clerkMiddleware(async (auth, request: NextRequest) => {
-  const ip = request.headers.get('x-forwarded-for') || '127.0.0.1';
-  let limiter = null;
+const hasClerkKeys = process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY && !process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY.startsWith('<');
 
+const handleRateLimiting = async (request: NextRequest, ip: string) => {
+  let limiter = null;
   if (request.nextUrl.pathname.startsWith('/api/webhooks/')) {
     limiter = rateLimiters.webhook;
   } else if (request.nextUrl.pathname.startsWith('/api/ai') || request.nextUrl.pathname.startsWith('/assistant')) {
@@ -82,19 +82,39 @@ export default clerkMiddleware(async (auth, request: NextRequest) => {
       return new NextResponse('Too Many Requests', { status: 429 });
     }
   }
+  return null;
+};
+
+const middlewareHandler = async (auth: any, request: NextRequest) => {
+  const ip = request.headers.get('x-forwarded-for') || '127.0.0.1';
+  
+  const rateLimitResponse = await handleRateLimiting(request, ip);
+  if (rateLimitResponse) return rateLimitResponse;
 
   if (isLoadTestRequest(request)) {
     const response = NextResponse.next();
     return applySecurityHeaders(response, request);
   }
 
-  if (!isPublicRoute(request)) {
+  if (auth && !isPublicRoute(request)) {
     await auth.protect();
   }
 
   const response = NextResponse.next();
   return applySecurityHeaders(response, request);
-});
+};
+
+export default hasClerkKeys 
+  ? clerkMiddleware(middlewareHandler)
+  : async (request: NextRequest) => {
+      // Fallback middleware when Clerk is absent
+      const ip = request.headers.get('x-forwarded-for') || '127.0.0.1';
+      const rateLimitResponse = await handleRateLimiting(request, ip);
+      if (rateLimitResponse) return rateLimitResponse;
+      
+      const response = NextResponse.next();
+      return applySecurityHeaders(response, request);
+    };
 
 export const config = {
   matcher: [
