@@ -72,14 +72,16 @@ async function tryLoadTestIdentity() {
   if (!userId || typeof userId !== 'string') return null;
 
   // Resolve the user from DB — tenant comes from DB, never from token
-  const user = await prisma.user.findUnique({
-    where: { id: userId },
-    include: {
-      tenant: true,
-      userRoles: {
-        include: { role: { include: { permissions: { include: { permission: true } } } } }
+  const user = await executeAsSystem(SystemOperation.SECURITY_AUDIT, async (tx) => {
+    return tx.user.findUnique({
+      where: { id: userId },
+      include: {
+        tenant: true,
+        userRoles: {
+          include: { role: { include: { permissions: { include: { permission: true } } } } }
+        }
       }
-    }
+    });
   });
 
   if (!user) return null;
@@ -316,9 +318,11 @@ async function tryLoadTestIdentityLight() {
   if (!userId || typeof userId !== 'string') return null;
 
   // SHALLOW LOOKUP: No roles, no permissions, no related tenant object.
-  const user = await prisma.user.findUnique({
-    where: { id: userId },
-    select: { id: true, tenantId: true, email: true, status: true }
+  const user = await executeAsSystem(SystemOperation.SECURITY_AUDIT, async (tx) => {
+    return tx.user.findUnique({
+      where: { id: userId },
+      select: { id: true, tenantId: true, email: true, status: true }
+    });
   });
 
   if (!user) return null;
