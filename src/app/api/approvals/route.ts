@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { requireAuth, requireTenant, requirePermissionFast } from '@/lib/auth';
-import prisma from '@/../database/utils/prisma';
+import prisma from '@db/utils/prisma';
 import { ApprovalService } from '@/modules/approvals/approval.service';
 import { Logger } from '@/lib/logger/logger';
 

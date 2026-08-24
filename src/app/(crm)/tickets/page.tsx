@@ -3,7 +3,7 @@ import { Badge } from '@/components/ui/Badge';
 import { Card } from '@/components/ui/Card';
 import { AlertCircle, CheckCircle2, Clock, Ticket as TicketIcon } from 'lucide-react';
 import { TicketForm } from '@/components/crm/TicketForm';
-import { withTenant } from '@/../database/utils/prisma-tenant';
+import { withTenant } from '@db/utils/prisma-tenant';
 import { requireTenant } from '@/lib/auth';
 import Link from 'next/link';
 

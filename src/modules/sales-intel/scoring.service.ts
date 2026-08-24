@@ -1,5 +1,5 @@
-import prisma from '@/../database/utils/prisma';
-import { withTenant, withTenantTransaction } from '@/../database/utils/prisma-tenant';
+import prisma from '@db/utils/prisma';
+import { withTenant, withTenantTransaction } from '@db/utils/prisma-tenant';
 
 export class ScoringService {
   /**

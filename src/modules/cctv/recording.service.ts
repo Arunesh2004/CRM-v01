@@ -1,6 +1,6 @@
 import { requireAuth, requireTenant, requirePermission } from '@/lib/auth';
-import globalPrisma from '@/../database/utils/prisma';
-import { withTenant, withTenantTransaction } from '@/../database/utils/prisma-tenant';
+import globalPrisma from '@db/utils/prisma';
+import { withTenant, withTenantTransaction } from '@db/utils/prisma-tenant';
 import crypto from 'crypto';
 
 export async function getCameraRecordings(cameraId: string, limit: number = 50, cursor?: string) {

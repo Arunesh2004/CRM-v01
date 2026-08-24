@@ -1,4 +1,4 @@
-import prisma from '@/../database/utils/prisma';
+import prisma from '@db/utils/prisma';
 import { ActorType } from '@prisma/client';
 
 export type AuditLogPayload = {

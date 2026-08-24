@@ -2,7 +2,7 @@ import { requireAuth, requireTenant, requirePermission } from '@/lib/auth';
 import { withTenant, withTenantTransaction } from '../../../../database/utils/prisma-tenant';
 import { getCurrentUserContext } from '@/lib/tenant-context';
 import { assertRelationOwnership } from '@/lib/security/tenant-guard';
-import globalPrisma from '@/../database/utils/prisma';
+import globalPrisma from '@db/utils/prisma';
 
 export interface CreateNotificationInput {
   userId: string;

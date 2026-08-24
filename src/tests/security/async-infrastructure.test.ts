@@ -1,6 +1,6 @@
 import { describe, it, expect, beforeAll, afterAll, vi } from 'vitest';
 import { PrismaClient } from '@prisma/client';
-import { executeAsSystem, SystemOperation } from '@/../database/utils/prisma-system';
+import { executeAsSystem, SystemOperation } from '@db/utils/prisma-system';
 import crypto from 'crypto';
 
 process.env.INNGEST_EVENT_KEY = 'test-key';

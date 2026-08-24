@@ -8,7 +8,7 @@ import { Skeleton } from '@/components/ui/Skeleton';
 import { getTasksAction } from '@/modules/crm/actions/task.actions';
 import { FilterBar } from '@/components/crm/FilterBar';
 import { PaginationButton } from '@/components/crm/PaginationButton';
-import { withTenant } from '@/../database/utils/prisma-tenant';
+import { withTenant } from '@db/utils/prisma-tenant';
 import { requireTenant } from '@/lib/auth';
 import { format } from 'date-fns';
 import Link from 'next/link';

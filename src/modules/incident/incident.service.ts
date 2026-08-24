@@ -1,9 +1,9 @@
 import { requireAuth, requireTenant, requirePermission } from '@/lib/auth';
-import { withTenant, withTenantTransaction } from '@/../database/utils/prisma-tenant';
+import { withTenant, withTenantTransaction } from '@db/utils/prisma-tenant';
 import { CreateIncidentInput, UpdateIncidentStatusInput, AssignIncidentInput } from './incident.types';
 
 import { assertRelationOwnership } from '@/lib/security/tenant-guard';
-import globalPrisma from '@/../database/utils/prisma';
+import globalPrisma from '@db/utils/prisma';
 
 export async function createIncident(input: CreateIncidentInput) {
   const user = await requireAuth();

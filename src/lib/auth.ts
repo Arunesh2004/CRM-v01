@@ -1,12 +1,12 @@
 import { auth, clerkClient } from '@clerk/nextjs/server';
-import prisma from '@/../database/utils/prisma';
+import prisma from '@db/utils/prisma';
 import { Action, Resource } from '@prisma/client';
 import { ensureUserProvisioned, synchronizeClerkIdentity } from '@/modules/auth/services/provisioning.service';
 import { Logger } from '@/lib/observability/logger';
 import { headers } from 'next/headers';
 import jwt from 'jsonwebtoken';
 import { redis } from '@/lib/cache/redis.client';
-import { executeAsSystem, SystemOperation } from '@/../database/utils/prisma-system';
+import { executeAsSystem, SystemOperation } from '@db/utils/prisma-system';
 
 import { cache } from 'react';
 

@@ -1,8 +1,8 @@
 import { requireAuth, requireTenant, requirePermission, requireAuthIdentity, requirePermissionFast, requireTenantFromIdentity } from '@/lib/auth';
-import { withTenant, withTenantTransaction } from '@/../database/utils/prisma-tenant';
+import { withTenant, withTenantTransaction } from '@db/utils/prisma-tenant';
 import { CreateCustomerInput, UpdateCustomerInput } from '../crm.types';
 
-import { createTenantCustomerFast } from '@/../database/utils/fast-tenant-queries';
+import { createTenantCustomerFast } from '@db/utils/fast-tenant-queries';
 
 export async function createCustomer(input: CreateCustomerInput) {
   const startTotal = performance.now();
@@ -18,7 +18,7 @@ export async function createCustomer(input: CreateCustomerInput) {
 
   await requirePermissionFast(identity.id, 'CUSTOMER', 'CREATE');
 
-  const prismaModule = await import('@/../database/utils/prisma');
+  const prismaModule = await import('@db/utils/prisma');
   const existing = await prismaModule.default.customer.findFirst({
     where: { tenantId, normalizedName, deletedAt: null },
     select: { id: true }
@@ -48,7 +48,7 @@ export async function createCustomer(input: CreateCustomerInput) {
 }
 
 import { QueryParams, PaginatedResponse } from '../../core/types';
-import globalPrisma from '@/../database/utils/prisma';
+import globalPrisma from '@db/utils/prisma';
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 export async function getCustomers(params?: QueryParams & { createdAtStart?: Date; createdAtEnd?: Date; }): Promise<PaginatedResponse<any>> {

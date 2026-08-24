@@ -1,5 +1,5 @@
 import { requireAuth } from '@/lib/auth';
-import prisma from '@/../database/utils/prisma';
+import prisma from '@db/utils/prisma';
 import { notFound } from 'next/navigation';
 import Link from 'next/link';
 

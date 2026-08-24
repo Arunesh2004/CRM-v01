@@ -1,5 +1,5 @@
 import { requireAuth, requireTenant, requirePermission } from '@/lib/auth';
-import { withTenant, withTenantTransaction } from '@/../database/utils/prisma-tenant';
+import { withTenant, withTenantTransaction } from '@db/utils/prisma-tenant';
 import { CreateLeadInput, UpdateLeadInput } from '../crm.types';
 import { EventBus } from '../../core/events/event-bus';
 
@@ -65,7 +65,7 @@ export async function createLead(input: CreateLeadInput) {
 }
 
 import { QueryParams, PaginatedResponse } from '../../core/types';
-import globalPrisma from '@/../database/utils/prisma';
+import globalPrisma from '@db/utils/prisma';
 
 export async function getLeads(params?: QueryParams & { createdAtStart?: Date; createdAtEnd?: Date; }): Promise<PaginatedResponse<any>> {
   await requireAuth();

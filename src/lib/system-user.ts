@@ -1,4 +1,4 @@
-import prisma from '@/../database/utils/prisma';
+import prisma from '@db/utils/prisma';
 
 export async function getSystemUser(tenantId: string) {
   const systemClerkId = `SYSTEM_${tenantId}`;

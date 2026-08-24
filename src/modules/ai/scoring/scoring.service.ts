@@ -1,5 +1,5 @@
-import prisma from '@/../database/utils/prisma';
-import { withTenant } from '@/../database/utils/prisma-tenant';
+import prisma from '@db/utils/prisma';
+import { withTenant } from '@db/utils/prisma-tenant';
 import { Logger } from '@/lib/logger/logger';
 import { AIProviderFactory } from '@/lib/providers/ai/ai-provider.factory';
 import { requirePermissionFast } from '@/lib/auth';

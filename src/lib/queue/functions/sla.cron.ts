@@ -1,7 +1,7 @@
 import { inngest } from '../inngest.client';
 import { SecureJobEnvelope } from '../types';
 import { withJobContext } from '../worker';
-import { executeAsSystem, SystemOperation } from '@/../database/utils/prisma-system';
+import { executeAsSystem, SystemOperation } from '@db/utils/prisma-system';
 import { SLAService } from '@/modules/support/sla.service';
 
 // Cron job to trigger SLA evaluation across all active tenants

@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import { executeAsSystem, SystemOperation } from '@/../database/utils/prisma-system';
+import { executeAsSystem, SystemOperation } from '@db/utils/prisma-system';
 import crypto from 'crypto';
 import fs from 'fs';
 import path from 'path';

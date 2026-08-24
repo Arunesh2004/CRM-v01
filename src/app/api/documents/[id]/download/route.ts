@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { requireTenant, requireAuthIdentity, requirePermissionFast } from '@/lib/auth';
-import prisma from '@/../database/utils/prisma';
+import prisma from '@db/utils/prisma';
 import { ProviderFactory } from '@/infrastructure/provider.factory';
 import { StorageProvider } from '@/infrastructure/storage/storage.interface';
 

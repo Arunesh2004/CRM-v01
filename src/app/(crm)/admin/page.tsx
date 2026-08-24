@@ -1,5 +1,5 @@
 import { requireAuth, requireTenant } from '@/lib/auth';
-import prisma from '@/../database/utils/prisma';
+import prisma from '@db/utils/prisma';
 import { AdminClientTabs } from '@/components/admin/AdminClientTabs';
 
 export default async function AdminDashboardPage() {

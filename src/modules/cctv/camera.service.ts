@@ -1,8 +1,8 @@
 import { requireAuth, requireTenant, requirePermission } from '@/lib/auth';
-import { withTenant, withTenantTransaction } from '@/../database/utils/prisma-tenant';
+import { withTenant, withTenantTransaction } from '@db/utils/prisma-tenant';
 import { CreateCameraInput, UpdateCameraInput, SimulateAIEventInput } from './cctv.types';
 import { assertRelationOwnership } from '@/lib/security/tenant-guard';
-import globalPrisma from '@/../database/utils/prisma';
+import globalPrisma from '@db/utils/prisma';
 
 export async function createCamera(input: CreateCameraInput) {
   const user = await requireAuth();

@@ -1,6 +1,6 @@
 import { requireAuth, requireTenant, requirePermission } from '@/lib/auth';
-import globalPrisma from '@/../database/utils/prisma';
-import { withTenant, withTenantTransaction } from '@/../database/utils/prisma-tenant';
+import globalPrisma from '@db/utils/prisma';
+import { withTenant, withTenantTransaction } from '@db/utils/prisma-tenant';
 import { EventBus } from '../core/events/event-bus';
 
 export async function getAIEvents(params?: {

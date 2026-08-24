@@ -1,4 +1,4 @@
-import { withTenant } from '@/../database/utils/prisma-tenant';
+import { withTenant } from '@db/utils/prisma-tenant';
 
 export type SearchResult = {
   id: string;

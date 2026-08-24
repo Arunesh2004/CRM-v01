@@ -1,4 +1,4 @@
-import prisma from '@/../database/utils/prisma';
+import prisma from '@db/utils/prisma';
 import { requireAuth, requireTenant, requirePermission } from '@/lib/auth';
 import { createAuditLog } from '../audit/audit.service';
 

@@ -1,5 +1,5 @@
 import { requireAuth, requireTenant, requirePermission } from '@/lib/auth';
-import globalPrisma from '@/../database/utils/prisma';
+import globalPrisma from '@db/utils/prisma';
 import { withTenant, withTenantTransaction } from '../../../../database/utils/prisma-tenant';
 import { ProviderFactory } from '@/lib/providers/provider.factory';
 import { CreateCallInput } from '../communication.types';

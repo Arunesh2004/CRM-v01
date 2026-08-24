@@ -1,5 +1,5 @@
 import { JobPayload } from '@/../src/lib/queue/JobQueueProvider';
-import { prismaAdmin } from '@/../database/utils/prisma';
+import { prismaAdmin } from '@db/utils/prisma';
 import { getStorageProvider } from '@/../src/lib/storage';
 import { KeyManagementService } from './security/KeyManagementService';
 import crypto from 'crypto';

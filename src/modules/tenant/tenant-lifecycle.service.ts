@@ -1,4 +1,4 @@
-import prisma from '@/../database/utils/prisma';
+import prisma from '@db/utils/prisma';
 import { requireAuth } from '@/lib/auth';
 import { invalidateTenantCache } from '@/modules/tenant/tenant.service';
 

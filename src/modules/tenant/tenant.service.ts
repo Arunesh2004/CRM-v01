@@ -1,4 +1,4 @@
-import prisma from '@/../database/utils/prisma';
+import prisma from '@db/utils/prisma';
 import { redis } from '@/lib/cache/redis.client';
 
 export async function getTenantConfig(tenantId: string) {

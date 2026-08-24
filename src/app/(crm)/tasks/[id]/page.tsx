@@ -11,7 +11,7 @@ import Link from 'next/link';
 import { TaskComments } from '@/components/crm/TaskComments';
 import { TaskDocumentsWrapper } from './TaskDocumentsWrapper';
 import { EditTaskForm } from '@/components/crm/EditTaskForm';
-import { withTenant } from '@/../database/utils/prisma-tenant';
+import { withTenant } from '@db/utils/prisma-tenant';
 import { requireTenant } from '@/lib/auth';
 
 export default async function TaskDetailPage({ params }: { params: { id: string } }) {

@@ -1,4 +1,4 @@
-import prisma from '@/../database/utils/prisma';
+import prisma from '@db/utils/prisma';
 import { requireAuth, requireTenant } from '@/lib/auth';
 import { formatDistanceToNow } from 'date-fns';
 

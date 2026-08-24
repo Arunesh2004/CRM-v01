@@ -1,4 +1,4 @@
-import prisma from '@/../database/utils/prisma';
+import prisma from '@db/utils/prisma';
 import { AIConfig } from '@/lib/config/ai.config';
 import { Logger } from '@/lib/logger/logger';
 import { AIRole, AIConversationStatus, AIConversation, AIConversationMessage } from '@prisma/client';

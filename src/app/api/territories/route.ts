@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { requireAuth, requireTenant, requirePermissionFast } from '@/lib/auth';
-import prisma from '@/../database/utils/prisma';
+import prisma from '@db/utils/prisma';
 import { TerritoryService } from '@/modules/sales-intel/territory.service';
 import { Logger } from '@/lib/logger/logger';
 

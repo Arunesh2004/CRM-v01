@@ -1,4 +1,4 @@
-import { prismaAdmin } from '@/../database/utils/prisma';
+import { prismaAdmin } from '@db/utils/prisma';
 import { KeyManagementService } from './security/KeyManagementService';
 import crypto from 'crypto';
 import zlib from 'zlib';

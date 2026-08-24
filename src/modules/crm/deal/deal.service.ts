@@ -1,8 +1,8 @@
-import { withTenant, withTenantTransaction } from '@/../database/utils/prisma-tenant';
+import { withTenant, withTenantTransaction } from '@db/utils/prisma-tenant';
 import { requireAuth, requireTenant, requirePermission } from '@/lib/auth';
 import { Prisma } from '@prisma/client';
 import crypto from 'crypto';
-import globalPrisma from '@/../database/utils/prisma';
+import globalPrisma from '@db/utils/prisma';
 
 export async function getDeals(params?: {
   pipelineId?: string;

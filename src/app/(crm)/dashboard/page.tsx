@@ -1,6 +1,6 @@
 import { Suspense } from "react";
 import { requireAuth, requireTenant } from "@/lib/auth";
-import { withTenant } from "@/../database/utils/prisma-tenant";
+import { withTenant } from "@db/utils/prisma-tenant";
 import { getDashboardAnalytics } from "@/modules/analytics/analytics.service";
 import { Skeleton } from "@/components/ui/Skeleton";
 import { EmptyState } from "@/components/ui/EmptyState";

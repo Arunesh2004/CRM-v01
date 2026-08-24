@@ -1,5 +1,5 @@
-import globalPrisma from '@/../database/utils/prisma';
-import { withTenant, withTenantTransaction } from '@/../database/utils/prisma-tenant';
+import globalPrisma from '@db/utils/prisma';
+import { withTenant, withTenantTransaction } from '@db/utils/prisma-tenant';
 import { requireAuth, requireTenant, requirePermission } from '@/lib/auth';
 import { SecurityEventService } from '../security-events/security-event.service';
 import { RequestAIExecutionInput, ApproveAIExecutionInput } from './types';

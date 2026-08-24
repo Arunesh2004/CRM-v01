@@ -1,4 +1,4 @@
-import prisma from '@/../database/utils/prisma';
+import prisma from '@db/utils/prisma';
 import { Logger } from '@/lib/logger/logger';
 import { AIProviderFactory } from '@/lib/providers/ai/ai-provider.factory';
 import { AIPermissionService } from '@/modules/ai-permissions/ai-permission.service';

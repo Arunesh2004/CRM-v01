@@ -1,4 +1,4 @@
-import { prismaAdmin } from '@/../database/utils/prisma';
+import { prismaAdmin } from '@db/utils/prisma';
 import crypto from 'crypto';
 import { pipeline } from 'stream/promises';
 import zlib from 'zlib';

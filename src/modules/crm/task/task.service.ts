@@ -1,10 +1,10 @@
 import { requireAuth, requireTenant, requirePermission } from '@/lib/auth';
-import { withTenant, withTenantTransaction } from '@/../database/utils/prisma-tenant';
+import { withTenant, withTenantTransaction } from '@db/utils/prisma-tenant';
 import { CreateTaskInput, UpdateTaskInput } from '../crm.types';
 import { assertRelationOwnership } from '@/lib/security/tenant-guard';
 import { EventBus } from '../../core/events/event-bus';
 import { QueryParams, PaginatedResponse } from '../../core/types';
-import globalPrisma from '@/../database/utils/prisma';
+import globalPrisma from '@db/utils/prisma';
 
 export async function createTask(input: CreateTaskInput) {
   const user = await requireAuth();

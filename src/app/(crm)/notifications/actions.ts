@@ -1,6 +1,6 @@
 'use server';
 
-import prisma from '@/../database/utils/prisma';
+import prisma from '@db/utils/prisma';
 import { requireAuth, requireTenant } from '@/lib/auth';
 
 export async function getUnreadNotificationsAction() {

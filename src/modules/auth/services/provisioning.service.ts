@@ -1,6 +1,6 @@
-import prisma from '@/../database/utils/prisma';
+import prisma from '@db/utils/prisma';
 import type { User as ClerkUser } from '@clerk/nextjs/server';
-import { executeAsSystem, SystemOperation } from '@/../database/utils/prisma-system';
+import { executeAsSystem, SystemOperation } from '@db/utils/prisma-system';
 
 export async function ensureUserProvisioned(clerkUser: ClerkUser | any) {
   // Normalize user data handling both Clerk SDK User object and Webhook payload

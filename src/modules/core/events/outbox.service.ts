@@ -1,6 +1,6 @@
 import { inngest } from '@/lib/queue/inngest.client';
-import { executeAsSystem, SystemOperation } from '@/../database/utils/prisma-system';
-import { withTenant } from '@/../database/utils/prisma-tenant';
+import { executeAsSystem, SystemOperation } from '@db/utils/prisma-system';
+import { withTenant } from '@db/utils/prisma-tenant';
 
 const MAX_RETRIES = 5;
 

@@ -1,7 +1,7 @@
 'use server';
 
 import { requireAuth } from '@/lib/auth';
-import prisma from '@/../database/utils/prisma';
+import prisma from '@db/utils/prisma';
 import { redirect } from 'next/navigation';
 
 export async function submitOnboarding(formData: FormData) {

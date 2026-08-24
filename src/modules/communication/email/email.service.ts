@@ -3,7 +3,7 @@ import { withTenant, withTenantTransaction } from '../../../../database/utils/pr
 import { ProviderFactory } from '@/lib/providers/provider.factory';
 import { CreateEmailInput } from '../communication.types';
 import { getCurrentUserContext } from '@/lib/tenant-context';
-import globalPrisma from '@/../database/utils/prisma';
+import globalPrisma from '@db/utils/prisma';
 
 export async function sendEmail(input: CreateEmailInput) {
   await requireAuth();

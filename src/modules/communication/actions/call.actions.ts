@@ -2,7 +2,7 @@
 
 import { sanitizeClientError } from '@/lib/errors/client-safe-error';
 import { requireAuth, requireTenant, requirePermission } from '@/lib/auth';
-import { withTenant } from '@/../database/utils/prisma-tenant';
+import { withTenant } from '@db/utils/prisma-tenant';
 import { Resource, Action } from '@prisma/client';
 
 export async function getCallsAction() {

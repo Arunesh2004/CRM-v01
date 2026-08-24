@@ -1,5 +1,5 @@
 import { inngest } from '@/lib/queue/inngest.client';
-import prisma from '@/../database/utils/prisma';
+import prisma from '@db/utils/prisma';
 import { RpoPolicy } from '@prisma/client';
 
 export const dataRetentionCron = inngest.createFunction(

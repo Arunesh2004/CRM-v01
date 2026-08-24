@@ -4,7 +4,7 @@ import { exportTenant } from '@/modules/recovery/export.engine';
 import { sanitizeClientError } from '@/lib/errors/client-safe-error';
 import { getIncidentsCsv, getCustomersCsv, getCommunicationsCsv } from '@/modules/reporting/export.service';
 import { Resource, Action } from '@prisma/client';
-import { executeAsSystem, SystemOperation } from '@/../database/utils/prisma-system';
+import { executeAsSystem, SystemOperation } from '@db/utils/prisma-system';
 
 export async function GET(req: NextRequest) {
   try {

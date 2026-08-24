@@ -3,7 +3,7 @@ import { getLeadsAction } from "@/modules/crm/actions/lead.actions";
 import { LeadForm } from "@/components/crm/LeadForm";
 import { StatusUpdater } from "@/components/crm/StatusUpdater";
 import { LeadActions } from "@/components/crm/LeadActions";
-import { withTenant } from "@/../database/utils/prisma-tenant";
+import { withTenant } from "@db/utils/prisma-tenant";
 import { requireTenant } from "@/lib/auth";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/Card";
 import { Badge } from "@/components/ui/Badge";

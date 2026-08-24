@@ -45,6 +45,40 @@ async function main() {
       }
     });
 
+    const auditAdmin = await tx.user.upsert({
+      where: { tenantId_email: { tenantId: tenant.id, email: 'audit-load-admin@acmesecurity.com' } },
+      update: {},
+      create: {
+        email: 'audit-load-admin@acmesecurity.com',
+        clerkId: 'demo-audit-admin',
+        employeeId: 'EMP-AUDIT001',
+        tenantId: tenant.id,
+        status: 'ACTIVE',
+        onboardingStatus: 'COMPLETED'
+      }
+    });
+
+    let globalAdminRole = await tx.role.findFirst({ where: { tenantId: tenant.id, name: 'GLOBAL_ADMIN' } });
+    if (!globalAdminRole) {
+      globalAdminRole = await tx.role.create({
+        data: {
+          tenantId: tenant.id,
+          name: 'GLOBAL_ADMIN',
+        }
+      });
+    }
+
+    const existingAuditUR = await tx.userRole.findFirst({ where: { userId: auditAdmin.id, roleId: globalAdminRole.id } });
+    if (!existingAuditUR) {
+      await tx.userRole.create({
+        data: {
+          userId: auditAdmin.id,
+          roleId: globalAdminRole.id,
+          tenantId: tenant.id
+        }
+      });
+    }
+
     let demoRole = await tx.role.findFirst({ where: { tenantId: tenant.id, name: 'DEMO_VIEWER' } });
     if (!demoRole) {
       demoRole = await tx.role.create({

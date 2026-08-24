@@ -1,4 +1,4 @@
-import prisma from '@/../database/utils/prisma';
+import prisma from '@db/utils/prisma';
 import { NotificationType } from '@prisma/client';
 import { NotificationProviderFactory } from '@/infrastructure/notification/notification.factory';
 
@@ -45,7 +45,7 @@ export class NotificationService {
 
   static async getNotifications(params?: { userId?: string, limit?: number }) {
     const { requireAuth, requireTenant, requirePermission } = await import('@/lib/auth');
-    const { withTenant } = await import('@/../database/utils/prisma-tenant');
+    const { withTenant } = await import('@db/utils/prisma-tenant');
     
     const user = await requireAuth();
     const tenantId = await requireTenant();

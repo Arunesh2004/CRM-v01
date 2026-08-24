@@ -1,7 +1,7 @@
 import { requireAuth, requireTenant, requirePermission } from '@/lib/auth';
-import { withTenant, withTenantTransaction } from '@/../database/utils/prisma-tenant';
+import { withTenant, withTenantTransaction } from '@db/utils/prisma-tenant';
 import { CreateLocationInput, UpdateLocationInput } from '../crm.types';
-import globalPrisma from '@/../database/utils/prisma';
+import globalPrisma from '@db/utils/prisma';
 
 export async function createLocation(input: CreateLocationInput) {
   const user = await requireAuth();

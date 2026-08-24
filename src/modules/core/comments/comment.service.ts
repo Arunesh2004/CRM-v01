@@ -1,4 +1,4 @@
-import { withTenant } from '@/../database/utils/prisma-tenant';
+import { withTenant } from '@db/utils/prisma-tenant';
 import { requireAuth, requireTenant } from '@/lib/auth';
 import { EntityType } from '@prisma/client';
 import { EventBus } from '@/modules/core/events/event-bus';

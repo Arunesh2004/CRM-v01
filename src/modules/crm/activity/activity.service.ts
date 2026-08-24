@@ -1,5 +1,5 @@
 import { requireAuth, requireTenant, requirePermission } from '@/lib/auth';
-import { withTenant } from '@/../database/utils/prisma-tenant';
+import { withTenant } from '@db/utils/prisma-tenant';
 import { CreateTimelineEntryInput } from '../crm.types';
 
 export async function createTimelineEntry(input: CreateTimelineEntryInput) {

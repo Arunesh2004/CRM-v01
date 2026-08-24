@@ -4,7 +4,7 @@ import { secureTools } from './tools/ai.tools';
 import { requireAuth, requireTenant, checkPermission } from '@/lib/auth';
 import { Logger } from '@/lib/logger/logger';
 import { DistributedRateLimiter } from '@/lib/rate-limit/rate-limiter';
-import prisma from '@/../database/utils/prisma';
+import prisma from '@db/utils/prisma';
 import { AIConfig } from '@/lib/config/ai.config';
 
 // ---------------------------------------------------------------------------

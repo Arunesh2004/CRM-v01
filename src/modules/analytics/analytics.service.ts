@@ -1,4 +1,4 @@
-import { withTenant } from '@/../database/utils/prisma-tenant';
+import { withTenant } from '@db/utils/prisma-tenant';
 import { subMonths, startOfMonth, format, endOfMonth } from 'date-fns';
 
 export async function getDashboardAnalytics(tenantId: string, monthsRange: number = 6) {

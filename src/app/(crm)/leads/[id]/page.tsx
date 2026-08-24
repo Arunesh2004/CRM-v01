@@ -1,5 +1,5 @@
 import { notFound } from 'next/navigation';
-import { withTenant } from '@/../database/utils/prisma-tenant';
+import { withTenant } from '@db/utils/prisma-tenant';
 import { requireAuth, requireTenant, requirePermission } from '@/lib/auth';
 import { Badge } from '@/components/ui/Badge';
 import { Mail, Phone, Target, User2, ArrowLeft, Clock } from 'lucide-react';

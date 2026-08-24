@@ -1,4 +1,4 @@
-import { prismaAdmin } from '@/../database/utils/prisma';
+import { prismaAdmin } from '@db/utils/prisma';
 import { getStorageProvider } from '../../../lib/storage';
 
 const POLICY_LIMITS: Record<string, number> = {

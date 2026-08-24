@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
-import { withTenant, withTenantTransaction } from '@/../database/utils/prisma-tenant';
-import prisma from '@/../database/utils/prisma';
+import { withTenant, withTenantTransaction } from '@db/utils/prisma-tenant';
+import prisma from '@db/utils/prisma';
 import crypto from 'crypto';
 import { inngest } from '@/lib/queue/inngest.client';
 

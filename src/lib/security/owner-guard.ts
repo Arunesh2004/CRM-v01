@@ -1,4 +1,4 @@
-import prisma from '@/../database/utils/prisma';
+import prisma from '@db/utils/prisma';
 import { getCurrentUser } from '../auth';
 
 export async function assertTenantOwner(tenantId: string, userId?: string) {

@@ -1,7 +1,7 @@
 import { Webhook } from 'svix';
 import { NextRequest, NextResponse } from 'next/server';
 import { WebhookEvent } from '@clerk/nextjs/server';
-import prisma from '@/../database/utils/prisma';
+import prisma from '@db/utils/prisma';
 import { Logger } from '@/lib/observability/logger';
 import { ensureUserProvisioned } from '@/modules/auth/services/provisioning.service';
 

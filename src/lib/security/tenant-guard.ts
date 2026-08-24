@@ -1,4 +1,4 @@
-import prisma from '@/../database/utils/prisma';
+import prisma from '@db/utils/prisma';
 
 /**
  * Asserts that the specified entity belongs to the given tenantId.

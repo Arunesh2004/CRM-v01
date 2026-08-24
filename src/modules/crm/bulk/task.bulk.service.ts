@@ -1,8 +1,8 @@
-import prisma from '@/../database/utils/prisma';
+import prisma from '@db/utils/prisma';
 import { requireTenant, requirePermission } from '@/lib/auth';
 import { TaskStatus } from '@prisma/client';
-import globalPrisma from '@/../database/utils/prisma';
-import { withTenantTransaction } from '@/../database/utils/prisma-tenant';
+import globalPrisma from '@db/utils/prisma';
+import { withTenantTransaction } from '@db/utils/prisma-tenant';
 
 export const MAX_SYNC_BULK_SIZE = 500;
 

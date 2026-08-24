@@ -1,4 +1,4 @@
-import { prismaAdmin } from '@/../database/utils/prisma';
+import { prismaAdmin } from '@db/utils/prisma';
 
 export interface RPOMetrics {
   tenantId: string;
