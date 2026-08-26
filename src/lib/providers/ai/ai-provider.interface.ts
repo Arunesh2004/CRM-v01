@@ -58,6 +58,16 @@ export interface AIProvider {
     requestId?: string,
     history?: {role: 'user'|'assistant', content: string}[]
   ): Promise<AIResponse>;
+
+  /**
+   * Transcribes and summarizes an audio file in one pass.
+   * Expected to return JSON structure containing transcript, summary, and sentiment.
+   */
+  transcribeAudio?(
+    filePath: string,
+    mimeType: string,
+    prompt?: string
+  ): Promise<{ transcript: string; summary: string; sentiment: string }>;
 }
 
 export interface AITool {

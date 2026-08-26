@@ -13,16 +13,20 @@ export async function getDashboardAnalytics(tenantId: string, monthsRange: numbe
     const end = endOfMonth(targetDate);
     const monthName = format(targetDate, 'MMM');
     
-    const [customers, leads] = await Promise.all([
+    const [customers, leads, invoices] = await Promise.all([
       prisma.customer.count({
         where: { tenantId, createdAt: { gte: start, lte: end }, deletedAt: null }
       }),
       prisma.lead.count({
         where: { tenantId, createdAt: { gte: start, lte: end }, deletedAt: null }
+      }),
+      prisma.invoice.aggregate({
+        where: { tenantId, createdAt: { gte: start, lte: end } },
+        _sum: { amountPaid: true }
       })
     ]);
     
-    const revenue = customers * 1250;
+    const revenue = invoices._sum.amountPaid || 0;
 
     return {
       name: monthName,

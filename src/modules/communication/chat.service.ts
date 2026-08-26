@@ -1,4 +1,4 @@
-import prisma from '../../../database/utils/prisma';
+import { withTenant } from '../../../database/utils/prisma-tenant';
 import { realtime } from './adapter';
 
 export class ChatService {
@@ -6,11 +6,12 @@ export class ChatService {
    * Start a new chat or get an existing direct chat
    */
   static async startChat(tenantId: string, initiatorId: string, participantIds: string[], isGroup: boolean = false, name?: string) {
+    const prisma = withTenant(tenantId);
+
     if (!isGroup && participantIds.length === 1) {
       // Check if direct chat already exists
       const existing = await prisma.chatConversation.findFirst({
         where: {
-          tenantId,
           type: 'DIRECT',
           participants: {
             every: {
@@ -57,17 +58,21 @@ export class ChatService {
   }
 
   /**
-   * Send a message to a chat
+   * Send a message to a chat.
+   * Verifies the sender is a participant in the conversation before creating the message.
+   * All queries use withTenant(tenantId) to enforce RLS at the database level.
    */
   static async sendMessage(tenantId: string, conversationId: string, senderId: string, content: string, metadata?: any) {
+    const prisma = withTenant(tenantId);
+
     // Verify participation and tenant boundary
-    const participation = await prisma.chatParticipant.findUnique({
-      where: {
-        conversationId_userId: { conversationId, userId: senderId }
-      }
+    // ChatParticipant is now RLS-protected; the withTenant context ensures the lookup
+    // only returns rows belonging to this tenant.
+    const participation = await prisma.chatParticipant.findFirst({
+      where: { conversationId, userId: senderId }
     });
 
-    if (!participation || participation.tenantId !== tenantId) {
+    if (!participation) {
       throw new Error('Not authorized to send messages in this conversation.');
     }
 
@@ -100,11 +105,13 @@ export class ChatService {
    * Soft delete a message
    */
   static async deleteMessage(tenantId: string, messageId: string, userId: string) {
-    const message = await prisma.chatMessage.findUnique({
+    const prisma = withTenant(tenantId);
+
+    const message = await prisma.chatMessage.findFirst({
       where: { id: messageId }
     });
 
-    if (!message || message.tenantId !== tenantId || message.senderId !== userId) {
+    if (!message || message.senderId !== userId) {
       throw new Error('Not authorized to delete this message.');
     }
 
@@ -135,17 +142,19 @@ export class ChatService {
    * Get paginated messages
    */
   static async getMessages(tenantId: string, conversationId: string, userId: string, cursor?: string, take: number = 50) {
-    // Verify access
-    const participation = await prisma.chatParticipant.findUnique({
-      where: { conversationId_userId: { conversationId, userId } }
+    const prisma = withTenant(tenantId);
+
+    // Verify access — RLS enforces tenant boundary; participant check enforces conversation membership.
+    const participation = await prisma.chatParticipant.findFirst({
+      where: { conversationId, userId }
     });
 
-    if (!participation || participation.tenantId !== tenantId) {
+    if (!participation) {
       throw new Error('Not authorized');
     }
 
     return await prisma.chatMessage.findMany({
-      where: { tenantId, conversationId },
+      where: { conversationId },
       take,
       ...(cursor ? { skip: 1, cursor: { id: cursor } } : {}),
       orderBy: { createdAt: 'desc' },

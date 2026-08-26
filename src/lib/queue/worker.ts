@@ -16,10 +16,12 @@ export async function withJobContext<T>(
     throw new Error('SECURE_CONTEXT_ERROR: Job missing actorType');
   }
 
-  // Create RLS bounded transaction
-  return await globalPrisma.$transaction(async (baseTx) => {
-    // Elevate to a tenant-scoped transaction
-    const tx = await withTenantTransaction(baseTx, envelope.tenantId);
+  const tenantPrisma = withTenant(envelope.tenantId);
+
+  // Create RLS bounded transaction directly on the tenant scoped client
+  return await tenantPrisma.$transaction(async (tx: any) => {
+    // Elevate to a tenant-scoped transaction for RLS
+    await tx.$executeRawUnsafe(`SELECT set_config('app.current_tenant_id', '${envelope.tenantId}', true)`);
     
     // Check idempotency
     try {

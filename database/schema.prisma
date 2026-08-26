@@ -164,6 +164,7 @@ model Tenant {
   customers          Customer[]
   customerContacts   CustomerContact[]
   locations          Location[]
+  phoneNumbers       TenantPhoneNumber[]
   tasks              Task[]
   activityTimelines  ActivityTimeline[]
 
@@ -461,6 +462,21 @@ model TenantIntegration {
 // -----------------------------------------------------------------------------
 // CRM ENUMS
 // -----------------------------------------------------------------------------
+
+model TenantPhoneNumber {
+  id           String              @id @default(uuid())
+  tenantId     String
+  phoneNumber  String              @unique // Strict global uniqueness of E.164 number
+  provider     IntegrationProvider @default(TELEPHONY) // e.g. TWILIO
+  status       String              @default("ACTIVE") // ACTIVE, DISABLED
+  capabilities Json?               // e.g., ["VOICE", "SMS"]
+  createdAt    DateTime            @default(now())
+  updatedAt    DateTime            @updatedAt
+
+  tenant       Tenant              @relation(fields: [tenantId], references: [id])
+
+  @@index([tenantId])
+}
 
 enum LeadStatus {
   NEW
@@ -2326,10 +2342,13 @@ model DeadLetterQueue {
   @@index([createdAt])
 }
 
+/// @deprecated Legacy SaaS billing model
 model Subscription {
   id               String    @id @default(uuid())
   tenantId         String
+  /// @deprecated
   stripeCustomerId String?
+  /// @deprecated
   stripeSubId      String?
   status           String    @default("INACTIVE")
   planId           String?
@@ -2342,9 +2361,11 @@ model Subscription {
   @@index([tenantId])
 }
 
+/// @deprecated Legacy SaaS billing model
 model Invoice {
   id              String   @id @default(uuid())
   tenantId        String
+  /// @deprecated
   stripeInvoiceId String?
   amountDue       Float    @default(0)
   amountPaid      Float    @default(0)

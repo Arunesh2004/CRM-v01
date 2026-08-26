@@ -55,9 +55,54 @@ export class TwilioProvider implements TelephonyProvider {
     }
   }
 
+  async downloadRecording(recordingUrl: string, destinationPath: string): Promise<void> {
+    const fs = await import('fs');
+    const { pipeline } = await import('stream/promises');
+
+    const accountSid = process.env.TWILIO_ACCOUNT_SID;
+    const authToken = process.env.TWILIO_AUTH_TOKEN;
+    const authHeader = `Basic ${Buffer.from(`${accountSid}:${authToken}`).toString('base64')}`;
+
+    let parsedUrl;
+    try {
+      parsedUrl = new URL(recordingUrl);
+    } catch (e) {
+      throw new Error('Invalid recording URL format');
+    }
+
+    if (parsedUrl.hostname !== 'api.twilio.com') {
+      throw new Error('Security Error: Recording URL must be api.twilio.com');
+    }
+
+    // Ensure we fetch the audio format, not metadata
+    let url = parsedUrl.toString();
+    if (url.endsWith('.json')) {
+      url = url.replace('.json', '.wav');
+    } else if (!url.endsWith('.wav') && !url.endsWith('.mp3')) {
+      url = `${url}.wav`;
+    }
+
+    const response = await fetch(url, {
+      headers: { 'Authorization': authHeader }
+    });
+
+    if (!response.ok) {
+      throw new Error(`Failed to fetch Twilio recording: ${response.statusText}`);
+    }
+
+    if (!response.body) {
+      throw new Error('No body returned in Twilio recording response');
+    }
+
+    const fileStream = fs.createWriteStream(destinationPath);
+    const { Readable } = await import('stream');
+    const readable = Readable.fromWeb(response.body as any);
+    await pipeline(readable, fileStream);
+  }
   async fetchRecording(recordingUrl: string): Promise<Buffer> {
     return Buffer.from('mock_buffer_impl');
   }
+
   async makeCall(to: string, from?: string): Promise<{ success: boolean; callId?: string; error?: string }> {
     return { success: true, callId: 'mock' };
   }
@@ -89,6 +134,11 @@ export class MockTelephonyProvider implements TelephonyProvider {
   async endCall(sid: string) { return true; }
   async getCallStatus(sid: string) { return 'completed'; }
   async fetchRecording(url: string) { return Buffer.from('mock'); }
+  
+  async downloadRecording(url: string, destPath: string) {
+    const fs = await import('fs');
+    fs.writeFileSync(destPath, 'mock audio content for test');
+  }
   async makeCall(to: string, from?: string): Promise<{ success: boolean; callId?: string; error?: string }> {
     return { success: true, callId: 'mock' };
   }

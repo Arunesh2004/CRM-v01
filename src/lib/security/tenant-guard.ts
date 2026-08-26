@@ -1,15 +1,17 @@
-import prisma from '@db/utils/prisma';
+import { executeAsSystem, SystemOperation } from '@db/utils/prisma-system';
 
 /**
  * Asserts that the specified entity belongs to the given tenantId.
+ * Uses a system bypass to read the entity (the check itself must be RLS-unrestricted).
  * @param model The lowercase Prisma model name (e.g. 'location', 'camera')
  * @param id The entity ID
  * @param tenantId The current tenant ID
  */
 export async function assertTenantOwnership(model: string, id: string, tenantId: string) {
-  // @ts-ignore
-  const entity = await prisma[model].findUnique({
-    where: { id }
+  // Use system bypass to read raw entity for the security check itself
+  const entity = await executeAsSystem(SystemOperation.SECURITY_AUDIT, async (tx) => {
+    // @ts-ignore
+    return tx[model].findUnique({ where: { id } });
   });
 
   if (!entity) {

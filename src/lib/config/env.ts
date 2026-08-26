@@ -54,6 +54,12 @@ export function validateEnvironment(): void {
 
   // Production Safety Checks
   if (process.env.NODE_ENV === 'production') {
+    if (process.env.COMPANY_TENANT_ID?.trim() === '00000000-0000-0000-0000-000000000001') {
+      throw new Error('CRITICAL STARTUP FAILURE: COMPANY_TENANT_ID cannot be the development placeholder in production.');
+    }
+    if (process.env.INITIAL_ADMIN_EMAIL?.trim().toLowerCase() === 'admin@canonical.com') {
+      throw new Error('CRITICAL STARTUP FAILURE: INITIAL_ADMIN_EMAIL cannot be the development placeholder in production.');
+    }
     if (process.env.DATABASE_URL?.includes('localhost')) {
       throw new Error('CRITICAL STARTUP FAILURE: DATABASE_URL cannot point to localhost in production.');
     }
@@ -86,6 +92,8 @@ export const ENV = {
     return val.split(',').map(e => e.trim()).filter(e => e.length > 0);
   },
   
+
+
   // Storage
   get awsAccessKeyId() { return process.env.AWS_ACCESS_KEY_ID; },
   get awsSecretAccessKey() { return process.env.AWS_SECRET_ACCESS_KEY; },

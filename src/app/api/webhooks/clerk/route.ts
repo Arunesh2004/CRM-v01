@@ -2,6 +2,7 @@ import { Webhook } from 'svix';
 import { NextRequest, NextResponse } from 'next/server';
 import { WebhookEvent } from '@clerk/nextjs/server';
 import prisma from '@db/utils/prisma';
+import { executeAsSystem, SystemOperation } from '@db/utils/prisma-system';
 import { Logger } from '@/lib/observability/logger';
 import { ensureUserProvisioned } from '@/modules/auth/services/provisioning.service';
 
@@ -37,7 +38,10 @@ export async function POST(req: NextRequest) {
 
   // Verify the payload with the headers
   try {
-    if (process.env.TEST_MODE === 'true' && svix_signature === 'v1,test_valid_signature') {
+    const isTestMode = process.env.TEST_MODE === 'true';
+    const isSafeEnvironment = process.env.NODE_ENV !== 'production' && process.env.VERCEL_ENV !== 'production';
+
+    if (isTestMode && isSafeEnvironment && svix_signature === 'v1,test_valid_signature') {
       evt = payload;
     } else {
       evt = wh.verify(body, {
@@ -75,9 +79,11 @@ export async function POST(req: NextRequest) {
     const email = email_addresses[0]?.email_address?.toLowerCase()?.trim();
     if (!email) return NextResponse.json({ error: 'No email' }, { status: 400 });
     try {
-      await prisma.user.updateMany({
-        where: { clerkId: id },
-        data: { email: email }
+      await executeAsSystem(SystemOperation.CLERK_PROVISIONING, async (tx) => {
+        await tx.user.updateMany({
+          where: { clerkId: id },
+          data: { email: email }
+        });
       });
       return NextResponse.json({ success: true }, { status: 200 });
     } catch {
@@ -89,12 +95,14 @@ export async function POST(req: NextRequest) {
     const { id } = evt.data;
     if (!id) return NextResponse.json({ error: 'No id' }, { status: 400 });
     try {
-      await prisma.user.updateMany({
-        where: { clerkId: id },
-        data: { 
-          status: 'INACTIVE',
-          deletedAt: new Date()
-        }
+      await executeAsSystem(SystemOperation.CLERK_PROVISIONING, async (tx) => {
+        await tx.user.updateMany({
+          where: { clerkId: id },
+          data: { 
+            status: 'INACTIVE',
+            deletedAt: new Date()
+          }
+        });
       });
       return NextResponse.json({ success: true }, { status: 200 });
     } catch {

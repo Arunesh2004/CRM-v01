@@ -5,6 +5,10 @@ export const dynamic = 'force-dynamic';
 
 export async function GET(req: Request) {
   try {
+    if (process.env.NODE_ENV === 'production' || process.env.VERCEL_ENV === 'production') {
+      return NextResponse.json({ error: 'CRITICAL: Cannot run demo seed script in production environment.' }, { status: 403 });
+    }
+
     const result = await executeAsSystem(SystemOperation.DEMO_SEED, async (tx) => {
       let tenant = await tx.tenant.findFirst();
       if (!tenant) {

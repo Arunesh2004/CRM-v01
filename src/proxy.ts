@@ -38,9 +38,9 @@ function isLoadTestRequest(req: Request): boolean {
 function applySecurityHeaders(response: NextResponse, request: NextRequest): NextResponse {
   const csp = [
     "default-src 'self'",
-    "script-src 'self' 'unsafe-eval' 'unsafe-inline' https://clerk.com https://*.clerk.com https://*.clerk.accounts.dev https://js.stripe.com",
-    "connect-src 'self' https://*.clerk.com https://*.clerk.accounts.dev https://api.stripe.com wss://*.clerk.com",
-    "frame-src 'self' https://js.stripe.com https://hooks.stripe.com",
+    "script-src 'self' 'unsafe-eval' 'unsafe-inline' https://clerk.com https://*.clerk.com https://*.clerk.accounts.dev",
+    "connect-src 'self' https://*.clerk.com https://*.clerk.accounts.dev wss://*.clerk.com",
+    "frame-src 'self'",
     "worker-src 'self' blob:",
     "img-src 'self' data: https://img.clerk.com",
     "style-src 'self' 'unsafe-inline'",

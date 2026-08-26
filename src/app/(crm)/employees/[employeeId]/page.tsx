@@ -2,6 +2,7 @@ import { requireAuth } from '@/lib/auth';
 import prisma from '@db/utils/prisma';
 import { notFound } from 'next/navigation';
 import Link from 'next/link';
+import { RoleEditModal } from '@/components/crm/RoleEditModal';
 
 export default async function EmployeeProfilePage({ params }: { params: { employeeId: string } }) {
   const actor = await requireAuth();
@@ -120,9 +121,10 @@ export default async function EmployeeProfilePage({ params }: { params: { employ
               <h3 className="text-lg font-bold text-rose-900 dark:text-rose-400 mb-4">Management Actions</h3>
               <div className="flex flex-wrap gap-4">
                 {canManageRole && (
-                  <button className="px-4 py-2 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg text-sm font-medium text-slate-700 dark:text-slate-200 hover:border-indigo-500 transition-colors">
-                    Change Role
-                  </button>
+                  <RoleEditModal 
+                    userId={employee.id} 
+                    currentRole={employee.userRoles[0]?.role.name || 'MEMBER'} 
+                  />
                 )}
                 {canManageDept && (
                   <button className="px-4 py-2 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg text-sm font-medium text-slate-700 dark:text-slate-200 hover:border-indigo-500 transition-colors">

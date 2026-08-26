@@ -11,31 +11,65 @@ export const withTenant = (tenantId: string) => {
     query: {
       $allModels: {
         async $allOperations({ model, operation, args, query }) {
-          const rlsModels = [
-            'User', 'Customer', 'CustomerContact', 'Lead', 'Deal',
-            'Task', 'Incident', 'Camera', 'AIEvent', 'ChatMessage',
-            'MailMessage', 'Document', 'AuditLog', 'SecurityEvent',
-            'AIExecution', 'Ticket', 'TicketMessage', 'SLAConfiguration', 'SLAEvent',
-            'ActivityTimeline', 'CallLog'
-          ];
-          
           const tenantScopedModels = [
+            // === Core CRM ===
             'User', 'DeviceSession', 'Role', 'AuditLog', 'TenantIntegration',
             'Lead', 'Customer', 'CustomerContact', 'Location', 'Task',
-            'CRMComment', 'ActivityTimeline', 'Call', 'CallParticipant', 'CallLog',
-            'CallRecording', 'CallTranscript', 'AISummary', 'Meeting',
-            'MeetingParticipant', 'DemoStorage', 'EmailThread', 'EmailMessage',
-            'EmailAttachment', 'Conversation', 'ConversationMember', 'Message',
+            'CRMComment', 'ActivityTimeline', 'Document', 'DocumentEmbedding', 'DocumentPermission',
+            // === Communication ===
+            'Call', 'CallParticipant', 'CallLog', 'CallRecording', 'CallTranscript', 'AISummary',
+            'Meeting', 'MeetingParticipant', 'DemoStorage',
+            'EmailThread', 'EmailMessage', 'EmailAttachment',
+            'Conversation', 'ConversationMember', 'Message',
             'MessageMention', 'MessageAttachment', 'MessageReadStatus',
-            'Notification', 'NotificationPreference', 'Subscription', 'Invoice',
-            'Payment', 'PaymentCustomer', 'UsageEvent', 'Camera', 'CameraCredential',
-            'CameraStream', 'Recording', 'CameraEvent', 'AIEvent', 'WebhookEvent',
-            'Incident', 'RecoveryJob', 'RecoverySnapshot', 'RecoveryAuditLog',
-            'RestoreCheckpoint', 'Pipeline', 'PipelineStage', 'Deal',
-            'DealStageHistory', 'EventOutbox', 'AIConversation', 'AIConversationMessage',
-            'SecurityEvent', 'AIExecution', 'Ticket', 'TicketMessage',
-            'SLAConfiguration', 'SLAEvent'
+            'ChatConversation', 'ChatParticipant', 'ChatMessage', 'ChatReadReceipt',
+            'MailThread', 'MailMessage', 'MailRecipient', 'MailDraft', 'CommunicationAttachment',
+            'Notification', 'NotificationPreference',
+            // === Security & Identity ===
+            'Department', 'RolePermission', 'UserRole', 'UserPresence',
+            'SecurityEvent', 'FieldSecurityPolicy', 'ABACPolicy',
+            'ApprovalRequest', 'ApprovalStep',
+            // === Finance & Revenue ===
+            'Subscription', 'Invoice', 'Payment', 'PaymentCustomer', 'UsageEvent',
+            'Product', 'ProductCategory', 'ProductFamily',
+            'PriceBook', 'PriceBookEntry', 'DiscountRule',
+            'Quote', 'QuoteLineItem',
+            // === Sales Intelligence ===
+            'Pipeline', 'PipelineStage', 'Deal', 'DealStageHistory', 'DealSnapshot',
+            'Territory', 'UserTerritory', 'SalesQuota',
+            // === CCTV / Monitoring ===
+            'Camera', 'CameraCredential', 'CameraStream', 'Recording', 'CameraEvent',
+            // === Incidents & Recovery ===
+            'Incident', 'RecoveryJob', 'RecoverySnapshot', 'RecoveryAuditLog', 'RestoreCheckpoint',
+            // === AI ===
+            'AIEvent', 'AIConversation', 'AIConversationMessage',
+            'AIExecution', 'AIAgentExecution', 'AIMemory', 'AIReference',
+            'AIProviderConfig', 'AITokenUsage',
+            // === Workflows & Automation ===
+            'Workflow', 'WorkflowTrigger', 'WorkflowAction', 'WorkflowExecution', 'WorkflowExecutionStep',
+            // === Events & Integration ===
+            'WebhookEvent', 'EventOutbox', 'DeadLetterQueue',
+            // === Support ===
+            'Ticket', 'TicketMessage', 'SLAConfiguration', 'SLAEvent',
+            // === Telephony ===
+            'TenantPhoneNumber',
+            //
+            // ⚠️ IMPORTANT EXCEPTION — IdempotencyKey must NOT be in this list.
+            //
+            // The withTenant middleware wraps standalone mutations (create, update, delete)
+            // in an independent prisma.$transaction() with set_config. For most models this
+            // is fine. But IdempotencyKey is created INSIDE an outer transaction in worker.ts
+            // (withJobContext). If IdempotencyKey were here, the middleware would wrap the
+            // create in a NESTED independent transaction that commits even when the outer
+            // transaction aborts — breaking retry-on-failure semantics.
+            //
+            // IdempotencyKey is still RLS-safe: worker.ts manually calls set_config('app.current_tenant_id')
+            // inside the outer transaction before creating the key, so RLS is satisfied.
+            //
+            // Do NOT add IdempotencyKey here.
           ];
+          
+          const rlsModels = tenantScopedModels;
 
           if (!tenantScopedModels.includes(model)) {
             return query(args);

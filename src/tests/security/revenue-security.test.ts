@@ -11,7 +11,13 @@ describe('Phase 10.1: Revenue Security & Adversarial Tests', () => {
   let standardUserId = 'standard-user-id';
 
   beforeAll(async () => {
-    // Basic setup if not bootstrapped
+    // Dynamically provision tenants for deterministic tests instead of relying on seed data
+    await executeAsSystem(SystemOperation.DEMO_SEED, async (tx) => {
+      const ta = await tx.tenant.create({ data: { name: 'Tenant A - Revenue Sec' } });
+      const tb = await tx.tenant.create({ data: { name: 'Tenant B - Revenue Sec' } });
+      tenantA = ta.id;
+      tenantB = tb.id;
+    });
   });
 
   describe('Tenant Isolation (RLS)', () => {

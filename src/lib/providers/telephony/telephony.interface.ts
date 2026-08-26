@@ -15,5 +15,6 @@ export interface TelephonyProvider {
   endCall(providerCallId: string): Promise<boolean>;
   getCallStatus(providerCallId: string): Promise<string>;
   fetchRecording(recordingUrl: string): Promise<Buffer>;
+  downloadRecording(recordingUrl: string, destinationPath: string): Promise<void>;
   sendSms(tenantId: string, payload: { to: string, text: string }): Promise<{ success: boolean; error?: string }>;
 }

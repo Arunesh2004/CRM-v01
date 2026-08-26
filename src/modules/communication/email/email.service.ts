@@ -25,7 +25,7 @@ export async function sendEmail(input: CreateEmailInput) {
   
   return await globalPrisma.$transaction(async (baseTx: any) => {
     const tx = await withTenantTransaction(baseTx, tenantId);
-    const thread = await tx.emailThread.create({
+    const thread = await tx.mailThread.create({
       data: {
         tenantId,
         subject: input.subject,
@@ -33,15 +33,13 @@ export async function sendEmail(input: CreateEmailInput) {
       }
     });
     
-    const msg = await tx.emailMessage.create({
+    const msg = await tx.mailMessage.create({
       data: {
         tenantId,
         threadId: thread.id,
-        direction: 'OUTBOUND',
-        from: 'system@crm.com',
-        to: input.to,
+        senderId: user.id,
         bodyHtml: input.bodyHtml,
-        sentAt: new Date()
+        metadata: { to: input.to },
       }
     });
 

@@ -249,8 +249,7 @@ export default function CRMLayoutClient({
           </div>
 
           {/* Search bar — command palette trigger */}
-          <div className="hidden md:flex items-center relative flex-1 max-w-md">
-            <Search className="w-4 h-4 absolute left-3.5 text-slate-400" />
+          <div className="hidden md:flex items-center relative flex-1 max-w-md ml-4">
             <CommandPalette />
           </div>
 

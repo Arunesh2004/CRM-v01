@@ -28,7 +28,7 @@ export async function createCall(input: CreateCallInput) {
       data: {
         tenantId,
         providerCallId: response.callId,
-        provider: 'TWILIO', // Mapped statically for legacy support
+        provider: 'EXTERNAL', // Mapped statically for legacy support
         status: CallStatus.COMPLETED, // IN_PROGRESS removed in Phase 3
         callerEmployeeId: user.id, // Using userId as employeeId for legacy bridge
         receiverEmployeeId: input.contactId || 'unknown'

@@ -47,17 +47,20 @@ export async function synchronizeClerkIdentity(clerkId: string, emailStr: string
 
   // 4. If status is INVITED (clerkId is null), link them atomically
   if (user.status === 'INVITED') {
-     const { count } = await prisma.user.updateMany({
-       where: {
-         id: user.id,
-         clerkId: { equals: null },
-         status: 'INVITED'
-       },
-       data: {
-         clerkId: clerkId,
-         status: 'ACTIVE'
-       }
-     });
+     const result = await executeAsSystem(SystemOperation.CLERK_PROVISIONING, async (tx) =>
+       tx.user.updateMany({
+         where: {
+           id: user.id,
+           clerkId: { equals: null },
+           status: 'INVITED'
+         },
+         data: {
+           clerkId: clerkId,
+           status: 'ACTIVE'
+         }
+       })
+     );
+     const count = result.count;
 
      if (count === 1) {
        console.log(`[Provisioning] Successfully linked clerkId to invited user ${email}`);
@@ -74,7 +77,9 @@ export async function synchronizeClerkIdentity(clerkId: string, emailStr: string
        return { ...user, clerkId, status: 'ACTIVE' };
      } else {
        // Race condition: someone else linked it, or status changed
-       const refreshedUser = await prisma.user.findUnique({ where: { id: user.id } });
+       const refreshedUser = await executeAsSystem(SystemOperation.CLERK_PROVISIONING, async (tx) =>
+         tx.user.findUnique({ where: { id: user.id } })
+       );
        if (!refreshedUser || refreshedUser.status === 'INACTIVE') return null;
        if (refreshedUser.clerkId === clerkId) return refreshedUser;
        return null;

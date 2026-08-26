@@ -29,7 +29,7 @@ const logger = new Logger();
  * Returns null on any verification failure (falls through to normal Clerk auth).
  */
 function isLoadTestAuthEnabled(): boolean {
-  if (process.env.VERCEL_ENV !== 'preview') return false;
+  if (process.env.NODE_ENV === 'production' || process.env.VERCEL_ENV === 'production') return false;
   if (process.env.CRM_LOAD_TEST_AUTH_ENABLED !== 'true') return false;
   if (!process.env.LOAD_TEST_SECRET) return false;
   return true;

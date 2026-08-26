@@ -1,11 +1,16 @@
 import { PrismaClient } from '@prisma/client';
 import { executeAsSystem, SystemOperation } from '../../utils/prisma-system';
+import { ENV } from '../../../src/lib/config/env';
 
 const prisma = new PrismaClient();
 
 async function main() {
   console.log('Seeding Demo Data...');
   
+  if (ENV.isProduction) {
+    throw new Error('CRITICAL: Cannot run demo seed script in production environment.');
+  }
+
   await executeAsSystem(SystemOperation.SECURITY_AUDIT, async (tx) => {
     const tenant = await tx.tenant.upsert({
       where: { id: 'demo-tenant-1' },

@@ -273,4 +273,63 @@ export class GeminiProvider implements AIProvider {
 
     throw new Error('Maximum tool iterations exceeded');
   }
+
+  async transcribeAudio(
+    filePath: string,
+    mimeType: string,
+    prompt: string = 'Transcribe this audio call exactly, and provide a summary and sentiment analysis.'
+  ): Promise<{ transcript: string; summary: string; sentiment: string }> {
+    try {
+      Logger.info('Uploading audio to Gemini', { event: 'GEMINI_FILE_UPLOAD_STARTED', mimeType });
+      const uploadResult = await this.ai.files.upload({ file: filePath, config: { mimeType } });
+      Logger.info('Audio uploaded to Gemini', { event: 'GEMINI_FILE_UPLOAD_SUCCESS', uri: uploadResult.uri });
+
+      const systemPrompt = `You are an expert audio analyst for a CRM.
+You must output a raw JSON object (and nothing else) matching exactly this schema:
+{
+  "transcript": "Full word-for-word transcription...",
+  "summary": "A concise summary of the conversation...",
+  "sentiment": "POSITIVE, NEGATIVE, or NEUTRAL"
+}`;
+
+      const response = await this.ai.models.generateContent({
+        model: this.modelName,
+        config: {
+          systemInstruction: systemPrompt,
+          temperature: 0.2,
+          responseMimeType: 'application/json'
+        },
+        contents: [
+          uploadResult,
+          prompt
+        ]
+      });
+
+      const text = response.text || '{}';
+      let parsed;
+      try {
+        parsed = JSON.parse(text);
+      } catch(e) {
+        Logger.warn('Gemini Audio API returned malformed JSON', { event: 'GEMINI_AUDIO_JSON_PARSE_FAILED', text });
+        parsed = { transcript: text, summary: 'Error parsing summary', sentiment: 'NEUTRAL' };
+      }
+
+      // Clean up the file from Gemini storage
+      try {
+        if (uploadResult.name) await this.ai.files.delete({ name: uploadResult.name });
+        Logger.info('Cleaned up Gemini file', { event: 'GEMINI_FILE_CLEANUP_SUCCESS', name: uploadResult.name });
+      } catch (cleanupErr) {
+        Logger.warn('Failed to clean up Gemini file', { event: 'GEMINI_FILE_CLEANUP_FAILED', name: uploadResult.name });
+      }
+
+      return {
+        transcript: parsed.transcript || '',
+        summary: parsed.summary || '',
+        sentiment: parsed.sentiment || 'NEUTRAL'
+      };
+    } catch (err: any) {
+      Logger.error('Gemini transcribeAudio failed', err instanceof Error ? err : new Error(String(err?.message ?? 'unknown')), { event: 'GEMINI_AUDIO_PROCESSING_FAILED' });
+      throw err;
+    }
+  }
 }

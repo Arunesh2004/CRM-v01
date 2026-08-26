@@ -7,6 +7,8 @@ import { getAIEventsAction } from '@/modules/ai-events/actions/ai-event.actions'
 import { Video, ShieldAlert, AlertCircle, PlayCircle, Clock } from 'lucide-react';
 import Link from 'next/link';
 import { ArrowLeft } from 'lucide-react';
+import { MockVideoPlayer } from './_components/mock-video-player';
+import { RecordingTimeline } from './_components/recording-timeline';
 
 export default async function CameraDetailPage({ params }: { params: { id: string } }) {
   // We can fetch data concurrently
@@ -53,16 +55,7 @@ export default async function CameraDetailPage({ params }: { params: { id: strin
         <div className="lg:col-span-2 space-y-4">
           <div className="glass-panel rounded-xl overflow-hidden shadow-2xl relative aspect-video bg-black flex items-center justify-center">
             {camera.status === 'ONLINE' && streamInfo ? (
-              <div className="absolute inset-0 flex flex-col items-center justify-center text-center p-6 border-2 border-dashed border-emerald-500/30">
-                <Video className="w-12 h-12 text-emerald-400 mb-4 animate-pulse" />
-                <h3 className="text-xl text-emerald-400 font-semibold mb-2">Secure Stream Connected</h3>
-                <p className="text-[#8891B0] text-sm font-mono break-all max-w-md">
-                  wss://stream.ai-security-crm.example.com/...
-                </p>
-                <div className="mt-4 px-3 py-1 bg-white/5 rounded text-xs text-[#8891B0]">
-                  Token Expiry: {new Date(streamInfo.expiresAt).toLocaleTimeString()}
-                </div>
-              </div>
+              <MockVideoPlayer streamUrl={streamInfo.streamUrl} expiresAt={streamInfo.expiresAt} />
             ) : (
               <div className="text-center">
                 <AlertCircle className="w-12 h-12 text-rose-400 mx-auto mb-2" />
@@ -71,26 +64,7 @@ export default async function CameraDetailPage({ params }: { params: { id: strin
             )}
           </div>
           
-          <div className="glass-panel rounded-xl p-6">
-            <h3 className="text-lg font-semibold text-white mb-4 flex items-center gap-2">
-              <Clock className="w-5 h-5 text-violet-400" /> Recent Recordings (DVR)
-            </h3>
-            {recordings.length > 0 ? (
-              <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
-                {recordings.map((rec: any) => (
-                  <div key={rec.id} className="bg-white/5 rounded-lg p-3 hover:bg-white/10 transition-colors cursor-pointer group">
-                    <div className="aspect-video bg-black/40 rounded flex items-center justify-center mb-2">
-                      <PlayCircle className="w-8 h-8 text-white/50 group-hover:text-violet-400 transition-colors" />
-                    </div>
-                    <p className="text-xs text-white font-medium">{new Date(rec.startTime).toLocaleTimeString()}</p>
-                    <p className="text-[10px] text-[#8891B0]">{(rec.sizeBytes / 1024 / 1024).toFixed(1)} MB</p>
-                  </div>
-                ))}
-              </div>
-            ) : (
-              <p className="text-sm text-[#8891B0]">No recent recordings available.</p>
-            )}
-          </div>
+          <RecordingTimeline recordings={recordings} />
         </div>
 
         {/* AI Events Timeline */}

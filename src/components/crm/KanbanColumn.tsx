@@ -10,8 +10,7 @@ const columnBadge: Record<string, string> = {
   NEW:         'badge-violet',
   CONTACTED:   'badge-cyan',
   QUALIFIED:   'badge-amber',
-  NEGOTIATION: 'badge-amber',
-  WON:         'badge-emerald',
+  CONVERTED:   'badge-emerald',
   LOST:        'badge-rose',
 };
 

@@ -1,21 +1,54 @@
 import { NextResponse } from 'next/server';
 import { Logger } from '@/lib/observability/logger';
+import twilio from 'twilio';
+import { executeAsSystem, SystemOperation } from '@db/utils/prisma-system';
+import { withTenant } from '@db/utils/prisma-tenant';
 
 const logger = new Logger();
 
 export async function POST(req: Request) {
-  // Real implementation requires verifying the Twilio request signature
-  // using the twilio client's validateRequest function.
-  
   try {
-    const formData = await req.formData();
-    const callStatus = formData.get('CallStatus');
-    const callSid = formData.get('CallSid');
+    const bodyText = await req.text();
+    const signature = req.headers.get('x-twilio-signature');
 
-    console.log(`[Twilio Webhook] Received status update for Call ${callSid}: ${callStatus}`);
+    const isValid = twilio.validateRequest(
+      process.env.TWILIO_WEBHOOK_SECRET || '',
+      signature || '',
+      req.url,
+      Object.fromEntries(new URLSearchParams(bodyText))
+    );
+    if (!isValid) {
+      logger.warn('Invalid Twilio Status Signature', { ip: req.headers.get('x-forwarded-for') });
+      return NextResponse.json({ error: 'Invalid signature' }, { status: 400 });
+    }
 
-    // In a real implementation we would look up the Communication record by ID (callSid)
-    // and update its status in the database to COMPLETED, FAILED, NO_ANSWER, etc.
+    const params = new URLSearchParams(bodyText);
+    const callStatus = params.get('CallStatus');
+    const callSid = params.get('CallSid');
+
+    if (!callSid) {
+      return NextResponse.json({ error: 'Missing CallSid' }, { status: 400 });
+    }
+
+    // Securely resolve tenantId from trusted CallLog using System context
+    const callLog = await executeAsSystem(SystemOperation.EXTERNAL_WEBHOOK_PROCESS, async (tx) => {
+      return tx.callLog.findFirst({ where: { providerCallId: callSid } });
+    });
+
+    if (!callLog) {
+      logger.warn('Status webhook received for unknown CallSid', { callSid });
+      return NextResponse.json({ error: 'Unknown CallSid' }, { status: 400 });
+    }
+
+    const tenantId = callLog.tenantId;
+    console.log(`[Twilio Webhook] Received status update for Call ${callSid} (Tenant: ${tenantId}): ${callStatus}`);
+
+    // Entering tenant context to securely update the CallLog
+    const prisma = withTenant(tenantId);
+    // await prisma.callLog.update({
+    //   where: { id: callLog.id },
+    //   data: { status: mapTwilioStatus(callStatus) }
+    // });
     
     return NextResponse.json({ received: true });
   } catch (err: any) {

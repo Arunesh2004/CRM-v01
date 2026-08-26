@@ -9,7 +9,7 @@ const securityHeaders = [
   { key: 'Permissions-Policy', value: 'camera=(), microphone=(), geolocation=()' },
   {
     key: 'Content-Security-Policy',
-    value: "default-src 'self'; script-src 'self' 'unsafe-eval' 'unsafe-inline' https://clerk.com https://*.clerk.com https://*.clerk.accounts.dev https://js.stripe.com; connect-src 'self' https://*.clerk.com https://*.clerk.accounts.dev https://api.stripe.com wss://*.clerk.com; frame-src 'self' https://js.stripe.com https://hooks.stripe.com; worker-src 'self' blob:; img-src 'self' data: https://img.clerk.com; style-src 'self' 'unsafe-inline';"
+    value: "default-src 'self'; script-src 'self' 'unsafe-eval' 'unsafe-inline' https://clerk.com https://*.clerk.com https://*.clerk.accounts.dev; connect-src 'self' https://*.clerk.com https://*.clerk.accounts.dev wss://*.clerk.com; frame-src 'self'; worker-src 'self' blob:; img-src 'self' data: https://img.clerk.com; style-src 'self' 'unsafe-inline';"
   }
 ];
 

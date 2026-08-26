@@ -5,6 +5,7 @@ import { clerkClient } from '@clerk/nextjs/server';
 
 import { EventBus } from '../core/events/event-bus';
 import globalPrisma from '@db/utils/prisma';
+import { validateDepartmentScope } from '../security/abac/department-scope';
 
 export async function getEmployees(filters?: { search?: string, departmentId?: string, roleName?: string, status?: string }) {
   const actor = await requireAuth();
@@ -104,32 +105,27 @@ export async function inviteEmployee(emailStr: string, roleName: string = 'MEMBE
   const email = emailStr.toLowerCase().trim();
 
   // Role and Department Authorization
-  let isTenantAdmin = false;
-  let isDepartmentHead = false;
-  for (const ur of actor.userRoles) {
-    if (ur.role.name === 'TENANT_ADMIN') isTenantAdmin = true;
-    if (ur.role.name === 'DEPARTMENT_HEAD') isDepartmentHead = true;
-  }
+  const actorRoleNames = actor.userRoles.map((ur: any) => ur.role.name);
+  const { finalDepartmentId } = validateDepartmentScope(
+    actorRoleNames,
+    actor.departmentId,
+    requestedDepartmentId,
+    roleName
+  );
 
-  let finalDepartmentId = requestedDepartmentId;
-
-  if (isDepartmentHead && !isTenantAdmin) {
-    if (!actor.departmentId) {
-      throw new Error('You do not belong to a department to manage.');
-    }
-    finalDepartmentId = actor.departmentId; // Force their own department
-  }
+  // Use tenant-scoped client so app.current_tenant_id is set for all RLS-enforced lookups
+  const tenantPrisma = withTenant(tenantId);
 
   // Ensure department belongs to tenant if provided
   if (finalDepartmentId) {
-    const dept = await prisma.department.findFirst({
+    const dept = await tenantPrisma.department.findFirst({
       where: { id: finalDepartmentId, tenantId }
     });
     if (!dept) throw new Error('Invalid department');
   }
 
   // Verify Role exists in Tenant
-  const role = await prisma.role.findFirst({
+  const role = await tenantPrisma.role.findFirst({
     where: { name: roleName, tenantId }
   });
 
@@ -140,7 +136,7 @@ export async function inviteEmployee(emailStr: string, roleName: string = 'MEMBE
   const empId = await generateEmployeeId(tenantId);
 
   // This will fail safely if email is not unique
-  const newUser = await prisma.user.create({
+  const newUser = await tenantPrisma.user.create({
     data: {
       email,
       employeeId: empId,
@@ -243,7 +239,9 @@ export async function updateEmployeeRole(userId: string, newRoleName: string) {
     throw new Error("Only TENANT_ADMIN can change roles.");
   }
 
-  const userToUpdate = await prisma.user.findFirst({
+  const tenantPrisma = withTenant(tenantId);
+
+  const userToUpdate = await tenantPrisma.user.findFirst({
     where: { id: userId, tenantId, deletedAt: null }
   });
 
@@ -251,7 +249,7 @@ export async function updateEmployeeRole(userId: string, newRoleName: string) {
     throw new Error('User not found in this tenant.');
   }
 
-  const role = await prisma.role.findFirst({
+  const role = await tenantPrisma.role.findFirst({
     where: { name: newRoleName, tenantId }
   });
 
@@ -271,7 +269,8 @@ export async function updateEmployeeRole(userId: string, newRoleName: string) {
     await tx.userRole.create({
       data: {
         userId,
-        roleId: role.id
+        roleId: role.id,
+        tenantId
       }
     });
   });
@@ -300,32 +299,32 @@ export async function reassignDepartment(userId: string, newDepartmentId: string
   
   await requirePermission('USER', 'UPDATE');
 
-  let isTenantAdmin = false;
-  let isDepartmentHead = false;
-  for (const ur of actor.userRoles) {
-    if (ur.role.name === 'TENANT_ADMIN') isTenantAdmin = true;
-    if (ur.role.name === 'DEPARTMENT_HEAD') isDepartmentHead = true;
-  }
-
-  if (!isTenantAdmin && !isDepartmentHead) {
-    throw new Error("You do not have permission to reassign departments.");
-  }
-
   const userToUpdate = await prisma.user.findFirst({
     where: { id: userId, tenantId }
   });
 
   if (!userToUpdate) {
-    throw new Error('User not found.');
+    throw new Error('User not found in this tenant.');
   }
 
-  // Department Head restriction
+  // Role and Department Authorization
+  const actorRoleNames = actor.userRoles.map((ur: any) => ur.role.name);
+  const { finalDepartmentId } = validateDepartmentScope(
+    actorRoleNames,
+    actor.departmentId,
+    newDepartmentId
+  );
+  
+  if (!finalDepartmentId) {
+    throw new Error("Invalid department target.");
+  }
+
+  const isDepartmentHead = actorRoleNames.includes('DEPARTMENT_HEAD');
+  const isTenantAdmin = actorRoleNames.includes('TENANT_ADMIN') || actorRoleNames.includes('GLOBAL_ADMIN');
+
   if (isDepartmentHead && !isTenantAdmin) {
     if (userToUpdate.departmentId !== actor.departmentId) {
       throw new Error("You can only reassign employees within your own department.");
-    }
-    if (newDepartmentId !== actor.departmentId) {
-      throw new Error("You cannot move employees outside your department.");
     }
   }
 

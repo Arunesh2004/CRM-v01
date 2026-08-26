@@ -45,6 +45,47 @@ async function main() {
     }
   }
 
+  // Assign baseline permissions for functional roles
+  const rolePermissionsMap: Record<string, { resource: Resource, actions: Action[] }[]> = {
+    DEPARTMENT_HEAD: [
+      { resource: Resource.USER, actions: [Action.CREATE, Action.READ, Action.UPDATE, Action.DELETE] },
+      { resource: Resource.CUSTOMER, actions: [Action.CREATE, Action.READ, Action.UPDATE, Action.DELETE] },
+      { resource: Resource.LEAD, actions: [Action.CREATE, Action.READ, Action.UPDATE, Action.DELETE] },
+      { resource: Resource.TASK, actions: [Action.CREATE, Action.READ, Action.UPDATE, Action.DELETE] },
+      { resource: Resource.COMMUNICATION, actions: [Action.CREATE, Action.READ] },
+      { resource: Resource.SYSTEM, actions: [Action.READ] }
+    ],
+    MEMBER: [
+      { resource: Resource.USER, actions: [Action.READ] },
+      { resource: Resource.CUSTOMER, actions: [Action.CREATE, Action.READ, Action.UPDATE] },
+      { resource: Resource.LEAD, actions: [Action.CREATE, Action.READ, Action.UPDATE] },
+      { resource: Resource.TASK, actions: [Action.CREATE, Action.READ, Action.UPDATE] },
+      { resource: Resource.COMMUNICATION, actions: [Action.CREATE, Action.READ] },
+      { resource: Resource.SYSTEM, actions: [Action.READ] }
+    ]
+  };
+
+  for (const [roleName, permissions] of Object.entries(rolePermissionsMap)) {
+    const role = await prisma.role.findFirst({ where: { name: roleName, tenantId: tenant.id } });
+    if (role) {
+      for (const { resource, actions } of permissions) {
+        for (const action of actions) {
+          const perm = await prisma.permission.upsert({
+            where: { resource_action: { resource, action } },
+            update: {},
+            create: { resource, action }
+          });
+          await prisma.rolePermission.upsert({
+            where: { roleId_permissionId: { roleId: role.id, permissionId: perm.id } },
+            update: {},
+            create: { roleId: role.id, permissionId: perm.id, tenantId: tenant.id }
+          });
+        }
+      }
+      console.log(`Assigned baseline permissions to ${roleName}`);
+    }
+  }
+
   // Seed initial administrators and internal test emails
   const adminEmails = [...ENV.initialAdminEmails, ...ENV.internalTestEmails];
   // Deduplicate array
@@ -96,8 +137,8 @@ async function main() {
   }
 
   // --- DEMO TENANT BOOTSTRAP ---
-  const demoEmail = ENV.demoAccountEmail || 'demo@company.com';
-  if (demoEmail) {
+  if (!ENV.isProduction && ENV.demoAccountEmail) {
+    const demoEmail = ENV.demoAccountEmail;
     // We use a deterministic UUID for the demo tenant so it doesn't conflict with random IDs
     const demoTenantId = 'd3m00000-0000-4000-a000-000000000000';
     const demoTenant = await prisma.tenant.upsert({

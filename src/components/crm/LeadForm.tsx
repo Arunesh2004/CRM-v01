@@ -7,7 +7,7 @@ import { toast } from 'sonner';
 import { Button } from '../ui/button';
 import { Loader2, X } from 'lucide-react';
 
-export function LeadForm() {
+export function LeadForm({ customTrigger }: { customTrigger?: React.ReactNode }) {
   const [isOpen, setIsOpen] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState('');
@@ -41,9 +41,15 @@ export function LeadForm() {
 
   return (
     <>
-      <Button onClick={() => setIsOpen(true)}>
-        New Lead
-      </Button>
+      {customTrigger ? (
+        <div onClick={() => setIsOpen(true)} className="w-full">
+          {customTrigger}
+        </div>
+      ) : (
+        <Button onClick={() => setIsOpen(true)}>
+          New Lead
+        </Button>
+      )}
 
       {isOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 sm:p-0 animate-in fade-in duration-200">

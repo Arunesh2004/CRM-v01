@@ -182,53 +182,24 @@ export async function simulateAIEvent(input: SimulateAIEventInput) {
       }
     });
 
-    // Determine severity mapping
-    let severity: any = 'LOW';
-    const obj = input.detectedObject.toLowerCase();
-    if (obj.includes('person')) {
-      severity = 'HIGH';
-    } else if (obj.includes('vehicle')) {
-      severity = 'MEDIUM';
-    } else if (obj.includes('restricted') || obj.includes('intrusion')) {
-      severity = 'CRITICAL';
-    }
-
-    const title = `Security Alert: ${input.detectedObject}`;
-    let incident = null;
-
-    if (camera.location) {
-      incident = await tx.incident.create({
-        data: {
-          tenantId,
-          locationId: camera.locationId!,
-          cameraId: camera.id,
+    // Create EventOutbox in the same transaction for async processing
+    await tx.eventOutbox.create({
+      data: {
+        tenantId,
+        eventId: aiEvent.id, // using aiEvent.id as unique eventId for idempotency and correlation
+        eventType: 'CCTV.AI_EVENT.DETECTED',
+        payload: {
           aiEventId: aiEvent.id,
-          title,
-          severity,
-          status: 'OPEN',
+          cameraId: camera.id,
+          detectedObject: input.detectedObject,
+          confidence: input.confidence,
+          actorId: user.id
         }
-      });
-
-      await tx.activityTimeline.create({
-        data: {
-          tenantId,
-          type: 'SYSTEM',
-          content: `${title} [${severity}] at ${camera.name} (${Math.round(input.confidence * 100)}% confidence)`,
-          actorId: user.id,
-          entityType: 'CUSTOMER',
-          entityId: camera.location.customerId
-        }
-      });
-    }
-
-    return { aiEvent, incidentId: incident?.id };
-  });
-
-  if (result.incidentId) {
-    import('../communication/notification.service').then(({ NotificationService }) => {
-      NotificationService.createNotification(tenantId, user.id, 'ALERT', 'Camera AI Event', 'AI detected a significant event.').catch(console.error);
+      }
     });
-  }
+
+    return { aiEvent };
+  });
 
   return result.aiEvent;
 }
