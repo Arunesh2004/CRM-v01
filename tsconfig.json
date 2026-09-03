@@ -31,5 +31,5 @@
     ".next/dev/types/**/*.ts",
     "**/*.mts"
   ],
-  "exclude": ["node_modules", "tests", "scripts", "load-test", "check-db.ts", "vitest.config.ts", "playwright.config.ts", "check-users.ts", "services"]
+  "exclude": ["node_modules", "tests", "src/tests", "scripts", "load-test", "check-db.ts", "vitest.config.ts", "playwright.config.ts", "check-users.ts", "services"]
 }

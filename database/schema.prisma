@@ -126,6 +126,34 @@ enum AIExecutionStatus {
   BLOCKED
 }
 
+enum CameraAuthMode {
+  NONE
+  PASSWORD
+}
+
+enum CameraStreamInvalidationStatus {
+  PENDING
+  PROCESSING
+  COMPLETED
+  FAILED
+}
+
+enum JobStatus {
+  PENDING
+  PROCESSING
+  RETRY_SCHEDULED
+  COMPLETED
+  FAILED
+  SKIPPED
+}
+
+enum CCTVNodeStatus {
+  HEALTHY
+  UNREACHABLE
+  DRAINING
+  DECOMMISSIONED
+}
+
 // -----------------------------------------------------------------------------
 // MODELS
 // -----------------------------------------------------------------------------
@@ -141,17 +169,18 @@ enum QuoteStatus {
 }
 
 model Tenant {
-  id             String       @id @default(uuid())
-  name           String
-  ownerId        String?      @unique
-  owner          User?        @relation("TenantOwner", fields: [ownerId], references: [id])
-  status         TenantStatus @default(PENDING)
-  createdAt      DateTime     @default(now())
-  updatedAt      DateTime     @updatedAt
-  deletedAt      DateTime?
-  deletedById    String?
-  deletionReason String?
-  rpoPolicy      RpoPolicy    @default(BASIC)
+  id                String       @id @default(uuid())
+  name              String
+  ownerId           String?      @unique
+  owner             User?        @relation("TenantOwner", fields: [ownerId], references: [id])
+  status            TenantStatus @default(PENDING)
+  createdAt         DateTime     @default(now())
+  updatedAt         DateTime     @updatedAt
+  deletedAt         DateTime?
+  deletedById       String?
+  deletionReason    String?
+  rpoPolicy         RpoPolicy    @default(BASIC)
+  cctvRetentionDays Int          @default(30)
 
   tenantBootstrap    TenantBootstrap?
   departments        Department[]
@@ -250,12 +279,39 @@ model Tenant {
   workflowExecutionSteps WorkflowExecutionStep[]
   rolePermissions        RolePermission[]
   userRoles              UserRole[]
+  userInvitations        UserInvitation[]
 }
 
 model TenantBootstrap {
   tenantId       String   @id
   bootstrappedAt DateTime @default(now())
   tenant         Tenant   @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+}
+
+/// User invitation record created when an admin invites a new user to a tenant.
+/// Stores a hashed token for secure validation during the accept-invite flow.
+model UserInvitation {
+  id           String    @id @default(uuid())
+  tenantId     String
+  email        String
+  roleId       String
+  departmentId String?
+  tokenHash    String    @unique
+  expiresAt    DateTime
+  status       String    @default("PENDING") // PENDING, ACCEPTED, REVOKED
+  invitedById  String?
+  acceptedAt   DateTime?
+  revokedAt    DateTime?
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+
+  tenant     Tenant      @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  role       Role        @relation(fields: [roleId], references: [id], onDelete: Restrict)
+  department Department? @relation(fields: [departmentId], references: [id], onDelete: SetNull)
+  invitedBy  User?       @relation(fields: [invitedById], references: [id], onDelete: SetNull)
+
+  @@index([tenantId, email])
+  @@index([tokenHash])
 }
 
 model Department {
@@ -269,6 +325,7 @@ model Department {
   tenant             Tenant              @relation(fields: [tenantId], references: [id], onDelete: Cascade)
   users              User[]
   documentEmbeddings DocumentEmbedding[]
+  userInvitations    UserInvitation[]
 
   @@unique([tenantId, name])
   @@index([tenantId])
@@ -337,8 +394,9 @@ model User {
   approvalRequests     ApprovalRequest[]
   approvalSteps        ApprovalStep[]
 
-  assignedTickets    Ticket[]        @relation("TicketAssignee")
+  assignedTickets    Ticket[]         @relation("TicketAssignee")
   sentTicketMessages TicketMessage[]
+  sentInvitations    UserInvitation[]
 
   @@unique([tenantId, email])
   @@unique([tenantId, employeeId])
@@ -377,6 +435,7 @@ model Role {
   permissions         RolePermission[]
   deletedAt           DateTime?
   documentPermissions DocumentPermission[]
+  userInvitations     UserInvitation[]
 
   @@index([tenantId, id])
 }
@@ -469,11 +528,11 @@ model TenantPhoneNumber {
   phoneNumber  String              @unique // Strict global uniqueness of E.164 number
   provider     IntegrationProvider @default(TELEPHONY) // e.g. TWILIO
   status       String              @default("ACTIVE") // ACTIVE, DISABLED
-  capabilities Json?               // e.g., ["VOICE", "SMS"]
+  capabilities Json? // e.g., ["VOICE", "SMS"]
   createdAt    DateTime            @default(now())
   updatedAt    DateTime            @updatedAt
 
-  tenant       Tenant              @relation(fields: [tenantId], references: [id])
+  tenant Tenant @relation(fields: [tenantId], references: [id])
 
   @@index([tenantId])
 }
@@ -598,8 +657,10 @@ model Customer {
   documents    Document[]
 
   // Communication
-  quotes  Quote[]
-  tickets Ticket[]
+  quotes            Quote[]
+  tickets           Ticket[]
+  chatConversations ChatConversation[]
+  mailThreads       MailThread[]
 
   @@unique([tenantId, normalizedName])
   @@index([tenantId])
@@ -896,6 +957,8 @@ model Camera {
   protocol      CameraProtocol
   status        CameraStatus   @default(OFFLINE)
   lastHeartbeat DateTime?
+  authMode      CameraAuthMode @default(NONE)
+  streamVersion Int            @default(0)
   createdAt     DateTime       @default(now())
   updatedAt     DateTime       @updatedAt
 
@@ -946,18 +1009,23 @@ model CameraStream {
 }
 
 model Recording {
-  id         String          @id @default(uuid())
-  tenantId   String
-  cameraId   String
-  storageKey String
-  status     RecordingStatus @default(PROCESSING)
-  startTime  DateTime
-  endTime    DateTime?
-  sizeBytes  Int?
-  createdAt  DateTime        @default(now())
+  id            String          @id @default(uuid())
+  tenantId      String
+  cameraId      String
+  storageKey    String
+  status        RecordingStatus @default(PROCESSING)
+  startTime     DateTime
+  endTime       DateTime?
+  sizeBytes     Int?
+  segmentId     String?         @unique
+  streamVersion Int             @default(0)
+  sourceNodeId  String? // Nullable provenance: which CCTVNode created this recording
+  createdAt     DateTime        @default(now())
 
-  tenant Tenant @relation(fields: [tenantId], references: [id])
-  camera Camera @relation(fields: [cameraId], references: [id], onDelete: Cascade)
+  tenant         Tenant          @relation(fields: [tenantId], references: [id])
+  camera         Camera          @relation(fields: [cameraId], references: [id], onDelete: Cascade)
+  sourceNode     CCTVNode?       @relation(fields: [sourceNodeId], references: [id], onDelete: SetNull)
+  aiAnalysisJobs AIAnalysisJob[]
 
   @@index([tenantId, cameraId, startTime])
   @@index([tenantId, status])
@@ -988,6 +1056,7 @@ model AIEvent {
   detectedObject String
   metadata       Json?
   timestamp      DateTime @default(now())
+  recordingId    String?
 
   tenant    Tenant    @relation(fields: [tenantId], references: [id])
   camera    Camera    @relation(fields: [cameraId], references: [id], onDelete: Cascade)
@@ -995,6 +1064,97 @@ model AIEvent {
   deletedAt DateTime?
 
   @@index([tenantId, cameraId, timestamp])
+}
+
+model CameraStreamInvalidation {
+  id            String                         @id @default(uuid())
+  cameraId      String
+  tenantId      String
+  streamVersion Int
+  opaquePath    String
+  status        CameraStreamInvalidationStatus @default(PENDING)
+  attempts      Int                            @default(0)
+  nextAttemptAt DateTime                       @default(now())
+  lastError     String?
+  createdAt     DateTime                       @default(now())
+  updatedAt     DateTime                       @updatedAt
+  completedAt   DateTime?
+
+  @@unique([cameraId, streamVersion])
+  @@index([cameraId])
+  @@index([status, nextAttemptAt])
+}
+
+model CCTVNode {
+  id               String         @id @default(uuid())
+  name             String         @unique
+  status           CCTVNodeStatus @default(HEALTHY)
+  webhookKeyId     String         @unique // Identifies this node in webhook headers
+  webhookSecretRef String // Reference to secret (e.g., env var name or KMS key path)
+  lastHeartbeat    DateTime?
+  diskUsagePct     Float? // Last reported disk usage %
+  diskFreeGb       Float? // Last reported free disk GB
+  createdAt        DateTime       @default(now())
+  updatedAt        DateTime       @updatedAt
+
+  ingestionJobs RecordingIngestionJob[]
+  recordings    Recording[]
+}
+
+model RecordingIngestionJob {
+  id              String    @id @default(uuid())
+  localFilePath   String
+  segmentId       String    @unique
+  recordingNodeId String // Node affinity: worker only claims jobs for its own node
+  status          JobStatus @default(PENDING)
+  terminalReason  String?
+  workerId        String?
+  leaseExpiresAt  DateTime?
+  attempts        Int       @default(0)
+  nextAttemptAt   DateTime  @default(now())
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+
+  node CCTVNode @relation(fields: [recordingNodeId], references: [id])
+
+  @@index([recordingNodeId, status, leaseExpiresAt])
+  @@index([localFilePath])
+  @@index([status, leaseExpiresAt])
+}
+
+model RetentionDeletionJob {
+  id             String    @id @default(uuid())
+  recordingId    String    @unique
+  storageKey     String
+  status         JobStatus @default(PENDING)
+  terminalReason String?
+  workerId       String?
+  leaseExpiresAt DateTime?
+  attempts       Int       @default(0)
+  nextAttemptAt  DateTime  @default(now())
+  createdAt      DateTime  @default(now())
+  updatedAt      DateTime  @updatedAt
+
+  @@index([status, leaseExpiresAt])
+}
+
+model AIAnalysisJob {
+  id             String    @id @default(uuid())
+  recordingId    String
+  analysisType   String
+  dedupeKey      String    @unique
+  status         JobStatus @default(PENDING)
+  terminalReason String?
+  workerId       String?
+  leaseExpiresAt DateTime?
+  attempts       Int       @default(0)
+  nextAttemptAt  DateTime  @default(now())
+  createdAt      DateTime  @default(now())
+  updatedAt      DateTime  @updatedAt
+
+  recording Recording @relation(fields: [recordingId], references: [id], onDelete: Cascade)
+
+  @@index([status, leaseExpiresAt])
 }
 
 // -----------------------------------------------------------------------------
@@ -1048,19 +1208,22 @@ enum AttachmentType {
 }
 
 model ChatConversation {
-  id        String               @id @default(uuid())
-  tenantId  String
-  type      ChatConversationType
-  name      String?
-  createdAt DateTime             @default(now())
-  updatedAt DateTime             @updatedAt
-  deletedAt DateTime?
+  id         String               @id @default(uuid())
+  tenantId   String
+  type       ChatConversationType
+  name       String?
+  customerId String? // Optional CRM customer link
+  createdAt  DateTime             @default(now())
+  updatedAt  DateTime             @updatedAt
+  deletedAt  DateTime?
 
   tenant       Tenant            @relation(fields: [tenantId], references: [id])
+  customer     Customer?         @relation(fields: [customerId], references: [id], onDelete: SetNull)
   participants ChatParticipant[]
   messages     ChatMessage[]
 
   @@index([tenantId, createdAt])
+  @@index([tenantId, customerId])
 }
 
 model ChatParticipant {
@@ -1119,17 +1282,20 @@ model ChatReadReceipt {
 }
 
 model MailThread {
-  id        String   @id @default(uuid())
-  tenantId  String
-  subject   String
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  id         String   @id @default(uuid())
+  tenantId   String
+  subject    String
+  customerId String? // Optional CRM customer link
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
 
   tenant   Tenant        @relation(fields: [tenantId], references: [id])
+  customer Customer?     @relation(fields: [customerId], references: [id], onDelete: SetNull)
   messages MailMessage[]
   drafts   MailDraft[]
 
   @@index([tenantId, createdAt])
+  @@index([tenantId, customerId])
 }
 
 model MailRecipient {
