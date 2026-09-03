@@ -9,6 +9,11 @@ import { deriveOpaquePath } from '@/modules/cctv/stream.service';
 
 const original_POST = async function (req: NextRequest) {
   try {
+    if (!ENV.cctvEnabled) {
+      Logger.warn('[MediaMTX Webhook] Rejected: CCTV module is disabled.');
+      return NextResponse.json({ error: 'Service Unavailable', message: 'CCTV module is currently disabled' }, { status: 503 });
+    }
+
     // 1. Read the internal secret configured in the environment
     const internalSecret = ENV.mediamtxWebhookSecret;
     if (!internalSecret) {

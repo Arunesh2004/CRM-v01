@@ -36,15 +36,6 @@ vi.mock('@/lib/security/ssrf', () => ({
 const mockFetch = vi.fn();
 global.fetch = mockFetch;
 
-vi.mock('@/lib/config/env', () => ({
-  ENV: {
-    mediamtxWebhookSecret: 'super_secret',
-    cctvStreamJwtSecret: 'jwt_secret',
-    mediamtxApiUrl: 'http://mediamtx:9997',
-    mediamtxPublicUrl: 'ws://localhost'
-  }
-}));
-
 describe('Phase C10.2.1 Streaming Security Integration', () => {
   const mockTenantId = 'tenant_123';
   const mockUserId = 'user_123';

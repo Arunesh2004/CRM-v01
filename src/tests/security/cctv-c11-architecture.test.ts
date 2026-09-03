@@ -6,6 +6,7 @@ import { deriveOpaquePath } from '@/modules/cctv/opaque-path.helper';
 describe('Phase C11 Adversarial Architecture Tests', () => {
   let tenant: any;
   let camera: any;
+  let node: any;
 
   beforeAll(async () => {
     process.env.CCTV_OPAQUE_PATH_SECRET = 'c11-test-secret';
@@ -23,10 +24,20 @@ describe('Phase C11 Adversarial Architecture Tests', () => {
         streamVersion: 1
       }
     });
+
+    node = await globalPrisma.cCTVNode.create({
+      data: {
+        name: 'c11-test-node',
+        status: 'HEALTHY',
+        webhookKeyId: 'c11-test-webhook-key-id',
+        webhookSecretRef: 'C11_TEST_WEBHOOK_SECRET'
+      }
+    });
   });
 
   afterAll(async () => {
     await globalPrisma.camera.delete({ where: { id: camera.id } });
+    await globalPrisma.cCTVNode.delete({ where: { id: node.id } });
     await globalPrisma.tenant.delete({ where: { id: tenant.id } });
   });
 
@@ -35,9 +46,9 @@ describe('Phase C11 Adversarial Architecture Tests', () => {
       data: {
         localFilePath: '/var/lib/mediamtx/recordings/fake/failed.mp4',
         segmentId: 'failed-segment-id',
-        recordingNodeId: 'test-node-id', // Test fixture node ID
+        recordingNodeId: node.id,
         status: 'FAILED'
-      } as any, // as any: test-node-id bypasses FK for unit test purposes
+      },
     });
 
     const claimedJobIdsResult = await globalPrisma.$queryRaw<{ id: string }[]>`
@@ -66,10 +77,10 @@ describe('Phase C11 Adversarial Architecture Tests', () => {
       data: {
         localFilePath: '/var/lib/mediamtx/recordings/fake/retry.mp4',
         segmentId: 'retry-segment-id',
-        recordingNodeId: 'test-node-id', // Test fixture node ID
+        recordingNodeId: node.id,
         status: 'RETRY_SCHEDULED',
         nextAttemptAt: pastDate
-      } as any, // as any: test-node-id bypasses FK for unit test purposes
+      },
     });
 
     const claimedJobIdsResult = await globalPrisma.$queryRaw<{ id: string }[]>`

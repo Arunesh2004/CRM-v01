@@ -24,6 +24,9 @@ const original_GET = async function (req: NextRequest,
     });
   } catch (error: any) {
     Logger.error('[Stream API] Error generating stream token:', error);
+    if (error.message === 'CCTV module is disabled') {
+      return NextResponse.json({ error: 'Service Unavailable', message: 'CCTV features are currently disabled.' }, { status: 503 });
+    }
     if (error.message === 'Camera credentials not configured') {
       return NextResponse.json({ error: { code: 'MISSING_CREDENTIALS', message: 'Camera credentials must be configured before streaming.' } }, { status: 428 });
     }

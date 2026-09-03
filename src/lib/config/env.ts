@@ -1,25 +1,38 @@
 export function validateEnvironment(): void {
   // Required foundational infrastructure
-  const requiredVars = [
+  const coreRequiredVars = [
     'DATABASE_URL',
     'NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY',
     'CLERK_SECRET_KEY',
     'CLERK_WEBHOOK_SECRET',
+    'ENCRYPTION_KEY',
+  ];
+
+  // Optional CCTV integration variables
+  const cctvVars = [
     'CCTV_STREAM_JWT_SECRET',
     'CCTV_OPAQUE_PATH_SECRET',
     'MEDIAMTX_API_URL',
     'MEDIAMTX_WEBHOOK_SECRET',
-    'ENCRYPTION_KEY',
     'PUBLIC_APP_URL'
   ];
 
   // We do not strictly enforce billing keys yet in this validation 
   // since they are not activated, but architecturally they will be added here.
   const isProduction = process.env.NODE_ENV === 'production' && process.env.VERCEL_ENV === 'production';
-  const missing = requiredVars.filter(v => !process.env[v]);
+  const missingCore = coreRequiredVars.filter(v => !process.env[v]);
   
-  if (missing.length > 0) {
-    throw new Error(`CRITICAL STARTUP FAILURE: Missing required environment variables: ${missing.join(', ')}`);
+  if (missingCore.length > 0) {
+    throw new Error(`CRITICAL STARTUP FAILURE: Missing required environment variables: ${missingCore.join(', ')}`);
+  }
+
+  const missingCCTV = cctvVars.filter(v => !process.env[v]);
+  const presentCCTV = cctvVars.filter(v => !!process.env[v]);
+
+  if (missingCCTV.length > 0 && presentCCTV.length > 0) {
+    console.warn(`WARNING: CCTV integration is partially configured. Missing variables: ${missingCCTV.join(', ')}. CCTV features will be disabled.`);
+  } else if (missingCCTV.length === cctvVars.length) {
+    console.log(`INFO: CCTV integration is not configured. CCTV features will be disabled.`);
   }
   
   const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
@@ -97,15 +110,40 @@ export const ENV = {
   get awsSecretAccessKey() { return process.env.AWS_SECRET_ACCESS_KEY; },
 
   // CCTV / MediaMTX
-  get cctvStreamJwtSecret() { return process.env.CCTV_STREAM_JWT_SECRET!; },
-  get cctvOpaquePathSecret() { return process.env.CCTV_OPAQUE_PATH_SECRET!; },
+  get cctvEnabled(): boolean {
+    const cctvVars = [
+      process.env.CCTV_STREAM_JWT_SECRET,
+      process.env.CCTV_OPAQUE_PATH_SECRET,
+      process.env.MEDIAMTX_API_URL,
+      process.env.MEDIAMTX_WEBHOOK_SECRET,
+      process.env.PUBLIC_APP_URL
+    ];
+    return cctvVars.every(v => !!v);
+  },
+  get cctvStreamJwtSecret() { 
+    if (!this.cctvEnabled) throw new Error('CCTV module is disabled: missing required configuration');
+    return process.env.CCTV_STREAM_JWT_SECRET!; 
+  },
+  get cctvOpaquePathSecret() { 
+    if (!this.cctvEnabled) throw new Error('CCTV module is disabled: missing required configuration');
+    return process.env.CCTV_OPAQUE_PATH_SECRET!; 
+  },
   get cctvOpaquePathSecretPrevious() { return process.env.CCTV_OPAQUE_PATH_SECRET_PREVIOUS; },
   get cctvOpaquePathSecretPreviousValidUntil() { 
     return process.env.CCTV_OPAQUE_PATH_SECRET_PREVIOUS_VALID_UNTIL ? 
       new Date(process.env.CCTV_OPAQUE_PATH_SECRET_PREVIOUS_VALID_UNTIL) : undefined;
   },
-  get mediamtxApiUrl() { return process.env.MEDIAMTX_API_URL!; },
-  get publicAppUrl() { return process.env.PUBLIC_APP_URL!; },
-  get mediamtxWebhookSecret() { return process.env.MEDIAMTX_WEBHOOK_SECRET!; },
+  get mediamtxApiUrl() { 
+    if (!this.cctvEnabled) throw new Error('CCTV module is disabled: missing required configuration');
+    return process.env.MEDIAMTX_API_URL!; 
+  },
+  get publicAppUrl() { 
+    if (!this.cctvEnabled) throw new Error('CCTV module is disabled: missing required configuration');
+    return process.env.PUBLIC_APP_URL!; 
+  },
+  get mediamtxWebhookSecret() { 
+    if (!this.cctvEnabled) throw new Error('CCTV module is disabled: missing required configuration');
+    return process.env.MEDIAMTX_WEBHOOK_SECRET!; 
+  },
   get encryptionKey() { return process.env.ENCRYPTION_KEY!; }
 };

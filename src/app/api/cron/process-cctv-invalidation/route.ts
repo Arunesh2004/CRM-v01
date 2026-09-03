@@ -12,6 +12,10 @@ const original_GET = async function (req: NextRequest) {
   }
 
   try {
+    if (!ENV.cctvEnabled) {
+      return NextResponse.json({ success: true, message: 'CCTV module disabled' });
+    }
+
     // 1. Recover stale PROCESSING jobs (stuck for > 5 minutes)
     const fiveMinutesAgo = new Date(Date.now() - 5 * 60 * 1000);
     await globalPrisma.cameraStreamInvalidation.updateMany({
@@ -53,7 +57,7 @@ const original_GET = async function (req: NextRequest) {
     }
 
     // 4. Process claimed jobs
-    const mediamtxUrl = ENV.mediamtxApiUrl || 'http://localhost:9997';
+    const mediamtxUrl = ENV.mediamtxApiUrl;
     let successCount = 0;
     let failCount = 0;
 

@@ -191,9 +191,11 @@ describe('CCTV Concurrency & Rotation Tests (Phase C10.5)', () => {
     const deleteResult = await deleteCamera(camera.id);
     expect(deleteResult.success).toBe(true);
 
-    // 5. Verify camera is deleted, outbox survives, new stream connections rejected
+    // 5. Verify camera is soft-deleted (deletedAt set), outbox survives, new stream connections rejected
+    // Note: deleteCamera uses soft-delete — row remains with deletedAt set, not hard-deleted.
     const deletedCamera = await prisma.camera.findUnique({ where: { id: camera.id } });
-    expect(deletedCamera).toBeNull();
+    expect(deletedCamera).not.toBeNull();
+    expect(deletedCamera!.deletedAt).not.toBeNull();
 
     const outbox = await prisma.cameraStreamInvalidation.findFirst({
       where: { cameraId: camera.id, streamVersion: initialStreamVersion }

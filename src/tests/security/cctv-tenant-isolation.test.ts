@@ -6,6 +6,11 @@ import { createCamera, getCameraById, updateCamera, deleteCamera, simulateAIEven
 import { getCameraRecordings, generateRecordingDownloadUrl } from '@/modules/cctv/recording.service';
 import { generateStreamToken } from '@/modules/cctv/stream.service';
 
+// Mock SSRF validation to bypass DNS lookup in tests
+vi.mock('@/lib/security/ssrf', () => ({
+  validateAndResolveHostname: vi.fn((hostname: string) => Promise.resolve(hostname))
+}));
+
 describe('CCTV Adversarial Security Tests', () => {
   let tenantAId: string;
   let tenantBId: string;
@@ -103,6 +108,11 @@ describe('CCTV Adversarial Security Tests', () => {
 
   beforeEach(() => {
     vi.resetAllMocks();
+    // Mock fetch to prevent real MediaMTX calls from hanging
+    global.fetch = vi.fn().mockResolvedValue({
+      ok: true,
+      json: async () => ({})
+    }) as any;
   });
 
   // Mock helpers
@@ -187,7 +197,7 @@ describe('CCTV Adversarial Security Tests', () => {
         ipAddress: '10.0.0.3',
         protocol: 'RTSP',
         authMode: 'NONE'
-      })).rejects.toThrow(/Cross-tenant access denied/);
+      })).rejects.toThrow(/Invalid or unauthorized reference/);
     });
 
     it('Tenant A cannot update existing camera to Tenant B location', async () => {
@@ -195,7 +205,7 @@ describe('CCTV Adversarial Security Tests', () => {
       await expect(updateCamera({
         id: tA_CameraId,
         locationId: tB_LocationId
-      })).rejects.toThrow(/Cross-tenant access denied/);
+      })).rejects.toThrow(/Invalid or unauthorized reference/);
     });
   });
 

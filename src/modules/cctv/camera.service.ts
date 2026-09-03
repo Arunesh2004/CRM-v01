@@ -263,8 +263,8 @@ export async function deleteCamera(id: string) {
     return { success: true, stalePath, idempotent: false }; 
   });
 
-  if (result.stalePath) {
-    // Force-sweep MediaMTX paths immediately (best-effort)
+  if (result.stalePath && ENV.cctvEnabled) {
+    // Force-sweep MediaMTX paths immediately (best-effort, only when CCTV is configured)
     try {
       const prefix = `c_${tenantId}_${id}_`;
       const res = await fetch(`${ENV.mediamtxApiUrl}/v3/config/paths/list?search=${prefix}`);

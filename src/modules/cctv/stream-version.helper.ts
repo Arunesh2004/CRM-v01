@@ -44,8 +44,9 @@ export async function invalidateCurrentStreamGeneration(
  * If this fails, the durable background worker will pick it up.
  */
 export async function attemptImmediateInvalidation(opaquePath: string) {
+  if (!ENV.cctvEnabled) return;
   try {
-    const mediamtxUrl = ENV.mediamtxApiUrl || 'http://localhost:9997';
+    const mediamtxUrl = ENV.mediamtxApiUrl;
     await fetch(`${mediamtxUrl}/v3/config/paths/delete/${opaquePath}`, {
       method: 'DELETE'
     }).catch(() => {});

@@ -60,6 +60,10 @@ export async function invalidateStreamAccess(tenantId: string, camera: any, cred
 }
 
 export async function generateStreamToken(cameraId: string) {
+  if (!ENV.cctvEnabled) {
+    throw new Error('CCTV module is disabled');
+  }
+
   const user = await requireAuth();
   const tenantId = await requireTenant();
   
