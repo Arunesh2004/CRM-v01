@@ -1,4 +1,5 @@
 import crypto from 'crypto';
+import { Logger } from '@/lib/logger/logger';
 
 export class WebhookSecurity {
   /**
@@ -26,7 +27,7 @@ export class WebhookSecurity {
         crypto.timingSafeEqual(Buffer.from(signature), Buffer.from(digestBase64))
       );
     } catch (e) {
-      console.error('Webhook signature verification failed:', e);
+      Logger.error('Webhook signature verification failed:', e);
       return false;
     }
   }

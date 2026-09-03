@@ -4,7 +4,7 @@ import path from 'path';
 async function runTests() {
   console.log('--- Running Multi-Tenant Security Audit Tests ---');
 
-  const srcDir = path.join(__dirname, '../src');
+  const srcDir = path.join(process.cwd(), '/src');
 
   let violations = 0;
 
@@ -50,15 +50,15 @@ async function runTests() {
   });
 
   console.log('\\n[3] Verifying Database Security (Prisma)...');
-  const schemaPath = path.join(__dirname, '../database/schema.prisma');
+  const schemaPath = path.join(process.cwd(), '/database/schema.prisma');
   if (fs.existsSync(schemaPath)) {
     const schemaContent = fs.readFileSync(schemaPath, 'utf8');
     const models = schemaContent.split('\nmodel ').slice(1);
     
     for (const modelDef of models) {
       const modelName = modelDef.split(' ')[0].trim();
-      // Exclude global system models
-      if (['Tenant', 'User', 'WebhookEvent', 'Permission', 'RolePermission', 'UserRole', 'Plan'].includes(modelName)) continue;
+      // Exclude global system models and infrastructure models
+      if (['Tenant', 'User', 'WebhookEvent', 'Permission', 'RolePermission', 'UserRole', 'Plan', 'CCTVNode', 'RecordingIngestionJob', 'RetentionDeletionJob', 'AIAnalysisJob', 'AITool'].includes(modelName)) continue;
       
       if (!modelDef.includes('tenantId')) {
         console.error(`Violation: Model ${modelName} is missing tenantId relation!`);

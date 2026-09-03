@@ -1,9 +1,10 @@
 import { NextResponse } from 'next/server';
+import { withApiContext } from '@/lib/observability/context';
 import { executeAsSystem, SystemOperation } from '@db/utils/prisma-system';
 
 export const dynamic = 'force-dynamic';
 
-export async function GET(req: Request) {
+const _orig_GET = async function (req: Request) {
   try {
     if (process.env.NODE_ENV === 'production' || process.env.VERCEL_ENV === 'production') {
       return NextResponse.json({ error: 'CRITICAL: Cannot run demo seed script in production environment.' }, { status: 403 });
@@ -57,8 +58,11 @@ export async function GET(req: Request) {
       return { user };
     });
 
-    return NextResponse.json({ success: true, user: result.user });
+    const safeUser = { id: result.user.id, email: result.user.email, status: result.user.status };
+    return NextResponse.json({ success: true, user: safeUser });
   } catch (e: any) {
     return NextResponse.json({ error: e.message }, { status: 500 });
   }
 }
+
+export const GET = withApiContext(_orig_GET);

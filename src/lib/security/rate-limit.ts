@@ -1,3 +1,5 @@
+import { Logger } from '@/lib/logger/logger';
+
 export interface RateLimiter {
   /**
    * Checks if the given identifier has exceeded the rate limit.
@@ -41,7 +43,7 @@ export class MemoryRateLimiter implements RateLimiter {
 export class RedisRateLimiter implements RateLimiter {
   async check(identifier: string, limit = 10, windowMs = 60000): Promise<boolean> {
     if (!process.env.REDIS_URL) {
-      console.warn("Redis URL missing, falling back to permissive mode (ALLOW ALL).");
+      Logger.warn('Redis URL missing, falling back to permissive rate-limit mode (ALLOW ALL).');
       return true;
     }
     
@@ -63,7 +65,7 @@ export class RedisRateLimiter implements RateLimiter {
       return Number(currentRaw) <= limit;
     } catch (e: any) {
       const safeMsg = e?.message?.replace(/redis:\/\/[^@]+@/, 'redis://***@');
-      console.error("Redis Rate Limiter Error:", safeMsg);
+      Logger.warn('Redis Rate Limiter Error (message sanitized)', { safeMsg });
       // Fail open if Redis is down, or implement memory fallback here
       return true;
     }

@@ -1,3 +1,4 @@
+import { withTenant, withTenantTransaction } from '@db/utils/prisma-tenant';
 import prisma from '@db/utils/prisma';
 import { AIConfig } from '@/lib/config/ai.config';
 import { Logger } from '@/lib/logger/logger';
@@ -8,7 +9,7 @@ export class ConversationService {
    * Retrieves an owned conversation. Returns null if missing or not owned by user/tenant.
    */
   static async getOwnedConversation(tenantId: string, userId: string, conversationId: string): Promise<AIConversation | null> {
-    const conversation = await prisma.aIConversation.findUnique({
+    const conversation = await withTenant(tenantId).aIConversation.findUnique({
       where: { id: conversationId }
     });
     
@@ -29,7 +30,7 @@ export class ConversationService {
       safeTitle = title.replace(/[\r\n]+/g, ' ').substring(0, 80);
     }
     
-    const conv = await prisma.aIConversation.create({
+    const conv = await withTenant(tenantId).aIConversation.create({
       data: {
         tenantId,
         userId,
@@ -46,7 +47,7 @@ export class ConversationService {
    */
   static async listOwnedConversations(tenantId: string, userId: string, limit: number = AIConfig.MAX_CONVERSATION_LIST_LIMIT, cursor?: string): Promise<AIConversation[]> {
     const takeAmount = Math.min(limit, AIConfig.MAX_CONVERSATION_LIST_LIMIT);
-    return prisma.aIConversation.findMany({
+    return withTenant(tenantId).aIConversation.findMany({
       where: { tenantId, userId, status: AIConversationStatus.ACTIVE },
       take: takeAmount,
       ...(cursor && { cursor: { id: cursor }, skip: 1 }),
@@ -62,7 +63,7 @@ export class ConversationService {
    */
   static async listArchivedConversations(tenantId: string, userId: string, limit: number = AIConfig.MAX_CONVERSATION_LIST_LIMIT, cursor?: string): Promise<AIConversation[]> {
     const takeAmount = Math.min(limit, AIConfig.MAX_CONVERSATION_LIST_LIMIT);
-    return prisma.aIConversation.findMany({
+    return withTenant(tenantId).aIConversation.findMany({
       where: { tenantId, userId, status: AIConversationStatus.ARCHIVED },
       take: takeAmount,
       ...(cursor && { cursor: { id: cursor }, skip: 1 }),
@@ -82,7 +83,7 @@ export class ConversationService {
       return conv; // Already archived or not found
     }
     
-    return prisma.aIConversation.update({
+    return withTenant(tenantId).aIConversation.update({
       where: { id: conversationId },
       data: {
         status: AIConversationStatus.ARCHIVED,
@@ -128,12 +129,12 @@ export class ConversationService {
     }
 
     // 3. Verify conversation bounds via aggregation
-    const countQuery = prisma.aIConversationMessage.count({
+    const countQuery = withTenant(tenantId).aIConversationMessage.count({
       where: { conversationId, tenantId }
     });
     
     // Approximate byte size aggregation by doing sum of lengths
-    const messages = await prisma.aIConversationMessage.findMany({
+    const messages = await withTenant(tenantId).aIConversationMessage.findMany({
       where: { conversationId, tenantId },
       select: { content: true } // Minimal payload to compute size safely
     });
@@ -153,7 +154,7 @@ export class ConversationService {
 
     // 4. Proceed with insertion inside a try-catch for DB safety
     try {
-      const message = await prisma.aIConversationMessage.create({
+      const message = await withTenant(tenantId).aIConversationMessage.create({
         data: {
           conversationId,
           tenantId,
@@ -187,7 +188,7 @@ export class ConversationService {
 
     const takeAmount = Math.min(limit, AIConfig.MAX_HISTORY_MESSAGES + 50); // Hard limit sanity check
     
-    return prisma.aIConversationMessage.findMany({
+    return withTenant(tenantId).aIConversationMessage.findMany({
       where: { conversationId, tenantId },
       take: takeAmount,
       ...(cursor && { cursor: { id: cursor }, skip: 1 }),

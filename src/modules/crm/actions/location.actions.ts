@@ -1,4 +1,5 @@
 'use server'
+import { withServerActionContext } from '@/lib/observability/server-action';
 import { sanitizeClientError } from '@/lib/errors/client-safe-error';
 
 import { requireAuth, requireTenant, requirePermission } from '@/lib/auth';
@@ -6,7 +7,7 @@ import { CreateLocationSchema, UpdateLocationSchema } from '../validators/locati
 import * as locationService from '../location/location.service';
 import { z } from 'zod';
 
-export async function createLocationAction(payload: z.infer<typeof CreateLocationSchema>) {
+async function _createLocationAction(payload: z.infer<typeof CreateLocationSchema>) {
   try {
     const validatedData = CreateLocationSchema.parse(payload);
     
@@ -21,7 +22,7 @@ export async function createLocationAction(payload: z.infer<typeof CreateLocatio
   }
 }
 
-export async function updateLocationAction(payload: z.infer<typeof UpdateLocationSchema>) {
+async function _updateLocationAction(payload: z.infer<typeof UpdateLocationSchema>) {
   try {
     const validatedData = UpdateLocationSchema.parse(payload);
     
@@ -36,7 +37,7 @@ export async function updateLocationAction(payload: z.infer<typeof UpdateLocatio
   }
 }
 
-export async function getLocationsAction() {
+async function _getLocationsAction() {
   try {
     await requireAuth();
     await requireTenant();
@@ -49,7 +50,7 @@ export async function getLocationsAction() {
   }
 }
 
-export async function deleteLocationAction(id: string) {
+async function _deleteLocationAction(id: string) {
   try {
     await requireAuth();
     await requireTenant();
@@ -61,3 +62,11 @@ export async function deleteLocationAction(id: string) {
     return { success: false, error: sanitizeClientError(error) };
   }
 }
+
+export const createLocationAction = withServerActionContext(_createLocationAction);
+
+export const updateLocationAction = withServerActionContext(_updateLocationAction);
+
+export const getLocationsAction = withServerActionContext(_getLocationsAction);
+
+export const deleteLocationAction = withServerActionContext(_deleteLocationAction);

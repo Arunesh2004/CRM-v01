@@ -1,4 +1,5 @@
 'use server'
+import { withServerActionContext } from '@/lib/observability/server-action';
 import { sanitizeClientError } from '@/lib/errors/client-safe-error';
 import { revalidatePath } from 'next/cache';
 
@@ -24,7 +25,7 @@ const KanbanStageSchema = z.object({
   status: z.nativeEnum(LeadStatus, { error: () => ({ message: 'Invalid pipeline stage' }) }),
 });
 
-export async function updateLeadStatusAction(payload: { id: string; status: string }) {
+async function _updateLeadStatusAction(payload: { id: string; status: string }) {
   try {
     const { id, status } = KanbanStageSchema.parse(payload);
     // updateLead already enforces auth + tenant + permission + ownership internally
@@ -36,7 +37,7 @@ export async function updateLeadStatusAction(payload: { id: string; status: stri
   }
 }
 
-export async function createLeadAction(payload: z.infer<typeof CreateLeadSchema>) {
+async function _createLeadAction(payload: z.infer<typeof CreateLeadSchema>) {
   try {
     const validatedData = CreateLeadSchema.parse(payload);
     
@@ -49,7 +50,7 @@ export async function createLeadAction(payload: z.infer<typeof CreateLeadSchema>
   }
 }
 
-export async function updateLeadAction(payload: z.infer<typeof UpdateLeadSchema>) {
+async function _updateLeadAction(payload: z.infer<typeof UpdateLeadSchema>) {
   try {
     const validatedData = UpdateLeadSchema.parse(payload);
     
@@ -62,7 +63,7 @@ export async function updateLeadAction(payload: z.infer<typeof UpdateLeadSchema>
 
 import { QueryParams } from '../../core/types';
 
-export async function getLeadsAction(params?: QueryParams) {
+async function _getLeadsAction(params?: QueryParams) {
   try {
     const result = await leadService.getLeads(params);
     return { success: true, data: result };
@@ -71,7 +72,7 @@ export async function getLeadsAction(params?: QueryParams) {
   }
 }
 
-export async function assignLeadAction(leadId: string, assignedUserId: string) {
+async function _assignLeadAction(leadId: string, assignedUserId: string) {
   try {
     // updateLead handles assignment timeline and audit logs if assignedUserId changes
     const result = await leadService.updateLead({ id: leadId, assignedUserId });
@@ -81,7 +82,7 @@ export async function assignLeadAction(leadId: string, assignedUserId: string) {
   }
 }
 
-export async function convertLeadAction(leadId: string) {
+async function _convertLeadAction(leadId: string) {
   try {
     const result = await leadService.convertLeadToCustomer(leadId);
     return { success: true, data: result };
@@ -90,7 +91,7 @@ export async function convertLeadAction(leadId: string) {
   }
 }
 
-export async function deleteLeadAction(leadId: string) {
+async function _deleteLeadAction(leadId: string) {
   try {
     const result = await leadService.deleteLead(leadId);
     return { success: true, data: result };
@@ -98,3 +99,17 @@ export async function deleteLeadAction(leadId: string) {
     return { success: false, error: sanitizeClientError(error) };
   }
 }
+
+export const updateLeadStatusAction = withServerActionContext(_updateLeadStatusAction);
+
+export const createLeadAction = withServerActionContext(_createLeadAction);
+
+export const updateLeadAction = withServerActionContext(_updateLeadAction);
+
+export const getLeadsAction = withServerActionContext(_getLeadsAction);
+
+export const assignLeadAction = withServerActionContext(_assignLeadAction);
+
+export const convertLeadAction = withServerActionContext(_convertLeadAction);
+
+export const deleteLeadAction = withServerActionContext(_deleteLeadAction);

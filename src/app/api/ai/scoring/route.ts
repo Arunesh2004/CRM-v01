@@ -1,9 +1,10 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { withApiContext } from '@/lib/observability/context';
 import { requireAuth, requireTenant } from '@/lib/auth';
 import { ScoringService } from '@/modules/ai/scoring/scoring.service';
 import { Logger } from '@/lib/logger/logger';
 
-export async function POST(req: NextRequest) {
+const _orig_POST = async function (req: NextRequest) {
   try {
     const { userId } = await requireAuth();
     const tenantId = await requireTenant();
@@ -38,3 +39,5 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: 'Internal Server Error' }, { status: 500 });
   }
 }
+
+export const POST = withApiContext(_orig_POST);

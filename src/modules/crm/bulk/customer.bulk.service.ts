@@ -3,6 +3,7 @@ import { requireTenant, requirePermission } from '@/lib/auth';
 import { CustomerStatus } from '@prisma/client';
 import globalPrisma from '@db/utils/prisma';
 import { withTenantTransaction } from '@db/utils/prisma-tenant';
+import { Logger } from '@/lib/logger/logger';
 
 export const MAX_SYNC_BULK_SIZE = 500;
 
@@ -21,7 +22,7 @@ export class CustomerBulkService {
         throw new Error(`Bulk operation exceeds max synchronous size of ${MAX_SYNC_BULK_SIZE}. Please run asynchronously.`);
       }
       // Future: Queue Job
-      console.log(`[Queue] Pushing ${customerIds.length} customer updates to worker queue.`);
+      Logger.info(`[Queue] Pushing ${customerIds.length} customer updates to worker queue.`);
       return { count: customerIds.length, queued: true };
     }
 

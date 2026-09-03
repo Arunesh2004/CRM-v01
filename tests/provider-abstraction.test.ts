@@ -16,7 +16,7 @@ async function runTests() {
   console.log('✔ Provider Factory successfully instantiated interfaces');
 
   // 2. Test Abstraction Methods (Safe Placeholders)
-  const emailResult = await emailProvider.sendEmail('test@example.com', 'Subject', '<p>Body</p>');
+  const emailResult = await emailProvider.sendEmail('test-tenant', { to: 'test@example.com', subject: 'Subject', html: '<p>Body</p>' });
   if (!emailResult.success) throw new Error('Email provider failed');
   console.log('✔ Email provider abstraction returned successfully:', emailResult);
 
@@ -24,7 +24,7 @@ async function runTests() {
   if (!callResult.success) throw new Error('Telephony provider failed');
   console.log('✔ Telephony provider abstraction returned successfully:', callResult);
 
-  const msgResult = await messagingProvider.sendMessage('+1234567890', 'Hello from CRM');
+  const msgResult = await messagingProvider.sendMessage('test-tenant', { to: '+1234567890', text: 'Hello from CRM', type: 'text' });
   if (!msgResult.success) throw new Error('Messaging provider failed');
   console.log('✔ Messaging provider abstraction returned successfully:', msgResult);
 

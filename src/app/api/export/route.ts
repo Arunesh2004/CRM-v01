@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { withApiContext } from '@/lib/observability/context';
 import { requireAuth, requireTenant, requirePermission } from '@/lib/auth';
 import { exportTenant } from '@/modules/recovery/export.engine';
 import { sanitizeClientError } from '@/lib/errors/client-safe-error';
@@ -6,7 +7,7 @@ import { getIncidentsCsv, getCustomersCsv, getCommunicationsCsv } from '@/module
 import { Resource, Action } from '@prisma/client';
 import { executeAsSystem, SystemOperation } from '@db/utils/prisma-system';
 
-export async function GET(req: NextRequest) {
+const _orig_GET = async function (req: NextRequest) {
   try {
     const authUser = await requireAuth();
 
@@ -109,3 +110,5 @@ export async function GET(req: NextRequest) {
     return NextResponse.json({ error: sanitizeClientError(error) }, { status: 500 });
   }
 }
+
+export const GET = withApiContext(_orig_GET);

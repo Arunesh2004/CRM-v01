@@ -1,10 +1,11 @@
 'use server'
+import { withServerActionContext } from '@/lib/observability/server-action';
 
 import { sanitizeClientError } from '@/lib/errors/client-safe-error';
 import { requireAuth, requireTenant, requirePermission } from '@/lib/auth';
 import { RevenueService } from '../revenue.service';
 
-export async function getQuotesAction() {
+async function _getQuotesAction() {
   try {
     const tenantId = await requireTenant();
     const session = await requireAuth();
@@ -14,3 +15,5 @@ export async function getQuotesAction() {
     return { success: false, error: sanitizeClientError(error) };
   }
 }
+
+export const getQuotesAction = withServerActionContext(_getQuotesAction);

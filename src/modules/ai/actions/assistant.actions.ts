@@ -1,4 +1,5 @@
 'use server';
+import { withServerActionContext } from '@/lib/observability/server-action';
 
 import { askAssistant } from '../assistant.service';
 import { requireAuth, requireTenant } from '@/lib/auth';
@@ -13,7 +14,7 @@ export type ChatMessage = {
   content: string;
 };
 
-export async function askAssistantAction(prompt: string, conversationId?: string) {
+async function _askAssistantAction(prompt: string, conversationId?: string) {
   let userId = 'anonymous';
   let tenantId = 'anonymous';
   let lockKey: string | undefined = undefined;
@@ -119,3 +120,5 @@ export async function askAssistantAction(prompt: string, conversationId?: string
     }
   }
 }
+
+export const askAssistantAction = withServerActionContext(_askAssistantAction);

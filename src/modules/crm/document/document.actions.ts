@@ -1,10 +1,12 @@
 'use server';
+import { withServerActionContext } from '@/lib/observability/server-action';
 
 import { createDocument, deleteDocument } from './document.service';
 import { revalidatePath } from 'next/cache';
 import { requireAuthIdentity, requireTenantFromIdentity } from '@/lib/auth';
 import { fileTypeFromBuffer } from 'file-type';
 import path from 'path';
+import { Logger } from '@/lib/logger/logger';
 
 function sanitizeFilename(originalName: string) {
   let clean = path.basename(originalName);
@@ -33,7 +35,7 @@ const ALLOWED_MIME_TYPES = [
   'image/webp'
 ];
 
-export async function uploadDocumentAction(formData: FormData) {
+async function _uploadDocumentAction(formData: FormData) {
   try {
     const file = formData.get('file') as File | null;
     const customerId = formData.get('customerId') as string | null;
@@ -88,19 +90,23 @@ export async function uploadDocumentAction(formData: FormData) {
 
     return { success: true };
   } catch (error: any) {
-    console.error('Upload error:', error);
+    Logger.error('Upload error:', error);
     return { error: error.message || 'Failed to upload document' };
   }
 }
 
-export async function deleteDocumentAction(id: string, customerId?: string, taskId?: string) {
+async function _deleteDocumentAction(id: string, customerId?: string, taskId?: string) {
   try {
     await deleteDocument(id);
     if (customerId) revalidatePath(`/customers/${customerId}`);
     if (taskId) revalidatePath(`/tasks/${taskId}`);
     return { success: true };
   } catch (error: any) {
-    console.error('Delete error:', error);
+    Logger.error('Delete error:', error);
     return { error: error.message || 'Failed to delete document' };
   }
 }
+
+export const uploadDocumentAction = withServerActionContext(_uploadDocumentAction);
+
+export const deleteDocumentAction = withServerActionContext(_deleteDocumentAction);

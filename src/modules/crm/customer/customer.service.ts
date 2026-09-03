@@ -1,4 +1,5 @@
 import { requireAuth, requireTenant, requirePermission, requireAuthIdentity, requirePermissionFast, requireTenantFromIdentity } from '@/lib/auth';
+import { requireRelationOwnership } from '@/lib/auth/relation-auth';
 import { withTenant, withTenantTransaction } from '@db/utils/prisma-tenant';
 import { CreateCustomerInput, UpdateCustomerInput } from '../crm.types';
 
@@ -6,12 +7,12 @@ import { createTenantCustomerFast } from '@db/utils/fast-tenant-queries';
 
 export async function createCustomer(input: CreateCustomerInput) {
   const startTotal = performance.now();
-  console.log(`[PHASE_26E_MEASUREMENT] Starting createCustomer...`);
+  Logger.info(`[PHASE_26E_MEASUREMENT] Starting createCustomer...`);
   
   const startAuth = performance.now();
   const identity = await requireAuthIdentity();
   const tenantId = await requireTenantFromIdentity(identity);
-  console.log(`[PHASE_26E_MEASUREMENT] Auth lookup duration: ${(performance.now() - startAuth).toFixed(2)}ms`);
+  Logger.info(`[PHASE_26E_MEASUREMENT] Auth lookup duration: ${(performance.now() - startAuth).toFixed(2)}ms`);
   
   const startParallel = performance.now();
   const normalizedName = input.name.toLowerCase().trim().replace(/\s+/g, ' ');
@@ -26,7 +27,7 @@ export async function createCustomer(input: CreateCustomerInput) {
 
   if (existing) throw new Error('A customer with this name already exists.');
 
-  console.log(`[PHASE_26E_MEASUREMENT] Parallel checks duration: ${(performance.now() - startParallel).toFixed(2)}ms`);
+  Logger.info(`[PHASE_26E_MEASUREMENT] Parallel checks duration: ${(performance.now() - startParallel).toFixed(2)}ms`);
   
   const startWrite = performance.now();
   const result = await createTenantCustomerFast(tenantId, identity.id, input);
@@ -49,6 +50,7 @@ export async function createCustomer(input: CreateCustomerInput) {
 
 import { QueryParams, PaginatedResponse } from '../../core/types';
 import globalPrisma from '@db/utils/prisma';
+import { Logger } from '@/lib/logger/logger';
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 export async function getCustomers(params?: QueryParams & { createdAtStart?: Date; createdAtEnd?: Date; }): Promise<PaginatedResponse<any>> {
@@ -281,9 +283,17 @@ export async function createContact(input: any) {
   const tenantId = await requireTenant();
   await requirePermission('CUSTOMER', 'UPDATE');
 
+
+
   const prisma = withTenant(tenantId);
   return await globalPrisma.$transaction(async (baseTx: any) => {
     const tx = await withTenantTransaction(baseTx, tenantId);
+    
+    // VERIFY RELATION OWNERSHIP
+    await requireRelationOwnership(tx, tenantId, {
+      customer: input.customerId
+    });
+
     if (input.isPrimary) {
       await tx.customerContact.updateMany({
         where: { customerId: input.customerId, tenantId },
@@ -324,9 +334,16 @@ export async function createLocation(input: any) {
   const tenantId = await requireTenant();
   await requirePermission('CUSTOMER', 'UPDATE');
 
+
+
   const prisma = withTenant(tenantId);
   return await globalPrisma.$transaction(async (baseTx: any) => {
     const tx = await withTenantTransaction(baseTx, tenantId);
+
+    // VERIFY RELATION OWNERSHIP
+    await requireRelationOwnership(tx, tenantId, {
+      customer: input.customerId
+    });
 
     const location = await tx.location.create({
       data: {
@@ -354,3 +371,4 @@ export async function createLocation(input: any) {
     return location;
   });
 }
+

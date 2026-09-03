@@ -1,11 +1,12 @@
 import { inngest } from '@/lib/queue/inngest.client';
 import { executeAsSystem, SystemOperation } from '@db/utils/prisma-system';
 import { withTenant } from '@db/utils/prisma-tenant';
+import { Logger } from '@/lib/logger/logger';
 
 const MAX_RETRIES = 5;
 
 export async function processOutbox() {
-  console.log('Processing EventOutbox...');
+  Logger.info('Processing EventOutbox...');
 
   // Minimum required system bypass to scan pending jobs across all tenants
   const pendingEvents = await executeAsSystem(SystemOperation.PLATFORM_CRON, async (tx) => {
@@ -81,7 +82,7 @@ export async function processOutbox() {
 }
 
 export async function cleanupOutbox() {
-  console.log('Cleaning up EventOutbox...');
+  Logger.info('Cleaning up EventOutbox...');
 
   // PROCESSED events retained for 7 days
   const sevenDaysAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000);
@@ -130,6 +131,6 @@ export async function cleanupOutbox() {
     }
   }
 
-  console.log(`Outbox cleanup completed. Deleted ${deletedCount} records.`);
+  Logger.info(`Outbox cleanup completed. Deleted ${deletedCount} records.`);
   return { success: true, deleted: deletedCount };
 }

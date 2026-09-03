@@ -1,6 +1,8 @@
-import { prismaAdmin } from '@db/utils/prisma';
+// import { prismaAdmin } from '@db/utils/prisma'; (removed)
 import { exportTenant } from '../export.engine';
 import crypto from 'crypto';
+import { executeAsSystem, SystemOperation } from '@db/utils/prisma-system';
+import { Logger } from '@/lib/logger/logger';
 
 export class BackupSchedulerService {
   /**
@@ -9,9 +11,9 @@ export class BackupSchedulerService {
   async triggerBackupCycle(): Promise<void> {
     await this.recoverStaleJobs();
 
-    const tenants = await prismaAdmin.tenant.findMany({
+    const tenants = await executeAsSystem(SystemOperation.PLATFORM_CRON, async (tx) => tx.tenant.findMany({
       where: { status: 'ACTIVE' }
-    });
+    }));
 
     for (const tenant of tenants) {
       await this.triggerTenantBackup(tenant.id, tenant.ownerId || 'SYSTEM');
@@ -26,7 +28,7 @@ export class BackupSchedulerService {
       // Idempotency constraint using raw SQL to prevent concurrency race conditions.
       // If Worker A and B hit this simultaneously, only one will insert successfully.
       const newJobId = crypto.randomUUID();
-      const insertResult: any[] = await prismaAdmin.$transaction(async (tx) => {
+      const insertResult: any[] = await executeAsSystem(SystemOperation.PLATFORM_CRON, async (tx) => {
         // Obtain an advisory transaction lock based on the tenant ID hash
         await tx.$executeRawUnsafe(`SELECT pg_advisory_xact_lock(hashtext($1))`, tenantId);
         
@@ -64,7 +66,7 @@ export class BackupSchedulerService {
         return { success: false, reason: error.message };
       }
     } catch (e: any) {
-      console.error('Backup trigger failed:', e);
+      Logger.error('Backup trigger failed:', e);
       return { success: false, reason: e.message };
     }
   }
@@ -76,7 +78,7 @@ export class BackupSchedulerService {
     // If a job is IN_PROGRESS for more than 1 hour, assume the worker crashed.
     const oneHourAgo = new Date(Date.now() - 60 * 60 * 1000);
     
-    await prismaAdmin.recoveryJob.updateMany({
+    await executeAsSystem(SystemOperation.PLATFORM_CRON, async (tx) => tx.recoveryJob.updateMany({
       where: {
         status: 'IN_PROGRESS',
         startedAt: { lt: oneHourAgo }
@@ -86,6 +88,6 @@ export class BackupSchedulerService {
         errorMessage: 'Stale job detected (worker crash). Auto-failed by scheduler.',
         completedAt: new Date()
       }
-    });
+    }));
   }
 }

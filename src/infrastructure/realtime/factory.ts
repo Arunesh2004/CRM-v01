@@ -1,5 +1,6 @@
 import { RealtimeProvider } from './interfaces';
 import { DemoRealtimeProvider } from './demo.provider';
+import { PusherProvider } from './pusher.provider';
 
 export class RealtimeFactory {
   static getProvider(): RealtimeProvider {
@@ -11,7 +12,7 @@ export class RealtimeFactory {
       case 'supabase':
         throw new Error('Supabase Realtime not yet implemented');
       case 'pusher':
-        throw new Error('Pusher not yet implemented');
+        return new PusherProvider();
       case 'ably':
         throw new Error('Ably not yet implemented');
       default:

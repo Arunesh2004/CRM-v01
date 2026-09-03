@@ -1,4 +1,5 @@
 import prisma from '@db/utils/prisma';
+import { executeAsSystem, SystemOperation } from '@db/utils/prisma-system';
 import { AIConfig } from '@/lib/config/ai.config';
 import { Logger } from '@/lib/logger/logger';
 import { AIConversationStatus } from '@prisma/client';
@@ -15,14 +16,14 @@ export class ConversationRetentionService {
     cutoffDate.setDate(cutoffDate.getDate() - archiveAfterDays);
     
     // Find candidates bounded by batch size
-    const candidates = await prisma.aIConversation.findMany({
+    const candidates = await executeAsSystem(SystemOperation.PLATFORM_CRON, async (tx) => tx.aIConversation.findMany({
       where: {
         status: AIConversationStatus.ACTIVE,
         updatedAt: { lt: cutoffDate }
       },
       select: { id: true, updatedAt: true },
       take: AIConfig.RETENTION_BATCH_SIZE
-    });
+    }));
 
     if (candidates.length === 0) return 0;
     if (dryRun) return candidates.length;
@@ -30,7 +31,7 @@ export class ConversationRetentionService {
     let archivedCount = 0;
     // Update conditionally
     for (const candidate of candidates) {
-      const updateRes = await prisma.aIConversation.updateMany({
+      const updateRes = await executeAsSystem(SystemOperation.PLATFORM_CRON, async (tx) => tx.aIConversation.updateMany({
         where: {
           id: candidate.id,
           status: AIConversationStatus.ACTIVE,
@@ -40,7 +41,7 @@ export class ConversationRetentionService {
           status: AIConversationStatus.ARCHIVED,
           archivedAt: new Date()
         }
-      });
+      }));
       archivedCount += updateRes.count;
     }
 
@@ -57,29 +58,33 @@ export class ConversationRetentionService {
     const cutoffDate = new Date();
     cutoffDate.setDate(cutoffDate.getDate() - retentionDays);
 
-    const candidates = await prisma.aIConversation.findMany({
+    const candidates = await executeAsSystem(SystemOperation.PLATFORM_CRON, async (tx) => tx.aIConversation.findMany({
       where: {
         status: AIConversationStatus.ARCHIVED,
         archivedAt: { lt: cutoffDate }
       },
       select: { id: true },
       take: AIConfig.RETENTION_BATCH_SIZE
-    });
+    }));
 
     if (candidates.length === 0) return 0;
     if (dryRun) return candidates.length;
 
     let deletedCount = 0;
-    // Bulk delete using conditionally bounded limits if possible, or individually with checks
     for (const candidate of candidates) {
-      const delRes = await prisma.aIConversation.deleteMany({
-        where: {
-          id: candidate.id,
-          status: AIConversationStatus.ARCHIVED,
-          archivedAt: { lt: cutoffDate } // strict recheck
-        }
-      });
-      deletedCount += delRes.count;
+      try {
+        await executeAsSystem(SystemOperation.PLATFORM_CRON, async (tx) => {
+          await tx.aIConversationMessage.deleteMany({
+            where: { conversationId: candidate.id }
+          });
+          await tx.aIConversation.delete({
+            where: { id: candidate.id }
+          });
+        });
+        deletedCount++;
+      } catch (e) {
+        Logger.error('Failed to delete conversation', { id: candidate.id, error: e });
+      }
     }
 
     return deletedCount;

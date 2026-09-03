@@ -5,9 +5,9 @@ import { randomUUID } from 'crypto';
 export class DemoEmailProvider implements EmailProvider {
   async checkHealth(): Promise<ProviderHealth> {
     return {
-      status: 'active',
+      status: 'READY',
       providerName: 'DemoEmailProvider',
-      message: 'Running in local simulation mode'
+      criticality: 'DEGRADED',
     };
   }
 

@@ -1,3 +1,4 @@
+import { withTenant, withTenantTransaction } from '@db/utils/prisma-tenant';
 import prisma from '@db/utils/prisma';
 import { getCurrentUser } from '../auth';
 
@@ -12,7 +13,7 @@ export async function assertTenantOwner(tenantId: string, userId?: string) {
     actingUserId = user.id;
   }
 
-  const tenant = await prisma.tenant.findUnique({
+  const tenant = await withTenant(tenantId).tenant.findUnique({
     where: { id: tenantId }
   });
 

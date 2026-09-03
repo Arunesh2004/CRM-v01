@@ -1,11 +1,13 @@
 "use server";
+import { withServerActionContext } from '@/lib/observability/server-action';
+import { withTenant, withTenantTransaction } from '@db/utils/prisma-tenant';
 
 import { requireAuth } from '@/lib/auth';
 import prisma from '@db/utils/prisma';
 import { revalidatePath } from 'next/cache';
 import { redirect } from 'next/navigation';
 
-export async function completeProfileAction(formData: FormData) {
+async function _completeProfileAction(formData: FormData) {
   const user = await requireAuth();
 
   if (user.onboardingStatus !== 'PENDING') {
@@ -21,7 +23,7 @@ export async function completeProfileAction(formData: FormData) {
     throw new Error('All fields are required.');
   }
 
-  const updatedUser = await prisma.user.update({
+  const updatedUser = await withTenant(user.tenantId).user.update({
     where: { id: user.id },
     data: {
       firstName,
@@ -44,3 +46,5 @@ export async function completeProfileAction(formData: FormData) {
   revalidatePath('/');
   redirect('/dashboard');
 }
+
+export const completeProfileAction = withServerActionContext(_completeProfileAction);

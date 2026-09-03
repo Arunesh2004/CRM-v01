@@ -1,4 +1,4 @@
-import { prismaAdmin } from '@db/utils/prisma';
+import { withTenant } from '@db/utils/prisma-tenant';
 import crypto from 'crypto';
 import { pipeline } from 'stream/promises';
 import zlib from 'zlib';
@@ -9,7 +9,8 @@ import { KeyManagementService } from './security/KeyManagementService';
 const ENCRYPTION_ALGORITHM = 'aes-256-gcm';
 
 export async function exportTenant(tenantId: string, requestorUserId: string, existingJobId?: string) {
-  const tenant = await prismaAdmin.tenant.findUnique({
+  const tenantPrisma = withTenant(tenantId);
+  const tenant = await tenantPrisma.tenant.findUnique({
     where: { id: tenantId }
   });
   if (!tenant) throw new Error('Tenant not found');
@@ -19,12 +20,12 @@ export async function exportTenant(tenantId: string, requestorUserId: string, ex
 
   let job;
   if (existingJobId) {
-    job = await prismaAdmin.recoveryJob.update({
+    job = await tenantPrisma.recoveryJob.update({
       where: { id: existingJobId },
       data: { status: 'IN_PROGRESS', startedAt: new Date() }
     });
   } else {
-    job = await prismaAdmin.recoveryJob.create({
+    job = await tenantPrisma.recoveryJob.create({
       data: {
         tenantId,
         requestedBy: requestorUserId,
@@ -35,7 +36,7 @@ export async function exportTenant(tenantId: string, requestorUserId: string, ex
     });
   }
 
-  await logAudit(tenantId, job.id, 'EXPORT_STARTED', requestorUserId);
+  await logAudit(tenantPrisma, tenantId, job.id, 'EXPORT_STARTED', requestorUserId);
 
   try {
     const jsonStream = new PassThrough();
@@ -85,10 +86,9 @@ export async function exportTenant(tenantId: string, requestorUserId: string, ex
           let isFirstRecord = true;
           let hasMore = true;
           const CHUNK_SIZE = 5000;
-          const model = tableName;
 
           while (hasMore) {
-            const records: any[] = (await (prismaAdmin as any)[model].findMany({
+            const records: any[] = (await prismaModel.findMany({
               where: tableName === 'tenant' ? { id: tenantId } : { tenantId },
               take: CHUNK_SIZE,
               skip: cursor ? 1 : 0,
@@ -111,22 +111,22 @@ export async function exportTenant(tenantId: string, requestorUserId: string, ex
           jsonStream.write(`\n  ]${isLast ? '' : ','}\n`);
         };
 
-        await exportTable('tenant', prismaAdmin.tenant);
-        await exportTable('roles', prismaAdmin.role);
-        await exportTable('users', prismaAdmin.user);
-        await exportTable('customers', prismaAdmin.customer);
-        await exportTable('leads', prismaAdmin.lead);
-        await exportTable('tasks', prismaAdmin.task);
-        await exportTable('chatConversation', prismaAdmin.chatConversation);
-        await exportTable('chatParticipant', prismaAdmin.chatParticipant);
-        await exportTable('chatMessage', prismaAdmin.chatMessage);
-        await exportTable('communicationAttachment', prismaAdmin.communicationAttachment);
-        await exportTable('mailThread', prismaAdmin.mailThread);
-        await exportTable('mailRecipient', prismaAdmin.mailRecipient);
-        await exportTable('mailMessage', prismaAdmin.mailMessage);
-        await exportTable('callLog', prismaAdmin.callLog);
-        await exportTable('incidents', prismaAdmin.incident);
-        await exportTable('auditLogs', prismaAdmin.auditLog, true);
+        await exportTable('tenant', tenantPrisma.tenant);
+        await exportTable('roles', tenantPrisma.role);
+        await exportTable('users', tenantPrisma.user);
+        await exportTable('customers', tenantPrisma.customer);
+        await exportTable('leads', tenantPrisma.lead);
+        await exportTable('tasks', tenantPrisma.task);
+        await exportTable('chatConversation', tenantPrisma.chatConversation);
+        await exportTable('chatParticipant', tenantPrisma.chatParticipant);
+        await exportTable('chatMessage', tenantPrisma.chatMessage);
+        await exportTable('communicationAttachment', tenantPrisma.communicationAttachment);
+        await exportTable('mailThread', tenantPrisma.mailThread);
+        await exportTable('mailRecipient', tenantPrisma.mailRecipient);
+        await exportTable('mailMessage', tenantPrisma.mailMessage);
+        await exportTable('callLog', tenantPrisma.callLog);
+        await exportTable('incidents', tenantPrisma.incident);
+        await exportTable('auditLogs', tenantPrisma.auditLog, true);
 
         jsonStream.write('}\n');
         jsonStream.end();
@@ -142,7 +142,7 @@ export async function exportTenant(tenantId: string, requestorUserId: string, ex
 
     const archiveLocation = `${uploadedUri}?iv=${iv.toString('hex')}&tag=${authTag.toString('hex')}`;
 
-    const snapshot = await prismaAdmin.recoverySnapshot.create({
+    const snapshot = await tenantPrisma.recoverySnapshot.create({
       data: {
         tenantId,
         version: 1,
@@ -160,7 +160,7 @@ export async function exportTenant(tenantId: string, requestorUserId: string, ex
       }
     });
 
-    await prismaAdmin.recoveryJob.update({
+    await tenantPrisma.recoveryJob.update({
       where: { id: job.id },
       data: {
         status: 'COMPLETED',
@@ -171,12 +171,12 @@ export async function exportTenant(tenantId: string, requestorUserId: string, ex
       }
     });
 
-    await logAudit(tenantId, job.id, 'SUCCESS', requestorUserId, { checksum, archiveLocation });
+    await logAudit(tenantPrisma, tenantId, job.id, 'SUCCESS', requestorUserId, { checksum, archiveLocation });
 
     return { jobId: job.id, archiveLocation, checksum };
 
   } catch (error: any) {
-    await prismaAdmin.recoveryJob.update({
+    await tenantPrisma.recoveryJob.update({
       where: { id: job.id },
       data: {
         status: 'FAILED',
@@ -184,13 +184,13 @@ export async function exportTenant(tenantId: string, requestorUserId: string, ex
         errorMessage: error.message
       }
     });
-    await logAudit(tenantId, job.id, 'FAILURE', requestorUserId, { error: error.message });
+    await logAudit(tenantPrisma, tenantId, job.id, 'FAILURE', requestorUserId, { error: error.message });
     throw error;
   }
 }
 
-async function logAudit(tenantId: string, jobId: string, action: string, actorId: string, metadata?: any) {
-  await prismaAdmin.recoveryAuditLog.create({
+async function logAudit(tenantPrisma: any, tenantId: string, jobId: string, action: string, actorId: string, metadata?: any) {
+  await tenantPrisma.recoveryAuditLog.create({
     data: {
       tenantId,
       jobId,

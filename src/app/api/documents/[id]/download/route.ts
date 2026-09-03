@@ -1,10 +1,12 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { withApiContext } from '@/lib/observability/context';
+import { Logger } from '@/lib/logger/logger';
 import { requireTenant, requireAuthIdentity, requirePermissionFast } from '@/lib/auth';
 import prisma from '@db/utils/prisma';
 import { ProviderFactory } from '@/infrastructure/provider.factory';
 import { StorageProvider } from '@/infrastructure/storage/storage.interface';
 
-export async function GET(
+const _orig_GET = async function (
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
@@ -52,10 +54,12 @@ export async function GET(
     return NextResponse.redirect(signedUrl);
 
   } catch (error: any) {
-    console.error('Document download route error:', error);
+    Logger.error('Document download route error:', error);
     if (error.message && error.message.includes('Permission denied')) {
       return new NextResponse('Forbidden', { status: 403 });
     }
     return new NextResponse('Unauthorized or Internal Error', { status: 401 });
   }
 }
+
+export const GET = withApiContext(_orig_GET);

@@ -7,6 +7,7 @@ import {
   getPipelinesAction,
   getDealAnalyticsAction,
   seedDefaultPipelineAction,
+  getAssignableUsersAction,
 } from "@/modules/crm/actions/deal.actions";
 import { requireTenant } from "@/lib/auth";
 import { DealKanbanBoardClientWrapper as DealKanbanBoard } from "./DealKanbanBoardClientWrapper";
@@ -40,6 +41,9 @@ export default async function DealsPage(props: {
   const analyticsRes = await getDealAnalyticsAction();
   const metrics = analyticsRes.success ? analyticsRes.data : null;
 
+  const usersRes = await getAssignableUsersAction();
+  const assignableUsers = usersRes.success && usersRes.data ? usersRes.data : [];
+
   return (
     <div className="flex flex-col gap-6 h-[calc(100vh-6rem)]">
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
@@ -61,7 +65,7 @@ export default async function DealsPage(props: {
               </option>
             ))}
           </select>
-          <DealForm pipelines={pipelines} />
+          <DealForm pipelines={pipelines} assignableUsers={assignableUsers} />
         </div>
       </div>
 

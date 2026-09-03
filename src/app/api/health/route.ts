@@ -1,15 +1,10 @@
 import { NextResponse } from 'next/server';
+import { withApiContext } from '@/lib/observability/context';
 import prisma from '@db/utils/prisma';
 
-export async function GET() {
-  const status = {
+const _orig_GET = async function () {
+  const status: any = {
     status: 'ok',
-    environment: process.env.NODE_ENV,
-    config: {
-      clerkPublishableKey: !!process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY,
-      clerkSecretKey: !!process.env.CLERK_SECRET_KEY,
-      databaseUrl: !!process.env.DATABASE_URL
-    },
     database: 'unknown'
   };
 
@@ -22,7 +17,7 @@ export async function GET() {
     status.status = 'degraded';
   }
 
-  const isConfigured = status.config.clerkPublishableKey && status.config.clerkSecretKey && status.config.databaseUrl;
+  const isConfigured = !!process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY && !!process.env.CLERK_SECRET_KEY && !!process.env.DATABASE_URL;
   if (!isConfigured) {
     status.status = 'misconfigured';
   }
@@ -31,3 +26,5 @@ export async function GET() {
 
   return NextResponse.json(status, { status: httpStatus });
 }
+
+export const GET = withApiContext(_orig_GET);

@@ -10,8 +10,26 @@ export default function GlobalError({
   reset: () => void;
 }) {
   useEffect(() => {
-    // Log the error to an error reporting service in production
+    // Log the error locally
     console.error('Global Error Boundary Caught:', error);
+
+    // Dynamic import to avoid SSR issues with window if it leaks
+    import('@/lib/observability/client-telemetry').then(({ normalizeTelemetryUrl }) => {
+      // Fire-and-forget telemetry dispatch
+      fetch('/api/internal/telemetry/error', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          name: (error.name || 'Error').substring(0, 100),
+          message: (error.message || 'Unknown error').substring(0, 500),
+          digest: error.digest ? error.digest.substring(0, 64) : undefined,
+          stack: error.stack ? error.stack.substring(0, 2000) : undefined,
+          url: normalizeTelemetryUrl(window.location.href),
+        }),
+      }).catch(() => {
+        // Intentionally swallowed so telemetry failure NEVER breaks the error UI
+      });
+    }).catch(() => {});
   }, [error]);
 
   return (

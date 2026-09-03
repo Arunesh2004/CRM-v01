@@ -1,3 +1,4 @@
+import { Logger } from '@/lib/logger/logger';
 import prisma from '@db/utils/prisma';
 import type { User as ClerkUser } from '@clerk/nextjs/server';
 import { executeAsSystem, SystemOperation } from '@db/utils/prisma-system';
@@ -15,7 +16,7 @@ export async function ensureUserProvisioned(clerkUser: ClerkUser | any) {
   }
   
   if (!email) {
-    console.warn(`[Provisioning] Clerk user ${id} has no email. Skipping.`);
+    Logger.warn('[Provisioning] Clerk user has no email', { id });
     return null;
   }
 
@@ -35,55 +36,20 @@ export async function synchronizeClerkIdentity(clerkId: string, emailStr: string
 
   // 2. Reject unknown accounts
   if (!user) {
-    console.warn(`[Provisioning] Unknown Google Account ${email} attempted to login. Denied.`);
+    Logger.warn('[Provisioning] Unknown account login denied', { email: email.replace(/(?<=.).(?=.*@)/g, '*') });
     return null; // Deny entry
   }
 
   // 3. User exists. Check status
   if (user.status === 'INACTIVE') {
-     console.warn(`[Provisioning] Inactive user ${email} attempted to login. Denied.`);
+     Logger.warn('[Provisioning] Inactive user login denied', { email: email.replace(/(?<=.).(?=.*@)/g, '*') });
      return null;
   }
 
-  // 4. If status is INVITED (clerkId is null), link them atomically
+  // 4. If status is INVITED, deny entry. They MUST use the token flow.
   if (user.status === 'INVITED') {
-     const result = await executeAsSystem(SystemOperation.CLERK_PROVISIONING, async (tx) =>
-       tx.user.updateMany({
-         where: {
-           id: user.id,
-           clerkId: { equals: null },
-           status: 'INVITED'
-         },
-         data: {
-           clerkId: clerkId,
-           status: 'ACTIVE'
-         }
-       })
-     );
-     const count = result.count;
-
-     if (count === 1) {
-       console.log(`[Provisioning] Successfully linked clerkId to invited user ${email}`);
-       
-       const { createAuditLog } = await import('../../audit/audit.service');
-       await createAuditLog({
-         tenantId: user.tenantId,
-         actorId: user.id,
-         action: 'EMPLOYEE_ACTIVATED',
-         resource: 'USER',
-         resourceId: user.id
-       });
-
-       return { ...user, clerkId, status: 'ACTIVE' };
-     } else {
-       // Race condition: someone else linked it, or status changed
-       const refreshedUser = await executeAsSystem(SystemOperation.CLERK_PROVISIONING, async (tx) =>
-         tx.user.findUnique({ where: { id: user.id } })
-       );
-       if (!refreshedUser || refreshedUser.status === 'INACTIVE') return null;
-       if (refreshedUser.clerkId === clerkId) return refreshedUser;
-       return null;
-     }
+     Logger.warn('[Provisioning] Unredeemed invited user linking denied', { email: email.replace(/(?<=.).(?=.*@)/g, '*') });
+     return null;
   }
 
   // 5. If status is ACTIVE, verify identity matches
@@ -91,7 +57,7 @@ export async function synchronizeClerkIdentity(clerkId: string, emailStr: string
      if (user.clerkId === clerkId) {
         return user;
      } else {
-        console.warn(`[Provisioning] Identity Reassignment Denied for ${email}. Expected ${user.clerkId}, got ${clerkId}`);
+        Logger.warn(`[Provisioning] Identity Reassignment Denied`, { expected: user.clerkId, got: clerkId });
         return null;
      }
   }

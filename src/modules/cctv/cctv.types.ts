@@ -1,15 +1,18 @@
-import { CameraProtocol, CameraStatus } from '@prisma/client';
+import { CameraProtocol, CameraStatus, CameraAuthMode } from '@prisma/client';
 
 export type CreateCameraInput = {
   name: string;
   locationId: string;
   ipAddress: string;
   protocol: CameraProtocol;
+  authMode: CameraAuthMode;
   model?: string;
   manufacturer?: string;
+  rtspUsername?: string;
+  rtspPassword?: string;
 };
 
-export type UpdateCameraInput = Partial<CreateCameraInput> & {
+export type UpdateCameraInput = Partial<Omit<CreateCameraInput, 'rtspUsername' | 'rtspPassword'>> & {
   id: string;
   status?: CameraStatus;
 };

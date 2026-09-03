@@ -1,3 +1,4 @@
+import { Logger } from '@/lib/logger/logger';
 import { withTenant } from '../../../../database/utils/prisma-tenant';
 import { SecurityEventService } from '../../../../src/modules/security-events/security-event.service';
 
@@ -90,7 +91,7 @@ export class ContextBuilderService {
         restrictions
       };
     } catch (error) {
-      console.error('Failed to build AI context', error);
+      Logger.error('Failed to build AI context', { error: (error as any).message });
       throw error;
     }
   }

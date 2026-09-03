@@ -1,3 +1,4 @@
+import { NextRequest } from 'next/server';
 import { describe, it, expect, beforeAll, afterAll, vi } from 'vitest';
 import { PrismaClient } from '@prisma/client';
 import { executeAsSystem, SystemOperation } from '@db/utils/prisma-system';
@@ -44,7 +45,7 @@ describe('Phase 11: Async Infrastructure & Scalability Security', () => {
     const secret = process.env.WEBHOOK_SECRET || 'default_dev_secret';
     
     it('should reject missing webhook signature', async () => {
-      const req = new Request(`http://localhost/api/webhooks/ingest?tenantId=${tenantId}`, {
+      const req = new NextRequest(`http://localhost/api/webhooks/ingest?tenantId=${tenantId}`, {
         method: 'POST',
         body: JSON.stringify({ id: crypto.randomUUID(), type: 'test' })
       });
@@ -56,7 +57,7 @@ describe('Phase 11: Async Infrastructure & Scalability Security', () => {
 
     it('should reject invalid webhook signature and log SecurityEvent', async () => {
       const payload = { id: crypto.randomUUID(), type: 'test' };
-      const req = new Request(`http://localhost/api/webhooks/ingest?tenantId=${tenantId}`, {
+      const req = new NextRequest(`http://localhost/api/webhooks/ingest?tenantId=${tenantId}`, {
         method: 'POST',
         headers: { 'x-webhook-signature': 'invalid_signature' },
         body: JSON.stringify(payload)
@@ -76,7 +77,7 @@ describe('Phase 11: Async Infrastructure & Scalability Security', () => {
       const rawBody = JSON.stringify(payload);
       const signature = crypto.createHmac('sha256', secret).update(rawBody).digest('hex');
 
-      const req1 = new Request(`http://localhost/api/webhooks/ingest?tenantId=${tenantId}`, {
+      const req1 = new NextRequest(`http://localhost/api/webhooks/ingest?tenantId=${tenantId}`, {
         method: 'POST',
         headers: { 'x-webhook-signature': signature },
         body: rawBody
@@ -84,7 +85,7 @@ describe('Phase 11: Async Infrastructure & Scalability Security', () => {
       const res1 = await POST(req1);
       expect(res1.status).toBe(202);
 
-      const req2 = new Request(`http://localhost/api/webhooks/ingest?tenantId=${tenantId}`, {
+      const req2 = new NextRequest(`http://localhost/api/webhooks/ingest?tenantId=${tenantId}`, {
         method: 'POST',
         headers: { 'x-webhook-signature': signature },
         body: rawBody

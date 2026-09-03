@@ -1,7 +1,7 @@
 import { requireAuth, requireTenant, requirePermission } from '@/lib/auth';
 import { withTenant, withTenantTransaction } from '@db/utils/prisma-tenant';
 import { CreateTaskInput, UpdateTaskInput } from '../crm.types';
-import { assertRelationOwnership } from '@/lib/security/tenant-guard';
+import { requireRelationOwnership } from '@/lib/auth/relation-auth';
 import { EventBus } from '../../core/events/event-bus';
 import { QueryParams, PaginatedResponse } from '../../core/types';
 import globalPrisma from '@db/utils/prisma';
@@ -11,18 +11,16 @@ export async function createTask(input: CreateTaskInput) {
   const tenantId = await requireTenant();
   await requirePermission('TASK', 'CREATE');
 
-  const relationsToAssert: {model: string, id: string}[] = [];
-  if (input.assignedUserId) relationsToAssert.push({ model: 'user', id: input.assignedUserId });
-  if (input.leadId) relationsToAssert.push({ model: 'lead', id: input.leadId });
-  if (input.customerId) relationsToAssert.push({ model: 'customer', id: input.customerId });
-
-  if (relationsToAssert.length > 0) {
-    await assertRelationOwnership(relationsToAssert, tenantId);
-  }
-
   const prisma = withTenant(tenantId);
   return await globalPrisma.$transaction(async (baseTx: any) => {
     const tx = await withTenantTransaction(baseTx, tenantId);
+
+    await requireRelationOwnership(tx, tenantId, {
+      user: input.assignedUserId,
+      lead: input.leadId,
+      customer: input.customerId,
+    });
+
     const task = await tx.task.create({
       data: {
         title: input.title,

@@ -1,4 +1,5 @@
-import { prismaAdmin } from '../../../database/utils/prisma';
+import { executeAsSystem, SystemOperation } from '@db/utils/prisma-system';
+import { withTenant } from '@db/utils/prisma-tenant';
 import crypto from 'crypto';
 import zlib from 'zlib';
 import { PassThrough } from 'stream';
@@ -23,7 +24,8 @@ export async function requestRestore(archiveLocation: string, checksum: string, 
   }
 
   // 2. Fetch RecoverySnapshot to validate source of truth
-  const snapshot = await prismaAdmin.recoverySnapshot.findFirst({
+  const tenantPrisma = withTenant(sourceTenantId);
+  const snapshot = await tenantPrisma.recoverySnapshot.findFirst({
     where: { tenantId: sourceTenantId, checksum }
   });
 
@@ -32,7 +34,7 @@ export async function requestRestore(archiveLocation: string, checksum: string, 
   }
 
   // 3. Verify requester authority
-  const tenant = await prismaAdmin.tenant.findUnique({
+  const tenant = await tenantPrisma.tenant.findUnique({
     where: { id: sourceTenantId }
   });
 
@@ -63,7 +65,7 @@ export async function requestRestore(archiveLocation: string, checksum: string, 
   }
 
   // 5. Create a REQUESTED job
-  return await prismaAdmin.recoveryJob.create({
+  return await tenantPrisma.recoveryJob.create({
     data: {
       tenantId: sourceTenantId,
       requestedBy: requestorUserId,
@@ -78,32 +80,32 @@ export async function requestRestore(archiveLocation: string, checksum: string, 
 }
 
 export async function approveRestore(jobId: string) {
-  await prismaAdmin.recoveryJob.update({
+  await executeAsSystem(SystemOperation.DISASTER_RECOVERY, async (tx) => tx.recoveryJob.update({
     where: { id: jobId },
     data: { status: 'APPROVED' }
-  });
+  }));
 }
 
 export async function executeRestore(jobId: string) {
-  const job = await prismaAdmin.recoveryJob.findUnique({ where: { id: jobId } });
+  const job = await executeAsSystem(SystemOperation.DISASTER_RECOVERY, async (tx) => tx.recoveryJob.findUnique({ where: { id: jobId } }));
   if (!job) throw new Error('Job not found');
   if (job.status !== 'APPROVED' && job.mode !== 'DRY_RUN') {
     throw new Error('Restore job must be APPROVED before execution (unless DRY_RUN).');
   }
 
-  await prismaAdmin.recoveryJob.update({
+  await executeAsSystem(SystemOperation.DISASTER_RECOVERY, async (tx) => tx.recoveryJob.update({
     where: { id: jobId },
     data: { status: 'VALIDATING' }
-  });
+  }));
 
   try {
     const result = await processRestore(job);
     return result;
   } catch (error: any) {
-    await prismaAdmin.recoveryJob.update({
+    await executeAsSystem(SystemOperation.DISASTER_RECOVERY, async (tx) => tx.recoveryJob.update({
       where: { id: jobId },
       data: { status: 'FAILED', completedAt: new Date(), errorMessage: error.message }
-    });
+    }));
     throw error;
   }
 }
@@ -135,10 +137,10 @@ async function processRestore(job: any) {
   }
 
   const storage = getStorageProvider();
-  const snapshot = await prismaAdmin.recoverySnapshot.findFirst({
+  const snapshot = await executeAsSystem(SystemOperation.DISASTER_RECOVERY, async (tx) => tx.recoverySnapshot.findFirst({
     where: { tenantId: tenantIdToDownload, checksum: job.checksum },
     orderBy: { createdAt: 'desc' }
-  });
+  }));
 
   if (!snapshot) {
     throw new Error('Checksum validation failed: No matching snapshot found in database');
@@ -163,10 +165,10 @@ async function processRestore(job: any) {
 
   let decryptedContent = '';
   
-  await prismaAdmin.recoveryJob.update({
+  await executeAsSystem(SystemOperation.DISASTER_RECOVERY, async (tx) => tx.recoveryJob.update({
     where: { id: jobId },
     data: { status: 'IN_PROGRESS' }
-  });
+  }));
 
   const sourceStream = await storage.download(tenantIdToDownload, objectKey);
   
@@ -187,9 +189,9 @@ async function processRestore(job: any) {
           const payload = JSON.parse(decryptedContent);
           const originalTenantId = payload.metadata.tenantId;
 
-          const snapshot = await prismaAdmin.recoverySnapshot.findFirst({
+          const snapshot = await executeAsSystem(SystemOperation.DISASTER_RECOVERY, async (tx) => tx.recoverySnapshot.findFirst({
             where: { checksum: calculatedChecksum }
-          });
+          }));
       
           if (!snapshot) {
             throw new Error('Checksum validation failed: No matching snapshot found in database');
@@ -199,9 +201,9 @@ async function processRestore(job: any) {
             throw new Error('Incompatible backup version.');
           }
 
-          const originalTenant = await prismaAdmin.tenant.findUnique({
+          const originalTenant = await executeAsSystem(SystemOperation.DISASTER_RECOVERY, async (tx) => tx.tenant.findUnique({
             where: { id: originalTenantId }
-          });
+          }));
       
           const payloadOwnerId = payload.tenant && payload.tenant.length > 0 ? payload.tenant[0].ownerId : null;
           if (payloadOwnerId !== requestorUserId) {
@@ -209,24 +211,24 @@ async function processRestore(job: any) {
           }
       
           let targetTenantId = originalTenantId;
-          let newTenantId = crypto.randomUUID();
+          const newTenantId = crypto.randomUUID();
           
           if (mode === 'CLONE') {
             targetTenantId = newTenantId;
           }
       
           if (mode === 'DRY_RUN') {
-            await prismaAdmin.recoveryJob.update({
+            await executeAsSystem(SystemOperation.DISASTER_RECOVERY, async (tx) => tx.recoveryJob.update({
               where: { id: jobId },
               data: { status: 'COMPLETED', completedAt: new Date(), tenantId: targetTenantId }
-            });
+            }));
             return resolve({ success: true, mode: 'DRY_RUN', validation: 'PASS' });
           }
       
-          await prismaAdmin.recoveryJob.update({
+          await executeAsSystem(SystemOperation.DISASTER_RECOVERY, async (tx) => tx.recoveryJob.update({
             where: { id: jobId },
             data: { tenantId: targetTenantId }
-          });
+          }));
       
           const mapTenantId = (data: any[]) => {
             if (mode !== 'CLONE') return data;
@@ -237,7 +239,7 @@ async function processRestore(job: any) {
             });
           };
       
-          await prismaAdmin.$transaction(async (tx) => {
+          await executeAsSystem(SystemOperation.DISASTER_RECOVERY, async (tx) => {
             const insert = async (model: any, data: any[]) => {
               if (!data || data.length === 0) return;
               await model.createMany({ data: mapTenantId(data), skipDuplicates: true });
@@ -269,12 +271,12 @@ async function processRestore(job: any) {
             await insert(tx.callLog, payload.callLog);
             await insert(tx.incident, payload.incidents);
             // Ignore audit logs from backup to avoid overwriting immutable triggers
-          }, { maxWait: 10000, timeout: 300000 });
+          }, { maxWait: 10000, timeout: 300000 } as any);
       
-          await prismaAdmin.recoveryJob.update({
+          await executeAsSystem(SystemOperation.DISASTER_RECOVERY, async (tx) => tx.recoveryJob.update({
             where: { id: jobId },
             data: { status: 'COMPLETED', completedAt: new Date(), checksum: calculatedChecksum }
-          });
+          }));
 
           resolve({ success: true, mode, targetTenantId });
         } catch(e) {

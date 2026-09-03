@@ -22,7 +22,7 @@ describe('PHASE 13.1A: Twilio Status Webhook Security Remediation', () => {
   const SECRET = 'test_secret_123';
   let victimTenantId: string;
   let attackerTenantId: string;
-  let callSid: string = 'CA_test_call_sid_123';
+  const callSid: string = 'CA_test_call_sid_123';
   let callLogId: string;
 
   beforeAll(async () => {

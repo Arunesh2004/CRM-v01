@@ -1,4 +1,5 @@
 'use server';
+import { withServerActionContext } from '@/lib/observability/server-action';
 import { sanitizeClientError } from '@/lib/errors/client-safe-error';
 
 
@@ -7,8 +8,9 @@ import { withTenant } from '../../../database/utils/prisma-tenant';
 import { IntegrationProvider } from '@prisma/client';
 import { revalidatePath } from 'next/cache';
 import { ProviderConfigCache } from '@/infrastructure/cache/provider.cache';
+import { Logger } from '@/lib/logger/logger';
 
-export async function getTenantIntegrationsAction() {
+async function _getTenantIntegrationsAction() {
   try {
     const tenantId = await requireTenant();
     await requirePermission('SYSTEM', 'READ'); // Assuming READ is for viewing settings
@@ -37,7 +39,7 @@ export async function getTenantIntegrationsAction() {
   }
 }
 
-export async function testIntegrationConnectionAction(providerType: IntegrationProvider) {
+async function _testIntegrationConnectionAction(providerType: IntegrationProvider) {
   try {
     const tenantId = await requireTenant();
     await requirePermission('SYSTEM', 'UPDATE');
@@ -71,7 +73,7 @@ export async function testIntegrationConnectionAction(providerType: IntegrationP
     try {
       ProviderConfigCache.invalidate(`tenant:${tenantId}:provider:${providerType}`);
     } catch (err) {
-      console.warn('Failed to invalidate provider cache:', err);
+      Logger.warn('Failed to invalidate provider cache:', err);
     }
 
     revalidatePath('/settings/integrations');
@@ -81,7 +83,7 @@ export async function testIntegrationConnectionAction(providerType: IntegrationP
   }
 }
 
-export async function updateIntegrationCredentialsAction(providerType: IntegrationProvider, credentialsStr: string) {
+async function _updateIntegrationCredentialsAction(providerType: IntegrationProvider, credentialsStr: string) {
   try {
     const tenantId = await requireTenant();
     await requirePermission('SYSTEM', 'UPDATE');
@@ -125,7 +127,7 @@ export async function updateIntegrationCredentialsAction(providerType: Integrati
     try {
       ProviderConfigCache.invalidate(`tenant:${tenantId}:provider:${providerType}`);
     } catch (err) {
-      console.warn('Failed to invalidate provider cache:', err);
+      Logger.warn('Failed to invalidate provider cache:', err);
     }
 
     revalidatePath('/settings/integrations');
@@ -135,7 +137,7 @@ export async function updateIntegrationCredentialsAction(providerType: Integrati
   }
 }
 
-export async function deleteIntegrationAction(providerType: IntegrationProvider) {
+async function _deleteIntegrationAction(providerType: IntegrationProvider) {
   try {
     const tenantId = await requireTenant();
     await requirePermission('SYSTEM', 'UPDATE');
@@ -163,7 +165,7 @@ export async function deleteIntegrationAction(providerType: IntegrationProvider)
     try {
       ProviderConfigCache.invalidate(`tenant:${tenantId}:provider:${providerType}`);
     } catch (err) {
-      console.warn('Failed to invalidate provider cache:', err);
+      Logger.warn('Failed to invalidate provider cache:', err);
     }
 
     revalidatePath('/settings/integrations');
@@ -172,3 +174,11 @@ export async function deleteIntegrationAction(providerType: IntegrationProvider)
     return { success: false, error: sanitizeClientError(error) };
   }
 }
+
+export const getTenantIntegrationsAction = withServerActionContext(_getTenantIntegrationsAction);
+
+export const testIntegrationConnectionAction = withServerActionContext(_testIntegrationConnectionAction);
+
+export const updateIntegrationCredentialsAction = withServerActionContext(_updateIntegrationCredentialsAction);
+
+export const deleteIntegrationAction = withServerActionContext(_deleteIntegrationAction);

@@ -1,9 +1,10 @@
 'use server';
+import { withServerActionContext } from '@/lib/observability/server-action';
 
 import { inviteEmployee, disableEmployee, updateEmployeeRole, reassignDepartment, updateProfile } from '@/modules/users/user.service';
 import { revalidatePath } from 'next/cache';
 
-export async function inviteEmployeeAction(formData: FormData) {
+async function _inviteEmployeeAction(formData: FormData) {
   try {
     const email = formData.get('email') as string;
     const roleName = formData.get('roleName') as string || 'MEMBER';
@@ -18,8 +19,9 @@ export async function inviteEmployeeAction(formData: FormData) {
     return { error: error.message || 'Failed to invite employee' };
   }
 }
+export const inviteEmployeeAction = withServerActionContext(_inviteEmployeeAction);
 
-export async function disableEmployeeAction(userId: string) {
+async function _disableEmployeeAction(userId: string) {
   try {
     await disableEmployee(userId);
     revalidatePath('/employees');
@@ -28,8 +30,9 @@ export async function disableEmployeeAction(userId: string) {
     return { error: error.message || 'Failed to disable employee' };
   }
 }
+export const disableEmployeeAction = withServerActionContext(_disableEmployeeAction);
 
-export async function updateEmployeeRoleAction(userId: string, formData: FormData) {
+async function _updateEmployeeRoleAction(userId: string, formData: FormData) {
   try {
     const roleName = formData.get('roleName') as string;
     if (!roleName) throw new Error("Role is required");
@@ -41,8 +44,9 @@ export async function updateEmployeeRoleAction(userId: string, formData: FormDat
     return { error: error.message || 'Failed to update role' };
   }
 }
+export const updateEmployeeRoleAction = withServerActionContext(_updateEmployeeRoleAction);
 
-export async function reassignDepartmentAction(userId: string, formData: FormData) {
+async function _reassignDepartmentAction(userId: string, formData: FormData) {
   try {
     const departmentId = formData.get('departmentId') as string;
     if (!departmentId) throw new Error("Department is required");
@@ -54,8 +58,9 @@ export async function reassignDepartmentAction(userId: string, formData: FormDat
     return { error: error.message || 'Failed to reassign department' };
   }
 }
+export const reassignDepartmentAction = withServerActionContext(_reassignDepartmentAction);
 
-export async function updateProfileAction(userId: string, formData: FormData) {
+async function _updateProfileAction(userId: string, formData: FormData) {
   try {
     const data = {
       firstName: formData.get('firstName') as string | undefined,
@@ -78,3 +83,4 @@ export async function updateProfileAction(userId: string, formData: FormData) {
     return { error: error.message || 'Failed to update profile' };
   }
 }
+export const updateProfileAction = withServerActionContext(_updateProfileAction);

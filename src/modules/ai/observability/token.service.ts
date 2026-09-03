@@ -1,3 +1,5 @@
+import { Logger } from '@/lib/logger/logger';
+import { withTenant, withTenantTransaction } from '@db/utils/prisma-tenant';
 import prisma from '../../../../database/utils/prisma';
 import { TokenUsage } from '../providers/ai-provider.interface';
 
@@ -19,7 +21,7 @@ export class AIObservabilityService {
       // e.g., $0.0015 per 1K input, $0.002 per 1K output
       const cost = (usage.inputTokens / 1000) * 0.0015 + (usage.outputTokens / 1000) * 0.002;
 
-      await prisma.aITokenUsage.create({
+      await withTenant(tenantId).aITokenUsage.create({
         data: {
           tenantId,
           userId,
@@ -33,7 +35,7 @@ export class AIObservabilityService {
         }
       });
     } catch (error) {
-      console.error('Failed to track AI token usage', error);
+      Logger.error('Failed to track AI token usage', { error: (error as any).message });
       // We don't throw here to avoid failing the primary business logic just because observability failed
     }
   }

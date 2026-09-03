@@ -2,19 +2,17 @@ import { Suspense } from 'react';
 import { notFound } from 'next/navigation';
 import { getCamerasAction } from '@/modules/cctv/actions/camera.actions';
 import { getCameraRecordingsAction } from '@/modules/cctv/actions/recording.actions';
-import { generateStreamTokenAction as streamAction } from '@/modules/cctv/actions/stream.actions';
 import { getAIEventsAction } from '@/modules/ai-events/actions/ai-event.actions';
 import { Video, ShieldAlert, AlertCircle, PlayCircle, Clock } from 'lucide-react';
 import Link from 'next/link';
 import { ArrowLeft } from 'lucide-react';
-import { MockVideoPlayer } from './_components/mock-video-player';
+import { CameraStreamContainer } from './_components/camera-stream-container';
 import { RecordingTimeline } from './_components/recording-timeline';
 
 export default async function CameraDetailPage({ params }: { params: { id: string } }) {
   // We can fetch data concurrently
-  const [camerasResult, streamResult, eventsResult, recordingsResult] = await Promise.all([
+  const [camerasResult, eventsResult, recordingsResult] = await Promise.all([
     getCamerasAction(), // In reality we should have getCameraByIdAction exposed, for now filter locally if missing
-    streamAction(params.id),
     getAIEventsAction({ cameraId: params.id, limit: 10 }),
     getCameraRecordingsAction(params.id, 5)
   ]);
@@ -22,7 +20,6 @@ export default async function CameraDetailPage({ params }: { params: { id: strin
   const camera = (camerasResult.data || []).find((c: any) => c.id === params.id);
   if (!camera) return notFound();
 
-  const streamInfo = streamResult.success ? streamResult.data : null;
   const events = eventsResult.success ? (eventsResult.data?.data || []) : [];
   const recordings = recordingsResult.success ? (recordingsResult.data?.data || []) : [];
 
@@ -53,15 +50,13 @@ export default async function CameraDetailPage({ params }: { params: { id: strin
         
         {/* Live Stream View */}
         <div className="lg:col-span-2 space-y-4">
-          <div className="glass-panel rounded-xl overflow-hidden shadow-2xl relative aspect-video bg-black flex items-center justify-center">
-            {camera.status === 'ONLINE' && streamInfo ? (
-              <MockVideoPlayer streamUrl={streamInfo.streamUrl} expiresAt={streamInfo.expiresAt} />
-            ) : (
-              <div className="text-center">
-                <AlertCircle className="w-12 h-12 text-rose-400 mx-auto mb-2" />
-                <p className="text-[#8891B0]">Camera is offline or stream is inaccessible.</p>
-              </div>
-            )}
+          <div className="h-full relative">
+            <CameraStreamContainer 
+              cameraId={camera.id}
+              status={camera.status}
+              authMode={camera.authMode}
+              hasCredentials={camera.hasCredentials}
+            />
           </div>
           
           <RecordingTimeline recordings={recordings} />

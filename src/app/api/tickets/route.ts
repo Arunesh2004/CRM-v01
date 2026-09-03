@@ -1,10 +1,11 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { withApiContext } from '@/lib/observability/context';
 import { requireAuth, requireTenant, requirePermissionFast } from '@/lib/auth';
 import prisma from '@db/utils/prisma';
 import { TicketService } from '@/modules/support/ticket.service';
 import { Logger } from '@/lib/logger/logger';
 
-export async function GET(req: NextRequest) {
+const _orig_GET = async function (req: NextRequest) {
   try {
     const { id: userId } = await requireAuth();
     const tenantId = await requireTenant();
@@ -19,3 +20,5 @@ export async function GET(req: NextRequest) {
     return NextResponse.json({ error: 'Internal Server Error' }, { status: 500 });
   }
 }
+
+export const GET = withApiContext(_orig_GET);

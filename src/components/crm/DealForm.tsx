@@ -7,7 +7,7 @@ import { toast } from 'sonner';
 import { Button } from '../ui/button';
 import { Loader2, X } from 'lucide-react';
 
-export function DealForm({ pipelines }: { pipelines: any[] }) {
+export function DealForm({ pipelines, assignableUsers = [] }: { pipelines: any[], assignableUsers?: any[] }) {
   const [isOpen, setIsOpen] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState('');
@@ -28,6 +28,7 @@ export function DealForm({ pipelines }: { pipelines: any[] }) {
       value: parseFloat(formData.get('value') as string) || 0,
       pipelineId: selectedPipeline,
       stageId: formData.get('stageId') as string,
+      assignedUserId: formData.get('assignedUserId') as string,
       description: formData.get('description') as string,
     };
 
@@ -165,6 +166,28 @@ export function DealForm({ pipelines }: { pipelines: any[] }) {
                     ))}
                   </select>
                 </div>
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-[#8891B0] mb-1.5">Assignee <span className="text-rose-400">*</span></label>
+                <select 
+                  required
+                  name="assignedUserId"
+                  className="w-full text-sm transition-all focus:ring-2 focus:ring-[#7C5CFC] focus:border-transparent text-white"
+                  style={{
+                    background: 'rgba(20,27,51,.55)',
+                    border: '1px solid rgba(255,255,255,.08)',
+                    borderRadius: '.7rem',
+                    padding: '.6rem 1rem',
+                  }}
+                >
+                  <option value="" disabled selected>Select assignee</option>
+                  {assignableUsers.map((user: any) => (
+                    <option key={user.id} value={user.id}>
+                      {user.email}
+                    </option>
+                  ))}
+                </select>
               </div>
 
               <div>

@@ -7,13 +7,7 @@ import { Search, Loader2 } from "lucide-react";
 import { searchAction } from "@/modules/search/actions/search.actions";
 import { useDebounce } from "use-debounce";
 
-type SearchResult = {
-  id: string;
-  type: "CUSTOMER" | "LEAD" | "TASK" | "EMPLOYEE";
-  title: string;
-  subtitle: string;
-  url: string;
-};
+import { SearchResult } from "@/modules/search/search.service";
 
 export function CommandPaletteCore({
   open,

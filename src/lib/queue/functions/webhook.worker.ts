@@ -10,7 +10,17 @@ export const webhookWorker = inngest.createFunction(
     concurrency: {
       limit: 10,
       key: 'event.data.tenantId'
-    }
+    },
+    onFailure: async ({ event, error }) => {
+      const { getFailureEventIdSafe, sendToDeadLetterQueue } = await import('../worker');
+      const safeEvent = event as { data: { event: { data: any, attemptCount?: number } } };
+      const originalEvent = safeEvent.data.event;
+      const envelope = originalEvent.data;
+      if (envelope && envelope.tenantId) {
+        const eventId = getFailureEventIdSafe(event);
+        await sendToDeadLetterQueue(envelope, new Error(error.message), originalEvent.attemptCount ?? 1, eventId);
+      }
+    },
   },
   async ({ event, step }: { event: { data: SecureJobEnvelope<{ webhookEventId: string }> }, step: any }) => {
     return await step.run('process-webhook', async () => {

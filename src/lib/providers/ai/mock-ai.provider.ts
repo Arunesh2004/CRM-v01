@@ -9,47 +9,84 @@ export class MockAIProvider implements AIProvider {
     requestId?: string,
     history?: {role: 'user'|'assistant', content: string}[]
   ): Promise<AIResponse> {
-    Logger.info(`[MOCK AI] Generation requested`, { tools: tools.length });
+    Logger.info(`[MOCK AI] Generation requested`, { tools: tools.length, prompt });
     const p = prompt.toLowerCase();
 
-    // Very naive NLP for demo purposes
-    let executedData = null;
-    let contextName = '';
     const toolsRequested: string[] = [];
     const toolsExecuted: string[] = [];
+    let executedData = null;
+    let text = "Demo AI Copilot is active. I can help search CRM records, retrieve customer details, or update leads.";
 
-    if (p.includes('incident') || p.includes('security')) {
-      const tool = tools.find(t => t.name === 'getIncidentSummary');
-      if (tool) {
-        toolsRequested.push('getIncidentSummary');
-        executedData = await tool.execute({});
-        toolsExecuted.push('getIncidentSummary');
-        contextName = 'security';
+    try {
+      if (p.includes('search') || p.includes('find') || p.includes('look up')) {
+        const tool = tools.find(t => t.name === 'search_crm');
+        if (tool) {
+          // Naive extraction: "search for Acme" -> "Acme"
+          let query = prompt.replace(/(search for|search|find|look up) /ig, '').trim();
+          if (!query) query = 'test';
+
+          toolsRequested.push('search_crm');
+          executedData = await tool.execute({ query });
+          toolsExecuted.push('search_crm');
+          
+          text = `I found ${executedData?.length || 0} matching CRM records for "${query}".`;
+        }
+      } else if (p.includes('show customer') || p.includes('get customer') || p.includes('customer details')) {
+        const tool = tools.find(t => t.name === 'get_customer');
+        if (tool) {
+          // Naive extraction: "show customer 123" -> "123"
+          const customerId = prompt.replace(/(show customer|get customer|customer details)/i, '').trim();
+          if (!customerId) throw new Error("Please provide a valid customer ID.");
+
+          toolsRequested.push('get_customer');
+          executedData = await tool.execute({ customerId });
+          toolsExecuted.push('get_customer');
+          
+          text = `Here are the details for customer: ${executedData?.name || customerId}.`;
+        }
+      } else if (p.includes('update lead') || p.includes('move lead') || p.includes('change lead status')) {
+        const tool = tools.find(t => t.name === 'update_lead');
+        if (tool) {
+          // Naive extraction: "move lead XYZ to QUALIFIED"
+          const tokens = prompt.split(' ');
+          const leadIdIndex = tokens.findIndex(t => t.toLowerCase() === 'lead') + 1;
+          const toIndex = tokens.findIndex(t => t.toLowerCase() === 'to');
+          
+          if (leadIdIndex > 0 && leadIdIndex < tokens.length) {
+             const leadId = tokens[leadIdIndex];
+             let status = '';
+             
+             if (toIndex > leadIdIndex && toIndex + 1 < tokens.length) {
+               status = tokens[toIndex + 1].toUpperCase();
+             } else {
+               // Just pick the last word if 'to' is missing
+               status = tokens[tokens.length - 1].toUpperCase();
+             }
+
+             const validStatuses = ['NEW', 'CONTACTED', 'QUALIFIED', 'LOST', 'CONVERTED'];
+             if (!validStatuses.includes(status)) {
+               throw new Error(`Invalid lead status: ${status}. Allowed statuses are: ${validStatuses.join(', ')}.`);
+             }
+
+             toolsRequested.push('update_lead');
+             executedData = await tool.execute({ leadId, status });
+             toolsExecuted.push('update_lead');
+             
+             text = `Successfully updated lead ${leadId} to status ${status}.`;
+          } else {
+             throw new Error("Could not determine lead ID or status from the request.");
+          }
+        }
       }
-    } else if (p.includes('customer') || p.includes('lead')) {
-      const tool = tools.find(t => t.name === 'getCustomerSummary');
-      if (tool) {
-        toolsRequested.push('getCustomerSummary');
-        executedData = await tool.execute({});
-        toolsExecuted.push('getCustomerSummary');
-        contextName = 'crm';
+    } catch (error: any) {
+      Logger.error('[MOCK AI] Tool execution failed', error);
+      // Determine if error is an authorization failure (from AIPermissionService)
+      if (error.message?.includes('403') || error.message?.includes('Forbidden') || error.message?.includes('unauthorized') || error.message?.includes('denied')) {
+        text = "Access denied. You do not have permission to perform this action.";
+      } else {
+        text = error.message || "An error occurred while executing the tool.";
       }
-    } else if (p.includes('camera') || p.includes('video')) {
-      const tool = tools.find(t => t.name === 'getCameraStatus');
-      if (tool) {
-        toolsRequested.push('getCameraStatus');
-        executedData = await tool.execute({});
-        toolsExecuted.push('getCameraStatus');
-        contextName = 'cameras';
-      }
-    } else if (p.includes('communication') || p.includes('email') || p.includes('sms')) {
-      const tool = tools.find(t => t.name === 'getCommunicationSummary');
-      if (tool) {
-        toolsRequested.push('getCommunicationSummary');
-        executedData = await tool.execute({});
-        toolsExecuted.push('getCommunicationSummary');
-        contextName = 'communication';
-      }
+      // If a tool threw an error, it might not have populated executedData, but we might still return the error text
     }
 
     const baseTelemetry = {
@@ -59,27 +96,6 @@ export class MockAIProvider implements AIProvider {
       totalToolCalls: toolsExecuted.length,
       terminationReason: 'COMPLETE' as const,
     };
-
-    if (!executedData) {
-      return {
-        text: "I'm sorry, I couldn't understand which part of your business you're asking about. Try asking about incidents, customers, cameras, or billing.",
-        ...baseTelemetry,
-      };
-    }
-
-    // Format the mock response based on the context
-    let text = "Here is the raw data I found: " + JSON.stringify(executedData);
-    if (contextName === 'security') {
-      text = `You have a total of ${executedData.total} incidents. Currently, ${executedData.open} are open and ${executedData.critical} are critical. ${executedData.resolved} have been resolved.`;
-    } else if (contextName === 'crm') {
-      text = `Your CRM currently tracks ${executedData.customers} customers and ${executedData.leads} active leads, with a conversion rate of ${executedData.conversionRate}%.`;
-    } else if (contextName === 'cameras') {
-      text = `You have ${executedData.total} provisioned cameras. ${executedData.active} are currently active/online, and ${executedData.offline} are offline.`;
-    } else if (contextName === 'communication') {
-      text = `We have dispatched ${executedData.total} communications (${executedData.email} emails, ${executedData.sms} SMS, ${executedData.whatsapp} WhatsApp). The success rate is ${executedData.successRate}%.`;
-    } else if (contextName === 'billing') {
-      text = `You are currently on the ${executedData.planName} plan. Your usage is at ${executedData.usagePercentage}% of your limits.`;
-    }
 
     return { text, ...baseTelemetry };
   }

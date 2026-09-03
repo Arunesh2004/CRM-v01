@@ -10,7 +10,17 @@ export const aiScoringWorker = inngest.createFunction(
     concurrency: {
       limit: 5,
       key: 'event.data.tenantId' // Prevent API limits from being exhausted by a single tenant
-    }
+    },
+    onFailure: async ({ event, error }) => {
+      const { getFailureEventIdSafe, sendToDeadLetterQueue } = await import('../worker');
+      const safeEvent = event as { data: { event: { data: any, attemptCount?: number } } };
+      const originalEvent = safeEvent.data.event;
+      const envelope = originalEvent.data;
+      if (envelope && envelope.tenantId) {
+        const eventId = getFailureEventIdSafe(event);
+        await sendToDeadLetterQueue(envelope, new Error(error.message), originalEvent.attemptCount ?? 1, eventId);
+      }
+    },
   },
   async ({ event, step }: { event: { data: SecureJobEnvelope<{ entityId: string, entityType: 'LEAD' | 'DEAL' }> }, step: any }) => {
     return await step.run('execute-ai-scoring', async () => {

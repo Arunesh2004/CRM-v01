@@ -1,10 +1,11 @@
 'use server'
+import { withServerActionContext } from '@/lib/observability/server-action';
 
 import { sanitizeClientError } from '@/lib/errors/client-safe-error';
 import { requireAuth, requireTenant, requirePermission } from '@/lib/auth';
 import { TicketService } from '../ticket.service';
 
-export async function getTicketsAction() {
+async function _getTicketsAction() {
   try {
     const tenantId = await requireTenant();
     const session = await requireAuth();
@@ -15,7 +16,7 @@ export async function getTicketsAction() {
   }
 }
 
-export async function createTicketAction(payload: any) {
+async function _createTicketAction(payload: any) {
   try {
     const tenantId = await requireTenant();
     const session = await requireAuth();
@@ -33,7 +34,7 @@ export async function createTicketAction(payload: any) {
   }
 }
 
-export async function getTicketByIdAction(ticketId: string) {
+async function _getTicketByIdAction(ticketId: string) {
   try {
     const tenantId = await requireTenant();
     const session = await requireAuth();
@@ -43,3 +44,9 @@ export async function getTicketByIdAction(ticketId: string) {
     return { success: false, error: sanitizeClientError(error) };
   }
 }
+
+export const getTicketsAction = withServerActionContext(_getTicketsAction);
+
+export const createTicketAction = withServerActionContext(_createTicketAction);
+
+export const getTicketByIdAction = withServerActionContext(_getTicketByIdAction);

@@ -1,6 +1,7 @@
 import { KMSClient, GenerateDataKeyCommand, EncryptCommand, DecryptCommand, ListAliasesCommand } from '@aws-sdk/client-kms';
 import { KMSProvider, DataKeyResult } from './KMSProvider';
 import crypto from 'crypto';
+import { Logger } from '@/lib/logger/logger';
 
 export class CloudKMSProvider implements KMSProvider {
   private client: KMSClient;
@@ -69,7 +70,7 @@ export class CloudKMSProvider implements KMSProvider {
   async rotateKey(): Promise<string> {
     // True cloud key rotation is handled by AWS KMS automatically or by updating the Alias target.
     // For this abstraction, we just simulate the rotation logging.
-    console.log(`[CloudKMS] Triggering key rotation audit on alias ${this.aliasName}`);
+    Logger.info(`CloudKMS triggering key rotation audit`, { alias: this.aliasName });
     return this.aliasName;
   }
 

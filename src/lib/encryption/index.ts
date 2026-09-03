@@ -1,4 +1,5 @@
 import * as crypto from 'crypto';
+import { Logger } from '@/lib/logger/logger';
 
 const ALGORITHM = 'aes-256-gcm';
 const IV_LENGTH = 16;
@@ -70,7 +71,7 @@ export class EncryptionService {
 
       return plaintext;
     } catch (error) {
-      console.error('Decryption failed:', error);
+      Logger.error('Decryption failed:', error);
       return '[DECRYPTION_FAILED]';
     }
   }

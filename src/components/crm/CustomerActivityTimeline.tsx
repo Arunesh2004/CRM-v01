@@ -5,6 +5,7 @@ import { Activity, Mail, Phone, PenSquare, Clock, CheckSquare, MessageSquare, Sh
 import { format } from 'date-fns';
 import { UnifiedTimelineItem, UnifiedTimelineType } from '@/modules/crm/crm.types';
 import { Badge } from '../ui/Badge';
+import Link from 'next/link';
 
 export function CustomerActivityTimeline({ activities }: { activities: UnifiedTimelineItem[] }) {
   const [filter, setFilter] = useState<UnifiedTimelineType | 'ALL'>('ALL');
@@ -63,12 +64,14 @@ export function CustomerActivityTimeline({ activities }: { activities: UnifiedTi
         {filteredActivities.length === 0 ? (
            <div className="text-center py-10 text-muted-foreground text-sm">No activities match this filter.</div>
         ) : (
-          filteredActivities.map((activity) => (
-            <div key={activity.id} className="relative pl-8 before:absolute before:left-[15px] before:top-10 before:bottom-[-40px] before:w-px before:bg-border last:before:hidden group">
-              <div className={`absolute left-0 top-1 w-8 h-8 rounded-full flex items-center justify-center ring-4 ${getColorClass(activity.type)} shadow-sm transition-transform group-hover:scale-110`}>
-                {getIcon(activity.type)}
-              </div>
-              <div className="flex flex-col gap-1.5 bg-card border rounded-lg p-4 shadow-sm hover:shadow-md transition-shadow">
+          filteredActivities.map((activity) => {
+            let href = null;
+            if (activity.type === 'EMAIL') href = `/communication/mail/${activity.id}`;
+            else if (activity.type === 'MESSAGE') href = `/communication/chat/${activity.id}`;
+            else if (activity.type === 'TASK') href = `/tasks/${activity.id}`;
+
+            const CardContent = (
+              <div className={`flex flex-col gap-1.5 bg-card border rounded-lg p-4 shadow-sm transition-shadow ${href ? 'hover:shadow-md hover:border-violet-500/50 cursor-pointer' : ''}`}>
                 <div className="flex justify-between items-start gap-4">
                   <h4 className="text-sm font-semibold text-foreground">{activity.title}</h4>
                   <div className="flex items-center gap-1.5 text-xs text-muted-foreground shrink-0 whitespace-nowrap">
@@ -91,8 +94,16 @@ export function CustomerActivityTimeline({ activities }: { activities: UnifiedTi
                   )}
                 </div>
               </div>
+            );
+
+            return (
+            <div key={activity.id} className="relative pl-8 before:absolute before:left-[15px] before:top-10 before:bottom-[-40px] before:w-px before:bg-border last:before:hidden group">
+              <div className={`absolute left-0 top-1 w-8 h-8 rounded-full flex items-center justify-center ring-4 ${getColorClass(activity.type)} shadow-sm transition-transform group-hover:scale-110`}>
+                {getIcon(activity.type)}
+              </div>
+              {href ? <Link href={href} className="block">{CardContent}</Link> : CardContent}
             </div>
-          ))
+          )})
         )}
       </div>
     </div>

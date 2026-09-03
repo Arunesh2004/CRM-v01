@@ -1,3 +1,4 @@
+import { withTenant, withTenantTransaction } from '@db/utils/prisma-tenant';
 import prisma from '@db/utils/prisma';
 import { requireAuth, requireTenant, requirePermission } from '@/lib/auth';
 import { createAuditLog } from '../audit/audit.service';
@@ -7,7 +8,7 @@ export async function getDepartments() {
   const tenantId = await requireTenant();
   
   // Everyone can view departments in the company
-  return await prisma.department.findMany({
+  return await withTenant(tenantId).department.findMany({
     where: { tenantId },
     include: {
       _count: {
@@ -33,7 +34,7 @@ export async function createDepartment(name: string, description?: string) {
     throw new Error('Only TENANT_ADMIN can create departments.');
   }
 
-  const dept = await prisma.department.create({
+  const dept = await withTenant(tenantId).department.create({
     data: {
       name,
       description,
@@ -68,7 +69,7 @@ export async function updateDepartment(departmentId: string, name: string, descr
     throw new Error('Only TENANT_ADMIN can update departments.');
   }
 
-  const dept = await prisma.department.update({
+  const dept = await withTenant(tenantId).department.update({
     where: { id: departmentId, tenantId },
     data: { name, description }
   });

@@ -1,7 +1,7 @@
 import { requireAuth, requireTenant, requirePermission } from '@/lib/auth';
 import { withTenant, withTenantTransaction } from '../../../../database/utils/prisma-tenant';
 import { getCurrentUserContext } from '@/lib/tenant-context';
-import { assertRelationOwnership } from '@/lib/security/tenant-guard';
+import { requireRelationOwnership } from '@/lib/auth/relation-auth';
 import globalPrisma from '@db/utils/prisma';
 
 export interface CreateNotificationInput {
@@ -17,12 +17,12 @@ export async function createNotification(input: CreateNotificationInput) {
   await requirePermission('COMMUNICATION', 'CREATE');
   const user = await getCurrentUserContext();
   
-  await assertRelationOwnership([{ model: 'user', id: input.userId }], tenantId);
-
   const prisma = withTenant(tenantId);
   
   return await globalPrisma.$transaction(async (baseTx: any) => {
     const tx = await withTenantTransaction(baseTx, tenantId);
+
+    await requireRelationOwnership(tx, tenantId, { user: input.userId });
 
     const notification = await tx.notification.create({
       data: {

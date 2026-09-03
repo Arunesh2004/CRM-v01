@@ -11,8 +11,7 @@ async function runTests() {
     DATABASE_URL: 'valid',
     NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY: 'valid',
     CLERK_WEBHOOK_SECRET: 'valid',
-    COMPANY_TENANT_ID: 'valid',
-    INITIAL_ADMIN_EMAIL: 'valid'
+    COMPANY_TENANT_ID: 'valid'
   };
   
   try {
@@ -32,7 +31,6 @@ async function runTests() {
     CLERK_SECRET_KEY: 'valid',
     CLERK_WEBHOOK_SECRET: 'valid',
     COMPANY_TENANT_ID: 'valid',
-    INITIAL_ADMIN_EMAIL: 'valid',
     NEXT_PUBLIC_STRIPE_SECRET_KEY: 'sk_test_123' // Malicious leak
   };
 

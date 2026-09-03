@@ -51,7 +51,17 @@ export const slaEvaluateWorker = inngest.createFunction(
     concurrency: {
       limit: 10,
       key: 'event.data.tenantId' // Prevent one tenant from monopolizing workers
-    }
+    },
+    onFailure: async ({ event, error }) => {
+      const { getFailureEventIdSafe, sendToDeadLetterQueue } = await import('../worker');
+      const safeEvent = event as { data: { event: { data: any, attemptCount?: number } } };
+      const originalEvent = safeEvent.data.event;
+      const envelope = originalEvent.data;
+      if (envelope && envelope.tenantId) {
+        const eventId = getFailureEventIdSafe(event);
+        await sendToDeadLetterQueue(envelope, new Error(error.message), originalEvent.attemptCount ?? 1, eventId);
+      }
+    },
   },
   async ({ event, step }: { event: { data: SecureJobEnvelope<{ ticketId?: string }> }, step: any }) => {
     return await step.run('process-sla-breaches', async () => {

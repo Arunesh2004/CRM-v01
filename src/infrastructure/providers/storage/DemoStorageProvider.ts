@@ -5,9 +5,9 @@ import { Readable } from 'stream';
 export class DemoStorageProvider implements StorageProvider {
   async checkHealth(): Promise<ProviderHealth> {
     return {
-      status: 'active',
+      status: 'READY',
       providerName: 'DemoStorageProvider',
-      message: 'Running in local simulation mode (no persistent blobs)'
+      criticality: 'DEGRADED',
     };
   }
 

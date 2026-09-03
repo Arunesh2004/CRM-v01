@@ -1,4 +1,6 @@
 import pino from 'pino';
+import { redact } from '../observability/redact';
+import { getContext } from '../observability/context';
 
 const isProduction = process.env.NODE_ENV === 'production';
 
@@ -14,21 +16,27 @@ export const logger = pino({
   }),
 });
 
+function injectContext() {
+  const ctx = getContext();
+  if (!ctx) return {};
+  return { tenantId: ctx.tenantId, jobId: ctx.jobId, requestId: ctx.requestId };
+}
+
 export class Logger {
-  static info(msg: string, ...args: any[]) { logger.info({ args }, msg); }
-  static error(msg: string, ...args: any[]) { logger.error({ args }, msg); }
-  static warn(msg: string, ...args: any[]) { logger.warn({ args }, msg); }
-  static debug(msg: string, ...args: any[]) { logger.debug({ args }, msg); }
-  static fatal(msg: string, ...args: any[]) { logger.fatal({ args }, msg); }
+  static info(msg: string, ...args: any[]) { logger.info({ args: redact(args), ...injectContext() }, redact(msg)); }
+  static error(msg: string, ...args: any[]) { logger.error({ args: redact(args), ...injectContext() }, redact(msg)); }
+  static warn(msg: string, ...args: any[]) { logger.warn({ args: redact(args), ...injectContext() }, redact(msg)); }
+  static debug(msg: string, ...args: any[]) { logger.debug({ args: redact(args), ...injectContext() }, redact(msg)); }
+  static fatal(msg: string, ...args: any[]) { logger.fatal({ args: redact(args), ...injectContext() }, redact(msg)); }
   static time(label: string): () => number { 
     const start = Date.now();
     return () => Date.now() - start;
   }
-  info(msg: string, ...args: any[]) { logger.info({ args }, msg); }
-  error(msg: string, ...args: any[]) { logger.error({ args }, msg); }
-  warn(msg: string, ...args: any[]) { logger.warn({ args }, msg); }
-  debug(msg: string, ...args: any[]) { logger.debug({ args }, msg); }
-  fatal(msg: string, ...args: any[]) { logger.fatal({ args }, msg); }
+  info(msg: string, ...args: any[]) { logger.info({ args: redact(args), ...injectContext() }, redact(msg)); }
+  error(msg: string, ...args: any[]) { logger.error({ args: redact(args), ...injectContext() }, redact(msg)); }
+  warn(msg: string, ...args: any[]) { logger.warn({ args: redact(args), ...injectContext() }, redact(msg)); }
+  debug(msg: string, ...args: any[]) { logger.debug({ args: redact(args), ...injectContext() }, redact(msg)); }
+  fatal(msg: string, ...args: any[]) { logger.fatal({ args: redact(args), ...injectContext() }, redact(msg)); }
   time(label: string): () => number {
     const start = Date.now();
     return () => Date.now() - start;

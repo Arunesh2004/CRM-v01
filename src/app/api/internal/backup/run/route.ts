@@ -1,8 +1,10 @@
 import { NextResponse } from 'next/server';
+import { withApiContext } from '@/lib/observability/context';
+import { Logger } from '@/lib/logger/logger';
 import crypto from 'crypto';
 import { BackupSchedulerService } from '@/modules/recovery/scheduler/BackupSchedulerService';
 
-export async function POST(request: Request) {
+const _orig_POST = async function (request: Request) {
   try {
     const signature = request.headers.get('X-Scheduler-Signature');
     const timestampStr = request.headers.get('X-Scheduler-Timestamp');
@@ -43,7 +45,9 @@ export async function POST(request: Request) {
 
     return NextResponse.json({ success: true, message: 'Backup cycle initiated' }, { status: 202 });
   } catch (error: any) {
-    console.error('Backup Trigger API Error:', error);
+    Logger.error('Backup Trigger API Error:', error);
     return NextResponse.json({ error: 'Internal Server Error' }, { status: 500 });
   }
 }
+
+export const POST = withApiContext(_orig_POST);

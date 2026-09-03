@@ -41,7 +41,7 @@ export async function POST(req: Request) {
     }
 
     const tenantId = callLog.tenantId;
-    console.log(`[Twilio Webhook] Received status update for Call ${callSid} (Tenant: ${tenantId}): ${callStatus}`);
+    logger.info('Twilio Webhook: Received status update', { callSid, tenantId, callStatus });
 
     // Entering tenant context to securely update the CallLog
     const prisma = withTenant(tenantId);

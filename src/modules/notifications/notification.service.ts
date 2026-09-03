@@ -1,6 +1,7 @@
 import prisma from '@db/utils/prisma';
 import { NotificationType } from '@prisma/client';
 import { NotificationProviderFactory } from '@/infrastructure/notification/notification.factory';
+import { Logger } from '@/lib/logger/logger';
 
 export interface CreateNotificationParams {
   tenantId: string;
@@ -37,7 +38,7 @@ export class NotificationService {
       type: params.type,
       actionUrl: params.actionUrl
     }).catch(err => {
-      console.error(`[NotificationService] Failed to push realtime notification:`, err);
+      Logger.error('Failed to push realtime notification', err instanceof Error ? err : new Error(String(err)));
     });
 
     return notification;

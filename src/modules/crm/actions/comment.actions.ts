@@ -1,10 +1,11 @@
 'use server';
+import { withServerActionContext } from '@/lib/observability/server-action';
 import { sanitizeClientError } from '@/lib/errors/client-safe-error';
 
 import { createCRMComment, getCRMComments, updateCRMComment, deleteCRMComment } from '../../core/comments/comment.service';
 import { EntityType } from '@prisma/client';
 
-export async function createCRMCommentAction(
+async function _createCRMCommentAction(
   entityType: EntityType,
   entityId: string,
   content: string,
@@ -18,7 +19,7 @@ export async function createCRMCommentAction(
   }
 }
 
-export async function getCRMCommentsAction(
+async function _getCRMCommentsAction(
   entityType: EntityType,
   entityId: string,
   cursor?: string,
@@ -32,7 +33,7 @@ export async function getCRMCommentsAction(
   }
 }
 
-export async function updateCRMCommentAction(commentId: string, content: string) {
+async function _updateCRMCommentAction(commentId: string, content: string) {
   try {
     const result = await updateCRMComment(commentId, content);
     return { success: true, data: result };
@@ -41,7 +42,7 @@ export async function updateCRMCommentAction(commentId: string, content: string)
   }
 }
 
-export async function deleteCRMCommentAction(commentId: string) {
+async function _deleteCRMCommentAction(commentId: string) {
   try {
     const result = await deleteCRMComment(commentId);
     return { success: true, data: result };
@@ -49,3 +50,11 @@ export async function deleteCRMCommentAction(commentId: string) {
     return { success: false, error: sanitizeClientError(error) };
   }
 }
+
+export const createCRMCommentAction = withServerActionContext(_createCRMCommentAction);
+
+export const getCRMCommentsAction = withServerActionContext(_getCRMCommentsAction);
+
+export const updateCRMCommentAction = withServerActionContext(_updateCRMCommentAction);
+
+export const deleteCRMCommentAction = withServerActionContext(_deleteCRMCommentAction);

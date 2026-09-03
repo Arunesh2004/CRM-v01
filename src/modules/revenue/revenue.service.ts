@@ -1,4 +1,5 @@
 import prisma from '../../../database/utils/prisma';
+import { withTenant } from '../../../database/utils/prisma-tenant';
 import { QuoteStatus, Quote, QuoteLineItem, Resource, Action } from '@prisma/client';
 import { checkPermissionFast } from '../../lib/auth';
 import { SecurityEventService } from '../security-events/security-event.service';
@@ -25,7 +26,8 @@ export class RevenueService {
   static async getQuotes(tenantId: string, userId: string) {
     await checkPermissionFast(userId, 'REVENUE', 'READ');
     
-    const quotes = await prisma.quote.findMany({
+    const tenantPrisma = withTenant(tenantId);
+    const quotes = await tenantPrisma.quote.findMany({
       where: { tenantId },
       include: {
         deal: true,
@@ -101,7 +103,8 @@ export class RevenueService {
     const grandTotal = subtotal - discountTotal;
 
     // 4. Create Quote
-    return prisma.$transaction(async (tx: any) => {
+    const tenantPrisma = withTenant(tenantId);
+    return tenantPrisma.$transaction(async (tx: any) => {
       const quote = await tx.quote.create({
         data: {
           tenantId,
@@ -136,13 +139,14 @@ export class RevenueService {
   }
 
   static async submitForApproval(tenantId: string, userId: string, quoteId: string) {
-    const quote = await prisma.quote.findFirst({ where: { id: quoteId, tenantId }, include: { lineItems: true } });
+    const tenantPrisma = withTenant(tenantId);
+    const quote = await tenantPrisma.quote.findFirst({ where: { id: quoteId, tenantId }, include: { lineItems: true } });
     if (!quote) throw new Error('Quote not found');
 
     if (quote.status !== 'DRAFT') throw new Error('Can only submit DRAFT quotes');
 
     // Evaluate Discount Rules
-    const rules = await prisma.discountRule.findMany({ 
+    const rules = await tenantPrisma.discountRule.findMany({ 
       where: { tenantId, priceBookId: quote.priceBookId, isActive: true },
       orderBy: { priority: 'desc' }
     });
@@ -163,7 +167,7 @@ export class RevenueService {
 
     const nextStatus = requiresApproval ? 'PENDING_APPROVAL' : 'APPROVED';
 
-    return prisma.$transaction(async (tx: any) => {
+    return tenantPrisma.$transaction(async (tx: any) => {
       const updated = await tx.quote.update({
         where: { id: quoteId },
         data: { status: nextStatus }
@@ -206,10 +210,11 @@ export class RevenueService {
       throw new Error('Unauthorized');
     }
 
-    const quote = await prisma.quote.findFirst({ where: { id: quoteId, tenantId } });
+    const tenantPrisma = withTenant(tenantId);
+    const quote = await tenantPrisma.quote.findFirst({ where: { id: quoteId, tenantId } });
     if (!quote || quote.status !== 'PENDING_APPROVAL') throw new Error('Invalid quote state for approval');
 
-    return prisma.$transaction(async (tx: any) => {
+    return tenantPrisma.$transaction(async (tx: any) => {
       const updated = await tx.quote.update({
         where: { id: quoteId },
         data: { status: 'APPROVED' }
@@ -232,13 +237,14 @@ export class RevenueService {
 
   static async createQuoteRevision(tenantId: string, userId: string, quoteId: string) {
      // Clone quote logic
-     const quote = await prisma.quote.findFirst({ where: { id: quoteId, tenantId }, include: { lineItems: true } });
+     const tenantPrisma = withTenant(tenantId);
+     const quote = await tenantPrisma.quote.findFirst({ where: { id: quoteId, tenantId }, include: { lineItems: true } });
      if (!quote) throw new Error('Not found');
      
      // Immutable historical lock check
      if (quote.status === 'ACCEPTED') throw new Error('Cannot revise accepted quote');
 
-     return prisma.$transaction(async (tx: any) => {
+     return tenantPrisma.$transaction(async (tx: any) => {
         const newQuote = await tx.quote.create({
            data: {
              tenantId,
@@ -282,7 +288,8 @@ export class RevenueService {
   }
 
   static async acceptQuote(tenantId: string, userId: string, quoteId: string) {
-     const quote = await prisma.quote.findFirst({ where: { id: quoteId, tenantId } });
+     const tenantPrisma = withTenant(tenantId);
+     const quote = await tenantPrisma.quote.findFirst({ where: { id: quoteId, tenantId } });
      if (!quote) throw new Error('Quote not found');
      
      if (quote.status === 'ACCEPTED') return quote; // Idempotent
@@ -291,7 +298,7 @@ export class RevenueService {
         throw new Error('Invalid state transition to ACCEPTED');
      }
 
-     return prisma.$transaction(async (tx: any) => {
+     return tenantPrisma.$transaction(async (tx: any) => {
         const updated = await tx.quote.update({
           where: { id: quote.id },
           data: { status: 'ACCEPTED' }

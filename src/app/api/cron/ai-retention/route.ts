@@ -1,4 +1,5 @@
 import { NextResponse } from 'next/server';
+import { withApiContext } from '@/lib/observability/context';
 import { ConversationRetentionService } from '@/modules/ai/conversation-retention.service';
 import { Logger } from '@/lib/logger/logger';
 import { DistributedConcurrencyLock } from '@/lib/security/concurrency-lock';
@@ -24,7 +25,7 @@ function verifyCronSecret(req: Request): boolean {
   return mismatch === 0;
 }
 
-export async function GET(req: Request) {
+const _orig_GET = async function (req: Request) {
   if (!verifyCronSecret(req)) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   }
@@ -61,3 +62,5 @@ export async function GET(req: Request) {
     }
   }
 }
+
+export const GET = withApiContext(_orig_GET);

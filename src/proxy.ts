@@ -17,7 +17,7 @@ const isPublicRoute = createRouteMatcher([
   '/',
   '/sign-in(.*)',
   '/sign-up(.*)',
-  '/api/health',
+  '/api/health(.*)',
   '/api/webhooks/(.*)',
   '/api/inngest',
 ]);
@@ -66,20 +66,49 @@ const hasClerkKeys = process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY && !process.e
 
 const handleRateLimiting = async (request: NextRequest, ip: string) => {
   let limiter = null;
-  if (request.nextUrl.pathname.startsWith('/api/webhooks/')) {
+  let isHighRisk = false;
+
+  const pathname = request.nextUrl.pathname;
+  if (pathname.startsWith('/api/webhooks/')) {
     limiter = rateLimiters.webhook;
-  } else if (request.nextUrl.pathname.startsWith('/api/ai') || request.nextUrl.pathname.startsWith('/assistant')) {
+  } else if (pathname.startsWith('/api/ai') || pathname.startsWith('/assistant')) {
     limiter = rateLimiters.ai;
-  } else if (request.nextUrl.pathname.startsWith('/api/')) {
-    limiter = rateLimiters.api;
-  } else if (request.nextUrl.pathname.startsWith('/sign-in') || request.nextUrl.pathname.startsWith('/sign-up')) {
+    isHighRisk = true;
+  } else if (pathname.startsWith('/sign-in') || pathname.startsWith('/sign-up')) {
     limiter = rateLimiters.auth;
+    isHighRisk = true;
+  } else if (pathname.startsWith('/billing') || pathname.startsWith('/api/billing')) {
+    limiter = rateLimiters.api;
+    // Mutative operations (POST/Server Actions) on billing are high risk (fail-closed)
+    if (request.method === 'POST') {
+      isHighRisk = true;
+    }
+  } else if (pathname.startsWith('/api/quotes')) {
+    limiter = rateLimiters.api;
+    if (['POST', 'PUT', 'DELETE'].includes(request.method)) {
+      isHighRisk = true;
+    }
+  } else if (pathname.startsWith('/api/')) {
+    limiter = rateLimiters.api;
+  }
+
+  if (isHighRisk && !limiter) {
+    // If Redis is not configured, we must fail closed for high-risk endpoints.
+    // Edge middleware memory fallback is effectively useless due to short-lived isolates.
+    return new NextResponse('Service Unavailable (Rate Limiting Offline)', { status: 503 });
   }
 
   if (limiter) {
-    const { success } = await limiter.limit(ip);
-    if (!success) {
-      return new NextResponse('Too Many Requests', { status: 429 });
+    try {
+      const { success } = await limiter.limit(ip);
+      if (!success) {
+        return new NextResponse('Too Many Requests', { status: 429 });
+      }
+    } catch (error) {
+      // On Redis failure, high-risk fails closed, low-risk degrades (fails open)
+      if (isHighRisk) {
+        return new NextResponse('Service Unavailable', { status: 503 });
+      }
     }
   }
   return null;

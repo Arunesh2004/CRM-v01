@@ -1,8 +1,9 @@
 'use server'
+import { withServerActionContext } from '@/lib/observability/server-action';
 import { sanitizeClientError } from '@/lib/errors/client-safe-error';
 import * as recordingService from '../recording.service';
 
-export async function getCameraRecordingsAction(cameraId: string, limit?: number, cursor?: string) {
+async function _getCameraRecordingsAction(cameraId: string, limit?: number, cursor?: string) {
   try {
     const result = await recordingService.getCameraRecordings(cameraId, limit, cursor);
     return { success: true, data: result };
@@ -11,7 +12,7 @@ export async function getCameraRecordingsAction(cameraId: string, limit?: number
   }
 }
 
-export async function generateRecordingDownloadUrlAction(recordingId: string) {
+async function _generateRecordingDownloadUrlAction(recordingId: string) {
   try {
     const result = await recordingService.generateRecordingDownloadUrl(recordingId);
     return { success: true, data: result };
@@ -19,3 +20,7 @@ export async function generateRecordingDownloadUrlAction(recordingId: string) {
     return { success: false, error: sanitizeClientError(error) };
   }
 }
+
+export const getCameraRecordingsAction = withServerActionContext(_getCameraRecordingsAction);
+
+export const generateRecordingDownloadUrlAction = withServerActionContext(_generateRecordingDownloadUrlAction);

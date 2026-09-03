@@ -71,25 +71,6 @@ export async function processCallCompleted(envelope: SecureJobEnvelope<any>) {
     return { success: true };
   } catch (error: any) {
     Logger.error('Failed to process call transcription', error, { tenantId, callSid });
-    
-    // DLQ handling is manual since we bypassed withJobContext
-    try {
-      await tenantPrisma.deadLetterQueue.create({
-        data: {
-          tenantId,
-          jobId,
-          jobType: envelope.jobType,
-          correlationId: envelope.correlationId,
-          payload: envelope.payload,
-          lastError: error.message,
-          attemptCount: 1, // Assume 1 for simplicity outside Inngest's internal retry tracker
-          status: 'PENDING'
-        }
-      });
-    } catch (dlqErr) {
-      Logger.error('FATAL: Failed to write CALL_COMPLETED to DLQ', dlqErr, { tenantId });
-    }
-
     throw error;
   } finally {
     // Cleanup temp file

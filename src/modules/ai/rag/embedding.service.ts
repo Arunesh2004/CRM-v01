@@ -1,3 +1,4 @@
+import { withTenant, withTenantTransaction } from '@db/utils/prisma-tenant';
 import prisma from '../../../../database/utils/prisma';
 import { AIContext } from '../context/context-builder.service';
 import { SecurityEventService } from '../../../../src/modules/security-events/security-event.service';
@@ -17,7 +18,7 @@ export class EmbeddingService {
       // Step 2: Enforce Department boundaries (if applicable)
       // Step 3: Enforce Document Permission (RBAC mapping)
       
-      const accessibleDocuments = await prisma.documentPermission.findMany({
+      const accessibleDocuments = await withTenant(context.tenantId).documentPermission.findMany({
         where: {
           OR: [
             { userId: context.user.id },
@@ -31,7 +32,7 @@ export class EmbeddingService {
 
       // We use standard Prisma query. 
       // In production with pgvector, this would be an $queryRaw using <=> operator
-      const chunks = await prisma.documentEmbedding.findMany({
+      const chunks = await withTenant(context.tenantId).documentEmbedding.findMany({
         where: {
           tenantId: context.tenantId,
           OR: [

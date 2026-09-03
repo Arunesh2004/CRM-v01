@@ -1,9 +1,10 @@
 import { NotificationProvider, SendNotificationDTO } from './notification.provider';
+import { Logger } from '@/lib/logger/logger';
 
 export class DemoNotificationProvider implements NotificationProvider {
   async send(payload: SendNotificationDTO): Promise<void> {
-    console.log(`[DemoNotificationProvider] Sending notification to ${payload.userId} in tenant ${payload.tenantId}`);
-    console.log(`[DemoNotificationProvider] Payload: ${payload.title} - ${payload.body}`);
+    Logger.info(`[DemoNotificationProvider] Sending notification`, { userId: payload.userId, tenantId: payload.tenantId });
+    Logger.info(`[DemoNotificationProvider] Notification title dispatched`, { title: payload.title });
     // Simulate latency
     await new Promise(resolve => setTimeout(resolve, 50));
   }

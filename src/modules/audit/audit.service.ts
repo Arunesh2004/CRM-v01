@@ -1,5 +1,7 @@
+import { withTenant, withTenantTransaction } from '@db/utils/prisma-tenant';
 import prisma from '@db/utils/prisma';
 import { ActorType } from '@prisma/client';
+import { Logger } from '@/lib/logger/logger';
 
 export type AuditLogPayload = {
   tenantId: string;
@@ -14,7 +16,7 @@ export type AuditLogPayload = {
 
 export async function createAuditLog(payload: AuditLogPayload) {
   try {
-    await prisma.auditLog.create({
+    await withTenant(payload.tenantId).auditLog.create({
       data: {
         tenantId: payload.tenantId,
         actorId: payload.actorId,
@@ -28,6 +30,6 @@ export async function createAuditLog(payload: AuditLogPayload) {
     });
   } catch (error) {
     // Log failure but don't crash the main transaction
-    console.error('[AUDIT_LOG_ERROR]', error);
+    Logger.error('[AUDIT_LOG_ERROR]', error);
   }
 }

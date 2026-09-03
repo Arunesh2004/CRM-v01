@@ -1,3 +1,4 @@
+import { withTenant, withTenantTransaction } from '@db/utils/prisma-tenant';
 import prisma from '../../../../database/utils/prisma';
 import { AIContext } from '../context/context-builder.service';
 import { SecurityEventService } from '../../../../src/modules/security-events/security-event.service';
@@ -30,7 +31,7 @@ export class AIMemoryService {
       }
 
       // 3. Storage
-      const memory = await prisma.aIMemory.create({
+      const memory = await withTenant(context.tenantId).aIMemory.create({
         data: {
           tenantId: context.tenantId,
           userId: context.user.id,
@@ -51,7 +52,7 @@ export class AIMemoryService {
 
   static async retrieveRelevantMemories(context: AIContext, query: string) {
     // Return memories the user is allowed to see
-    return prisma.aIMemory.findMany({
+    return withTenant(context.tenantId).aIMemory.findMany({
       where: {
         tenantId: context.tenantId,
         OR: [

@@ -1,4 +1,5 @@
 import { Resource, Action } from '@prisma/client';
+import { ProviderHealth } from '../../../infrastructure/providers/base.interface';
 
 /**
  * Structured response returned by every AI provider.
@@ -68,6 +69,11 @@ export interface AIProvider {
     mimeType: string,
     prompt?: string
   ): Promise<{ transcript: string; summary: string; sentiment: string }>;
+
+  /**
+   * Checks the health and configuration status of the AI Provider.
+   */
+  checkHealth?(): ProviderHealth | Promise<ProviderHealth>;
 }
 
 export interface AITool {
@@ -76,5 +82,5 @@ export interface AITool {
   parameters?: Record<string, any>; // JSON schema format for tool arguments
   requiredResource?: Resource;
   requiredAction?: Action;
-  execute: (args: any) => Promise<any>;
+  execute: (args: any, context?: any) => Promise<any>;
 }

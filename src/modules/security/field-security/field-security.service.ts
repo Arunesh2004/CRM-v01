@@ -36,8 +36,8 @@ export class FieldSecurityService {
         if (cached) return cached as SecurityLevel;
       }
 
-      const policy = await prisma.fieldSecurityPolicy.findUnique({
-        where: { tenantId_modelName_fieldName: { tenantId, modelName, fieldName } }
+      const policy = await prisma.fieldSecurityPolicy.findFirst({
+        where: { tenantId, modelName, fieldName }
       });
 
       if (policy) {

@@ -107,6 +107,7 @@ describe('Phase 10.4 - Omni-channel Support - Adversarial Security Tests', () =>
       await tx.userRole.deleteMany();
       await tx.rolePermission.deleteMany();
       await tx.permission.deleteMany({ where: { resource: { in: ['TICKET', 'SYSTEM'] } } });
+      await tx.userInvitation.deleteMany();
       await tx.role.deleteMany();
       await tx.approvalRequest.deleteMany();
       await tx.deal.deleteMany();

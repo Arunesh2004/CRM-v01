@@ -1,3 +1,4 @@
+import { withTenant, withTenantTransaction } from '@db/utils/prisma-tenant';
 import prisma from '../../../database/utils/prisma';
 
 export class MailService {
@@ -9,7 +10,7 @@ export class MailService {
     if (!toIds.length) throw new Error('Mail must have at least one recipient');
 
     // Create thread and message
-    const thread = await prisma.mailThread.create({
+    const thread = await withTenant(tenantId).mailThread.create({
       data: {
         tenantId,
         subject,
@@ -37,7 +38,7 @@ export class MailService {
 
     const message = thread.messages[0];
 
-    await prisma.auditLog.create({
+    await withTenant(tenantId).auditLog.create({
       data: {
         tenantId,
         actorId: senderId, actorType: 'USER',
@@ -55,7 +56,7 @@ export class MailService {
    * Get inbox for a user
    */
   static async getInbox(tenantId: string, userId: string, cursor?: string, take: number = 50) {
-    return await prisma.mailRecipient.findMany({
+    return await withTenant(tenantId).mailRecipient.findMany({
       where: {
         tenantId,
         userId,
@@ -79,18 +80,18 @@ export class MailService {
    * Archive a mail thread for a specific user
    */
   static async archiveMail(tenantId: string, messageId: string, userId: string) {
-    const recipient = await prisma.mailRecipient.findFirst({
+    const recipient = await withTenant(tenantId).mailRecipient.findFirst({
       where: { tenantId, messageId, userId }
     });
 
     if (!recipient) throw new Error('Mail not found in your inbox.');
 
-    const archived = await prisma.mailRecipient.update({
+    const archived = await withTenant(tenantId).mailRecipient.update({
       where: { id: recipient.id },
       data: { archivedAt: new Date() }
     });
 
-    await prisma.auditLog.create({
+    await withTenant(tenantId).auditLog.create({
       data: {
         tenantId,
         actorId: userId, actorType: 'USER',

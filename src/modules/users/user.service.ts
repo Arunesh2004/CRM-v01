@@ -6,6 +6,9 @@ import { clerkClient } from '@clerk/nextjs/server';
 import { EventBus } from '../core/events/event-bus';
 import globalPrisma from '@db/utils/prisma';
 import { validateDepartmentScope } from '../security/abac/department-scope';
+import { emailProvider } from '../core/providers/email.provider';
+import crypto from 'crypto';
+import { Logger } from '@/lib/logger/logger';
 
 export async function getEmployees(filters?: { search?: string, departmentId?: string, roleName?: string, status?: string }) {
   const actor = await requireAuth();
@@ -135,6 +138,12 @@ export async function inviteEmployee(emailStr: string, roleName: string = 'MEMBE
 
   const empId = await generateEmployeeId(tenantId);
 
+  // Generate cryptographic token for invitation
+  const token = crypto.randomBytes(32).toString('hex');
+  const tokenHash = crypto.createHash('sha256').update(token).digest('hex');
+  const expiresAt = new Date();
+  expiresAt.setDate(expiresAt.getDate() + 7); // 7 days from now
+
   // This will fail safely if email is not unique
   const newUser = await tenantPrisma.user.create({
     data: {
@@ -149,17 +158,24 @@ export async function inviteEmployee(emailStr: string, roleName: string = 'MEMBE
       }
     }
   });
-
-  const client = await clerkClient();
   
-  // Create Clerk Invitation
-  const invitation = await client.invitations.createInvitation({
-    emailAddress: email,
-    publicMetadata: {
+  // Create our secure UserInvitation
+  await tenantPrisma.userInvitation.create({
+    data: {
       tenantId,
-      roleName
+      email,
+      roleId: role.id,
+      departmentId: finalDepartmentId,
+      tokenHash,
+      expiresAt,
+      invitedById: actor.id,
     }
   });
+
+  const appUrl = process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000';
+  const inviteUrl = `${appUrl}/accept-invite?token=${token}`;
+
+  await emailProvider.sendInvitation(email, inviteUrl, { roleName });
 
   // Log Audit
   const { createAuditLog } = await import('../audit/audit.service');
@@ -172,7 +188,7 @@ export async function inviteEmployee(emailStr: string, roleName: string = 'MEMBE
     metadata: { email, roleName, departmentId: finalDepartmentId }
   });
 
-  return invitation;
+  return { success: true, email };
 }
 
 export async function disableEmployee(userId: string) {
@@ -181,12 +197,41 @@ export async function disableEmployee(userId: string) {
   
   await requirePermission('USER', 'DELETE');
 
-  const userToRemove = await prisma.user.findFirst({
-    where: { id: userId, tenantId }
+  const prismaTenant = withTenant(tenantId);
+
+  const userToRemove = await prismaTenant.user.findFirst({
+    where: { id: userId, tenantId },
+    include: { userRoles: { include: { role: true } } }
   });
 
   if (!userToRemove) {
     throw new Error('User not found in this tenant.');
+  }
+
+  // Hierarchy and Department Check
+  const actorRoleNames = actor.userRoles.map((ur: any) => ur.role.name);
+  const targetRoleNames = userToRemove.userRoles.map((ur: any) => ur.role.name);
+  const isActorGlobal = actorRoleNames.includes('GLOBAL_ADMIN');
+  const isActorTenantAdmin = actorRoleNames.includes('TENANT_ADMIN');
+  const isActorDeptHead = actorRoleNames.includes('DEPARTMENT_HEAD');
+
+  const isTargetGlobal = targetRoleNames.includes('GLOBAL_ADMIN');
+  const isTargetTenantAdmin = targetRoleNames.includes('TENANT_ADMIN');
+  const isTargetDeptHead = targetRoleNames.includes('DEPARTMENT_HEAD');
+
+  if (!isActorGlobal) {
+    if (isTargetGlobal || (isTargetTenantAdmin && !isActorTenantAdmin) || (isTargetDeptHead && !isActorTenantAdmin && !isActorGlobal)) {
+      throw new Error('Forbidden: Cannot disable a user with equal or higher privileges.');
+    }
+    
+    if (isActorDeptHead && !isActorTenantAdmin) {
+      if (!actor.departmentId) {
+        throw new Error('Forbidden: You do not belong to a department to manage.');
+      }
+      if (userToRemove.departmentId !== actor.departmentId) {
+        throw new Error('Forbidden: You cannot manage employees outside your department.');
+      }
+    }
   }
 
   if (userToRemove.id === actor.id) {
@@ -194,7 +239,7 @@ export async function disableEmployee(userId: string) {
   }
 
   // Soft disable in our DB
-  await prisma.user.update({
+  await prismaTenant.user.update({
     where: { id: userId },
     data: { status: 'INACTIVE' }
   });
@@ -206,7 +251,7 @@ export async function disableEmployee(userId: string) {
       await client.users.deleteUser(userToRemove.clerkId);
       await invalidateUserCache(userToRemove.clerkId);
     } catch (e) {
-      console.warn("Failed to delete Clerk user or already deleted:", e);
+      Logger.warn("Failed to delete Clerk user or already deleted:", e);
     }
   }
 

@@ -17,7 +17,7 @@ export class DistributedRateLimiter {
     return `ratelimit:${env}:${scope}:${resource}:${action}`;
   }
 
-  static async checkLimit(tenantId: string, resource: string, action: string, limit: number, windowSeconds: number, ip?: string, userId?: string): Promise<RateLimitResult> {
+  static async checkLimit(tenantId: string, resource: string, action: string, limit: number, windowSeconds: number, ip?: string, userId?: string, failureMode: 'fail-closed' | 'degrade' = 'fail-closed'): Promise<RateLimitResult> {
     const key = this.generateKey(tenantId, resource, action, ip, userId);
     
     try {
@@ -45,7 +45,12 @@ export class DistributedRateLimiter {
 
       return { allowed, remaining };
     } catch (err: any) {
-      Logger.error('Redis Rate Limiter Failed', err instanceof Error ? err : new Error(String(err?.message ?? 'unknown')), { event: 'REDIS_FAILURE', fallback: true });
+      Logger.error('Redis Rate Limiter Failed', err instanceof Error ? err : new Error(String(err?.message ?? 'unknown')), { event: 'REDIS_FAILURE', fallback: true, failureMode });
+      
+      if (failureMode === 'fail-closed') {
+        return { allowed: false, remaining: 0 };
+      }
+
       return MemoryRateLimitFallback.checkLimit(key, AIConfig.FALLBACK_REQUESTS_PER_MINUTE, windowSeconds);
     }
   }

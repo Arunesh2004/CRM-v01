@@ -1,6 +1,8 @@
 import { Queue, Worker, Job } from 'bullmq';
 import Redis from 'ioredis';
 import { JobPayload, JobQueueProvider } from './JobQueueProvider';
+import { Logger } from '@/lib/logger/logger';
+
 
 export class BullMQProvider implements JobQueueProvider {
   private queue: Queue;
@@ -37,7 +39,7 @@ export class BullMQProvider implements JobQueueProvider {
     });
 
     this.worker.on('failed', (job, err) => {
-      console.error(`Job ${job?.id} failed:`, err.message);
+      Logger.error(`Job ${job?.id} failed`, new Error(err.message));
     });
   }
 

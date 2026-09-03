@@ -1,9 +1,10 @@
 import { NextResponse } from 'next/server';
+import { withApiContext } from '@/lib/observability/context';
 import { Logger } from '../../../../../lib/logger/logger';
 import twilio from 'twilio';
 import { executeAsSystem, SystemOperation } from '@db/utils/prisma-system';
 import { withTenant } from '@db/utils/prisma-tenant';
-export async function POST(req: Request) {
+const _orig_POST = async function (req: Request) {
   try {
     const bodyText = await req.text();
     const signature = req.headers.get('x-twilio-signature');
@@ -92,3 +93,5 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: 'Internal Server Error' }, { status: 500 });
   }
 }
+
+export const POST = withApiContext(_orig_POST);

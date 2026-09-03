@@ -132,10 +132,10 @@ export async function askAssistant(
     tenantId = await requireTenant();
 
     // 2. Rate Limiting (Distributed)
-    // Check Tenant Global Limit
-    const tenantLimit = await DistributedRateLimiter.checkLimit(tenantId as string, 'AI_ASSISTANT', 'QUERY', AIConfig.TENANT_REQUESTS_PER_MINUTE, 60);
-    // Check User Global Limit
-    const userLimit = await DistributedRateLimiter.checkLimit(tenantId as string, 'AI_ASSISTANT', 'QUERY', AIConfig.USER_REQUESTS_PER_MINUTE, 60, undefined, user.id ?? undefined);
+    // Check Tenant Global Limit (High-risk AI operation: fail-closed on Redis failure)
+    const tenantLimit = await DistributedRateLimiter.checkLimit(tenantId as string, 'AI_ASSISTANT', 'QUERY', AIConfig.TENANT_REQUESTS_PER_MINUTE, 60, undefined, undefined, 'fail-closed');
+    // Check User Global Limit (High-risk AI operation: fail-closed on Redis failure)
+    const userLimit = await DistributedRateLimiter.checkLimit(tenantId as string, 'AI_ASSISTANT', 'QUERY', AIConfig.USER_REQUESTS_PER_MINUTE, 60, undefined, user.id ?? undefined, 'fail-closed');
 
     if (!tenantLimit.allowed || !userLimit.allowed) {
       Logger.warn('AI Rate Limited', { event: 'AI_RATE_LIMITED', requestId, tenantId: tenantId ?? undefined, userId: user.id ?? undefined });

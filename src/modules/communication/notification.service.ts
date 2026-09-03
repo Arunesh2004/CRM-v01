@@ -1,3 +1,4 @@
+import { withTenant, withTenantTransaction } from '@db/utils/prisma-tenant';
 import prisma from '../../../database/utils/prisma';
 import { realtime } from './adapter';
 
@@ -6,7 +7,7 @@ export class NotificationService {
    * Create a new notification
    */
   static async createNotification(tenantId: string, userId: string, type: 'SYSTEM' | 'ALERT' | 'REMINDER', title: string, body: string) {
-    const notification = await prisma.notification.create({
+    const notification = await withTenant(tenantId).notification.create({
       data: {
         tenantId,
         userId,
@@ -25,7 +26,7 @@ export class NotificationService {
    * Get unread notifications
    */
   static async getUnreadNotifications(tenantId: string, userId: string, cursor?: string, take: number = 20) {
-    return await prisma.notification.findMany({
+    return await withTenant(tenantId).notification.findMany({
       where: {
         tenantId,
         userId,
@@ -41,7 +42,7 @@ export class NotificationService {
    * Mark a notification as read
    */
   static async markAsRead(tenantId: string, notificationId: string, userId: string) {
-    const notification = await prisma.notification.findUnique({
+    const notification = await withTenant(tenantId).notification.findUnique({
       where: { id: notificationId }
     });
 
@@ -49,7 +50,7 @@ export class NotificationService {
       throw new Error('Not authorized');
     }
 
-    return await prisma.notification.update({
+    return await withTenant(tenantId).notification.update({
       where: { id: notificationId },
       data: { isRead: true }
     });

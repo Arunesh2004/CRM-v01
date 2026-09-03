@@ -77,8 +77,7 @@ export class DistributedConcurrencyLock {
     } catch (err) {
       Logger.error('Redis Concurrency Lock Failed', err as Error, { event: 'REDIS_FAILURE', fallback: true });
       
-      // BOUNDED IN-MEMORY FALLBACK
-      return MemoryConcurrencyFallback.acquire(tenantId, userId, requestId);
+      return { acquired: false };
     }
   }
 
@@ -110,45 +109,10 @@ export class DistributedConcurrencyLock {
         await redis.eval(luaScript, 1, `concurrent:${env}:tenant:${tenantId}:slot:${i}`, requestId);
       }
     } catch (err) {
-      Logger.error('Redis Concurrency Release Failed', err as Error, { event: 'REDIS_FAILURE', fallback: true });
+      Logger.error('Redis Concurrency Release Failed', err as Error, { event: 'REDIS_FAILURE', fallback: false });
       
-      // Attempt fallback release
-      MemoryConcurrencyFallback.release(tenantId, userId, requestId);
+      // We intentionally do not fall back to a local memory store. 
+      // The lock will naturally expire due to the TTL set during acquisition.
     }
-  }
-}
-
-// ----------------------------------------------------------------------------
-// EMERGENCY FALLBACK (Instance-Local ONLY)
-// Active when Redis is completely down to preserve minimal availability.
-// ----------------------------------------------------------------------------
-
-class MemoryConcurrencyFallback {
-  private static userActive = new Map<string, Set<string>>();
-  private static tenantActive = new Map<string, Set<string>>();
-
-  static acquire(tenantId: string, userId: string, requestId: string): ConcurrencyLockResult {
-    let uSet = this.userActive.get(userId);
-    if (!uSet) { uSet = new Set(); this.userActive.set(userId, uSet); }
-    
-    let tSet = this.tenantActive.get(tenantId);
-    if (!tSet) { tSet = new Set(); this.tenantActive.set(tenantId, tSet); }
-
-    // Use strictly bounded fallback limits
-    if (uSet.size >= AIConfig.FALLBACK_MAX_CONCURRENT) return { acquired: false };
-    if (tSet.size >= AIConfig.FALLBACK_MAX_CONCURRENT * 2) return { acquired: false };
-
-    uSet.add(requestId);
-    tSet.add(requestId);
-
-    return { acquired: true, lockKey: requestId };
-  }
-
-  static release(tenantId: string, userId: string, requestId: string) {
-    const uSet = this.userActive.get(userId);
-    if (uSet) uSet.delete(requestId);
-
-    const tSet = this.tenantActive.get(tenantId);
-    if (tSet) tSet.delete(requestId);
   }
 }

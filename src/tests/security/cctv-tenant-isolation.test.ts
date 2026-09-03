@@ -80,12 +80,12 @@ describe('CCTV Adversarial Security Tests', () => {
 
       // Cameras
       const camA = await tx.camera.create({
-        data: { name: 'Cam A1', tenantId: tA.id, locationId: tA_LocationId, ipAddress: '10.0.0.1', protocol: 'RTSP' }
+        data: { name: 'Cam A1', tenantId: tA.id, locationId: tA_LocationId, ipAddress: '10.0.0.1', protocol: 'RTSP', authMode: 'NONE' }
       });
       tA_CameraId = camA.id;
 
       const camB = await tx.camera.create({
-        data: { name: 'Cam B1', tenantId: tB.id, locationId: tB_LocationId, ipAddress: '10.0.0.2', protocol: 'RTSP' }
+        data: { name: 'Cam B1', tenantId: tB.id, locationId: tB_LocationId, ipAddress: '10.0.0.2', protocol: 'RTSP', authMode: 'NONE' }
       });
       tB_CameraId = camB.id;
 
@@ -184,8 +184,9 @@ describe('CCTV Adversarial Security Tests', () => {
       await expect(createCamera({
         name: 'Malicious Cam',
         locationId: tB_LocationId,
-        ipAddress: '10.0.0.5',
-        protocol: 'RTSP'
+        ipAddress: '10.0.0.3',
+        protocol: 'RTSP',
+        authMode: 'NONE'
       })).rejects.toThrow(/Cross-tenant access denied/);
     });
 
@@ -204,8 +205,9 @@ describe('CCTV Adversarial Security Tests', () => {
       await expect(createCamera({
         name: 'Sneaky Cam',
         locationId: tA_LocationId,
-        ipAddress: '10.0.0.6',
-        protocol: 'RTSP'
+        ipAddress: '10.0.0.4',
+        protocol: 'RTSP',
+        authMode: 'NONE'
       })).rejects.toThrow('Forbidden: Missing UPDATE on CUSTOMER');
     });
 

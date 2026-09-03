@@ -126,11 +126,22 @@ export async function createDeal(data: {
     const stage = await tx.pipelineStage.findFirst({ where: { id: data.stageId, tenantId } });
     if (!stage) throw new Error('Stage not found in current tenant');
 
+    const assignee = await tx.user.findFirst({ where: { id: data.assignedUserId, tenantId } });
+    if (!assignee) throw new Error('Assigned user not found in current tenant');
+
     const deal = await tx.deal.create({
       data: {
         tenantId,
         createdById: user.id,
-        ...data
+        title: data.title,
+        description: data.description,
+        source: data.source,
+        value: data.value,
+        expectedCloseDate: data.expectedCloseDate,
+        pipelineId: data.pipelineId,
+        stageId: data.stageId,
+        customerId: data.customerId,
+        assignedUserId: data.assignedUserId,
       },
       include: { stage: true }
     });
@@ -151,7 +162,6 @@ export async function createDeal(data: {
         tenantId,
         entityType: 'DEAL',
         entityId: deal.id,
-        actorType: 'USER',
         actorId: user.id,
         type: 'SYSTEM',
         content: `Deal created in stage: ${deal.stage.name}`,

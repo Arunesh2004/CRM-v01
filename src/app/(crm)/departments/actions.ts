@@ -1,9 +1,10 @@
 'use server';
+import { withServerActionContext } from '@/lib/observability/server-action';
 
 import { createDepartment, updateDepartment, deleteDepartment } from '@/modules/departments/department.service';
 import { revalidatePath } from 'next/cache';
 
-export async function createDepartmentAction(formData: FormData) {
+async function _createDepartmentAction(formData: FormData) {
   try {
     const name = formData.get('name') as string;
     const description = formData.get('description') as string | undefined;
@@ -17,8 +18,9 @@ export async function createDepartmentAction(formData: FormData) {
     return { error: error.message || 'Failed to create department' };
   }
 }
+export const createDepartmentAction = withServerActionContext(_createDepartmentAction);
 
-export async function updateDepartmentAction(departmentId: string, formData: FormData) {
+async function _updateDepartmentAction(departmentId: string, formData: FormData) {
   try {
     const name = formData.get('name') as string;
     const description = formData.get('description') as string | undefined;
@@ -32,8 +34,9 @@ export async function updateDepartmentAction(departmentId: string, formData: For
     return { error: error.message || 'Failed to update department' };
   }
 }
+export const updateDepartmentAction = withServerActionContext(_updateDepartmentAction);
 
-export async function deleteDepartmentAction(departmentId: string) {
+async function _deleteDepartmentAction(departmentId: string) {
   try {
     await deleteDepartment(departmentId);
     revalidatePath('/departments');
@@ -42,3 +45,4 @@ export async function deleteDepartmentAction(departmentId: string) {
     return { error: error.message || 'Failed to delete department' };
   }
 }
+export const deleteDepartmentAction = withServerActionContext(_deleteDepartmentAction);

@@ -1,8 +1,9 @@
 import { NextResponse } from 'next/server';
+import { withApiContext } from '@/lib/observability/context';
 import { Logger } from '../../../../lib/logger/logger';
 import crypto from 'crypto';
 
-export async function GET(req: Request) {
+const _orig_GET = async function (req: Request) {
   // WhatsApp webhook verification step
   const url = new URL(req.url);
   const mode = url.searchParams.get('hub.mode');
@@ -17,7 +18,7 @@ export async function GET(req: Request) {
   }
 }
 
-export async function POST(req: Request) {
+const _orig_POST = async function (req: Request) {
   try {
     const rawBody = await req.text();
     const signature = req.headers.get('x-hub-signature-256');
@@ -95,3 +96,7 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: 'Internal Server Error' }, { status: 500 });
   }
 }
+
+export const GET = withApiContext(_orig_GET);
+
+export const POST = withApiContext(_orig_POST);

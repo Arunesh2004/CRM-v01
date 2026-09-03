@@ -7,8 +7,8 @@ import { AIPermissionService } from '../../modules/ai-permissions/ai-permission.
 describe('Phase 10.1: Revenue Security & Adversarial Tests', () => {
   let tenantA = '00000000-0000-0000-0000-000000000001';
   let tenantB = '00000000-0000-0000-0000-000000000002';
-  let adminUserId = 'admin-user-id';
-  let standardUserId = 'standard-user-id';
+  const adminUserId = 'admin-user-id';
+  const standardUserId = 'standard-user-id';
 
   beforeAll(async () => {
     // Dynamically provision tenants for deterministic tests instead of relying on seed data

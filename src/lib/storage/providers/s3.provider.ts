@@ -7,6 +7,8 @@ import {
   HeadObjectCommand 
 } from '@aws-sdk/client-s3';
 import { getSignedUrl } from '@aws-sdk/s3-request-presigner';
+import { Logger } from '@/lib/logger/logger';
+
 
 export class S3StorageProvider implements StorageProvider {
   private client: S3Client;
@@ -64,7 +66,7 @@ export class S3StorageProvider implements StorageProvider {
       await this.client.send(command);
       return true;
     } catch (err) {
-      console.error(`Failed to delete S3 object: ${fullPath}`, err);
+      Logger.error(`Failed to delete S3 object: ${fullPath}`, err instanceof Error ? err : new Error(String(err)));
       return false;
     }
   }

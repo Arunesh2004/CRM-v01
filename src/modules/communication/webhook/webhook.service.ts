@@ -1,3 +1,4 @@
+import { withTenant, withTenantTransaction } from '@db/utils/prisma-tenant';
 import prisma from '../../../../database/utils/prisma';
 import { ProviderFactory } from '../../../lib/providers/provider.factory';
 import crypto from 'crypto';
@@ -26,7 +27,7 @@ export class WebhookSignatureService {
   /**
    * Process a webhook event safely (handles deduplication and out-of-order execution).
    */
-  static async processWebhook(tenantId: string | null, providerName: string, eventId: string, eventType: string, payload: any, signature: string) {
+  static async processWebhook(tenantId: string, providerName: string, eventId: string, eventType: string, payload: any, signature: string) {
     // 1. Signature Verification
     const isValid = await this.validateSignature(providerName, signature, payload);
     if (!isValid) {
@@ -39,7 +40,7 @@ export class WebhookSignatureService {
     // Use transaction/upsert to ensure uniqueness
     let webhookEvent;
     try {
-      webhookEvent = await prisma.webhookEvent.create({
+      webhookEvent = await withTenant(tenantId).webhookEvent.create({
         data: {
           tenantId,
           provider: providerName,
@@ -59,14 +60,14 @@ export class WebhookSignatureService {
 
     // 3. Process the Event
     try {
-      await this.handleEvent(providerName, eventType, payload);
+      await this.handleEvent(tenantId, providerName, eventType, payload);
       
-      await prisma.webhookEvent.update({
+      await withTenant(tenantId).webhookEvent.update({
         where: { id: webhookEvent.id },
         data: { status: 'PROCESSED', processedAt: new Date() }
       });
     } catch (e: any) {
-      await prisma.webhookEvent.update({
+      await withTenant(tenantId).webhookEvent.update({
         where: { id: webhookEvent.id },
         data: { status: 'FAILED' }
       });
@@ -74,7 +75,7 @@ export class WebhookSignatureService {
     }
   }
 
-  private static async handleEvent(providerName: string, eventType: string, payload: any) {
+  private static async handleEvent(tenantId: string, providerName: string, eventType: string, payload: any) {
     if (providerName === 'whatsapp' || providerName === 'twilio') {
       const providerMessageId = payload.messageId; // Mock mapping
       const newStatus = eventType === 'delivered' ? 'DELIVERED' : (eventType === 'failed' ? 'FAILED' : 'SENT');
@@ -82,7 +83,7 @@ export class WebhookSignatureService {
       if (!providerMessageId) return;
 
       // Find message by a provider message ID (mocked lookup or actual if stored in future)
-      const msg = await prisma.chatMessage.findFirst({ 
+      const msg = await withTenant(tenantId).chatMessage.findFirst({ 
         where: { 
           metadata: { path: ['idempotencyKey'], equals: providerMessageId } 
         } 
@@ -100,7 +101,7 @@ export class WebhookSignatureService {
            throw new Error('Invalid state transition: Already failed');
         }
 
-        await prisma.chatMessage.update({
+        await withTenant(tenantId).chatMessage.update({
           where: { id: msg.id },
           data: { metadata: { ...metadata, status: newStatus } }
         });

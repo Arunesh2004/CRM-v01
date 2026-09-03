@@ -1,3 +1,4 @@
+import { SystemOperation } from '@db/utils/prisma-system';
 import { describe, it, expect, beforeAll, afterAll } from 'vitest';
 import crypto from 'crypto';
 

@@ -4,13 +4,14 @@ import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { createCameraAction } from '@/modules/cctv/actions/camera.actions';
 import { getLocationsAction } from '@/modules/crm/actions/location.actions';
-import { CameraProtocol } from '@prisma/client';
+import { CameraProtocol, CameraAuthMode } from '@prisma/client';
 
 export function CameraForm() {
   const [isOpen, setIsOpen] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState('');
   const [locations, setLocations] = useState<any[]>([]);
+  const [requiresAuth, setRequiresAuth] = useState(false);
   const router = useRouter();
 
   useEffect(() => {
@@ -32,8 +33,11 @@ export function CameraForm() {
       locationId: formData.get('locationId') as string,
       ipAddress: formData.get('ipAddress') as string,
       protocol: formData.get('protocol') as CameraProtocol,
+      authMode: (requiresAuth ? 'PASSWORD' : 'NONE') as CameraAuthMode,
       model: formData.get('model') as string,
       manufacturer: formData.get('manufacturer') as string,
+      rtspUsername: requiresAuth ? (formData.get('rtspUsername') as string) || undefined : undefined,
+      rtspPassword: requiresAuth ? (formData.get('rtspPassword') as string) || undefined : undefined,
     };
 
     const res = await createCameraAction(data);
@@ -109,6 +113,31 @@ export function CameraForm() {
                   <label className="block text-xs font-semibold text-[#8891B0] uppercase tracking-wider mb-1.5">Model</label>
                   <input name="model" type="text" className="w-full bg-[#06080F]/50 border border-white/[.08] rounded-lg p-2.5 text-white focus:outline-none focus:border-violet-500/50 focus:ring-1 focus:ring-violet-500/50 transition-all placeholder:text-white/20 text-sm" />
                 </div>
+              </div>
+
+              <div className="pt-4 border-t border-white/[.04]">
+                <label className="flex items-center space-x-3 cursor-pointer mb-4">
+                  <input 
+                    type="checkbox" 
+                    checked={requiresAuth}
+                    onChange={(e) => setRequiresAuth(e.target.checked)}
+                    className="w-4 h-4 bg-[#06080F]/50 border border-white/[.2] rounded text-violet-600 focus:ring-violet-500 focus:ring-offset-0 focus:ring-offset-transparent"
+                  />
+                  <span className="text-sm font-medium text-white">This camera requires RTSP credentials</span>
+                </label>
+
+                {requiresAuth && (
+                  <div className="grid grid-cols-2 gap-4 animate-in fade-in slide-in-from-top-2">
+                    <div>
+                      <label className="block text-xs font-semibold text-[#8891B0] uppercase tracking-wider mb-1.5">RTSP Username</label>
+                      <input name="rtspUsername" type="text" placeholder="Optional for now" className="w-full bg-[#06080F]/50 border border-white/[.08] rounded-lg p-2.5 text-white focus:outline-none focus:border-violet-500/50 focus:ring-1 focus:ring-violet-500/50 transition-all placeholder:text-white/20 text-sm" />
+                    </div>
+                    <div>
+                      <label className="block text-xs font-semibold text-[#8891B0] uppercase tracking-wider mb-1.5">RTSP Password</label>
+                      <input name="rtspPassword" type="password" placeholder="Optional for now" className="w-full bg-[#06080F]/50 border border-white/[.08] rounded-lg p-2.5 text-white focus:outline-none focus:border-violet-500/50 focus:ring-1 focus:ring-violet-500/50 transition-all placeholder:text-white/20 text-sm" />
+                    </div>
+                  </div>
+                )}
               </div>
 
               <div className="flex justify-end space-x-3 pt-6 border-t border-white/[.04]">

@@ -1,4 +1,6 @@
 import { NextResponse } from 'next/server';
+import { withApiContext } from '@/lib/observability/context';
+import { Logger } from '@/lib/logger/logger';
 import { executeAsSystem, SystemOperation } from '@db/utils/prisma-system';
 import crypto from 'crypto';
 import fs from 'fs';
@@ -6,7 +8,7 @@ import path from 'path';
 import { requireAuth, checkPermission } from '@/lib/auth';
 
 
-export async function GET() {
+const _orig_GET = async function () {
   try {
     const authUser = await requireAuth();
     
@@ -36,7 +38,7 @@ export async function GET() {
 
     const diagnosticData = await executeAsSystem(SystemOperation.SECURITY_AUDIT, async (tx) => {
       const u = await tx.user.findFirst({
-        where: { email: 'aruneshsharma2004@gmail.com'.toLowerCase() },
+        where: { id: authUser.id },
         include: {
           userRoles: true
         }
@@ -57,7 +59,7 @@ export async function GET() {
         buildConnection = JSON.parse(fs.readFileSync(buildFile, 'utf8'));
       }
     } catch (e) {
-      console.error('Error reading build-db.json:', e);
+      Logger.error('Error reading build-db.json:', e);
     }
 
     // Read seed-result.json
@@ -68,7 +70,7 @@ export async function GET() {
         seedResult = JSON.parse(fs.readFileSync(seedFile, 'utf8'));
       }
     } catch (e) {
-      console.error('Error reading seed-result.json:', e);
+      Logger.error('Error reading seed-result.json:', e);
     }
 
     return NextResponse.json({
@@ -97,3 +99,5 @@ export async function GET() {
     return NextResponse.json({ error: error.message }, { status: 500 });
   }
 }
+
+export const GET = withApiContext(_orig_GET);

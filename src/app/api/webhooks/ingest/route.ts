@@ -1,10 +1,12 @@
 import { NextResponse } from 'next/server';
+import { withApiContext } from '@/lib/observability/context';
+import { Logger } from '@/lib/logger/logger';
 import { withTenant, withTenantTransaction } from '@db/utils/prisma-tenant';
 import prisma from '@db/utils/prisma';
 import crypto from 'crypto';
 import { inngest } from '@/lib/queue/inngest.client';
 
-export async function POST(req: Request) {
+const _orig_POST = async function (req: Request) {
   try {
     const signature = req.headers.get('x-webhook-signature');
     if (!signature) {
@@ -102,7 +104,9 @@ export async function POST(req: Request) {
 
     return NextResponse.json({ success: true, id: webhookEvent.id }, { status: 202 });
   } catch (error) {
-    console.error('Webhook ingestion error:', error);
+    Logger.error('Webhook ingestion error:', error);
     return NextResponse.json({ error: 'Internal Server Error' }, { status: 500 });
   }
 }
+
+export const POST = withApiContext(_orig_POST);

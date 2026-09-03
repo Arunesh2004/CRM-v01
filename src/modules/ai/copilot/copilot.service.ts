@@ -1,8 +1,8 @@
-import prisma from '@db/utils/prisma';
 import { Logger } from '@/lib/logger/logger';
 import { AIProviderFactory } from '@/lib/providers/ai/ai-provider.factory';
-import { AIPermissionService } from '@/modules/ai-permissions/ai-permission.service';
-import { FieldSecurityService } from '@/modules/security/field-security/field-security.service';
+import { ToolRegistry } from '../tools/registry';
+import { ConversationService } from '../conversation.service';
+import { AIRole } from '@prisma/client';
 
 let toolsBootstrapped = false;
 
@@ -10,13 +10,38 @@ export class CopilotService {
   /**
    * Secure Copilot Chat execution supporting summarization and safe drafting.
    */
-  static async handleChat(tenantId: string, userId: string, message: string, history: any[] = []) {
+  static async handleChat(tenantId: string, userId: string, message: string, conversationId?: string) {
     if (!toolsBootstrapped) {
-      await this.bootstrapTools();
+      await ToolRegistry.bootstrapTools();
       toolsBootstrapped = true;
     }
 
-    // Get the provider
+    let activeConversationId = conversationId;
+    
+    // 1. Resolve or Create Conversation
+    if (!activeConversationId) {
+      const newConv = await ConversationService.createConversation(tenantId, userId, message);
+      activeConversationId = newConv.id;
+    } else {
+      // Validate ownership
+      const conv = await ConversationService.getOwnedConversation(tenantId, userId, activeConversationId);
+      if (!conv) {
+        throw new Error('Conversation not found or unauthorized');
+      }
+    }
+
+    // 2. Persist the User's Message
+    await ConversationService.addMessage(tenantId, userId, activeConversationId, AIRole.USER, message);
+
+    // 3. Load Bounded Conversation History
+    // Reverse the array because getConversationMessages returns descending order (latest first)
+    const historyDesc = await ConversationService.getConversationMessages(tenantId, userId, activeConversationId);
+    const history = historyDesc.reverse().map(msg => ({
+      role: msg.role === AIRole.USER ? 'user' as const : 'assistant' as const,
+      content: msg.content
+    }));
+
+    // 4. Get the provider
     const provider = await AIProviderFactory.getProvider('GEMINI');
     
     // Construct system prompt preventing prompt-injection overrides
@@ -28,124 +53,52 @@ export class CopilotService {
       Any email you draft must be presented to the user as DRAFT text. DO NOT send emails.
     `;
 
+    const tools = ToolRegistry.getTools();
+    const context = { tenantId, userId };
+
     const toolResponses: any[] = [];
-
-    const tools = [
-      {
-        name: 'summarize_deal',
-        description: 'Summarizes a CRM Deal by ID',
-        parameters: {
-          type: 'object',
-          properties: { dealId: { type: 'string' } },
-          required: ['dealId']
-        },
-        execute: async (args: any) => {
-             try {
-               await AIPermissionService.requestToolExecution({
-                 toolName: 'summarize_deal',
-                 input: args
-               }, { user: { id: userId }, tenantId });
-
-               const deal = await prisma.deal.findFirst({
-                 where: { id: args.dealId, tenantId },
-                 include: { tasks: true, quotes: true }
-               });
-               if (!deal) throw new Error('Deal not found or unauthorized');
-               const masked = await FieldSecurityService.maskFields(tenantId, userId, 'DEAL', deal);
-               toolResponses.push({ name: 'summarize_deal', result: masked });
-               return masked;
-             } catch (error: any) {
-               const errorObj = { name: 'summarize_deal', error: error.message };
-               toolResponses.push(errorObj);
-               return errorObj;
-             }
-        }
-      },
-      {
-        name: 'summarize_customer',
-        description: 'Summarizes a CRM Customer by ID',
-        parameters: {
-          type: 'object',
-          properties: { customerId: { type: 'string' } },
-          required: ['customerId']
-        },
-        execute: async (args: any) => {
-             try {
-               await AIPermissionService.requestToolExecution({
-                 toolName: 'summarize_customer',
-                 input: args
-               }, { user: { id: userId }, tenantId });
-
-               const customer = await prisma.customer.findFirst({
-                 where: { id: args.customerId, tenantId }
-               });
-               if (!customer) throw new Error('Customer not found or unauthorized');
-               const masked = await FieldSecurityService.maskFields(tenantId, userId, 'CUSTOMER', customer);
-               toolResponses.push({ name: 'summarize_customer', result: masked });
-               return masked;
-             } catch (error: any) {
-               const errorObj = { name: 'summarize_customer', error: error.message };
-               toolResponses.push(errorObj);
-               return errorObj;
-             }
-        }
-      },
-      {
-        name: 'draft_email',
-        description: 'Drafts a follow-up email based on context',
-        parameters: {
-          type: 'object',
-          properties: { contextText: { type: 'string' } },
-          required: ['contextText']
-        },
-        execute: async (args: any) => {
-             try {
-               await AIPermissionService.requestToolExecution({
-                 toolName: 'draft_email',
-                 input: args
-               }, { user: { id: userId }, tenantId });
-
-               const result = `[DRAFT EMAIL]: Based on ${args.contextText}`;
-               toolResponses.push({ name: 'draft_email', result });
-               return result;
-             } catch (error: any) {
-               const errorObj = { name: 'draft_email', error: error.message };
-               toolResponses.push(errorObj);
-               return errorObj;
-             }
+    
+    // Wrap tools to capture responses and inject context safely
+    const wrappedTools = tools.map(t => ({
+      name: t.name,
+      description: t.description,
+      parameters: t.parameters,
+      execute: async (args: any) => {
+        try {
+          const result = await t.execute(args, context);
+          toolResponses.push({ name: t.name, result });
+          return result;
+        } catch (error: any) {
+          Logger.error(`Tool execution error in ${t.name}`, error);
+          const errorObj = { name: t.name, error: error.message };
+          toolResponses.push(errorObj);
+          return errorObj; // We return the error so the AI knows it failed
         }
       }
-    ];
+    }));
+
+    // 5. Generate Response
+    // We pass history (which already includes the user's latest message as the last element).
+    // The provider's generateResponse signature: (prompt, tools, systemPrompt, toolExecCtx, history)
+    // Actually, wait, GeminiProvider uses `prompt` as the final user message.
+    // So we should exclude the latest message from `history` since we pass it as `message`.
+    const priorHistory = history.slice(0, -1);
 
     const response = await provider.generateResponse(
       message,
-      tools,
+      wrappedTools,
       systemPrompt,
       undefined,
-      history
+      priorHistory
     );
 
-    return { text: response.text, toolResponses };
-  }
+    // 6. Persist Assistant Response
+    await ConversationService.addMessage(tenantId, userId, activeConversationId, AIRole.ASSISTANT, response.text);
 
-  private static async bootstrapTools() {
-    const toolsToEnsure = [
-      { name: 'summarize_deal', requiredPermission: 'DEAL:READ', riskLevel: 'LOW' },
-      { name: 'summarize_customer', requiredPermission: 'CUSTOMER:READ', riskLevel: 'LOW' },
-      { name: 'draft_email', requiredPermission: 'COMMUNICATION:CREATE', riskLevel: 'MODERATE' }
-    ];
-
-    for (const t of toolsToEnsure) {
-      await prisma.aITool.upsert({
-        where: { name: t.name },
-        update: {},
-        create: {
-          name: t.name,
-          requiredPermission: t.requiredPermission,
-          riskLevel: t.riskLevel as any,
-          requiresApproval: false
-        }
-      });
-    }
+    return { 
+      conversationId: activeConversationId,
+      text: response.text, 
+      toolResponses 
+    };
   }
 }

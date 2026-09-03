@@ -6,8 +6,8 @@ dotenv.config();
 
 export default defineConfig({
   test: {
-
-    include: ['src/tests/**/*.test.ts'],
+    environment: 'jsdom',
+    include: ['src/tests/**/*.test.{ts,tsx}', 'tests/**/*.test.ts', 'tests/**/*.spec.ts'],
     fileParallelism: false,
     poolOptions: {
       threads: {

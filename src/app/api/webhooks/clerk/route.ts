@@ -1,4 +1,5 @@
 import { Webhook } from 'svix';
+import { withApiContext } from '@/lib/observability/context';
 import { NextRequest, NextResponse } from 'next/server';
 import { WebhookEvent } from '@clerk/nextjs/server';
 import prisma from '@db/utils/prisma';
@@ -8,7 +9,7 @@ import { ensureUserProvisioned } from '@/modules/auth/services/provisioning.serv
 
 const logger = new Logger();
 
-export async function POST(req: NextRequest) {
+const _orig_POST = async function (req: NextRequest) {
   const WEBHOOK_SECRET = process.env.CLERK_WEBHOOK_SECRET;
 
   if (!WEBHOOK_SECRET) {
@@ -61,7 +62,7 @@ export async function POST(req: NextRequest) {
   const { id } = evt.data;
   const eventType = evt.type;
 
-  console.log(`Webhook with and ID of ${id} and type of ${eventType}`);
+  logger.info(`Webhook with and ID of ${id} and type of ${eventType}`);
   
   if (eventType === 'user.created') {
     try {
@@ -112,3 +113,5 @@ export async function POST(req: NextRequest) {
 
   return NextResponse.json({ success: true }, { status: 200 });
 }
+
+export const POST = withApiContext(_orig_POST);

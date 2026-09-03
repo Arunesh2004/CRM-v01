@@ -1,9 +1,10 @@
 import { requireAuth, requireTenant, requirePermission } from '@/lib/auth';
 import { withTenant, withTenantTransaction } from '@db/utils/prisma-tenant';
 import { CreateIncidentInput, UpdateIncidentStatusInput, AssignIncidentInput } from './incident.types';
-
-import { assertRelationOwnership } from '@/lib/security/tenant-guard';
+import { Logger } from '@/lib/logger/logger';
+import { requireRelationOwnership } from '@/lib/auth/relation-auth';
 import globalPrisma from '@db/utils/prisma';
+
 
 export async function createIncident(input: CreateIncidentInput) {
   const user = await requireAuth();
@@ -13,16 +14,16 @@ export async function createIncident(input: CreateIncidentInput) {
   // Let's use CUSTOMER for now.
   await requirePermission('CUSTOMER', 'UPDATE');
 
-  await assertRelationOwnership([
-    { model: 'location', id: input.locationId },
-    { model: 'camera', id: input.cameraId },
-    { model: 'aIEvent', id: input.aiEventId }
-  ], tenantId);
-
   const prisma = withTenant(tenantId);
 
   const incident = await globalPrisma.$transaction(async (baseTx: any) => {
     const tx = await withTenantTransaction(baseTx, tenantId);
+
+    await requireRelationOwnership(tx, tenantId, {
+      location: input.locationId,
+      camera: input.cameraId,
+      aIEvent: input.aiEventId
+    });
     // 2. Validate Camera Consistency
     const camera = await tx.camera.findFirst({ where: { id: input.cameraId, tenantId }});
     if (camera && camera.locationId !== input.locationId) throw new Error("Relationship Consistency Error: Camera does not belong to Location");
@@ -63,7 +64,7 @@ export async function createIncident(input: CreateIncidentInput) {
 
   // Trigger notification asynchronously
   import('../communication/notification.service').then(({ NotificationService }) => {
-    NotificationService.createNotification(tenantId, user.id, 'ALERT', `Incident Generated: ${incident.title}`, incident.description || 'New security incident requires attention').catch(console.error);
+    NotificationService.createNotification(tenantId, user.id, 'ALERT', `Incident Generated: ${incident.title}`, incident.description || 'New security incident requires attention').catch((err: unknown) => Logger.error('Failed to send incident notification', err instanceof Error ? err : new Error(String(err))));
   });
 
   return incident;
@@ -165,7 +166,7 @@ export async function assignIncident(input: AssignIncidentInput) {
     if (!incident) throw new Error('Incident not found');
 
     if (input.assignedUserId) {
-      await assertRelationOwnership([{ model: 'user', id: input.assignedUserId }], tenantId);
+      await requireRelationOwnership(tx, tenantId, { user: input.assignedUserId });
     }
 
     const updated = await tx.incident.update({

@@ -84,7 +84,7 @@ describe('Onboarding Lifecycle & Security Invariants', () => {
     // The test DB isolates tests by creating a unique tenant per test suite.
   });
 
-  it('CASE A & B: Admin invites employee, matching Clerk registration links account', async () => {
+  it('CASE A & B: Admin invites employee, auto-linking is strictly BLOCKED', async () => {
     const uniqueSuffix = Date.now().toString();
     // Mock requireAuth to return Admin
     const mockAdmin = await executeAsSystem(SystemOperation.SECURITY_AUDIT, async (tx) => tx.user.findUnique({ where: { id: t1AdminId }, include: { userRoles: { include: { role: true } } } }));
@@ -109,17 +109,15 @@ describe('Onboarding Lifecycle & Security Invariants', () => {
       email_addresses: [{ email_address: email }]
     };
     
+    // Auto-linking must fail (return null) because the user is INVITED.
     const linkedUser = await ensureUserProvisioned(webhookPayload);
-    expect(linkedUser).toBeDefined();
-    expect(linkedUser?.clerkId).toBe('c_newemp_1');
-    expect(linkedUser?.status).toBe('ACTIVE');
+    expect(linkedUser).toBeNull();
     
-    // Verify DB
+    // Verify DB still says INVITED
     const activeUser = await executeAsSystem(SystemOperation.SECURITY_AUDIT, async (tx) =>
       tx.user.findFirst({ where: { email } })
     );
-    expect(activeUser?.status).toBe('ACTIVE');
-    expect(activeUser?.tenantId).toBe(tenant1Id);
+    expect(activeUser?.status).toBe('INVITED');
   });
 
   it('CASE C: Unknown Clerk User yields no CRM account', async () => {
@@ -159,14 +157,22 @@ describe('Onboarding Lifecycle & Security Invariants', () => {
       .rejects.toThrow('Forbidden: You cannot manage employees outside your department.');
   });
 
-  it('CASE H: Duplicate Webhook is Idempotent', async () => {
+  it('CASE H: Duplicate Webhook is Idempotent for ACTIVE users', async () => {
     const uniqueSuffix = Date.now().toString();
     const email = `dupwebhook_${uniqueSuffix}@t1.com`;
     const mockAdmin = await executeAsSystem(SystemOperation.SECURITY_AUDIT, async (tx) => tx.user.findUnique({ where: { id: t1AdminId }, include: { userRoles: { include: { role: true } } } }));
-    vi.spyOn(authLib, 'requireAuth').mockResolvedValue(mockAdmin as any);
-    vi.spyOn(authLib, 'requireTenant').mockResolvedValue(tenant1Id);
     
-    await inviteEmployee(email, 'MEMBER');
+    // Create an ACTIVE user directly (simulate they already completed onboarding)
+    await executeAsSystem(SystemOperation.SECURITY_AUDIT, async (tx) => {
+       await tx.user.create({
+         data: {
+           email,
+           clerkId: `c_dup_${uniqueSuffix}`,
+           tenantId: tenant1Id,
+           status: 'ACTIVE'
+         }
+       });
+    });
     
     const webhookPayload = {
       id: `c_dup_${uniqueSuffix}`,

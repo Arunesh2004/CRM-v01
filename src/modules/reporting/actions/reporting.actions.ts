@@ -1,10 +1,11 @@
 'use server';
+import { withServerActionContext } from '@/lib/observability/server-action';
 import { sanitizeClientError } from '@/lib/errors/client-safe-error';
 
 
 import * as reportingService from '../reporting.service';
 
-export async function getDashboardMetricsAction(startDate?: Date, endDate?: Date) {
+async function _getDashboardMetricsAction(startDate?: Date, endDate?: Date) {
   try {
     const [security, camera, crm, communication] = await Promise.all([
       reportingService.getSecurityMetrics(startDate, endDate),
@@ -21,3 +22,5 @@ export async function getDashboardMetricsAction(startDate?: Date, endDate?: Date
     return { success: false, error: sanitizeClientError(error) };
   }
 }
+
+export const getDashboardMetricsAction = withServerActionContext(_getDashboardMetricsAction);

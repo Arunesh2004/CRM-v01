@@ -3,6 +3,7 @@ import prisma from '@db/utils/prisma';
 import { withTenant } from '@db/utils/prisma-tenant';
 import { ProviderFactory } from '../../../infrastructure/provider.factory';
 import { StorageProvider } from '../../../infrastructure/storage/storage.interface';
+import { Logger } from '@/lib/logger/logger';
 
 export interface CreateDocumentInput {
   fileName: string;
@@ -11,6 +12,41 @@ export interface CreateDocumentInput {
   buffer: Buffer;
   customerId?: string;
   taskId?: string;
+}
+
+export async function requireDocumentAccess(tenantId: string, userId: string, documentId: string, action: 'READ' | 'WRITE' | 'DELETE') {
+  const prismaTenant = withTenant(tenantId);
+  const document = await prismaTenant.document.findUnique({
+    where: { id: documentId }
+  });
+  if (!document) throw new Error('Document not found');
+
+  if (document.uploadedById === userId) {
+    return document;
+  }
+
+  // Check explicit document permissions
+  const explicitPerm = await prismaTenant.documentPermission.findFirst({
+    where: {
+      documentId,
+      userId,
+      permission: { in: action === 'READ' ? ['READ', 'WRITE', 'DELETE'] : action === 'WRITE' ? ['WRITE', 'DELETE'] : ['DELETE'] }
+    }
+  });
+  if (explicitPerm) {
+    return document;
+  }
+
+  // Check parent CRM resource ownership
+  if (document.customerId) {
+    const hasPerm = await requirePermissionFast(userId, 'CUSTOMER', action === 'READ' ? 'READ' : 'UPDATE').catch(() => false);
+    if (hasPerm) return document;
+  } else if (document.taskId) {
+    const hasPerm = await requirePermissionFast(userId, 'TASK', action === 'READ' ? 'READ' : 'UPDATE').catch(() => false);
+    if (hasPerm) return document;
+  }
+
+  throw new Error('Forbidden: Unauthorized document access');
 }
 
 export async function createDocument(input: CreateDocumentInput) {
@@ -92,30 +128,31 @@ export async function createDocument(input: CreateDocumentInput) {
 
     return document;
   } catch (dbError) {
-    console.error('Failed to persist document to DB, attempting to cleanup storage', dbError);
+    Logger.error('Failed to persist document to DB, attempting to cleanup storage', dbError);
     // Best effort cleanup if DB fails
     try {
       await provider.delete(storageKey);
     } catch (cleanupError) {
-      console.error('Failed to cleanup storage after DB error', cleanupError);
+      Logger.error('Failed to cleanup storage after DB error', cleanupError);
     }
     throw new Error('Failed to save document metadata');
   }
 }
 
 export async function getDocument(id: string) {
-  const tenantId = await requireTenant();
-  const document = await prisma.document.findFirst({
-    where: { id, tenantId }
-  });
-  if (!document) throw new Error('Document not found');
-  return document;
+  const identity = await requireAuthIdentity();
+  const tenantId = await requireTenantFromIdentity(identity);
+  return await requireDocumentAccess(tenantId, identity.id, id, 'READ');
 }
 
 export async function getDocumentsForCustomer(customerId: string) {
-  const tenantId = await requireTenant();
-  return prisma.document.findMany({
-    where: { tenantId, customerId },
+  const identity = await requireAuthIdentity();
+  const tenantId = await requireTenantFromIdentity(identity);
+  await requirePermissionFast(identity.id, 'CUSTOMER', 'READ');
+  
+  const prismaTenant = withTenant(tenantId);
+  return prismaTenant.document.findMany({
+    where: { customerId },
     orderBy: { createdAt: 'desc' },
     select: {
       id: true,
@@ -130,9 +167,13 @@ export async function getDocumentsForCustomer(customerId: string) {
 }
 
 export async function getDocumentsForTask(taskId: string) {
-  const tenantId = await requireTenant();
-  return prisma.document.findMany({
-    where: { tenantId, taskId },
+  const identity = await requireAuthIdentity();
+  const tenantId = await requireTenantFromIdentity(identity);
+  await requirePermissionFast(identity.id, 'TASK', 'READ');
+
+  const prismaTenant = withTenant(tenantId);
+  return prismaTenant.document.findMany({
+    where: { taskId },
     orderBy: { createdAt: 'desc' },
     select: {
       id: true,
@@ -150,23 +191,11 @@ export async function deleteDocument(id: string) {
   const identity = await requireAuthIdentity();
   const tenantId = await requireTenantFromIdentity(identity);
 
-  const document = await prisma.document.findFirst({
-    where: { id, tenantId }
-  });
-  if (!document) throw new Error('Document not found');
+  const document = await requireDocumentAccess(tenantId, identity.id, id, 'DELETE');
 
-  // Verify permission
-  // For MVP, just require UPDATE on the parent CRM resource, or the user is the uploader
-  if (document.uploadedById !== identity.id) {
-    if (document.customerId) {
-      await requirePermissionFast(identity.id, 'CUSTOMER', 'UPDATE');
-    } else if (document.taskId) {
-      await requirePermissionFast(identity.id, 'TASK', 'UPDATE');
-    }
-  }
-
+  const prismaTenant = withTenant(tenantId);
   // Delete from DB first to ensure CRM consistency
-  await prisma.document.delete({
+  await prismaTenant.document.delete({
     where: { id }
   });
 
@@ -175,11 +204,11 @@ export async function deleteDocument(id: string) {
     const provider = await ProviderFactory.getForTenant('STORAGE') as StorageProvider;
     await provider.delete(document.storageKey);
   } catch (storageError) {
-    console.error('Failed to delete physical storage for document', document.id, storageError);
+    Logger.error('Failed to delete physical storage for document', document.id, storageError);
   }
 
   // Audit
-  await prisma.auditLog.create({
+  await prismaTenant.auditLog.create({
     data: {
       tenantId,
       actorId: identity.id,

@@ -5,8 +5,12 @@ export function validateEnvironment(): void {
     'NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY',
     'CLERK_SECRET_KEY',
     'CLERK_WEBHOOK_SECRET',
-    'COMPANY_TENANT_ID',
-    'INITIAL_ADMIN_EMAIL'
+    'CCTV_STREAM_JWT_SECRET',
+    'CCTV_OPAQUE_PATH_SECRET',
+    'MEDIAMTX_API_URL',
+    'MEDIAMTX_WEBHOOK_SECRET',
+    'ENCRYPTION_KEY',
+    'PUBLIC_APP_URL'
   ];
 
   // We do not strictly enforce billing keys yet in this validation 
@@ -19,10 +23,9 @@ export function validateEnvironment(): void {
   }
   
   const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
-  if (!uuidRegex.test(process.env.COMPANY_TENANT_ID!.trim())) {
+  if (process.env.COMPANY_TENANT_ID && !uuidRegex.test(process.env.COMPANY_TENANT_ID.trim())) {
     throw new Error(`CRITICAL STARTUP FAILURE: COMPANY_TENANT_ID must be a valid UUID.`);
   }
-
 
   // Twilio constraints
   if (isProduction) {
@@ -54,12 +57,7 @@ export function validateEnvironment(): void {
 
   // Production Safety Checks
   if (process.env.NODE_ENV === 'production') {
-    if (process.env.COMPANY_TENANT_ID?.trim() === '00000000-0000-0000-0000-000000000001') {
-      throw new Error('CRITICAL STARTUP FAILURE: COMPANY_TENANT_ID cannot be the development placeholder in production.');
-    }
-    if (process.env.INITIAL_ADMIN_EMAIL?.trim().toLowerCase() === 'admin@canonical.com') {
-      throw new Error('CRITICAL STARTUP FAILURE: INITIAL_ADMIN_EMAIL cannot be the development placeholder in production.');
-    }
+
     if (process.env.DATABASE_URL?.includes('localhost')) {
       throw new Error('CRITICAL STARTUP FAILURE: DATABASE_URL cannot point to localhost in production.');
     }
@@ -97,5 +95,17 @@ export const ENV = {
   // Storage
   get awsAccessKeyId() { return process.env.AWS_ACCESS_KEY_ID; },
   get awsSecretAccessKey() { return process.env.AWS_SECRET_ACCESS_KEY; },
-  
+
+  // CCTV / MediaMTX
+  get cctvStreamJwtSecret() { return process.env.CCTV_STREAM_JWT_SECRET!; },
+  get cctvOpaquePathSecret() { return process.env.CCTV_OPAQUE_PATH_SECRET!; },
+  get cctvOpaquePathSecretPrevious() { return process.env.CCTV_OPAQUE_PATH_SECRET_PREVIOUS; },
+  get cctvOpaquePathSecretPreviousValidUntil() { 
+    return process.env.CCTV_OPAQUE_PATH_SECRET_PREVIOUS_VALID_UNTIL ? 
+      new Date(process.env.CCTV_OPAQUE_PATH_SECRET_PREVIOUS_VALID_UNTIL) : undefined;
+  },
+  get mediamtxApiUrl() { return process.env.MEDIAMTX_API_URL!; },
+  get publicAppUrl() { return process.env.PUBLIC_APP_URL!; },
+  get mediamtxWebhookSecret() { return process.env.MEDIAMTX_WEBHOOK_SECRET!; },
+  get encryptionKey() { return process.env.ENCRYPTION_KEY!; }
 };

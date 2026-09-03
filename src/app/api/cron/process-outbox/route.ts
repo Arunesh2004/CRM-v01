@@ -1,4 +1,6 @@
 import { NextResponse } from 'next/server';
+import { withApiContext } from '@/lib/observability/context';
+import { Logger } from '@/lib/logger/logger';
 import { processOutbox } from '@/modules/core/events/outbox.service';
 import { sanitizeClientError } from '@/lib/errors/client-safe-error';
 
@@ -9,7 +11,7 @@ function verifyCronSecret(req: Request): boolean {
   const cronSecret = process.env.CRON_SECRET;
   if (!cronSecret) {
     // If CRON_SECRET is not configured at all, deny all requests
-    console.error('[Cron] CRON_SECRET environment variable is not set. Denying request.');
+    Logger.warn('CRON_SECRET environment variable is not set. Denying cron request.');
     return false;
   }
   // Constant-time comparison to prevent timing attacks
@@ -21,7 +23,7 @@ function verifyCronSecret(req: Request): boolean {
   return mismatch === 0;
 }
 
-export async function GET(req: Request) {
+const _orig_GET = async function (req: Request) {
   if (!verifyCronSecret(req)) {
     return NextResponse.json({ success: false, error: 'Unauthorized' }, { status: 401 });
   }
@@ -33,7 +35,7 @@ export async function GET(req: Request) {
   }
 }
 
-export async function POST(req: Request) {
+const _orig_POST = async function (req: Request) {
   if (!verifyCronSecret(req)) {
     return NextResponse.json({ success: false, error: 'Unauthorized' }, { status: 401 });
   }
@@ -44,3 +46,7 @@ export async function POST(req: Request) {
     return NextResponse.json({ success: false, error: sanitizeClientError(error) }, { status: 500 });
   }
 }
+
+export const GET = withApiContext(_orig_GET);
+
+export const POST = withApiContext(_orig_POST);

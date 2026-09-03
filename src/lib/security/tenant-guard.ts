@@ -10,7 +10,7 @@ import { executeAsSystem, SystemOperation } from '@db/utils/prisma-system';
 export async function assertTenantOwnership(model: string, id: string, tenantId: string) {
   // Use system bypass to read raw entity for the security check itself
   const entity = await executeAsSystem(SystemOperation.SECURITY_AUDIT, async (tx) => {
-    // @ts-ignore
+    // @ts-expect-error Prisma's TransactionClient does not export an index signature for dynamic model access
     return tx[model].findUnique({ where: { id } });
   });
 

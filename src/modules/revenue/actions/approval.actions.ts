@@ -1,10 +1,11 @@
 'use server';
+import { withServerActionContext } from '@/lib/observability/server-action';
 
 import { sanitizeClientError } from '@/lib/errors/client-safe-error';
 import { requireAuth, requireTenant } from '@/lib/auth';
 import { withTenant } from '@db/utils/prisma-tenant';
 
-export async function getApprovalsAction() {
+async function _getApprovalsAction() {
   try {
     const tenantId = await requireTenant();
     await requireAuth();
@@ -22,3 +23,5 @@ export async function getApprovalsAction() {
     return { success: false, error: sanitizeClientError(error) };
   }
 }
+
+export const getApprovalsAction = withServerActionContext(_getApprovalsAction);

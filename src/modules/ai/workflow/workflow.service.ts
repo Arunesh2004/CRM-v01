@@ -1,3 +1,4 @@
+import { withTenant, withTenantTransaction } from '@db/utils/prisma-tenant';
 import prisma from '../../../../database/utils/prisma';
 import { SecurityEventService } from '../../../../src/modules/security-events/security-event.service';
 import { AIPermissionService } from '../../../modules/ai-permissions/ai-permission.service';
@@ -16,7 +17,7 @@ export class WorkflowService {
   ) {
     try {
       // 1. Mark step as running
-      await prisma.workflowExecutionStep.create({
+      await withTenant(tenantId).workflowExecutionStep.create({
         data: {
           tenantId,
           executionId,
@@ -36,13 +37,13 @@ export class WorkflowService {
       const result = { success: true, action: actionType, data: inputData };
 
       // 4. Update step status
-      await prisma.workflowExecutionStep.updateMany({
+      await withTenant(tenantId).workflowExecutionStep.updateMany({
         where: { executionId, actionId },
         data: { status: 'COMPLETED', result: JSON.stringify(result) }
       });
 
       // 5. Audit Log (Phase 8 integration)
-      await prisma.auditLog.create({
+      await withTenant(tenantId).auditLog.create({
         data: {
           tenantId,
           actorId: userId, actorType: 'USER',
@@ -56,7 +57,7 @@ export class WorkflowService {
       return result;
 
     } catch (error) {
-      await prisma.workflowExecutionStep.updateMany({
+      await withTenant(tenantId).workflowExecutionStep.updateMany({
         where: { executionId, actionId },
         data: { status: 'FAILED', error: (error as Error).message }
       });

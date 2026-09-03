@@ -1,3 +1,6 @@
+import { redact } from './redact';
+import { getContext } from './context';
+
 export type LogLevel = 'info' | 'warn' | 'error' | 'debug';
 
 export interface LogContext {
@@ -5,6 +8,12 @@ export interface LogContext {
   requestId?: string;
   userId?: string;
   [key: string]: any;
+}
+
+function injectContext() {
+  const ctx = getContext();
+  if (!ctx) return {};
+  return { tenantId: ctx.tenantId, jobId: ctx.jobId, requestId: ctx.requestId };
 }
 
 /**
@@ -16,13 +25,14 @@ export class Logger {
     const payload = {
       timestamp: new Date().toISOString(),
       level,
-      message,
-      ...context,
+      message: redact(message),
+      ...injectContext(),
+      ...redact(context),
       ...(error && {
         error: {
-          message: error.message,
+          message: redact(error.message),
           name: error.name,
-          stack: process.env.NODE_ENV === 'production' ? undefined : error.stack,
+          stack: process.env.NODE_ENV === 'production' ? undefined : redact(error.stack),
         }
       })
     };

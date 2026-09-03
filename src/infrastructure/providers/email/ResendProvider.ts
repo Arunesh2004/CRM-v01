@@ -1,5 +1,6 @@
 import { EmailProvider, EmailPayload, EmailResponse } from './email.interface';
 import { ProviderContext, ProviderHealth } from '../base.interface';
+import { Logger } from '@/lib/logger/logger';
 
 export class ResendProvider implements EmailProvider {
   name = 'ResendProvider';
@@ -14,9 +15,12 @@ export class ResendProvider implements EmailProvider {
   }
 
   async checkHealth(): Promise<ProviderHealth> {
+    const isConfigured = !!this.apiKey;
     return {
-      status: this.apiKey ? 'active' : 'missing_credentials',
-      providerName: this.name
+      status: isConfigured ? 'READY' : 'MISSING_CREDENTIALS',
+      providerName: this.name,
+      criticality: 'DEGRADED',
+      reason: isConfigured ? undefined : 'Missing RESEND_API_KEY'
     };
   }
 
@@ -28,7 +32,7 @@ export class ResendProvider implements EmailProvider {
     // For this simulation, we act as if it succeeded if the key exists.
     const [user, domain] = payload.to.split('@');
     const maskedEmail = user ? `${user.charAt(0)}***@${domain || 'unknown'}` : '***';
-    console.log(`[ResendProvider] Sending email to ${maskedEmail} via Resend API...`);
+    Logger.info(`[ResendProvider] Sending email to ${maskedEmail} via Resend API...`);
     
     return {
       messageId: `resend_${Date.now()}_${Math.random().toString(36).substring(7)}`,

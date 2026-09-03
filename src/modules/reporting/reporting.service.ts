@@ -67,7 +67,7 @@ export async function getCommunicationMetrics(startDate?: Date, endDate?: Date) 
     orderBy: { createdAt: 'desc' },
   });
 
-  let total = notifications.length;
+  const total = notifications.length;
   let email = 0;
   let sms = 0;
   let whatsapp = 0;

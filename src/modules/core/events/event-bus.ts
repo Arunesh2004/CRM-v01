@@ -1,3 +1,5 @@
+import { Logger } from '@/lib/logger/logger';
+
 type EventHandler = (payload: any) => Promise<void> | void;
 
 class EventBusService {
@@ -17,12 +19,13 @@ class EventBusService {
     // Fire and forget, or await. Standard is fire and forget for decoupling.
     // In serverless, we might need to await it before execution context dies.
     await Promise.all(eventHandlers.map(handler => Promise.resolve(handler(payload)).catch((err: any) => {
-      console.error(`[EventBus] Error handling event ${event}:`, err);
+      Logger.error(`EventBus error handling event ${event}`, err instanceof Error ? err : new Error(String(err)));
     })));
   }
 }
 
 export const EventBus = new EventBusService();
+
 
 // Register handlers
 import { registerNotificationHandlers } from './notification.handlers';

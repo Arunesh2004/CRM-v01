@@ -1,3 +1,4 @@
+import { withTenant, withTenantTransaction } from '@db/utils/prisma-tenant';
 import prisma from '../../../database/utils/prisma';
 import { AttachmentType } from '@prisma/client';
 
@@ -15,7 +16,7 @@ export class AttachmentService {
     storageUrl: string,
     size: number
   ) {
-    const attachment = await prisma.communicationAttachment.create({
+    const attachment = await withTenant(tenantId).communicationAttachment.create({
       data: {
         tenantId,
         uploaderId,
@@ -35,7 +36,7 @@ export class AttachmentService {
    * Get attachments for a specific communication object
    */
   static async getAttachments(tenantId: string, attachedToType: AttachmentType, attachedToId: string) {
-    return await prisma.communicationAttachment.findMany({
+    return await withTenant(tenantId).communicationAttachment.findMany({
       where: {
         tenantId,
         attachedToType,

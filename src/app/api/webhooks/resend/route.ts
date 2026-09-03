@@ -1,11 +1,12 @@
 import { NextResponse } from 'next/server';
+import { withApiContext } from '@/lib/observability/context';
 import { Logger } from '../../../../lib/logger/logger';
 import crypto from 'crypto';
 
 // In a real app, you would use svix to verify Resend Webhooks:
 // import { Webhook } from 'svix';
 
-export async function POST(req: Request) {
+const _orig_POST = async function (req: Request) {
   try {
     const rawBody = await req.text();
     const signature = req.headers.get('svix-signature');
@@ -74,3 +75,5 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: 'Internal Server Error' }, { status: 500 });
   }
 }
+
+export const POST = withApiContext(_orig_POST);

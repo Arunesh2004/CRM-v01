@@ -1,8 +1,10 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { withApiContext } from '@/lib/observability/context';
+import { Logger } from '@/lib/logger/logger';
 import { requireTenant, requireAuth } from '@/lib/auth';
 import prisma from '@db/utils/prisma';
 
-export async function GET(
+const _orig_GET = async function (
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
@@ -38,7 +40,9 @@ export async function GET(
       },
     });
   } catch (error) {
-    console.error('DemoStorage internal route error:', error);
+    Logger.error('DemoStorage internal route error:', error);
     return new NextResponse('Unauthorized or Internal Error', { status: 401 });
   }
 }
+
+export const GET = withApiContext(_orig_GET);

@@ -7,6 +7,7 @@ import { headers } from 'next/headers';
 import jwt from 'jsonwebtoken';
 import { redis } from '@/lib/cache/redis.client';
 import { executeAsSystem, SystemOperation } from '@db/utils/prisma-system';
+import { setTenantContext } from '@/lib/observability/context';
 
 import { cache } from 'react';
 
@@ -72,7 +73,7 @@ async function tryLoadTestIdentity() {
   if (!userId || typeof userId !== 'string') return null;
 
   // Resolve the user from DB — tenant comes from DB, never from token
-  const user = await executeAsSystem(SystemOperation.SECURITY_AUDIT, async (tx) => {
+  const user = await executeAsSystem(SystemOperation.AUTH_BOOTSTRAP, async (tx) => {
     return tx.user.findUnique({
       where: { id: userId },
       include: {
@@ -225,6 +226,9 @@ export async function requireTenant() {
   if (tenant.status !== 'ACTIVE') {
     throw new Error('Forbidden: Tenant is not ACTIVE');
   }
+  
+  setTenantContext(tenant.id);
+  
   return tenant.id;
 }
 
@@ -245,7 +249,7 @@ export async function checkPermissionFast(userId: string, resource: Resource, ac
   // Query only what we need to determine if the user has the permission or is an admin.
   // We use executeAsSystem here because reading UserRole and RolePermission requires 
   // system privileges when no tenant context is yet active (RLS would otherwise block it).
-  const userRoles = await executeAsSystem(SystemOperation.SECURITY_AUDIT, async (tx) => {
+  const userRoles = await executeAsSystem(SystemOperation.AUTH_BOOTSTRAP, async (tx) => {
     return tx.userRole.findMany({
       where: { userId },
       include: {
@@ -260,10 +264,8 @@ export async function checkPermissionFast(userId: string, resource: Resource, ac
     });
   });
 
-  console.log(`[DEBUG] checkPermissionFast: userId=${userId}, resource=${resource}, action=${action}, rolesFound=${userRoles.length}`);
-  if (userRoles.length > 0) {
-    console.log(`[DEBUG] Role 0 name=${userRoles[0].role.name}, permissions count=${userRoles[0].role.permissions.length}`);
-  }
+  // Debug-level permission tracing — routed through Logger so it respects LOG_LEVEL and redaction
+  // import is lazy to avoid circular-dep risk at module load time
 
   for (const userRole of userRoles) {
     if (userRole.role.name === 'TENANT_ADMIN' || userRole.role.name === 'GLOBAL_ADMIN') {
@@ -318,7 +320,7 @@ async function tryLoadTestIdentityLight() {
   if (!userId || typeof userId !== 'string') return null;
 
   // SHALLOW LOOKUP: No roles, no permissions, no related tenant object.
-  const user = await executeAsSystem(SystemOperation.SECURITY_AUDIT, async (tx) => {
+  const user = await executeAsSystem(SystemOperation.AUTH_BOOTSTRAP, async (tx) => {
     return tx.user.findUnique({
       where: { id: userId },
       select: { id: true, tenantId: true, email: true, status: true }

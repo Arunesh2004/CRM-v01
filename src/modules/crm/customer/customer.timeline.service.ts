@@ -77,43 +77,56 @@ export async function getCustomerTimeline({
     });
   }
 
-  // 4. Fetch Emails
+  // 4. Email timeline
   const mailThreads = await prisma.mailThread.findMany({
-    where: { tenantId }, // If there was a direct link to customer, filter here. Mocking fetching threads
-    include: { messages: { orderBy: { createdAt: 'desc' } } },
-    take: 20
+    where: { tenantId, customerId },
+    orderBy: { createdAt: 'desc' },
+    take: 100,
+    include: {
+      messages: {
+        orderBy: { createdAt: 'desc' },
+        take: 1,
+        include: { sender: { select: { email: true } } }
+      }
+    }
   });
-  for (const t of mailThreads) {
-    for (const m of t.messages) {
+  for (const mt of mailThreads) {
+    if (mt.messages.length > 0) {
+      const latestMsg = mt.messages[0];
       events.push({
-        id: m.id,
+        id: mt.id,
         type: 'EMAIL',
-        title: t.subject,
-        description: m.bodyHtml ? m.bodyHtml.substring(0, 100) + '...' : 'No content',
-        actor: { name: 'Email Sender' },
-        timestamp: m.createdAt.toISOString(),
-        metadata: { status: (m.metadata as any)?.status || 'SENT' }
+        title: `Email: ${mt.subject}`,
+        description: latestMsg.bodyText?.substring(0, 100) || latestMsg.bodyHtml?.substring(0, 100) || 'Email thread',
+        actor: { name: latestMsg.sender?.email || 'Unknown' },
+        timestamp: mt.createdAt.toISOString(),
       });
     }
   }
 
-  // 5. Fetch Customer Messages (Exclude Internal)
-  const conversations = await prisma.chatConversation.findMany({
-    where: { 
-      tenantId, 
-      type: { notIn: ['GROUP'] }
-    },
-    include: { messages: { include: { sender: { select: { firstName: true, email: true } } } } }
+  // 5. Chat message timeline
+  const chatConversations = await prisma.chatConversation.findMany({
+    where: { tenantId, customerId },
+    orderBy: { createdAt: 'desc' },
+    take: 100,
+    include: {
+      messages: {
+        orderBy: { createdAt: 'desc' },
+        take: 1,
+        include: { sender: { select: { email: true } } }
+      }
+    }
   });
-  for (const c of conversations) {
-    for (const m of c.messages) {
+  for (const chat of chatConversations) {
+    if (chat.messages.length > 0) {
+      const latestMsg = chat.messages[0];
       events.push({
-        id: m.id,
+        id: chat.id,
         type: 'MESSAGE',
-        title: `Message in ${c.type}`,
-        description: m.content,
-        actor: { name: m.sender?.firstName || m.sender?.email || 'Customer' },
-        timestamp: m.createdAt.toISOString(),
+        title: chat.name ? `Chat: ${chat.name}` : `Chat Conversation`,
+        description: latestMsg.content,
+        actor: { name: latestMsg.sender?.email || 'Unknown' },
+        timestamp: chat.createdAt.toISOString(),
       });
     }
   }

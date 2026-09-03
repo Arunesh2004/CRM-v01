@@ -1,5 +1,7 @@
-import { prismaAdmin } from '@db/utils/prisma';
+import { executeAsSystem, SystemOperation } from '@db/utils/prisma-system';
+import { withTenant } from '@db/utils/prisma-tenant';
 import { getStorageProvider } from '../../../lib/storage';
+import { Logger } from '@/lib/logger/logger';
 
 const POLICY_LIMITS: Record<string, number> = {
   DAILY: 7,
@@ -12,10 +14,10 @@ export class RetentionPolicyService {
    * Enforces retention policies for all tenants based on their settings.
    */
   async enforceRetentionPolicies(): Promise<void> {
-    const tenants = await prismaAdmin.tenant.findMany({
+    const tenants = await executeAsSystem(SystemOperation.DISASTER_RECOVERY, async (tx) => tx.tenant.findMany({
       where: { status: { not: 'DELETED' } },
       select: { id: true, rpoPolicy: true }
-    });
+    }));
 
     for (const tenant of tenants) {
       await this.enforceTenantRetention(tenant.id);
@@ -31,11 +33,12 @@ export class RetentionPolicyService {
     // based on their RPO tier. 
     // ENTERPRISE = keep 30, BUSINESS = keep 14, BASIC = keep 7
     let keepCount = 7; // Default Basic
-    const tenant = await prismaAdmin.tenant.findUnique({ where: { id: tenantId } });
+    const tenantPrisma = withTenant(tenantId);
+    const tenant = await tenantPrisma.tenant.findUnique({ where: { id: tenantId } });
     if (tenant?.rpoPolicy === 'ENTERPRISE') keepCount = 30;
     if (tenant?.rpoPolicy === 'BUSINESS') keepCount = 14;
 
-    const snapshots = await prismaAdmin.recoverySnapshot.findMany({
+    const snapshots = await tenantPrisma.recoverySnapshot.findMany({
       where: { tenantId, status: 'ACTIVE' },
       orderBy: { createdAt: 'desc' }
     });
@@ -62,9 +65,10 @@ export class RetentionPolicyService {
    */
   async deleteSnapshotSafely(snapshot: any): Promise<void> {
     const storage = getStorageProvider();
+    const tenantPrisma = withTenant(snapshot.tenantId);
 
     // 1. Mark DELETE_PENDING
-    await prismaAdmin.recoverySnapshot.update({
+    await tenantPrisma.recoverySnapshot.update({
       where: { id: snapshot.id },
       data: { status: 'DELETE_PENDING' }
     });
@@ -72,13 +76,13 @@ export class RetentionPolicyService {
     // We need to extract the objectKey from the checksum/id, but actually we need the `RecoveryJob` that created it to get the `archiveLocation`.
     // We don't have a direct link from RecoverySnapshot -> Job right now in the schema.
     // Let's find the job by checksum.
-    const job = await prismaAdmin.recoveryJob.findFirst({
+    const job = await tenantPrisma.recoveryJob.findFirst({
       where: { tenantId: snapshot.tenantId, checksum: snapshot.checksum, status: 'COMPLETED' }
     });
 
     if (!job || !job.archiveLocation) {
       // If we can't find the file location, just mark it as DELETED to clean up the DB
-      await prismaAdmin.recoverySnapshot.update({
+      await tenantPrisma.recoverySnapshot.update({
         where: { id: snapshot.id },
         data: { status: 'DELETED' }
       });
@@ -107,12 +111,12 @@ export class RetentionPolicyService {
       }
       
       // 4. Update DB
-      await prismaAdmin.recoverySnapshot.update({
+      await tenantPrisma.recoverySnapshot.update({
         where: { id: snapshot.id },
         data: { status: 'DELETED' }
       });
 
-      await prismaAdmin.recoveryAuditLog.create({
+      await tenantPrisma.recoveryAuditLog.create({
         data: {
           tenantId: snapshot.tenantId,
           jobId: job.id,
@@ -123,7 +127,7 @@ export class RetentionPolicyService {
       });
     } catch (e: any) {
       // Failsafe: leave in DELETE_PENDING, DO NOT delete database metadata.
-      await prismaAdmin.recoveryAuditLog.create({
+      await tenantPrisma.recoveryAuditLog.create({
         data: {
           tenantId: snapshot.tenantId,
           jobId: job.id,
@@ -132,7 +136,7 @@ export class RetentionPolicyService {
           metadata: { snapshotId: snapshot.id, error: e.message }
         }
       });
-      console.error('Failed to delete snapshot from storage:', e);
+      Logger.error('Failed to delete snapshot from storage:', e);
     }
   }
 
@@ -140,9 +144,9 @@ export class RetentionPolicyService {
    * Resumes failed deletions (DELETE_PENDING)
    */
   async retryPendingDeletions(): Promise<void> {
-    const pending = await prismaAdmin.recoverySnapshot.findMany({
+    const pending = await executeAsSystem(SystemOperation.DISASTER_RECOVERY, async (tx) => tx.recoverySnapshot.findMany({
       where: { status: 'DELETE_PENDING' }
-    });
+    }));
 
     for (const snapshot of pending) {
       await this.deleteSnapshotSafely(snapshot);

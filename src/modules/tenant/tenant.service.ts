@@ -1,3 +1,4 @@
+import { withTenant, withTenantTransaction } from '@db/utils/prisma-tenant';
 import prisma from '@db/utils/prisma';
 import { redis } from '@/lib/cache/redis.client';
 
@@ -7,7 +8,7 @@ export async function getTenantConfig(tenantId: string) {
     if (cached) return cached as any;
   }
 
-  const tenant = await prisma.tenant.findUnique({
+  const tenant = await withTenant(tenantId).tenant.findUnique({
     where: { id: tenantId }
   });
 

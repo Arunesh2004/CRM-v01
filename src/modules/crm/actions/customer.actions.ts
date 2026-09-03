@@ -1,4 +1,5 @@
 'use server'
+import { withServerActionContext } from '@/lib/observability/server-action';
 import { sanitizeClientError } from '@/lib/errors/client-safe-error';
 
 import { requireAuth, requireTenant, requirePermission } from '@/lib/auth';
@@ -6,7 +7,7 @@ import { CreateCustomerSchema, UpdateCustomerSchema } from '../validators/custom
 import * as customerService from '../customer/customer.service';
 import { z } from 'zod';
 
-export async function createCustomerAction(payload: z.infer<typeof CreateCustomerSchema>) {
+async function _createCustomerAction(payload: z.infer<typeof CreateCustomerSchema>) {
   try {
     const validatedData = CreateCustomerSchema.parse(payload);
     
@@ -20,7 +21,7 @@ export async function createCustomerAction(payload: z.infer<typeof CreateCustome
   }
 }
 
-export async function updateCustomerAction(payload: z.infer<typeof UpdateCustomerSchema>) {
+async function _updateCustomerAction(payload: z.infer<typeof UpdateCustomerSchema>) {
   try {
     const validatedData = UpdateCustomerSchema.parse(payload);
     
@@ -36,7 +37,7 @@ export async function updateCustomerAction(payload: z.infer<typeof UpdateCustome
 
 import { QueryParams } from '../../core/types';
 
-export async function getCustomersAction(params?: QueryParams) {
+async function _getCustomersAction(params?: QueryParams) {
   try {
     const result = await customerService.getCustomers(params);
     return { success: true, data: result };
@@ -45,7 +46,7 @@ export async function getCustomersAction(params?: QueryParams) {
   }
 }
 
-export async function getCustomerByIdAction(id: string) {
+async function _getCustomerByIdAction(id: string) {
   try {
     const result = await customerService.getCustomerById(id);
     return { success: true, data: result };
@@ -54,7 +55,7 @@ export async function getCustomerByIdAction(id: string) {
   }
 }
 
-export async function deleteCustomerAction(customerId: string) {
+async function _deleteCustomerAction(customerId: string) {
   try {
     const result = await customerService.deleteCustomer(customerId);
     return { success: true, data: result };
@@ -65,26 +66,46 @@ export async function deleteCustomerAction(customerId: string) {
 
 import { revalidatePath } from 'next/cache';
 
-export async function createContactAction(payload: any) {
+const CreateContactSchema = z.object({
+  customerId: z.string().uuid(),
+  firstName: z.string().min(1),
+  lastName: z.string().min(1),
+  email: z.string().email().optional(),
+  phone: z.string().optional()
+}).strip();
+
+const CreateLocationSchema = z.object({
+  customerId: z.string().uuid(),
+  name: z.string().min(1),
+  address: z.string().optional(),
+  city: z.string().optional(),
+  state: z.string().optional(),
+  zip: z.string().optional(),
+  country: z.string().optional()
+}).strip();
+
+async function _createContactAction(payload: any) {
   try {
+    const validated = CreateContactSchema.parse(payload);
     await requireAuth();
     await requireTenant();
     await requirePermission('CUSTOMER', 'UPDATE');
-    const result = await customerService.createContact(payload);
-    revalidatePath(`/customers/${payload.customerId}`);
+    const result = await customerService.createContact(validated);
+    revalidatePath(`/customers/${validated.customerId}`);
     return { success: true, data: result };
   } catch (error: any) {
     return { success: false, error: sanitizeClientError(error) };
   }
 }
 
-export async function createLocationAction(payload: any) {
+async function _createLocationAction(payload: any) {
   try {
+    const validated = CreateLocationSchema.parse(payload);
     await requireAuth();
     await requireTenant();
     await requirePermission('CUSTOMER', 'UPDATE');
-    const result = await customerService.createLocation(payload);
-    revalidatePath(`/customers/${payload.customerId}`);
+    const result = await customerService.createLocation(validated);
+    revalidatePath(`/customers/${validated.customerId}`);
     return { success: true, data: result };
   } catch (error: any) {
     return { success: false, error: sanitizeClientError(error) };
@@ -93,7 +114,7 @@ export async function createLocationAction(payload: any) {
 
 import { getCustomerTimeline } from '../customer/customer.timeline.service';
 
-export async function getCustomerTimelineAction(params: {
+async function _getCustomerTimelineAction(params: {
   customerId: string;
   cursor?: string;
   limit?: number;
@@ -105,3 +126,18 @@ export async function getCustomerTimelineAction(params: {
     return { success: false, error: sanitizeClientError(error) };
   }
 }
+export const createCustomerAction = withServerActionContext(_createCustomerAction);
+
+export const updateCustomerAction = withServerActionContext(_updateCustomerAction);
+
+export const getCustomersAction = withServerActionContext(_getCustomersAction);
+
+export const getCustomerByIdAction = withServerActionContext(_getCustomerByIdAction);
+
+export const deleteCustomerAction = withServerActionContext(_deleteCustomerAction);
+
+export const createContactAction = withServerActionContext(_createContactAction);
+
+export const createLocationAction = withServerActionContext(_createLocationAction);
+
+export const getCustomerTimelineAction = withServerActionContext(_getCustomerTimelineAction);

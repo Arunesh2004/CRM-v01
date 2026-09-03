@@ -22,12 +22,12 @@ export function CustomerRelatedItems({ tasks, leads }: { tasks: any[], leads: an
           ) : (
             <div className="space-y-3 mt-2">
               {tasks.map(task => (
-                <div key={task.id} className="flex items-center justify-between p-3 border rounded-lg hover:border-accent transition-colors bg-card text-sm">
+                <Link key={task.id} href={`/tasks/${task.id}`} className="flex items-center justify-between p-3 border rounded-lg hover:border-accent transition-colors bg-card text-sm cursor-pointer">
                   <div className="font-medium text-foreground truncate max-w-[200px]" title={task.title}>{task.title}</div>
                   <Badge variant={task.status === 'COMPLETED' ? 'success' : 'secondary'} className="text-[10px]">
                     {task.status}
                   </Badge>
-                </div>
+                </Link>
               ))}
             </div>
           )}
@@ -50,7 +50,7 @@ export function CustomerRelatedItems({ tasks, leads }: { tasks: any[], leads: an
           ) : (
             <div className="space-y-3 mt-2">
               {leads.map(lead => (
-                <div key={lead.id} className="flex items-center justify-between p-3 border rounded-lg hover:border-accent transition-colors bg-card text-sm">
+                <Link key={lead.id} href={`/leads/${lead.id}`} className="flex items-center justify-between p-3 border rounded-lg hover:border-accent transition-colors bg-card text-sm cursor-pointer">
                   <div>
                     <div className="font-medium text-foreground truncate max-w-[150px]">{lead.name}</div>
                     <div className="text-xs text-muted-foreground">{lead.email || 'No email'}</div>
@@ -58,7 +58,7 @@ export function CustomerRelatedItems({ tasks, leads }: { tasks: any[], leads: an
                   <Badge variant="secondary" className="text-[10px]">
                     {lead.status}
                   </Badge>
-                </div>
+                </Link>
               ))}
             </div>
           )}

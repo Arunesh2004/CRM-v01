@@ -1,10 +1,11 @@
 'use server';
+import { withServerActionContext } from '@/lib/observability/server-action';
 
 import { sanitizeClientError } from '@/lib/errors/client-safe-error';
 import { requireAuth, requireTenant } from '@/lib/auth';
 import { withTenant } from '@db/utils/prisma-tenant';
 
-export async function getTerritoriesAction() {
+async function _getTerritoriesAction() {
   try {
     const tenantId = await requireTenant();
     await requireAuth();
@@ -20,3 +21,5 @@ export async function getTerritoriesAction() {
     return { success: false, error: sanitizeClientError(error) };
   }
 }
+
+export const getTerritoriesAction = withServerActionContext(_getTerritoriesAction);

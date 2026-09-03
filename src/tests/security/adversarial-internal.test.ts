@@ -17,7 +17,7 @@ describe('Adversarial Internal & Admin Surface (Stage 17 & 18)', () => {
     const req = new NextRequest('http://localhost/api/export?type=diagnostic', { method: 'GET' });
     
     // We expect this to fail with 500 or 401 because we have no Clerk auth headers
-    const res = await diagnosticGET(req);
+    const res = await diagnosticGET(req, {});
     
     // It should NOT be 200 OK. 
     expect(res.status).not.toBe(200);
@@ -34,8 +34,8 @@ describe('Adversarial Internal & Admin Surface (Stage 17 & 18)', () => {
   it('ATTACK: Access health check endpoint (Stage 17)', async () => {
     // Health check is meant to be public, but let's check its disclosure
     const req = new NextRequest('http://localhost/api/health', { method: 'GET' });
-    const res = await healthGET();
-        expect(res.status).toBe(200); // Health check succeeds in local test environment
+    const res = await healthGET(req, {});
+    expect(res.status).toBe(200); // Health check succeeds in local test environment
     
     const body = await res.json();
     expect(body.database).toBeDefined();
@@ -47,7 +47,7 @@ describe('Adversarial Internal & Admin Surface (Stage 17 & 18)', () => {
   it('ATTACK: Fuzz export endpoint with malformed types (Stage 18)', async () => {
     const req = new NextRequest('http://localhost/api/export?type=MALICIOUS_INJECTION_TYPE', { method: 'GET' });
     
-    const res = await diagnosticGET(req);
+    const res = await diagnosticGET(req, {});
     
     // Auth will fail first.
     expect(res.status).not.toBe(200);

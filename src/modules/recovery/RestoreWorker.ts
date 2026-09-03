@@ -1,31 +1,34 @@
 import { JobPayload } from '@/../src/lib/queue/JobQueueProvider';
-import { prismaAdmin } from '@db/utils/prisma';
+import prisma from '@db/utils/prisma';
+import { withTenant, withTenantTransaction } from '@db/utils/prisma-tenant';
 import { getStorageProvider } from '@/../src/lib/storage';
 import { KeyManagementService } from './security/KeyManagementService';
 import crypto from 'crypto';
+import { Logger } from '@/lib/logger/logger';
 
 export class RestoreWorker {
   
   async processChunk(payload: JobPayload) {
     const { tenantId, jobId, metadata } = payload;
+    const tenantPrisma = withTenant(tenantId);
     
     // 1. Double check tenant is locked and job is active
-    const tenant = await prismaAdmin.tenant.findUnique({ where: { id: tenantId } });
+    const tenant = await tenantPrisma.tenant.findUnique({ where: { id: tenantId } });
     if (!tenant || !tenant.isRestoreLocked) {
       throw new Error('Tenant is not locked. Processing aborted to prevent data corruption.');
     }
     
     // 2. Idempotency Check via Checkpoint
     const chunkId = metadata.chunkId;
-    const existingCheckpoint = await prismaAdmin.restoreCheckpoint.findUnique({ where: { chunkId } });
+    const existingCheckpoint = await tenantPrisma.restoreCheckpoint.findUnique({ where: { chunkId } });
     
     if (existingCheckpoint && existingCheckpoint.status === 'COMPLETED') {
-      console.log(`Chunk ${chunkId} already completed. Acking idemptoently.`);
+      Logger.info(`Chunk ${chunkId} already completed. Acking idemptoently.`);
       return; 
     }
 
     if (!existingCheckpoint) {
-      await prismaAdmin.restoreCheckpoint.create({
+      await tenantPrisma.restoreCheckpoint.create({
         data: {
           chunkId,
           recoveryJobId: jobId,
@@ -37,7 +40,7 @@ export class RestoreWorker {
         }
       });
     } else {
-      await prismaAdmin.restoreCheckpoint.update({
+      await tenantPrisma.restoreCheckpoint.update({
         where: { chunkId },
         data: { attempt: { increment: 1 }, status: 'PENDING' }
       });
@@ -45,7 +48,8 @@ export class RestoreWorker {
 
     try {
       // 3. Database Execution
-      await prismaAdmin.$transaction(async (tx) => {
+      await prisma.$transaction(async (tx) => {
+        await withTenantTransaction(tx, tenantId);
         // Execute the exact createMany block with skipDuplicates
         // We use dynamic model injection for the SAGA
         const modelDelegate = (tx as any)[metadata.model.toLowerCase()];
@@ -71,7 +75,7 @@ export class RestoreWorker {
       }, { timeout: 30000 }); // strict 30s timeout per chunk
 
     } catch (error: any) {
-      await prismaAdmin.restoreCheckpoint.update({
+      await tenantPrisma.restoreCheckpoint.update({
         where: { chunkId },
         data: { status: 'FAILED', errorMessage: error.message }
       });

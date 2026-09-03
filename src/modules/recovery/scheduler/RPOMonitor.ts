@@ -1,4 +1,5 @@
-import { prismaAdmin } from '@db/utils/prisma';
+import { executeAsSystem, SystemOperation } from '@db/utils/prisma-system';
+import { withTenant } from '@db/utils/prisma-tenant';
 
 export interface RPOMetrics {
   tenantId: string;
@@ -14,10 +15,10 @@ export class RPOMonitor {
    * Calculates RPO status for all tenants.
    */
   async getGlobalRPOStatus(): Promise<RPOMetrics[]> {
-    const tenants = await prismaAdmin.tenant.findMany({
+    const tenants = await executeAsSystem(SystemOperation.DISASTER_RECOVERY, async (tx) => tx.tenant.findMany({
       where: { status: { not: 'DELETED' } },
       select: { id: true, rpoPolicy: true }
-    });
+    }));
 
     const metrics: RPOMetrics[] = [];
     for (const tenant of tenants) {
@@ -36,7 +37,8 @@ export class RPOMonitor {
     if (policy === 'ENTERPRISE') targetRPOHours = 1;
 
     // Get the most recent successful snapshot
-    const latestSnapshot = await prismaAdmin.recoverySnapshot.findFirst({
+    const tenantPrisma = withTenant(tenantId);
+    const latestSnapshot = await tenantPrisma.recoverySnapshot.findFirst({
       where: { tenantId, status: 'ACTIVE' },
       orderBy: { createdAt: 'desc' }
     });

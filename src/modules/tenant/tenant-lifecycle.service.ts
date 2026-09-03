@@ -1,3 +1,4 @@
+import { withTenant, withTenantTransaction } from '@db/utils/prisma-tenant';
 import prisma from '@db/utils/prisma';
 import { requireAuth } from '@/lib/auth';
 import { invalidateTenantCache } from '@/modules/tenant/tenant.service';
@@ -5,7 +6,7 @@ import { invalidateTenantCache } from '@/modules/tenant/tenant.service';
 export async function requestTenantDeletion(tenantId: string, reason: string) {
   const user = await requireAuth();
 
-  const tenant = await prisma.tenant.findUnique({
+  const tenant = await withTenant(tenantId).tenant.findUnique({
     where: { id: tenantId }
   });
 
@@ -19,7 +20,7 @@ export async function requestTenantDeletion(tenantId: string, reason: string) {
 
 
 
-  const updatedTenant = await prisma.tenant.update({
+  const updatedTenant = await withTenant(tenantId).tenant.update({
     where: { id: tenantId },
     data: {
       status: 'DELETION_REQUESTED',
@@ -29,7 +30,7 @@ export async function requestTenantDeletion(tenantId: string, reason: string) {
     }
   });
 
-  await prisma.auditLog.create({
+  await withTenant(tenantId).auditLog.create({
     data: {
       tenantId: tenant.id,
       actorId: user.id,

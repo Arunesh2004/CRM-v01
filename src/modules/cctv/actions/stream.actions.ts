@@ -1,8 +1,9 @@
 'use server'
+import { withServerActionContext } from '@/lib/observability/server-action';
 import { sanitizeClientError } from '@/lib/errors/client-safe-error';
 import * as streamService from '../stream.service';
 
-export async function generateStreamTokenAction(cameraId: string) {
+async function _generateStreamTokenAction(cameraId: string) {
   try {
     const result = await streamService.generateStreamToken(cameraId);
     return { success: true, data: result };
@@ -10,3 +11,5 @@ export async function generateStreamTokenAction(cameraId: string) {
     return { success: false, error: sanitizeClientError(error) };
   }
 }
+
+export const generateStreamTokenAction = withServerActionContext(_generateStreamTokenAction);

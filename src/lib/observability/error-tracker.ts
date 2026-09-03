@@ -1,4 +1,5 @@
 import { logger, LogContext } from './logger';
+import { getContext } from './context';
 
 export interface ErrorTrackerOptions {
   tags?: Record<string, string>;
@@ -13,6 +14,7 @@ export interface ErrorTrackerOptions {
 export class ErrorTracker {
   captureException(error: Error | unknown, context?: LogContext, options?: ErrorTrackerOptions) {
     const normalizedError = error instanceof Error ? error : new Error(String(error));
+    const asyncCtx = getContext();
     
     // In the future:
     // Sentry.captureException(normalizedError, { tags: options?.tags, user: options?.user });

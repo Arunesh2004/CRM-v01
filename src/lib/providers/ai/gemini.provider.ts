@@ -4,21 +4,35 @@ import { Logger } from '../../logger/logger';
 import { AIConfig } from '../../config/ai.config';
 
 export class GeminiProvider implements AIProvider {
-  private ai: GoogleGenAI;
+  private ai?: GoogleGenAI;
   private modelName: string;
+  private isConfigured: boolean;
 
   constructor() {
     const apiKey = process.env.GEMINI_API_KEY;
-    if (!apiKey) {
-      throw new Error('GEMINI_API_KEY is not defined');
+    this.isConfigured = !!apiKey;
+    if (this.isConfigured) {
+      this.ai = new GoogleGenAI({ apiKey: apiKey! });
     }
-    this.ai = new GoogleGenAI({ apiKey });
     this.modelName = process.env.AI_MODEL || 'gemini-3.5-flash';
   }
 
+  checkHealth() {
+    return {
+      status: this.isConfigured ? 'READY' : 'MISSING_CREDENTIALS',
+      providerName: 'GeminiProvider',
+      criticality: 'CRITICAL',
+      reason: this.isConfigured ? undefined : 'GEMINI_API_KEY is not defined'
+    } as any; // Cast as any to bypass strict typing if imported ProviderHealth differs
+  }
+
   async generateResponse(prompt: string, tools: AITool[], systemInstruction?: string, requestId?: string, history?: {role: 'user'|'assistant', content: string}[]): Promise<AIResponse> {
+    if (!this.ai) {
+      throw new Error('GeminiProvider is unavailable: GEMINI_API_KEY is missing.');
+    }
+
     // Partial telemetry collected before timeout so the caller can still audit.
-    let partialTelemetry: Pick<AIResponse, 'toolsRequested' | 'toolsExecuted' | 'rounds' | 'totalToolCalls'> = {
+    const partialTelemetry: Pick<AIResponse, 'toolsRequested' | 'toolsExecuted' | 'rounds' | 'totalToolCalls'> = {
       toolsRequested: [],
       toolsExecuted: [],
       rounds: 0,
@@ -152,14 +166,14 @@ export class GeminiProvider implements AIProvider {
       }));
     }
 
-    const chat = this.ai.chats.create({
+    const chat = this.ai!.chats.create({
       model: this.modelName,
       config: {
         systemInstruction,
         tools: geminiTools as any,
         temperature: 0.1,
       },
-      history: geminiHistory
+      history: geminiHistory ?? [],
     });
 
     const historyBytes = history ? history.reduce((acc, curr) => acc + curr.content.length, 0) : 0;
@@ -277,8 +291,12 @@ export class GeminiProvider implements AIProvider {
   async transcribeAudio(
     filePath: string,
     mimeType: string,
-    prompt: string = 'Transcribe this audio call exactly, and provide a summary and sentiment analysis.'
+    prompt?: string
   ): Promise<{ transcript: string; summary: string; sentiment: string }> {
+    if (!this.ai) {
+      throw new Error('GeminiProvider is unavailable: GEMINI_API_KEY is missing.');
+    }
+    const requestId = `audio_${Date.now()}_${Math.random().toString(36).substring(7)}`;
     try {
       Logger.info('Uploading audio to Gemini', { event: 'GEMINI_FILE_UPLOAD_STARTED', mimeType });
       const uploadResult = await this.ai.files.upload({ file: filePath, config: { mimeType } });
@@ -300,8 +318,8 @@ You must output a raw JSON object (and nothing else) matching exactly this schem
           responseMimeType: 'application/json'
         },
         contents: [
-          uploadResult,
-          prompt
+          uploadResult as any,
+          { text: prompt }
         ]
       });
 

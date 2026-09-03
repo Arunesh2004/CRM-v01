@@ -1,10 +1,11 @@
 'use server';
+import { withServerActionContext } from '@/lib/observability/server-action';
 
 import { requireAuth } from '@/lib/auth';
 import prisma from '@db/utils/prisma';
 import { redirect } from 'next/navigation';
 
-export async function submitOnboarding(formData: FormData) {
+async function _submitOnboarding(formData: FormData) {
   const user = await requireAuth();
 
   const firstName = formData.get('firstName') as string;
@@ -29,3 +30,5 @@ export async function submitOnboarding(formData: FormData) {
 
   redirect('/dashboard');
 }
+
+export const submitOnboarding = withServerActionContext(_submitOnboarding);
