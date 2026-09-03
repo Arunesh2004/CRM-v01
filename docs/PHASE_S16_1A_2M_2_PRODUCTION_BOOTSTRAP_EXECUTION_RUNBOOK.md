@@ -9,27 +9,62 @@ This runbook provides a safe, step-by-step procedure for an operator to provisio
 - Operator must NOT modify the repository's `.env` file to inject Production credentials.
 
 ## 3. Database Identity Preflight
-To ensure the `DATABASE_URL` targets the correct Production Supabase project without printing the password, run this safe preflight script:
+To safely and reliably verify that your `DATABASE_URL` connects to the intended Production Supabase project (`ughcghzhmsruhalngrxp`) and matches the expected migration state (29 migrations, ending in `phase_c13`), create and run a temporary script.
 
-**PowerShell / Bash:**
-```bash
-# Note: Set DATABASE_URL in your temporary shell session first (see section 4)
-npx tsx -e "const u = new URL(process.env.DATABASE_URL); console.log('Host:', u.hostname); console.log('Project Match:', u.hostname.includes('ughcghzhmsruhalngrxp') ? 'READY (Production)' : 'NOT READY');"
+**Step 1: Create `preflight.ts`**
+Create a new file named `preflight.ts` in the project root with the following contents:
+
+```typescript
+import { PrismaClient } from '@prisma/client';
+const prisma = new PrismaClient();
+
+async function run() {
+  const dbUrl = process.env.DATABASE_URL || '';
+  if (!dbUrl) {
+    console.error('NOT READY: DATABASE_URL is missing.');
+    process.exit(1);
+  }
+  const u = new URL(dbUrl);
+  // Supabase Pooler URLs may not have the project in the host, but do in the user. Direct connections have it in the host.
+  const isProj = u.hostname.includes('ughcghzhmsruhalngrxp') || u.username.includes('ughcghzhmsruhalngrxp');
+  console.log('Host:', u.hostname, '| Mode:', u.port === '6543' ? 'Pooler' : 'Direct');
+  console.log('Project Ref Match:', isProj);
+  
+  const m = await prisma.$queryRaw`SELECT migration_name FROM _prisma_migrations ORDER BY finished_at DESC LIMIT 1`;
+  const latest = m[0]?.migration_name;
+  console.log('Latest Migration:', latest);
+  
+  if (isProj && latest === '20260831084841_phase_c13_comms_customer_links') {
+    console.log('READY (Production Identity Confirmed)');
+  } else {
+    console.error('NOT READY: Identity or migration mismatch.');
+  }
+}
+run().finally(() => prisma.$disconnect());
 ```
-**STOP CONDITION**: If the output does not say `READY (Production)`, DO NOT proceed.
+
+**Step 2: Run the Preflight**
+After setting your `DATABASE_URL` (see Section 4), execute:
+```bash
+npx tsx preflight.ts
+```
+**STOP CONDITION**: If the output does not say `READY (Production Identity Confirmed)`, DO NOT proceed. After successful verification, you may delete `preflight.ts`.
 
 ## 4. Safe Environment Setup
 To prevent leaking secrets into `.env` or globally, use a temporary shell session and inject the variable.
 
 **Windows PowerShell:**
+*WARNING*: To prevent credentials from being saved in PowerShell history, clear history afterward or use `Read-Host`. DO NOT paste the full connection string into chat or logs.
 ```powershell
-$env:DATABASE_URL="<production-db-connection-string>"
+ $env:DATABASE_URL = Read-Host -Prompt "Enter DATABASE_URL"
 ```
+*(Paste the URL when prompted. It will not be saved in your command history).*
 
 **Bash/Zsh (macOS/Linux):**
 ```bash
-export DATABASE_URL="<production-db-connection-string>"
+ export DATABASE_URL="<production-db-connection-string>"
 ```
+*(Prefixing with a space prevents it from entering Bash history).*
 
 ## 5. Existing-Data Checks
 Before running any mutations, verify that the intended verification identity and tenant do not already exist.
