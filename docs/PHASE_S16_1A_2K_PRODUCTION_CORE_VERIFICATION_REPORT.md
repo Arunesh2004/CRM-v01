@@ -1,51 +1,92 @@
 # PHASE S16.1A.2K - PRODUCTION CORE VERIFICATION & CLERK REMEDIATION REPORT
 
-## 1. Executive Summary
-This report validates the successful remediation of the production-blocking issue where the application returned a `failed_to_load_clerk_js` error and a 404 response on the `/sign-in` page. The issue was traced to a missing Clerk proxy route handler and an overly strict Next.js App Router limitation on underscore-prefixed directories, coupled with security middleware that blocked authentication requests.
+## 1. Exact Production Deployment Provenance
 
-The remediation involved:
-1. Creating the missing Clerk proxy route handler to serve the JS bundle.
-2. Refactoring the route to bypass Next.js private folder ignores (`/__clerk` -> `/clerk-proxy`).
-3. Configuring a Vercel-compatible Next.js rewrite rule to map traffic seamlessly.
-4. Allowlisting the proxy endpoint in the global security middleware.
+- **Git SHA**: bb6c9b2da902954b5f7b33ca3ca29441faf30794
+- **Vercel deployment**: crm-v01.vercel.app
+- **Production alias**: crm-v01.vercel.app
+- **Deployment status**: READY
 
-## 2. Issue Forensic Audit
-### 2.1 The Failure State
-* **Symptom**: Navigating to `https://crm-v01.vercel.app/sign-in` resulted in a blank screen with a console error: `Clerk: Failed to load Clerk JS, failed to load script: /__clerk/npm/@clerk/clerk-js@6/dist/clerk.browser.js`.
-* **Root Cause 1**: The application was configured with `NEXT_PUBLIC_CLERK_PROXY_URL=/__clerk` in the Vercel environment, but the corresponding proxy route handler (`app/__clerk/[[...path]]/route.ts`) was absent from the codebase.
-* **Root Cause 2**: Next.js App Router ignores any folder starting with an underscore (`_`), meaning even if `app/__clerk` was created, Next.js would not generate a route for it.
-* **Root Cause 3**: The Vercel security middleware in `src/proxy.ts` strictly enforced `auth.protect()` on all routes not explicitly declared public, causing an infinite redirect loop when the proxy attempted to authenticate itself.
+## 2. Health
 
-## 3. Remediation Architecture
-### 3.1 Clerk Proxy Restoration
-A new route handler was created at `src/app/clerk-proxy/[[...path]]/route.ts` utilizing Clerk's `@clerk/nextjs/server` `createFrontendApiProxyHandlers` API.
+| Check | Result |
+|---|---|
+| `/api/health/live` | PASS (HTTP 200: `{"status":"ok"}`) |
+| `/api/health/ready` | PASS (HTTP 200: `{"status":"ready","components":{"postgres":"ok","redis":"ok"}}`) |
 
-### 3.2 Next.js Rewrites
-To bridge the gap between the `NEXT_PUBLIC_CLERK_PROXY_URL` environment variable (which expects `/__clerk`) and the Next.js App Router limitations (which blocks `/__clerk` folders), a dynamic rewrite was introduced in `next.config.ts`:
-```typescript
-  async rewrites() {
-    return [
-      {
-        source: '/__clerk/:path*',
-        destination: '/clerk-proxy/:path*',
-      },
-    ]
-  }
-```
+## 3. Startup
 
-### 3.3 Security Middleware Allowlist
-The `isPublicRoute` matcher in `src/proxy.ts` was updated to include `/__clerk(.*)`, ensuring that requests to the frontend proxy do not trigger the authentication middleware and redirect loop.
+- **startup panic**: FIXED - No `CRITICAL STARTUP FAILURE` observed.
+- **CCTV startup decoupling**: VERIFIED - Application boots without MediaMTX.
 
-## 4. Verification Evidence
-A Browser Subagent was deployed to simulate a user navigating to the production URL. The subagent confirmed the successful remediation.
+## 4. Rate Limiter
 
-### 4.1 Production Render Validation
-* **Target URL**: `https://crm-v01.vercel.app/sign-in`
-* **Status**: The Clerk sign-in component renders completely and properly on screen.
-* **Console Errors**: No 404 errors related to `/__clerk` were detected.
+- **Redis**: OK (Verified via health/ready endpoint)
+- **Upstash**: OK
+- **Rate limiter**: OPERATIONAL (No "Rate Limiting Offline" errors)
 
-### 4.2 Visual Evidence
-*(Note: The recording of the subagent verifying the sign-in flow is stored in the system artifacts as `verify_clerk_signin_fixed.webp`.)*
+## 5. Clerk
 
-## 5. Conclusion
-Phase S16.1A.2K is officially complete. The core production application is now successfully authenticated, decoupled from failing CCTV dependencies, and rendering correctly in the Vercel Edge environment. Next steps involve returning to the overarching Phase 16 roadmap.
+- **`/sign-in`**: PASS - Renders correctly.
+- **Clerk JS**: PASS - JS bundle loads successfully (Verified via direct GET).
+- **`/__clerk` proxy**: PASS - Next.js rewrite correctly maps to `/clerk-proxy`.
+- **authentication redirect**: PASS - Unauthenticated requests properly redirect to `/sign-in`.
+
+## 6. Login
+
+- **login**: BLOCKED - The test account (`crm-phase1-admin-test@canonical.com`) does not exist in the Production Clerk user pool ("Couldn't find your account").
+- **session**: BLOCKED
+- **logout**: BLOCKED
+
+## 7. Core CRM
+
+| Module | Result | Evidence |
+|---|---|---|
+| Dashboard | BLOCKED | Missing valid test credentials |
+| Customers | BLOCKED | Missing valid test credentials |
+| Contacts | BLOCKED | Missing valid test credentials |
+| Deals | BLOCKED | Missing valid test credentials |
+| Tickets | BLOCKED | Missing valid test credentials |
+| Tasks | BLOCKED | Missing valid test credentials |
+| Communication | BLOCKED | Missing valid test credentials |
+| Notifications | BLOCKED | Missing valid test credentials |
+
+## 8. Browser Console / Network
+
+- **Meaningful Errors**: 
+  - Login failure: `"Couldn't find your account."`
+  - Captcha block: `"The CAPTCHA failed to load. This may be due to an unsupported browser or a browser extension."` (Encountered by headless browser on sign-up)
+  - `/notifications` unauthenticated redirect misconfiguration: Redirects unexpectedly to a Google OAuth error page instead of Clerk sign-in.
+
+## 9. Production Runtime Logs
+
+- No unhandled exceptions or 500 errors observed during unauthenticated verification.
+
+## 10. CCTV
+
+`DISABLED — PRODUCTION MEDIAMTX NOT PROVISIONED`
+
+## 11. Database
+
+`NO CHANGES`
+
+## 12. Redis
+
+`NO CHANGES`
+
+## 13. Environment
+
+`NO CHANGES`
+
+## 14. Final Assessment
+
+`BLOCKED — PRODUCTION VERIFICATION FAILED`
+
+## 15. Remaining Blockers
+
+- Missing valid Production test credentials. The predefined test user (`crm-phase1-admin-test@canonical.com`) is not registered in the production Clerk user pool, preventing authenticated core CRM verification.
+- Route `/notifications` has a misconfigured unauthenticated redirect leading to a Google OAuth error instead of the `/sign-in` page.
+
+## 16. Recommended Next Phase
+
+Provision valid test credentials in the Production Clerk environment (or provide them via secure channel) and rectify the `/notifications` route unauthenticated behavior, then re-run the authenticated core CRM module verification.
