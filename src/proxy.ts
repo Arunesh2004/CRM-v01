@@ -76,7 +76,6 @@ const handleRateLimiting = async (request: NextRequest, ip: string) => {
     isHighRisk = true;
   } else if (pathname.startsWith('/sign-in') || pathname.startsWith('/sign-up')) {
     limiter = rateLimiters.auth;
-    isHighRisk = true;
   } else if (pathname.startsWith('/billing') || pathname.startsWith('/api/billing')) {
     limiter = rateLimiters.api;
     // Mutative operations (POST/Server Actions) on billing are high risk (fail-closed)
