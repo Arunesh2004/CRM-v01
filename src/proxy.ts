@@ -20,7 +20,9 @@ const isPublicRoute = createRouteMatcher([
   '/api/health(.*)',
   '/api/webhooks/(.*)',
   '/api/inngest',
+  '/__clerk(.*)',  // Clerk Frontend API proxy — must be public to avoid sign-in redirect loop
 ]);
+
 
 function isLoadTestAuthEnabled(): boolean {
   if (process.env.VERCEL_ENV !== 'preview') return false;
