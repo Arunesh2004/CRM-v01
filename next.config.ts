@@ -15,6 +15,14 @@ const securityHeaders = [
 
 const nextConfig: NextConfig = {
   output: process.env.VERCEL === '1' ? undefined : 'standalone',
+  async rewrites() {
+    return [
+      {
+        source: '/__clerk/:path*',
+        destination: '/clerk-proxy/:path*',
+      },
+    ]
+  },
   async headers() {
     return [
       {
