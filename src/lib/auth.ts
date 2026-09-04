@@ -173,8 +173,9 @@ async function ensureUserProvisionedFromClerk(clerkId: string) {
     const client = await clerkClient();
     const clerkUser = await client.users.getUser(clerkId);
     let email = '';
-    if (clerkUser.emailAddresses && clerkUser.emailAddresses.length > 0) {
-      email = clerkUser.emailAddresses[0].emailAddress;
+    if (clerkUser.primaryEmailAddressId && clerkUser.emailAddresses) {
+      const primary = clerkUser.emailAddresses.find(e => e.id === clerkUser.primaryEmailAddressId);
+      if (primary) email = primary.emailAddress;
     }
     if (!email) return null;
     return await synchronizeClerkIdentity(clerkId, email);

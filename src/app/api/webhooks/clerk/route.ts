@@ -76,8 +76,9 @@ const _orig_POST = async function (req: NextRequest) {
   }
 
   if (eventType === 'user.updated') {
-    const { id, email_addresses } = evt.data;
-    const email = email_addresses[0]?.email_address?.toLowerCase()?.trim();
+    const { id, email_addresses, primary_email_address_id } = evt.data;
+    const primaryEmailObj = email_addresses.find(e => e.id === primary_email_address_id);
+    const email = primaryEmailObj?.email_address?.toLowerCase()?.trim();
     if (!email) return NextResponse.json({ error: 'No email' }, { status: 400 });
     try {
       await executeAsSystem(SystemOperation.CLERK_PROVISIONING, async (tx) => {

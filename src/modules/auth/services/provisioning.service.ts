@@ -9,10 +9,12 @@ export async function ensureUserProvisioned(clerkUser: ClerkUser | any) {
   
   // Extract email carefully based on whether it's SDK camelCase or Webhook snake_case
   let email = '';
-  if (clerkUser.emailAddresses && clerkUser.emailAddresses.length > 0) {
-    email = clerkUser.emailAddresses[0].emailAddress;
-  } else if (clerkUser.email_addresses && clerkUser.email_addresses.length > 0) {
-    email = clerkUser.email_addresses[0].email_address;
+  if (clerkUser.primaryEmailAddressId && clerkUser.emailAddresses) {
+    const primary = clerkUser.emailAddresses.find((e: { id: string, emailAddress: string }) => e.id === clerkUser.primaryEmailAddressId);
+    if (primary) email = primary.emailAddress;
+  } else if (clerkUser.primary_email_address_id && clerkUser.email_addresses) {
+    const primary = clerkUser.email_addresses.find((e: { id: string, email_address: string }) => e.id === clerkUser.primary_email_address_id);
+    if (primary) email = primary.email_address;
   }
   
   if (!email) {
