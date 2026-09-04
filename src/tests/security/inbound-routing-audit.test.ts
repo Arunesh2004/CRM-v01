@@ -65,14 +65,14 @@ describe('Phase 12.3: TenantPhoneNumber Schema & Isolation Tests', () => {
     // 2. Tenant A attempts to read Tenant B's number using Raw SQL (RLS enforcement check)
     // The crm_app_user should not be able to bypass RLS to read this.
     const readResult: any[] = await prisma.$transaction(async (tx) => {
-      await tx.$executeRaw`SELECT set_config('app.current_tenant_id', ${tenantAId}, true);`;
+      await tx.$queryRaw`SELECT set_config('app.current_tenant_id', ${tenantAId}, true);`;
       return tx.$queryRaw`SELECT * FROM "TenantPhoneNumber" WHERE "phoneNumber" = ${TWILIO_NUMBER_2};`;
     });
     expect(readResult.length).toBe(0); // Cannot see it
 
     // 3. Tenant A attempts to update Tenant B's number via Raw SQL
     await prisma.$transaction(async (tx) => {
-      await tx.$executeRaw`SELECT set_config('app.current_tenant_id', ${tenantAId}, true);`;
+      await tx.$queryRaw`SELECT set_config('app.current_tenant_id', ${tenantAId}, true);`;
       await tx.$executeRaw`UPDATE "TenantPhoneNumber" SET status = 'DISABLED' WHERE "phoneNumber" = ${TWILIO_NUMBER_2};`;
     });
 
@@ -84,7 +84,7 @@ describe('Phase 12.3: TenantPhoneNumber Schema & Isolation Tests', () => {
 
     // 5. Tenant A attempts to delete Tenant B's number via Raw SQL
     await prisma.$transaction(async (tx) => {
-      await tx.$executeRaw`SELECT set_config('app.current_tenant_id', ${tenantAId}, true);`;
+      await tx.$queryRaw`SELECT set_config('app.current_tenant_id', ${tenantAId}, true);`;
       await tx.$executeRaw`DELETE FROM "TenantPhoneNumber" WHERE "phoneNumber" = ${TWILIO_NUMBER_2};`;
     });
 
@@ -98,7 +98,7 @@ describe('Phase 12.3: TenantPhoneNumber Schema & Isolation Tests', () => {
     let insertError: any;
     try {
       await prisma.$transaction(async (tx) => {
-        await tx.$executeRaw`SELECT set_config('app.current_tenant_id', ${tenantAId}, true);`;
+        await tx.$queryRaw`SELECT set_config('app.current_tenant_id', ${tenantAId}, true);`;
         await tx.$executeRaw`
           INSERT INTO "TenantPhoneNumber" (id, "tenantId", "phoneNumber", "updatedAt")
           VALUES (gen_random_uuid(), ${tenantBId}, '+15550008888', now());

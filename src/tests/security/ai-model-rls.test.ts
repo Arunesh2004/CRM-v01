@@ -45,7 +45,7 @@ describe('AI Models RLS (Phase 1R)', () => {
 
   it('Tenant A SELECT AIConversation A -> ALLOW, B -> DENY', async () => {
     const res = await prisma.$transaction(async (tx) => {
-      await tx.$executeRaw`SELECT set_config('app.current_tenant_id', ${tenantA.id}, true)`;
+      await tx.$queryRaw`SELECT set_config('app.current_tenant_id', ${tenantA.id}, true)`;
       return tx.$queryRaw<any[]>`SELECT * FROM "AIConversation"`;
     });
     expect(res.length).toBe(1);
@@ -54,19 +54,19 @@ describe('AI Models RLS (Phase 1R)', () => {
 
   it('Tenant A INSERT AIConversation tenantId=A -> ALLOW, tenantId=B -> DENY', async () => {
     await prisma.$transaction(async (tx) => {
-      await tx.$executeRaw`SELECT set_config('app.current_tenant_id', ${tenantA.id}, true)`;
+      await tx.$queryRaw`SELECT set_config('app.current_tenant_id', ${tenantA.id}, true)`;
       await tx.$executeRaw`INSERT INTO "AIConversation" (id, "tenantId", "userId", title, "updatedAt") VALUES (${'conv_new_' + Date.now()}, ${tenantA.id}, ${userA.id}, 'New', NOW())`;
     });
 
     await expect(prisma.$transaction(async (tx) => {
-      await tx.$executeRaw`SELECT set_config('app.current_tenant_id', ${tenantA.id}, true)`;
+      await tx.$queryRaw`SELECT set_config('app.current_tenant_id', ${tenantA.id}, true)`;
       await tx.$executeRaw`INSERT INTO "AIConversation" (id, "tenantId", "userId", title, "updatedAt") VALUES (${'conv_evil_' + Date.now()}, ${tenantB.id}, ${userA.id}, 'Evil', NOW())`;
     })).rejects.toThrow();
   });
 
   it('Tenant A UPDATE AIConversation A -> ALLOW, B -> DENY', async () => {
     await prisma.$transaction(async (tx) => {
-      await tx.$executeRaw`SELECT set_config('app.current_tenant_id', ${tenantA.id}, true)`;
+      await tx.$queryRaw`SELECT set_config('app.current_tenant_id', ${tenantA.id}, true)`;
       const updated = await tx.$executeRaw`UPDATE "AIConversation" SET title = 'Updated A' WHERE id = ${convA.id}`;
       expect(updated).toBeGreaterThan(0);
       
@@ -77,14 +77,14 @@ describe('AI Models RLS (Phase 1R)', () => {
 
   it('Tenant A UPDATE AIConversation A SET tenantId=B -> DENY', async () => {
     await expect(prisma.$transaction(async (tx) => {
-      await tx.$executeRaw`SELECT set_config('app.current_tenant_id', ${tenantA.id}, true)`;
+      await tx.$queryRaw`SELECT set_config('app.current_tenant_id', ${tenantA.id}, true)`;
       await tx.$executeRaw`UPDATE "AIConversation" SET "tenantId" = ${tenantB.id} WHERE id = ${convA.id}`;
     })).rejects.toThrow();
   });
 
   it('Tenant A DELETE AIConversation A -> ALLOW, B -> DENY', async () => {
     await prisma.$transaction(async (tx) => {
-      await tx.$executeRaw`SELECT set_config('app.current_tenant_id', ${tenantA.id}, true)`;
+      await tx.$queryRaw`SELECT set_config('app.current_tenant_id', ${tenantA.id}, true)`;
       const deletedB = await tx.$executeRaw`DELETE FROM "AIConversation" WHERE id = ${convB.id}`;
       expect(deletedB).toBe(0); // Invisible, cannot delete
     });
@@ -92,14 +92,14 @@ describe('AI Models RLS (Phase 1R)', () => {
 
   it('Tenant A INSERT AIConversationMessage referencing Tenant B conv -> DENY (Foreign-Key Escape)', async () => {
     await expect(prisma.$transaction(async (tx) => {
-      await tx.$executeRaw`SELECT set_config('app.current_tenant_id', ${tenantA.id}, true)`;
+      await tx.$queryRaw`SELECT set_config('app.current_tenant_id', ${tenantA.id}, true)`;
       await tx.$executeRaw`INSERT INTO "AIConversationMessage" (id, "tenantId", "conversationId", role, content, "createdAt") VALUES (${'msg_evil_' + Date.now()}, ${tenantA.id}, ${convB.id}, 'USER', 'Evil', NOW())`;
     })).rejects.toThrow();
   });
 
   it('Tenant A INSERT AIExecution referencing Tenant B user -> DENY (Foreign-Key Escape)', async () => {
     await expect(prisma.$transaction(async (tx) => {
-      await tx.$executeRaw`SELECT set_config('app.current_tenant_id', ${tenantA.id}, true)`;
+      await tx.$queryRaw`SELECT set_config('app.current_tenant_id', ${tenantA.id}, true)`;
       await tx.$executeRaw`INSERT INTO "AIExecution" (id, "tenantId", "userId", "toolId", input, "updatedAt") VALUES (${'exec_evil_' + Date.now()}, ${tenantA.id}, ${userB.id}, ${toolA.id}, '{}', NOW())`;
     })).rejects.toThrow();
   });

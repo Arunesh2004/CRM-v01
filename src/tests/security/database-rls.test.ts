@@ -336,7 +336,7 @@ describe('PostgreSQL Row Level Security - Pre-Migration Baseline', () => {
   describe('9. FORGED TENANT CONTEXT TEST', () => {
     it('Directly setting app.current_tenant_id allows access to that tenant', async () => {
       await prisma.$transaction(async (tx) => {
-         await tx.$executeRawUnsafe(`SELECT set_config('app.current_tenant_id', '${tenantB.id}', true)`);
+         await tx.$queryRawUnsafe(`SELECT set_config('app.current_tenant_id', '${tenantB.id}', true)`);
          const customersB = await tx.$queryRaw<any[]>`SELECT * FROM "Customer"`;
          // Without RLS, it currently returns everything. With RLS, it would return Tenant B data.
          expect(customersB.length).toBeGreaterThan(0);

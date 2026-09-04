@@ -32,7 +32,7 @@ export async function withJobContext<T>(
     async () => {
       return await tenantPrisma.$transaction(async (tx: any) => {
         // Elevate to a tenant-scoped transaction for RLS
-        await tx.$executeRawUnsafe(`SELECT set_config('app.current_tenant_id', '${envelope.tenantId}', true)`);
+        await tx.$queryRawUnsafe('SELECT set_config(\'app.current_tenant_id\', $1, true)', envelope.tenantId);
         
         // Check idempotency
         try {

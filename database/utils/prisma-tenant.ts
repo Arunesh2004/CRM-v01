@@ -2,7 +2,7 @@ import { Prisma } from '@prisma/client';
 import prisma from './prisma';
 
 export const withTenantTransaction = async <T = any>(tx: T, tenantId: string): Promise<T> => {
-  await (tx as any).$executeRawUnsafe(`SELECT set_config('app.current_tenant_id', '${tenantId}', true)`);
+  await (tx as any).$queryRawUnsafe('SELECT set_config(\'app.current_tenant_id\', $1, true)', tenantId);
   return tx;
 };
 
@@ -105,7 +105,7 @@ export const withTenant = (tenantId: string) => {
              
              if (rlsModels.includes(model)) {
                return prisma.$transaction(async (tx) => {
-                 await tx.$executeRawUnsafe(`SELECT set_config('app.current_tenant_id', '${tenantId}', true)`);
+                 await tx.$queryRawUnsafe('SELECT set_config(\'app.current_tenant_id\', $1, true)', tenantId);
                  return (tx[model as Uncapitalize<typeof model>] as any)[actualOp](modifiedArgs);
                });
              }
@@ -115,7 +115,7 @@ export const withTenant = (tenantId: string) => {
           if (rlsModels.includes(model)) {
             // For standalone queries, start an interactive transaction
             return prisma.$transaction(async (tx) => {
-              await tx.$executeRawUnsafe(`SELECT set_config('app.current_tenant_id', '${tenantId}', true)`);
+              await tx.$queryRawUnsafe('SELECT set_config(\'app.current_tenant_id\', $1, true)', tenantId);
               
               if (['update', 'delete'].includes(operation)) {
                  const record = await (tx[model as Uncapitalize<typeof model>] as any).findFirst({

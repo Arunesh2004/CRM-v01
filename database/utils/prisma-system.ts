@@ -28,7 +28,7 @@ export async function executeAsSystem<T>(
   }));
 
   return await globalSystemPrisma.$transaction(async (tx) => {
-    await tx.$executeRawUnsafe(`SELECT set_config('app.bypass_rls', 'on', true)`);
+    await tx.$queryRawUnsafe(`SELECT set_config('app.bypass_rls', 'on', true)`);
     return await handler(tx);
   }, {
     maxWait: 25000,

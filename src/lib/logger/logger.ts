@@ -3,9 +3,12 @@ import { redact } from '../observability/redact';
 import { getContext } from '../observability/context';
 
 const isProduction = process.env.NODE_ENV === 'production';
+const allowedLevels = ['fatal', 'error', 'warn', 'info', 'debug', 'trace'];
+const rawLevel = (process.env.LOG_LEVEL || 'info').toLowerCase();
+const safeLevel = allowedLevels.includes(rawLevel) ? rawLevel : 'info';
 
 export const logger = pino({
-  level: process.env.LOG_LEVEL || 'info',
+  level: safeLevel,
   ...(isProduction ? {} : {
     transport: {
       target: 'pino-pretty',

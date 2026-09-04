@@ -3,6 +3,7 @@ import { AIProviderFactory } from '@/lib/providers/ai/ai-provider.factory';
 import { ToolRegistry } from '../tools/registry';
 import { ConversationService } from '../conversation.service';
 import { AIRole } from '@prisma/client';
+import { withTenant } from '@/../database/utils/prisma-tenant';
 
 let toolsBootstrapped = false;
 
@@ -41,9 +42,16 @@ export class CopilotService {
       content: msg.content
     }));
 
-    // 4. Get the provider
-    const provider = await AIProviderFactory.getProvider('GEMINI');
+    // 4. Determine AI Provider context based on authenticated role
+    const tenantPrisma = withTenant(tenantId);
+    const userRoles = await tenantPrisma.userRole.findMany({
+      where: { userId },
+      include: { role: true }
+    });
+    const isDemoUser = userRoles.some((ur: any) => ur.role.name === 'DEMO_USER');
+    const providerType = isDemoUser ? 'MOCK' : 'GEMINI';
     
+    const provider = AIProviderFactory.getProvider(providerType);
     // Construct system prompt preventing prompt-injection overrides
     const systemPrompt = `
       You are an internal Enterprise AI Sales Assistant. 

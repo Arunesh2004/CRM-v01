@@ -57,7 +57,7 @@ describe('Phase 6R: TenantBootstrap RLS Security (Stage 7)', () => {
     // We use queryRawUnsafe inside a transaction with tenantA set, to bypass Prisma's middleware rewriting the where clause.
     // This proves the DATABASE RLS policy directly blocks it.
     const result = await prisma.$transaction(async (tx) => {
-      await tx.$executeRaw`SELECT set_config('app.current_tenant_id', ${tenantA}, true)`;
+      await tx.$queryRaw`SELECT set_config('app.current_tenant_id', ${tenantA}, true)`;
       return tx.$queryRawUnsafe<any[]>(
         `SELECT * FROM "TenantBootstrap" WHERE "tenantId" = $1;`,
         tenantB
@@ -70,7 +70,7 @@ describe('Phase 6R: TenantBootstrap RLS Security (Stage 7)', () => {
   it('TEST C: Tenant A attempts INSERT with tenantId = Tenant B - EXPECT DENY', async () => {
     await expect(
       prisma.$transaction(async (tx) => {
-        await tx.$executeRaw`SELECT set_config('app.current_tenant_id', ${tenantA}, true)`;
+        await tx.$queryRaw`SELECT set_config('app.current_tenant_id', ${tenantA}, true)`;
         return tx.$queryRawUnsafe(
           `INSERT INTO "TenantBootstrap" ("tenantId") VALUES ($1);`,
           tenantB
@@ -82,7 +82,7 @@ describe('Phase 6R: TenantBootstrap RLS Security (Stage 7)', () => {
   it('TEST D: Tenant A attempts UPDATE of Tenant B TenantBootstrap - EXPECT DENY', async () => {
     // Attempting to update another tenant's row should affect 0 rows because RLS hides it.
     const result = await prisma.$transaction(async (tx) => {
-      await tx.$executeRaw`SELECT set_config('app.current_tenant_id', ${tenantA}, true)`;
+      await tx.$queryRaw`SELECT set_config('app.current_tenant_id', ${tenantA}, true)`;
       // Using execute to get affected rows count, update returns 0 if blocked by USING, or throws if WITH CHECK fails (but WITH CHECK applies to new rows)
       return tx.$executeRawUnsafe(
         `UPDATE "TenantBootstrap" SET "bootstrappedAt" = NOW() WHERE "tenantId" = $1;`,
@@ -94,7 +94,7 @@ describe('Phase 6R: TenantBootstrap RLS Security (Stage 7)', () => {
 
   it('TEST E: Tenant A attempts DELETE of Tenant B TenantBootstrap - EXPECT DENY', async () => {
     const result = await prisma.$transaction(async (tx) => {
-      await tx.$executeRaw`SELECT set_config('app.current_tenant_id', ${tenantA}, true)`;
+      await tx.$queryRaw`SELECT set_config('app.current_tenant_id', ${tenantA}, true)`;
       return tx.$executeRawUnsafe(
         `DELETE FROM "TenantBootstrap" WHERE "tenantId" = $1;`,
         tenantB
@@ -105,7 +105,7 @@ describe('Phase 6R: TenantBootstrap RLS Security (Stage 7)', () => {
 
   it('TEST F: Tenant A attempts to enumerate all TenantBootstrap rows - EXPECT Only Tenant A row is visible', async () => {
     const result = await prisma.$transaction(async (tx) => {
-      await tx.$executeRaw`SELECT set_config('app.current_tenant_id', ${tenantA}, true)`;
+      await tx.$queryRaw`SELECT set_config('app.current_tenant_id', ${tenantA}, true)`;
       return tx.$queryRawUnsafe<any[]>(`SELECT * FROM "TenantBootstrap";`);
     });
     
@@ -117,7 +117,7 @@ describe('Phase 6R: TenantBootstrap RLS Security (Stage 7)', () => {
 
   it('TEST G: Tenant A attempts to manipulate its own row - EXPECT Application behavior (ALLOW/DENY depending on route)', async () => {
     const result = await prisma.$transaction(async (tx) => {
-      await tx.$executeRaw`SELECT set_config('app.current_tenant_id', ${tenantA}, true)`;
+      await tx.$queryRaw`SELECT set_config('app.current_tenant_id', ${tenantA}, true)`;
       return tx.$executeRawUnsafe(
         `UPDATE "TenantBootstrap" SET "bootstrappedAt" = NOW() WHERE "tenantId" = $1;`,
         tenantA
