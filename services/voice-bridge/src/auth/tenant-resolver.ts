@@ -1,4 +1,5 @@
 import { PrismaClient } from '@prisma/client';
+import { assertValidTenantId } from '../../../../database/utils/tenant-id';
 
 // Initialized outside to share connection pool
 const prisma = new PrismaClient();
@@ -9,7 +10,8 @@ export async function verifyCallIdentity(callSid: string, tenantId: string): Pro
     // Validate tenant identity via RLS explicitly
     const result = await prisma.$transaction(async (tx) => {
       // Set RLS context securely
-      await tx.$queryRawUnsafe('SELECT set_config(\'app.current_tenant_id\', $1, true)', tenantId);
+      assertValidTenantId(tenantId);
+      await tx.$queryRawUnsafe(`SELECT set_config('app.current_tenant_id', '${tenantId}', true)`);
       
       // Look up CallLog by providerCallId (which maps to Twilio's CallSid)
       const callLog = await tx.callLog.findFirst({

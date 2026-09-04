@@ -1,4 +1,5 @@
 import { withTenant, withTenantTransaction } from '../../../database/utils/prisma-tenant';
+import { assertValidTenantId } from '../../../database/utils/tenant-id';
 import { SecureJobEnvelope } from './types';
 import { PrismaClient, Prisma } from '@prisma/client';
 import { redact } from '../observability/redact';
@@ -32,7 +33,8 @@ export async function withJobContext<T>(
     async () => {
       return await tenantPrisma.$transaction(async (tx: any) => {
         // Elevate to a tenant-scoped transaction for RLS
-        await tx.$queryRawUnsafe('SELECT set_config(\'app.current_tenant_id\', $1, true)', envelope.tenantId);
+        assertValidTenantId(envelope.tenantId);
+        await tx.$queryRawUnsafe(`SELECT set_config('app.current_tenant_id', '${envelope.tenantId}', true)`);
         
         // Check idempotency
         try {
