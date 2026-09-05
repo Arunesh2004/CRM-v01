@@ -55,6 +55,23 @@ export class ToolRegistry {
       throw new Error(`Unauthorized: Tool arguments cannot override identity context`);
     }
     const sanitizedArgs = { ...args };
+    
+    if (tool.confirmation_required && !sanitizedArgs.idempotencyKey) {
+      const dbTool = await prisma.aITool.findUnique({ where: { name: toolName } });
+      if (!dbTool) throw new Error(`Unauthorized: Tool ${toolName} not found in database`);
+      
+      const execution = await prisma.aIExecution.create({
+        data: {
+          tenantId: context.tenantId,
+          userId: context.user.id,
+          toolId: dbTool.id,
+          status: 'PENDING',
+          input: JSON.stringify(sanitizedArgs)
+        }
+      });
+      return { _type: 'PENDING_CONFIRMATION', executionId: execution.id };
+    }
+
     // Execute the actual tool
     return await tool.execute(sanitizedArgs, context);
   }

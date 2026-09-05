@@ -2,6 +2,7 @@ import { AIProvider } from './ai-provider.interface';
 import { MockAIProvider } from './mock-ai.provider';
 
 import { GeminiProvider } from './gemini.provider';
+import { GeminiEngineProvider } from './gemini-engine.provider';
 
 export type SupportedAIProvider = 'MOCK' | 'OPENAI' | 'GEMINI';
 
@@ -26,6 +27,9 @@ export class AIProviderFactory {
     if (process.env.APP_MODE === 'demo' || providerName === 'MOCK') {
       return new MockAIProvider();
     }
-    throw new Error(`AIEngineProvider is only implemented for MOCK in this phase. Requested: ${providerName}`);
+    if (providerName === 'GEMINI') {
+      return new GeminiEngineProvider();
+    }
+    throw new Error(`AIEngineProvider is not supported for ${providerName}`);
   }
 }

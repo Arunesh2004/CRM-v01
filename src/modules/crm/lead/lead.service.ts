@@ -189,6 +189,23 @@ export async function updateLead(input: UpdateLeadInput) {
 
   const result = await globalPrisma.$transaction(async (baseTx: any) => {
     const tx = await withTenantTransaction(baseTx, tenantId);
+    
+    if (input.idempotencyKey) {
+      // Read-before-write idempotency check (avoids aborted-transaction from catching P2002 inside $transaction)
+      const existing = await tx.idempotencyKey.findUnique({
+        where: { tenantId_key: { tenantId, key: input.idempotencyKey } }
+      });
+      if (existing) {
+        // Idempotency key seen before — mutation already succeeded, return existing lead
+        const existingLead = await tx.lead.findFirst({ where: { id: input.id, tenantId }, include: { assignedUser: { select: { id: true, email: true } } } });
+        return { lead: existingLead, assignmentChanged: false };
+      }
+      // First-time: insert the key to mark this mutation as seen
+      await tx.idempotencyKey.create({
+        data: { tenantId, key: input.idempotencyKey, expiresAt: new Date(Date.now() + 24 * 60 * 60 * 1000) }
+      });
+    }
+    
     const lead = await tx.lead.findFirst({ where: { id: input.id, tenantId }});
     if (!lead) throw new Error('Lead not found');
 

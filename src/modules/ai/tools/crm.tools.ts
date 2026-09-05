@@ -65,6 +65,7 @@ export const crmTools: AITool[] = [
     description: 'Updates a lead status.',
     requiredResource: 'LEAD',
     requiredAction: 'UPDATE',
+    confirmation_required: true,
     parameters: {
       type: 'object',
       properties: { 

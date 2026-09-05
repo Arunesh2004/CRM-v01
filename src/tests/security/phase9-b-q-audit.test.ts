@@ -4,7 +4,7 @@ import { Prisma } from '@prisma/client';
 import { ZodError } from 'zod';
 import { executeAsSystem, SystemOperation } from '@db/utils/prisma-system';
 import { FieldSecurityService } from '@/modules/security/field-security/field-security.service';
-import { CopilotService } from '@/modules/ai/copilot/copilot.service';
+import { askAssistant } from '@/modules/ai/assistant.service';
 
 describe('Phase 9 B-Q: API, Error, and Boundary Security Tests', () => {
   describe('9-C: Error Disclosure Sanitization', () => {
@@ -55,9 +55,8 @@ describe('Phase 9 B-Q: API, Error, and Boundary Security Tests', () => {
       expect(FieldSecurityService.maskFields).toBeTypeOf('function');
     });
 
-    it('CopilotService should use strict system prompts', async () => {
-      // Just assert it has a handleChat method
-      expect(CopilotService.handleChat).toBeTypeOf('function');
+    it('AssistantService should use strict system prompts', async () => {
+      expect(askAssistant).toBeTypeOf('function');
     });
   });
 

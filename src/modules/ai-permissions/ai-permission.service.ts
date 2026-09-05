@@ -4,6 +4,7 @@ import { requireAuth, requireTenant, requirePermission } from '@/lib/auth';
 import { SecurityEventService } from '../security-events/security-event.service';
 import { RequestAIExecutionInput, ApproveAIExecutionInput } from './types';
 import { AIExecution, AITool, AIExecutionStatus, ActorType, Resource, Action } from '@prisma/client';
+import { inngest } from '@/lib/queue/inngest.client';
 import { ABACPolicyService } from '../security/abac/abac-policy.service';
 
 export class AIPermissionService {
@@ -146,6 +147,12 @@ export class AIPermissionService {
             approverId: user.id
           }
         }
+      });
+
+      // Send WAKE-UP event for Inngest if this was a workflow step
+      await inngest.send({
+        name: 'workflow.approval',
+        data: { payload: { executionId: execution.id } } // Just wake it up, DB is authoritative
       });
 
       return updated;

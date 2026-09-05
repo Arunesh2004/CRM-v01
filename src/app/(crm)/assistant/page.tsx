@@ -1,14 +1,14 @@
 'use client';
 
 import { useState, useRef, useEffect } from 'react';
-import { Send, Bot, User, Loader2, Sparkles, AlertCircle, LayoutDashboard, Search, FileText } from 'lucide-react';
+import { Send, Bot, User, Loader2, Sparkles, AlertCircle, LayoutDashboard, Search, FileText, Check, X } from 'lucide-react';
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/Card';
 
 export default function AssistantPage() {
   const [messages, setMessages] = useState<{ role: 'user' | 'assistant'; text: string; tools?: any[] }[]>([]);
   const [input, setInput] = useState('');
   const [loading, setLoading] = useState(false);
-  const [conversationId, setConversationId] = useState<string | null>(null);
+  const [pendingConfirmation, setPendingConfirmation] = useState<{ executionId: string, tool: string } | null>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
   const scrollToBottom = () => {
@@ -17,15 +17,17 @@ export default function AssistantPage() {
 
   useEffect(() => {
     scrollToBottom();
-  }, [messages, loading]);
+  }, [messages, loading, pendingConfirmation]);
 
-  const sendMessage = async (presetInput?: string) => {
+  const sendMessage = async (presetInput?: string, hiddenTurn: boolean = false) => {
     const textToSend = presetInput || input;
-    if (!textToSend.trim()) return;
+    if (!textToSend.trim() && !hiddenTurn) return;
     
-    const userMessage = { role: 'user' as const, text: textToSend };
-    setMessages(prev => [...prev, userMessage]);
-    if (!presetInput) setInput('');
+    if (!hiddenTurn) {
+      setMessages(prev => [...prev, { role: 'user', text: textToSend }]);
+      if (!presetInput) setInput('');
+    }
+    
     setLoading(true);
 
     try {
@@ -34,22 +36,59 @@ export default function AssistantPage() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           message: textToSend,
-          conversationId
+          history: messages.map(m => ({ role: m.role, content: m.text }))
         })
       });
 
-      const data = await res.json();
-      
-      if (!res.ok) throw new Error(data.error || 'Failed to chat');
+      if (!res.ok) throw new Error('Failed to chat');
+      if (!res.body) throw new Error('No body');
 
-      if (data.conversationId) {
-        setConversationId(data.conversationId);
+      const reader = res.body.getReader();
+      const decoder = new TextDecoder();
+      let done = false;
+      let buffer = '';
+
+      let text = '';
+      let tools: any[] = [];
+
+      setMessages(prev => [...prev, { role: 'assistant', text: '', tools: [] }]);
+
+      while (!done) {
+        const { value, done: doneReading } = await reader.read();
+        done = doneReading;
+        if (value) {
+           buffer += decoder.decode(value, { stream: true });
+           const lines = buffer.split('\n');
+           buffer = lines.pop() || '';
+           for (const line of lines) {
+             if (line.startsWith('data: ')) {
+               const jsonStr = line.replace('data: ', '').trim();
+               if (!jsonStr) continue;
+               try {
+                 const event = JSON.parse(jsonStr);
+                 if (event.type === 'text') {
+                   text += event.content;
+                 } else if (event.type === 'tool_call') {
+                   tools = [...tools, { name: event.name, status: 'calling' }];
+                 } else if (event.type === 'tool_result') {
+                   tools = tools.map(t => t.name === event.name && t.status === 'calling' ? { ...t, status: 'done', result: event.result, error: event.error } : t);
+                 } else if (event.type === 'pending_confirmation') {
+                   setPendingConfirmation({ executionId: event.executionId, tool: event.tool });
+                 } else if (event.type === 'error') {
+                   text += `\n\n[Error: ${event.message}]`;
+                 }
+
+                 setMessages(prev => {
+                   const copy = [...prev];
+                   copy[copy.length - 1].text = text;
+                   copy[copy.length - 1].tools = tools;
+                   return copy;
+                 });
+               } catch(e) {}
+             }
+           }
+        }
       }
-
-      setMessages(prev => [
-        ...prev, 
-        { role: 'assistant', text: data.text, tools: data.toolResponses }
-      ]);
     } catch (error: any) {
       setMessages(prev => [...prev, { role: 'assistant', text: `I encountered an error processing that request. Please try again later.` }]);
     } finally {
@@ -57,7 +96,71 @@ export default function AssistantPage() {
     }
   };
 
+  const executeAction = async (action: 'CONFIRM' | 'CANCEL') => {
+    if (!pendingConfirmation) return;
+    const { executionId, tool } = pendingConfirmation;
+    setLoading(true);
+    try {
+      const res = await fetch('/api/ai/copilot/execute', {
+         method: 'POST',
+         headers: { 'Content-Type': 'application/json' },
+         body: JSON.stringify({ executionId, action })
+      });
+      const data = await res.json();
+      
+      setPendingConfirmation(null);
+
+      if (action === 'CANCEL') {
+         setMessages(prev => {
+           const copy = [...prev];
+           copy[copy.length - 1].text += `\n\n[Action Cancelled by User]`;
+           return copy;
+         });
+         return;
+      }
+
+      if (!res.ok) {
+         setMessages(prev => {
+           const copy = [...prev];
+           copy[copy.length - 1].text += `\n\n[Action Failed: ${data.error}]`;
+           return copy;
+         });
+         return;
+      }
+
+      // Automatically trigger a hidden turn to inform AI of success
+      setMessages(prev => {
+         const copy = [...prev];
+         const lastAsst = copy[copy.length - 1];
+         lastAsst.tools = lastAsst.tools?.map(t => t.name === tool ? { ...t, status: 'done', result: data.result } : t);
+         return copy;
+      });
+
+      // Start new turn
+      sendMessage("The action was confirmed and executed successfully. Please summarize the result.", true);
+
+    } catch (err: any) {
+      setPendingConfirmation(null);
+      setMessages(prev => {
+        const copy = [...prev];
+        copy[copy.length - 1].text += `\n\n[Action Failed: ${err.message}]`;
+        return copy;
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
+
   const renderToolResult = (tool: any, idx: number) => {
+    if (tool.status === 'calling') {
+      return (
+        <div key={idx} className="flex items-center gap-2 text-xs text-indigo-400 bg-indigo-900/20 p-2 rounded mt-2 border border-indigo-500/20">
+          <Loader2 className="w-3 h-3 animate-spin" />
+          <span>Executing {tool.name}...</span>
+        </div>
+      );
+    }
+    
     if (tool.error) {
       return (
         <div key={idx} className="flex items-center gap-2 text-sm text-red-500 bg-red-500/10 p-2 rounded mt-2 border border-red-500/20">
@@ -93,7 +196,6 @@ export default function AssistantPage() {
       </div>
       
       <Card className="flex-1 overflow-hidden border-white/10 bg-black/40 backdrop-blur-xl shadow-2xl flex flex-col relative">
-        {/* Chat History Area */}
         <div className="flex-1 overflow-y-auto p-6 space-y-6">
           {messages.length === 0 && (
             <div className="flex flex-col items-center justify-center h-full text-center space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-700">
@@ -124,19 +226,13 @@ export default function AssistantPage() {
                   <div className="text-sm font-medium text-white">Pipeline Review</div>
                   <div className="text-xs text-gray-400 mt-1">"Show me my active leads"</div>
                 </button>
-                <button 
-                  onClick={() => sendMessage("Draft a follow up email")}
-                  className="p-4 rounded-xl border border-white/10 bg-white/5 hover:bg-white/10 transition-all text-left group"
-                >
-                  <FileText className="w-5 h-5 text-green-400 mb-2 group-hover:scale-110 transition-transform" />
-                  <div className="text-sm font-medium text-white">Draft Email</div>
-                  <div className="text-xs text-gray-400 mt-1">"Draft a follow up email"</div>
-                </button>
               </div>
             </div>
           )}
           
-          {messages.map((msg, i) => (
+          {messages.map((msg, i) => {
+            if (msg.role === 'user' && msg.text.startsWith("The action was confirmed")) return null; // hide hidden turns
+            return (
             <div key={i} className={`flex gap-4 ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}>
               {msg.role === 'assistant' && (
                 <div className="flex-shrink-0 w-8 h-8 rounded-full bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center shadow-lg mt-1">
@@ -165,8 +261,30 @@ export default function AssistantPage() {
                 </div>
               )}
             </div>
-          ))}
-          {loading && (
+            );
+          })}
+          
+          {pendingConfirmation && (
+             <div className="flex gap-4 justify-start animate-in fade-in slide-in-from-bottom-2">
+               <div className="flex-shrink-0 w-8 h-8 rounded-full bg-yellow-500 flex items-center justify-center shadow-lg mt-1">
+                 <AlertCircle className="w-4 h-4 text-white" />
+               </div>
+               <div className="bg-yellow-500/10 border border-yellow-500/20 rounded-2xl rounded-tl-sm p-4 shadow-sm max-w-[85%]">
+                 <h3 className="text-yellow-400 font-medium mb-1">Confirmation Required</h3>
+                 <p className="text-sm text-gray-300 mb-4">The AI wants to execute a mutating action: <strong>{pendingConfirmation.tool}</strong>. Do you want to proceed?</p>
+                 <div className="flex gap-2">
+                    <button onClick={() => executeAction('CONFIRM')} disabled={loading} className="flex items-center gap-2 px-3 py-1.5 bg-green-600 hover:bg-green-500 text-white text-sm rounded-lg transition-colors">
+                      <Check className="w-4 h-4" /> Confirm Action
+                    </button>
+                    <button onClick={() => executeAction('CANCEL')} disabled={loading} className="flex items-center gap-2 px-3 py-1.5 bg-red-600 hover:bg-red-500 text-white text-sm rounded-lg transition-colors">
+                      <X className="w-4 h-4" /> Cancel
+                    </button>
+                 </div>
+               </div>
+             </div>
+          )}
+
+          {loading && !pendingConfirmation && (
             <div className="flex gap-4 justify-start animate-in fade-in">
               <div className="flex-shrink-0 w-8 h-8 rounded-full bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center shadow-lg mt-1">
                 <Bot className="w-4 h-4 text-white" />
@@ -180,7 +298,6 @@ export default function AssistantPage() {
           <div ref={messagesEndRef} />
         </div>
 
-        {/* Input Area */}
         <div className="p-4 bg-black/40 border-t border-white/10">
           <div className="relative max-w-4xl mx-auto flex items-end gap-2">
             <textarea 
@@ -192,21 +309,18 @@ export default function AssistantPage() {
                   sendMessage();
                 }
               }}
-              placeholder="Ask Copilot to search customers, summarize deals, or update leads..."
+              placeholder="Ask Copilot to search customers or update leads..."
               className="flex-1 max-h-32 min-h-[56px] resize-none rounded-xl border border-white/20 bg-white/5 p-4 pr-12 text-sm text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all backdrop-blur-md"
-              disabled={loading}
+              disabled={loading || !!pendingConfirmation}
               rows={1}
             />
             <button 
               onClick={() => sendMessage()}
-              disabled={loading || !input.trim()}
+              disabled={loading || !input.trim() || !!pendingConfirmation}
               className="absolute right-2 bottom-2 p-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-500 disabled:opacity-50 disabled:hover:bg-indigo-600 transition-colors"
             >
               <Send className="w-4 h-4" />
             </button>
-          </div>
-          <div className="text-center mt-2 text-xs text-gray-500">
-            AI Copilot respects your tenant permissions. It cannot bypass security policies.
           </div>
         </div>
       </Card>

@@ -11,6 +11,7 @@ export type CreateLeadInput = {
 export type UpdateLeadInput = Partial<CreateLeadInput> & {
   id: string;
   status?: LeadStatus;
+  idempotencyKey?: string;
 };
 
 export type CreateCustomerInput = {

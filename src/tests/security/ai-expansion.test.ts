@@ -1,6 +1,5 @@
 import { describe, it, expect, vi, beforeAll, afterAll } from 'vitest';
 import { ScoringService } from '../../modules/ai/scoring/scoring.service';
-import { CopilotService } from '../../modules/ai/copilot/copilot.service';
 import { executeAsSystem, SystemOperation } from '../../../database/utils/prisma-system';
 import * as crypto from 'crypto';
 

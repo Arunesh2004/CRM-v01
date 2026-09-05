@@ -82,6 +82,7 @@ export interface AITool {
   parameters?: Record<string, any>; // JSON schema format for tool arguments
   requiredResource?: Resource;
   requiredAction?: Action;
+  confirmation_required?: boolean;
   execute: (args: any, context?: any) => Promise<any>;
 }
 
