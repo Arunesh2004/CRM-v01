@@ -24,7 +24,7 @@ describe('PHASE 12.3: Twilio Communication Security', () => {
   const SECRET = 'test_secret_123';
   let victimTenantId: string;
   let callLogId: string;
-  const callSid: string = 'CA_test_call_sid_123';
+  let callSid: string = 'CA_test_call_sid_123';
 
   beforeAll(async () => {
     process.env.TWILIO_WEBHOOK_SECRET = SECRET;

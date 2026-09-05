@@ -6,6 +6,7 @@ import { slaEvaluateCron, slaEvaluateWorker } from '@/lib/queue/functions/sla.cr
 import { aiScoringWorker } from '@/lib/queue/functions/ai.scoring';
 import { outboxWorker } from '@/lib/queue/functions/outbox.worker';
 import { webhookWorker } from '@/lib/queue/functions/webhook.worker';
+import { workflowWorker } from '@/lib/queue/functions/workflow.worker';
 
 // Export the API handler for Inngest to reach our app
 export const { GET, POST, PUT } = serve({
@@ -17,5 +18,6 @@ export const { GET, POST, PUT } = serve({
     aiScoringWorker,
     outboxWorker,
     webhookWorker,
+    workflowWorker,
   ],
 });

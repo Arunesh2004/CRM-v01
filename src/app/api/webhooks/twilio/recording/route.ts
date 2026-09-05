@@ -8,7 +8,6 @@ import { executeAsSystem, SystemOperation } from '@db/utils/prisma-system';
 const _orig_POST = async function (req: Request) {
   try {
     const bodyText = await req.text();
-    const url = new URL(req.url);
     const signature = req.headers.get('x-twilio-signature');
     
     const isValid = twilio.validateRequest(

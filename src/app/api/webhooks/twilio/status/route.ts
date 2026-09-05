@@ -57,7 +57,7 @@ const _orig_POST = async function (req: Request) {
     const mappedStatus = (callStatus || 'COMPLETED').toUpperCase().replace('-', '_');
     await tenantPrisma.callLog.updateMany({
       where: { providerCallId: callSid, tenantId },
-      data: { status: mappedStatus as any }
+      data: { status: mappedStatus as import('@prisma/client').CallStatus }
     });
 
     if (callStatus === 'completed') {
@@ -76,9 +76,10 @@ const _orig_POST = async function (req: Request) {
           }
         });
         Logger.info(`Queued CALL_COMPLETED event for transcription`, { eventId, tenantId });
-      } catch (e: any) {
+      } catch (e: unknown) {
         // P2002 is Prisma's Unique Constraint Violation error code
-        if (e.code === 'P2002') {
+        const err = e as { code?: string };
+        if (err.code === 'P2002') {
           Logger.info(`Idempotent webhook retry swallowed for CALL_COMPLETED`, { callSid, tenantId });
         } else {
           Logger.error('Failed to queue CALL_COMPLETED event', e, { tenantId });
@@ -88,7 +89,7 @@ const _orig_POST = async function (req: Request) {
     }
 
     return NextResponse.json({ received: true });
-  } catch (err: any) {
+  } catch (err: unknown) {
     Logger.error('Twilio status webhook failed', err, { category: 'external_api' });
     return NextResponse.json({ error: 'Internal Server Error' }, { status: 500 });
   }

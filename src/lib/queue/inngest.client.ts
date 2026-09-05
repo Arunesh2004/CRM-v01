@@ -15,6 +15,12 @@ export type Events = {
   'webhook.ingested': {
     data: SecureJobEnvelope<{ webhookEventId: string }>;
   };
+  'workflow.execute': {
+    data: SecureJobEnvelope<{ workflowId: string; executionId: string }>;
+  };
+  'workflow.approval': {
+    data: { payload: { executionId: string } };
+  };
 };
 
 // Create a client to send and receive events

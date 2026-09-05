@@ -5,6 +5,7 @@ import { requireRelationOwnership } from '@/lib/auth/relation-auth';
 import { EventBus } from '../../core/events/event-bus';
 import { QueryParams, PaginatedResponse } from '../../core/types';
 import globalPrisma from '@db/utils/prisma';
+import { TaskCore } from './task.core';
 
 export async function createTask(input: CreateTaskInput) {
   const user = await requireAuth();
@@ -14,42 +15,7 @@ export async function createTask(input: CreateTaskInput) {
   const prisma = withTenant(tenantId);
   return await globalPrisma.$transaction(async (baseTx: any) => {
     const tx = await withTenantTransaction(baseTx, tenantId);
-
-    await requireRelationOwnership(tx, tenantId, {
-      user: input.assignedUserId,
-      lead: input.leadId,
-      customer: input.customerId,
-    });
-
-    const task = await tx.task.create({
-      data: {
-        title: input.title,
-        description: input.description,
-        dueDate: input.dueDate,
-        priority: input.priority || 'MEDIUM',
-        assignedUserId: input.assignedUserId,
-        leadId: input.leadId,
-        customerId: input.customerId,
-        tenantId
-      }
-    });
-    
-    await tx.activityTimeline.create({
-      data: {
-        tenantId,
-        type: 'SYSTEM',
-        content: `Task created: ${task.title}`,
-        actorId: user.id,
-        entityType: 'TASK',
-        entityId: task.id
-      }
-    });
-
-    if (input.assignedUserId) {
-      EventBus.emit('task.assigned', { tenantId, taskId: task.id, assigneeId: input.assignedUserId, title: task.title });
-    }
-
-    return task;
+    return await TaskCore.createTask(tx, tenantId, user.id, input);
   });
 }
 

@@ -2,6 +2,8 @@ import { AIProviderFactory } from '@/lib/providers/ai/ai-provider.factory';
 import { AIResponse } from '@/lib/providers/ai/ai-provider.interface';
 import { secureTools } from './tools/ai.tools';
 import { requireAuth, requireTenant, checkPermission } from '@/lib/auth';
+import { ContextBuilderService } from './context/context-builder.service';
+import { ToolRegistry } from './tools/registry';
 import { Logger } from '@/lib/logger/logger';
 import { DistributedRateLimiter } from '@/lib/rate-limit/rate-limiter';
 import prisma from '@db/utils/prisma';
@@ -159,10 +161,8 @@ export async function askAssistant(
     }
 
     // 4. Resolve Provider
-    // Uses GEMINI if API key is present and not in mock mode.
     const providerType = process.env.GEMINI_API_KEY && process.env.APP_MODE !== 'demo' ? 'GEMINI' : 'MOCK';
-    const provider = AIProviderFactory.getProvider(providerType);
-
+    
     // 5. System Instruction & Prompt Injection Defense
     const systemInstruction = `You are a helpful CRM AI Assistant for the authenticated user (${user.email}).
 CRITICAL SECURITY RULES:
@@ -181,11 +181,72 @@ ENTITY RESOLUTION & ANTI-HALLUCINATION RULES:
 - NEVER invent entity IDs. Only use IDs returned directly by search tools.
 - If a search tool returns multiple candidates (AMBIGUOUS_ENTITY), you MUST ask the user to clarify which entity they mean. DO NOT guess, and DO NOT call deep-dive details tools for all candidates in a loop.
 - If a search tool returns exactly 1 candidate, you may proceed to call the deep-dive details tool for that entity if it helps answer the user's question.`;
+    
+    if (providerType === 'MOCK') {
+      const provider = AIProviderFactory.getEngineProvider('MOCK');
+      
+      const aiContext = await ContextBuilderService.buildUserContext(tenantId!, user.id);
+      const session = provider.createSession(aiContext);
 
-    // 6. Execute Generation
-    // The provider returns a structured AIResponse (text + telemetry).
-    // Execution budgets (AI.3.1) are enforced inside the provider.
-    aiResponse = await provider.generateResponse(prompt, authorizedTools, systemInstruction, requestId, history);
+      aiResponse = { text: '', toolsRequested: [], toolsExecuted: [], rounds: 0, totalToolCalls: 0, terminationReason: 'COMPLETE' };
+      const currentPrompt = prompt;
+      let rounds = 0;
+      let finalResponse = '';
+
+      const turnContext: import('@/lib/providers/ai/ai-provider.interface').AITurnContext = {
+        prompt: currentPrompt,
+        history,
+        systemInstruction,
+        tools: authorizedTools.map(t => ({ name: t.name, description: t.description, parameters: t.parameters })),
+        requestId
+      };
+
+      while (rounds < AIConfig.MAX_TOOL_ROUNDS) {
+         const turnResult = await session.processTurn(turnContext);
+         
+         if (turnResult.toolRequests && turnResult.toolRequests.length > 0) {
+            aiResponse.toolsRequested.push(...turnResult.toolRequests.map((tr: any) => tr.name));
+            aiResponse.totalToolCalls += turnResult.toolRequests.length;
+            
+            const toolResults: import('@/lib/providers/ai/ai-provider.interface').AIToolResult[] = [];
+            for (const req of turnResult.toolRequests) {
+              try {
+                // IMPORTANT: Tool intent validation before calling ToolRegistry
+                if (typeof req.args === 'object' && req.args !== null) {
+                  if ('tenantId' in req.args || 'userId' in req.args || 'departmentId' in req.args) {
+                    throw new Error("Security Violation: Tool arguments cannot override identity context.");
+                  }
+                }
+                const result = await ToolRegistry.executeTool(req.name, req.args, aiContext);
+                toolResults.push({ toolCallId: req.id, result });
+                aiResponse.toolsExecuted.push(req.name);
+              } catch (e: any) {
+                Logger.error('AI Tool Execution Failed', e, { event: 'AI_TOOL_FAILED', requestId, toolName: req.name });
+                toolResults.push({ toolCallId: req.id, result: e.message, isError: true });
+              }
+            }
+            
+            const nextTurn = await session.submitToolResults(toolResults);
+            if (nextTurn.text) {
+               finalResponse = nextTurn.text;
+               break;
+            }
+            rounds++;
+         } else {
+            finalResponse = turnResult.text || "No response generated.";
+            break;
+         }
+      }
+      aiResponse.text = finalResponse;
+      aiResponse.rounds = rounds;
+    } else {
+      const provider = AIProviderFactory.getProvider(providerType);
+      
+      // 6. Execute Generation
+      // The provider returns a structured AIResponse (text + telemetry).
+      // Execution budgets (AI.3.1) are enforced inside the provider.
+      aiResponse = await provider.generateResponse(prompt, authorizedTools, systemInstruction, requestId, history);
+    }
 
     return aiResponse.text;
 

@@ -22,10 +22,10 @@ export class TwilioProvider implements TelephonyProvider {
         from: payload.from || this.defaultFrom,
         url: payload.url || `${process.env.NEXT_PUBLIC_APP_URL}/api/webhooks/twilio/twiml`,
         statusCallbackEvent: ['initiated', 'ringing', 'answered', 'completed'],
-        statusCallback: `${process.env.NEXT_PUBLIC_APP_URL}/api/webhooks/twilio/status?tenantId=${tenantId}`,
+        statusCallback: `${process.env.NEXT_PUBLIC_APP_URL}/api/webhooks/twilio/status`,
         record: true,
         recordingStatusCallbackEvent: ['completed'],
-        recordingStatusCallback: `${process.env.NEXT_PUBLIC_APP_URL}/api/webhooks/twilio/recording?tenantId=${tenantId}`
+        recordingStatusCallback: `${process.env.NEXT_PUBLIC_APP_URL}/api/webhooks/twilio/recording`
       });
       
       Logger.info('Twilio call initiated', { tenantId, sid: call.sid });

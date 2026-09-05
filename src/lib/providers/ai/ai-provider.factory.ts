@@ -21,4 +21,11 @@ export class AIProviderFactory {
         throw new Error(`Unsupported AI provider: ${providerName}`);
     }
   }
+
+  static getEngineProvider(providerName: SupportedAIProvider): import('./ai-provider.interface').AIEngineProvider {
+    if (process.env.APP_MODE === 'demo' || providerName === 'MOCK') {
+      return new MockAIProvider();
+    }
+    throw new Error(`AIEngineProvider is only implemented for MOCK in this phase. Requested: ${providerName}`);
+  }
 }

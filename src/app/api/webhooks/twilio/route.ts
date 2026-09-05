@@ -6,6 +6,9 @@ import { withTenant } from '@db/utils/prisma-tenant';
 
 const logger = new Logger();
 
+// DEPRECATED: This is a legacy/duplicate status endpoint.
+// Production traffic should route to /api/webhooks/twilio/status
+// Maintained for backwards compatibility in case existing Twilio configs still point here.
 export async function POST(req: Request) {
   try {
     const bodyText = await req.text();

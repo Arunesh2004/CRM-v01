@@ -99,4 +99,80 @@ export class MockAIProvider implements AIProvider {
 
     return { text, ...baseTelemetry };
   }
+
+  // ---------------------------------------------------------------------------
+  // SUBPHASE B: NEW PROVIDER-NEUTRAL INTERFACE
+  // ---------------------------------------------------------------------------
+  createSession(aiContext: any): import('./ai-provider.interface').AISession {
+    // We treat aiContext as immutable. We freeze it as defense-in-depth, though it's not the real boundary.
+    Object.freeze(aiContext);
+    
+    return {
+      async processTurn(context: import('./ai-provider.interface').AITurnContext) {
+        Logger.info(`[MOCK AI V2] Session generation requested`, { prompt: context.prompt });
+        const p = context.prompt.toLowerCase();
+        
+        // This mock does NOT execute tools. It merely parses the prompt and returns structured intents.
+        if (p.includes('search') || p.includes('find') || p.includes('look up')) {
+          let query = context.prompt.replace(/(search for|search|find|look up) /ig, '').trim();
+          if (!query) query = 'test';
+          return {
+            toolRequests: [{
+              id: 'call_' + Math.random().toString(36).substring(7),
+              name: 'search_crm',
+              args: { query }
+            }]
+          };
+        } else if (p.includes('show customer') || p.includes('get customer') || p.includes('customer details')) {
+          const customerId = context.prompt.replace(/(show customer|get customer|customer details)/i, '').trim();
+          if (!customerId) throw new Error("Please provide a valid customer ID.");
+          return {
+            toolRequests: [{
+              id: 'call_' + Math.random().toString(36).substring(7),
+              name: 'get_customer',
+              args: { customerId }
+            }]
+          };
+        } else if (p.includes('update lead') || p.includes('move lead') || p.includes('change lead status')) {
+          const tokens = context.prompt.split(' ');
+          const leadIdIndex = tokens.findIndex(t => t.toLowerCase() === 'lead') + 1;
+          const toIndex = tokens.findIndex(t => t.toLowerCase() === 'to');
+          
+          if (leadIdIndex > 0 && leadIdIndex < tokens.length) {
+             const leadId = tokens[leadIdIndex];
+             let status = '';
+             
+             if (toIndex > leadIdIndex && toIndex + 1 < tokens.length) {
+               status = tokens[toIndex + 1].toUpperCase();
+             } else {
+               status = tokens[tokens.length - 1].toUpperCase();
+             }
+
+             // We simulate an LLM payload, even if invalid.
+             return {
+               toolRequests: [{
+                 id: 'call_' + Math.random().toString(36).substring(7),
+                 name: 'update_lead',
+                 args: { leadId, status }
+               }]
+             };
+          }
+          return { text: "Could not determine lead ID or status from the request." };
+        }
+        
+        return { text: "Demo AI Copilot is active. I can help search CRM records, retrieve customer details, or update leads." };
+      },
+
+      async submitToolResults(results: import('./ai-provider.interface').AIToolResult[]) {
+        // In a real provider, we'd feed this back into the LLM. 
+        // For the mock, we just generate a generic confirmation text based on the results.
+        const res = results[0];
+        if (res.isError) {
+          return { text: `Error executing tool: ${res.result}` };
+        }
+        return { text: `Successfully processed results for tool call ${res.toolCallId}.` };
+      }
+    };
+  }
 }
+

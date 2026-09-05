@@ -1,9 +1,14 @@
 import { NextResponse } from 'next/server';
 import { withApiContext } from '@/lib/observability/context';
-import { Logger } from '../../../../../lib/logger/logger';
+import { redis } from '@/lib/cache/redis.client';
 import twilio from 'twilio';
+import { Logger } from '../../../../../lib/logger/logger';
+
 import { RoutingEngine } from '../../../../../lib/telephony/routing';
 import { executeAsSystem, SystemOperation } from '@db/utils/prisma-system';
+import { withTenant } from '@db/utils/prisma-tenant';
+import { CallStatus } from '@prisma/client';
+
 
 const _orig_POST = async function (req: Request) {
   try {
@@ -24,6 +29,8 @@ const _orig_POST = async function (req: Request) {
     const params = new URLSearchParams(bodyText);
     const from = params.get('From') || '';
     const to = params.get('To') || '';
+    // CallSid originates exclusively from the verified Twilio webhook body.
+    // It is never accepted from query parameters, headers, or caller-controlled input.
     const callSid = params.get('CallSid');
 
     // 4. Canonicalize the number using basic E.164 normalization
@@ -32,6 +39,17 @@ const _orig_POST = async function (req: Request) {
     if (!canonicalTo || !callSid) {
       Logger.warn('Invalid Twilio Inbound Payload: Missing To or CallSid', { canonicalTo, callSid });
       return NextResponse.json({ error: 'Bad Request' }, { status: 400 });
+    }
+
+    // --- IDEMPOTENCY BOUNDARY (Fast-Path) ---
+    if (redis) {
+      const lockKey = `twilio_inbound:${callSid}`;
+      const acquired = await redis.setnx(lockKey, '1');
+      if (!acquired) {
+        Logger.warn('Duplicate inbound webhook detected via Redis SETNX, ignoring safely', { callSid });
+        return new NextResponse('<Response />', { headers: { 'Content-Type': 'text/xml' } });
+      }
+      await redis.expire(lockKey, 3600); // 1 hour TTL
     }
 
     Logger.info(`Inbound call received from ${from} to ${canonicalTo}`);
@@ -58,16 +76,29 @@ const _orig_POST = async function (req: Request) {
     Logger.info(`Successfully routed inbound call to tenant`, { tenantId, canonicalTo, callSid });
 
     // 8. Establish tenant context AFTER the trusted mapping is resolved
-    // In a full implementation, we would create a CallLog here within the tenant context.
+    const tenantPrisma = withTenant(tenantId);
     
+    await tenantPrisma.callLog.create({
+      data: {
+        tenantId,
+        providerCallId: callSid,
+        provider: 'EXTERNAL',
+        status: CallStatus.RINGING, 
+        callerEmployeeId: 'unknown', 
+        receiverEmployeeId: 'system' 
+      }
+    });
+
     // 9. Continue through the existing routing architecture
     const twiml = await RoutingEngine.getInboundTwiML(tenantId, 'contactId_mock', { checkBusinessHours: true, strategy: 'ROUND_ROBIN' });
-
     return new NextResponse(twiml, { headers: { 'Content-Type': 'text/xml' } });
-  } catch (err: any) {
+
+  } catch (err: unknown) {
     Logger.error('Twilio inbound webhook failed', err, { category: 'external_api' });
     return NextResponse.json({ error: 'Internal Server Error' }, { status: 500 });
   }
 }
 
 export const POST = withApiContext(_orig_POST);
+
+

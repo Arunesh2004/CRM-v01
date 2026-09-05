@@ -397,6 +397,8 @@ model User {
   assignedTickets    Ticket[]         @relation("TicketAssignee")
   sentTicketMessages TicketMessage[]
   sentInvitations    UserInvitation[]
+  createdWorkflows     Workflow[]          @relation("WorkflowCreatedBy")
+  initiatedExecutions  WorkflowExecution[] @relation("WorkflowExecutionInitiator")
 
   @@unique([tenantId, email])
   @@unique([tenantId, employeeId])
@@ -1998,6 +2000,9 @@ model Workflow {
   createdAt   DateTime       @default(now())
   updatedAt   DateTime       @updatedAt
 
+  createdById String
+  createdBy   User   @relation("WorkflowCreatedBy", fields: [createdById], references: [id], onDelete: Restrict)
+
   tenant      Tenant              @relation(fields: [tenantId], references: [id], onDelete: Cascade)
   triggers    WorkflowTrigger[]
   actions     WorkflowAction[]
@@ -2046,6 +2051,9 @@ model WorkflowExecution {
   context    Json?
   createdAt  DateTime                @default(now())
   updatedAt  DateTime                @updatedAt
+
+  initiatedById String?
+  initiatedBy   User?  @relation("WorkflowExecutionInitiator", fields: [initiatedById], references: [id], onDelete: SetNull)
 
   tenantId String
   tenant   Tenant @relation(fields: [tenantId], references: [id], onDelete: Cascade)

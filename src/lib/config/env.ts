@@ -17,6 +17,17 @@ export function validateEnvironment(): void {
     'PUBLIC_APP_URL'
   ];
 
+  // Voice Bridge integration variables
+  const voiceStreamingEnabled = process.env.VOICE_STREAMING_ENABLED === 'true';
+  const voiceBridgeVars = ['VOICE_BRIDGE_URL', 'BRIDGE_JWT_SECRET'];
+  const missingVoiceBridgeVars = voiceBridgeVars.filter(v => !process.env[v]);
+  
+  if (voiceStreamingEnabled && missingVoiceBridgeVars.length > 0) {
+    console.error(`CRITICAL SECURITY FAILURE: Voice streaming is enabled but missing required configuration: ${missingVoiceBridgeVars.join(', ')}. Inbound calls will fail closed.`);
+  } else if (!voiceStreamingEnabled) {
+    console.log(`INFO: Voice streaming is intentionally disabled. Legacy routing will be used.`);
+  }
+
   // We do not strictly enforce billing keys yet in this validation 
   // since they are not activated, but architecturally they will be added here.
   const isProduction = process.env.NODE_ENV === 'production' && process.env.VERCEL_ENV === 'production';
@@ -42,7 +53,7 @@ export function validateEnvironment(): void {
 
   // Twilio constraints
   if (isProduction) {
-    if (!process.env.TWILIO_ACCOUNT_SID || !process.env.TWILIO_AUTH_TOKEN || !process.env.TWILIO_WEBHOOK_SECRET) {
+    if (!process.env.TWILIO_ACCOUNT_SID || !process.env.TWILIO_AUTH_TOKEN) {
       throw new Error(`CRITICAL STARTUP FAILURE: Twilio credentials missing in production`);
     }
   }
@@ -145,5 +156,19 @@ export const ENV = {
     if (!this.cctvEnabled) throw new Error('CCTV module is disabled: missing required configuration');
     return process.env.MEDIAMTX_WEBHOOK_SECRET!; 
   },
-  get encryptionKey() { return process.env.ENCRYPTION_KEY!; }
+  get encryptionKey() { return process.env.ENCRYPTION_KEY!; },
+
+  // Voice Bridge
+  get voiceStreamingEnabled(): boolean {
+    return process.env.VOICE_STREAMING_ENABLED === 'true';
+  },
+  get voiceBridgeUrl(): string {
+    if (!this.voiceStreamingEnabled) throw new Error('Voice Bridge is not enabled');
+    return process.env.VOICE_BRIDGE_URL!;
+  },
+  // Intentionally not exposed as a plain getter to prevent accidental logging.
+  // Use BRIDGE_JWT_SECRET directly in signing operations only.
+  get bridgeJwtSecretIsConfigured(): boolean {
+    return !!process.env.BRIDGE_JWT_SECRET;
+  },
 };
