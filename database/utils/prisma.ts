@@ -1,9 +1,8 @@
 import { PrismaClient } from "@prisma/client";
 
 const softDeleteModels = [
-  'Tenant', 'User', 'Role', 'Message', 'Conversation', 'Call', 'CallRecording', 
-  'CallTranscript', 'AISummary', 'Incident', 'Camera', 'AIEvent', 
-  'Subscription', 'Invoice', 'Payment', 'Customer', 'Lead', 'Task', 'Location'
+  'Tenant', 'User', 'Role', 'Incident', 'Camera', 'AIEvent', 
+  'Customer', 'Lead', 'Task', 'Location'
 ];
 
 const connectionUrl = process.env.DATABASE_URL;
