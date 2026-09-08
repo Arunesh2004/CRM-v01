@@ -173,26 +173,56 @@ export class WorkflowService {
     }
 
     // 4. AT-LEAST-ONCE DELIVERY WITH IDEMPOTENT SIDE EFFECTS
-    const idempotencyKeyStr = `wf_step_${step.id}`;
+    //
+    // CRITICAL: The idempotency key MUST be derived from stable, caller-independent identifiers
+    // that are identical for both concurrent workers executing the same logical action.
+    //
+    // Previously this used `wf_step_${step.id}` — WRONG: two concurrent callers can both
+    // race through the findFirst/create step creation path above and each create a distinct
+    // WorkflowExecutionStep with a unique UUID. Different step.id → different idempotency key
+    // → no collision → both workers proceed to create independent business rows.
+    //
+    // Correct: derive from executionId + action.id — both are known before step creation,
+    // are stable, and are identical for all concurrent workers for the same logical operation.
+    // The unique constraint on [tenantId, key] then correctly arbitrates the race.
+    const idempotencyKeyStr = `wf_exec_${executionId}_action_${action.id}`;
 
     try {
       const result = await globalPrisma.$transaction(async (baseTx: any) => {
-        const tx = await withTenantTransaction(baseTx, tenantId);
+        // Set tenant context on the raw transaction client.
+        // withTenantTransaction returns baseTx after calling set_config — the tenant RLS
+        // context is now active on baseTx for this transaction's lifetime.
+        await withTenantTransaction(baseTx, tenantId);
 
-        // a) Concurrency Claim / Idempotency Key creation
-        await tx.idempotencyKey.create({
+        // a) Concurrency Claim — insert IdempotencyKey using the raw baseTx.
+        //    IdempotencyKey is intentionally NOT in the withTenant extension's RLS model list
+        //    (see prisma-tenant.ts comment) precisely so it does not spawn a nested transaction.
+        //    Using baseTx directly here is correct and consistent with that design.
+        await baseTx.idempotencyKey.create({
           data: {
             tenantId,
             key: idempotencyKeyStr,
+            operation: action.actionType,
+            requestHash: idempotencyKeyStr,
             expiresAt: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000)
           }
         });
 
-        // b) Static Dispatcher inside transaction
+        // b) Static Dispatcher — pass baseTx as the external transaction client.
+        //    IMPORTANT: downstream service methods receive baseTx, NOT the withTenant-extended
+        //    client. This keeps all mutations inside the same atomic transaction. If we passed
+        //    the withTenant-extended client, its $allOperations middleware would wrap each
+        //    RLS-model mutation (Ticket, Incident, etc.) in an independent prisma.$transaction()
+        //    that commits immediately — allowing the business row to escape the outer
+        //    idempotency transaction and become durable even if the IdempotencyKey INSERT
+        //    later fails due to a concurrent race.
+        //
+        //    Tenant isolation is enforced because set_config('app.current_tenant_id') has
+        //    already been called on baseTx by withTenantTransaction above.
         let dispatchResult;
         switch (action.actionType) {
           case 'CREATE_TASK':
-            dispatchResult = await TaskCore.createTask(tx, tenantId, creatorId, config as any);
+            dispatchResult = await TaskCore.createTask(baseTx, tenantId, creatorId, config as any);
             break;
           case 'CREATE_TICKET':
             dispatchResult = await TicketService.createTicket(
@@ -202,7 +232,7 @@ export class WorkflowService {
               config.subject,
               config.description,
               config.priority || 'MEDIUM',
-              tx
+              baseTx
             );
             break;
           case 'CREATE_INCIDENT':
@@ -212,20 +242,21 @@ export class WorkflowService {
                 explicitTenantId: tenantId,
                 explicitUserId: creatorId
               },
-              tx
+              baseTx
             );
             break;
           default:
             throw new Error(`400: Unknown or unsupported action type: ${action.actionType}`);
         }
 
-        // c) Mark Step COMPLETED
-        await tx.workflowExecutionStep.updateMany({
+        // c) Mark Step COMPLETED — use baseTx so these mutations are also inside the
+        //    same atomic transaction as the IdempotencyKey claim and the business mutation.
+        await baseTx.workflowExecutionStep.updateMany({
           where: { id: step.id },
           data: { status: 'COMPLETED', result: JSON.stringify(dispatchResult) }
         });
         
-        await tx.auditLog.create({
+        await baseTx.auditLog.create({
           data: {
             tenantId,
             actorId: creatorId, actorType: 'USER',
@@ -241,15 +272,20 @@ export class WorkflowService {
 
       return { success: true, waitingApproval: false, result };
     } catch (error: any) {
-      const isIdempotencyCollision = error.code === 'P2002' && (
-        error.message?.includes('idempotencyKey') || 
-        error.message?.includes('IdempotencyKey') || 
-        (Array.isArray(error.meta?.target) && error.meta.target.includes('key')) ||
-        (typeof error.meta?.target === 'string' && error.meta.target.includes('key'))
+      // Narrow P2002 discrimination: ONLY treat a P2002 from the IdempotencyKey model
+      // as a concurrency collision. A P2002 from any other model (e.g. Incident.aiEventId
+      // @unique) must propagate as a real business error, not be silently swallowed.
+      // We use meta.modelName (set by Prisma) as the authoritative discriminator,
+      // matching the same logic used in src/lib/idempotency.ts isIdempotencyKeyConflict().
+      const isIdempotencyCollision = (
+        error.code === 'P2002' &&
+        error.meta?.modelName === 'IdempotencyKey'
       );
 
       if (isIdempotencyCollision) {
-        // Idempotency constraint hit - step already executed by another concurrent worker!
+        // Concurrency race: another concurrent worker already claimed this idempotency key.
+        // The outer transaction will be rolled back. The business mutation has NOT been
+        // committed (it was inside the same baseTx), so no duplicate row exists.
         return { success: true, waitingApproval: false, skipped: true, reason: 'Duplicate execution prevented' };
       }
 
