@@ -9,12 +9,14 @@ import { createCRMComment, deleteCRMComment } from '@/modules/core/comments/comm
 import { z } from 'zod';
 import { QueryParams } from '../../core/types';
 
-async function _createTaskAction(payload: z.infer<typeof CreateTaskSchema>) {
+async function _createTaskAction(payload: z.infer<typeof CreateTaskSchema> & { idempotencyKey?: string }) {
   try {
-    const validatedData = CreateTaskSchema.parse(payload);
-    const result = await taskService.createTask(validatedData);
+    const { idempotencyKey, ...taskData } = payload;
+    const validatedData = CreateTaskSchema.parse(taskData);
+
+    const result = await taskService.createTask({ ...validatedData, idempotencyKey });
     return { success: true, data: result };
-  } catch (error: any) {
+  } catch (error: unknown) {
     return { success: false, error: sanitizeClientError(error) };
   }
 }

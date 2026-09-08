@@ -3,14 +3,20 @@ import prisma from '@db/utils/prisma';
 import { notFound } from 'next/navigation';
 import Link from 'next/link';
 import { RoleEditModal } from '@/components/crm/RoleEditModal';
+import { disableEmployeeAction } from '../actions';
+import { EditProfileForm } from '@/components/employees/EditProfileForm';
+import { ReassignDepartmentForm } from '@/components/employees/ReassignDepartmentForm';
 
-export default async function EmployeeProfilePage({ params }: { params: { employeeId: string } }) {
+export default async function EmployeeProfilePage({ params }: { params: Promise<{ employeeId: string } > }) {
+  const resolvedParams = await params;
   const actor = await requireAuth();
   
   const employee = await prisma.user.findFirst({
-    where: { id: params.employeeId, tenantId: actor.tenantId },
+    where: { id: decodeURIComponent(resolvedParams.employeeId), tenantId: actor.tenantId },
     include: { department: true, userRoles: { include: { role: true } } }
   });
+
+  const departments = await prisma.department.findMany({ where: { tenantId: actor.tenantId } });
 
   if (!employee) return notFound();
 
@@ -26,6 +32,7 @@ export default async function EmployeeProfilePage({ params }: { params: { employ
   const canEditProfile = isSelf || isTenantAdmin;
   const canManageRole = isTenantAdmin;
   const canManageDept = isTenantAdmin || (isDepartmentHead && actor.departmentId === employee.departmentId);
+  const canDisableEmployee = (isTenantAdmin || (isDepartmentHead && actor.departmentId === employee.departmentId)) && !isSelf;
 
   return (
     <div className="max-w-4xl mx-auto p-6 min-h-screen font-sans">
@@ -79,9 +86,15 @@ export default async function EmployeeProfilePage({ params }: { params: { employ
             <div className="p-6 border-b border-slate-100 dark:border-slate-800 flex justify-between items-center">
               <h3 className="text-lg font-bold text-slate-900 dark:text-white">Contact & Details</h3>
               {canEditProfile && (
-                <button className="text-sm font-medium text-indigo-600 hover:text-indigo-700 dark:text-indigo-400 dark:hover:text-indigo-300">
-                  Edit Profile
-                </button>
+                <EditProfileForm 
+                  userId={employee.id} 
+                  initialData={{
+                    firstName: employee.firstName,
+                    lastName: employee.lastName,
+                    phone: employee.phone,
+                    designation: employee.designation
+                  }} 
+                />
               )}
             </div>
             <div className="p-6 grid grid-cols-1 sm:grid-cols-2 gap-6">
@@ -127,14 +140,18 @@ export default async function EmployeeProfilePage({ params }: { params: { employ
                   />
                 )}
                 {canManageDept && (
-                  <button className="px-4 py-2 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg text-sm font-medium text-slate-700 dark:text-slate-200 hover:border-indigo-500 transition-colors">
-                    Reassign Department
-                  </button>
+                  <ReassignDepartmentForm 
+                    userId={employee.id} 
+                    currentDepartmentId={employee.departmentId} 
+                    departments={departments.map(d => ({ id: d.id, name: d.name }))} 
+                  />
                 )}
-                {canManageRole && employee.status === 'ACTIVE' && (
-                  <button className="px-4 py-2 bg-white dark:bg-slate-800 border border-rose-200 dark:border-rose-900/50 rounded-lg text-sm font-medium text-rose-600 dark:text-rose-400 hover:bg-rose-50 dark:hover:bg-rose-900/20 transition-colors">
-                    Disable Employee
-                  </button>
+                {canDisableEmployee && employee.status === 'ACTIVE' && (
+                  <form action={disableEmployeeAction.bind(null, employee.id) as any}>
+                    <button type="submit" className="px-4 py-2 bg-white dark:bg-slate-800 border border-rose-200 dark:border-rose-900/50 rounded-lg text-sm font-medium text-rose-600 dark:text-rose-400 hover:bg-rose-50 dark:hover:bg-rose-900/20 transition-colors">
+                      Disable Employee
+                    </button>
+                  </form>
                 )}
               </div>
             </div>

@@ -72,6 +72,7 @@ enum Resource {
   REVENUE
   SALES_INTEL
   TICKET
+  PRODUCT
 }
 
 enum WebhookStatus {
@@ -1980,7 +1981,7 @@ model AITokenUsage {
   inputTokens   Int
   outputTokens  Int
   latencyMs     Int
-  cost          Float
+  cost          Decimal @db.Decimal(19,8)
   timestamp     DateTime @default(now())
 
   tenant    Tenant       @relation(fields: [tenantId], references: [id], onDelete: Cascade)
@@ -2167,7 +2168,7 @@ model PriceBookEntry {
   tenantId      String
   productId     String
   priceBookId   String
-  unitPrice     Float
+  unitPrice     Decimal @db.Decimal(19,4)
   currencyCode  String    @default("USD")
   isActive      Boolean   @default(true)
   effectiveFrom DateTime?
@@ -2216,10 +2217,10 @@ model Quote {
   priceBookId       String
   status            QuoteStatus @default(DRAFT)
   expirationDate    DateTime?
-  subtotal          Float       @default(0)
-  discountTotal     Float       @default(0)
-  taxTotal          Float       @default(0)
-  grandTotal        Float       @default(0)
+  subtotal          Decimal     @default(0) @db.Decimal(19,4)
+  discountTotal     Decimal     @default(0) @db.Decimal(19,4)
+  taxTotal          Decimal     @default(0) @db.Decimal(19,4)
+  grandTotal        Decimal     @default(0) @db.Decimal(19,4)
   previousVersionId String?     @unique
   createdAt         DateTime    @default(now())
   updatedAt         DateTime    @updatedAt
@@ -2246,9 +2247,9 @@ model QuoteLineItem {
   priceBookEntryId String
   productId        String // De-normalized for historical stability
   quantity         Int      @default(1)
-  unitPrice        Float // Snapshot of the price at quote time
+  unitPrice        Decimal @db.Decimal(19,4) // Snapshot of the price at quote time
   discount         Float    @default(0)
-  subtotal         Float
+  subtotal         Decimal @db.Decimal(19,4)
   metadata         Json?
   createdAt        DateTime @default(now())
   updatedAt        DateTime @updatedAt
@@ -2300,7 +2301,7 @@ model SalesQuota {
   tenantId     String
   userId       String
   period       String
-  targetAmount Float
+  targetAmount Decimal @db.Decimal(19,4)
   createdAt    DateTime @default(now())
   updatedAt    DateTime @updatedAt
 
@@ -2316,7 +2317,7 @@ model DealSnapshot {
   tenantId    String
   dealId      String
   date        DateTime @default(now())
-  value       Float
+  value       Decimal @db.Decimal(19,4)
   probability Int?
   stageId     String
   createdAt   DateTime @default(now())
@@ -2491,6 +2492,11 @@ model IdempotencyKey {
   expiresAt DateTime
   createdAt DateTime @default(now())
 
+  // New fields for Phase 29 Track A Idempotency
+  operation   String  @default("UNKNOWN")
+  requestHash String  @default("")
+  resourceId  String?
+
   tenant Tenant @relation(fields: [tenantId], references: [id], onDelete: Cascade)
 
   @@unique([tenantId, key])
@@ -2541,8 +2547,8 @@ model Invoice {
   tenantId        String
   /// @deprecated
   stripeInvoiceId String?
-  amountDue       Float    @default(0)
-  amountPaid      Float    @default(0)
+  amountDue       Decimal  @default(0) @db.Decimal(19,4)
+  amountPaid      Decimal  @default(0) @db.Decimal(19,4)
   status          String   @default("DRAFT")
   createdAt       DateTime @default(now())
   updatedAt       DateTime @updatedAt

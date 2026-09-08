@@ -19,10 +19,14 @@ import { TimelineTabWrapper } from './TimelineTabWrapper';
 import { DocumentsTabWrapper } from './DocumentsTabWrapper';
 import { EditCustomerForm } from '@/components/crm/EditCustomerForm';
 
-export default async function CustomerDetailsPage({ params }: { params: { id: string } }) {
-  const result = await getCustomerByIdAction(params.id);
+export default async function CustomerDetailsPage({ params }: { params: Promise<{ id: string } > }) {
+  const result = await getCustomerByIdAction((await params).id);
   
-  if (!result.success || !result.data) {
+  if (!result.success) {
+    throw new Error(result.error || 'Failed to load customer details');
+  }
+
+  if (!result.data) {
     notFound();
   }
 

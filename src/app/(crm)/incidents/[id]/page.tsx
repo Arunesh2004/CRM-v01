@@ -5,8 +5,8 @@ import { generateStreamTokenAction } from '@/modules/cctv/actions/stream.actions
 import Link from 'next/link';
 import { ArrowLeft, ShieldAlert, AlertTriangle, Video, MapPin, User, Activity } from 'lucide-react';
 
-export default async function IncidentInvestigationPage({ params }: { params: { id: string } }) {
-  const result = await getIncidentByIdAction(params.id);
+export default async function IncidentInvestigationPage({ params }: { params: Promise<{ id: string } > }) {
+  const result = await getIncidentByIdAction((await params).id);
   if (!result.success || !result.data) return notFound();
 
   const incident = result.data;

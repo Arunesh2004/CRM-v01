@@ -1,5 +1,6 @@
 'use server';
 import { withServerActionContext } from '@/lib/observability/server-action';
+import { serializeDecimal } from '@/lib/utils/decimal';
 
 import { sanitizeClientError } from '@/lib/errors/client-safe-error';
 import { requireAuth, requireTenant } from '@/lib/auth';
@@ -18,7 +19,7 @@ async function _getApprovalsAction() {
       include: { customer: true, deal: true, owner: true }
     });
 
-    return { success: true, data: pendingQuotes };
+    return { success: true, data: serializeDecimal(pendingQuotes) };
   } catch (error: any) {
     return { success: false, error: sanitizeClientError(error) };
   }

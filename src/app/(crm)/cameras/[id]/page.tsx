@@ -9,15 +9,16 @@ import { ArrowLeft } from 'lucide-react';
 import { CameraStreamContainer } from './_components/camera-stream-container';
 import { RecordingTimeline } from './_components/recording-timeline';
 
-export default async function CameraDetailPage({ params }: { params: { id: string } }) {
+export default async function CameraDetailPage({ params }: { params: Promise<{ id: string } > }) {
   // We can fetch data concurrently
   const [camerasResult, eventsResult, recordingsResult] = await Promise.all([
     getCamerasAction(), // In reality we should have getCameraByIdAction exposed, for now filter locally if missing
-    getAIEventsAction({ cameraId: params.id, limit: 10 }),
-    getCameraRecordingsAction(params.id, 5)
+    getAIEventsAction({ cameraId: (await params).id, limit: 10 }),
+    getCameraRecordingsAction((await params).id, 5)
   ]);
 
-  const camera = (camerasResult.data || []).find((c: any) => c.id === params.id);
+  const p = await params;
+  const camera = (camerasResult.data || []).find((c: any) => c.id === p.id);
   if (!camera) return notFound();
 
   const events = eventsResult.success ? (eventsResult.data?.data || []) : [];

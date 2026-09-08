@@ -14,8 +14,8 @@ import { EditTaskForm } from '@/components/crm/EditTaskForm';
 import { withTenant } from '@db/utils/prisma-tenant';
 import { requireTenant } from '@/lib/auth';
 
-export default async function TaskDetailPage({ params }: { params: { id: string } }) {
-  const result = await getTaskByIdAction(params.id);
+export default async function TaskDetailPage({ params }: { params: Promise<{ id: string } > }) {
+  const result = await getTaskByIdAction((await params).id);
   
   if (!result.success || !result.data) {
     notFound();

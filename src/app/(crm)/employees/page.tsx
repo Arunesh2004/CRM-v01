@@ -3,11 +3,13 @@ import { getDepartments } from '@/modules/departments/department.service';
 import { requireAuth } from '@/lib/auth';
 import { Suspense } from 'react';
 import Link from 'next/link';
+import { InviteEmployeeForm } from '@/components/employees/InviteEmployeeForm';
 
-export default async function EmployeesPage({ searchParams }: { searchParams: { [key: string]: string | string[] | undefined } }) {
+export default async function EmployeesPage(props: { searchParams: Promise<{ [key: string]: string | string[] | undefined }> }) {
   const actor = await requireAuth();
   
   // Parse Search Params
+  const searchParams = await props.searchParams;
   const search = typeof searchParams.search === 'string' ? searchParams.search : undefined;
   const departmentId = typeof searchParams.departmentId === 'string' ? searchParams.departmentId : undefined;
   const roleName = typeof searchParams.roleName === 'string' ? searchParams.roleName : undefined;
@@ -34,10 +36,7 @@ export default async function EmployeesPage({ searchParams }: { searchParams: { 
           <p className="text-sm text-slate-500 dark:text-slate-400 mt-1">Manage and view company personnel.</p>
         </div>
         {canManage && (
-          <button className="px-5 py-2.5 bg-gradient-to-r from-indigo-600 to-violet-600 hover:from-indigo-500 hover:to-violet-500 text-white text-sm font-semibold rounded-xl shadow-lg shadow-indigo-500/30 transition-all active:scale-95 flex items-center gap-2">
-            <svg xmlns="http://www.w3.org/-svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M5 12h14"/><path d="M12 5v14"/></svg>
-            Invite Employee
-          </button>
+          <InviteEmployeeForm departments={departments} />
         )}
       </div>
 

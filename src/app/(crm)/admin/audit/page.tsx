@@ -1,9 +1,15 @@
+import { requireAuth, requireTenant, requirePermission } from '@/lib/auth';
+import { Resource, Action } from '@prisma/client';
 import { getAuditLogsAction } from '@/modules/admin/actions/audit.actions';
 import { Card } from '@/components/ui/Card';
 import { Activity } from 'lucide-react';
 import { Badge } from '@/components/ui/Badge';
 
 export default async function AdminAuditPage() {
+  await requireTenant();
+  await requireAuth();
+  await requirePermission(Resource.SYSTEM, Action.UPDATE);
+
   const result = await getAuditLogsAction();
   const logs = result.success ? result.data : [];
 

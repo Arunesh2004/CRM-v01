@@ -7,7 +7,6 @@ import { FailureEventPayload } from 'inngest';
 import { withContext } from '../observability/context';
 import { Logger } from '../logger/logger';
 
-const globalPrisma = new PrismaClient();
 
 export async function withJobContext<T>(
   envelope: SecureJobEnvelope<any>,

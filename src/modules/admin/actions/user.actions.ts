@@ -11,7 +11,7 @@ async function _getUsersAction() {
     const tenantId = await requireTenant();
     await requireAuth();
     // Assuming MANAGE_SYSTEM or MANAGE_USERS is required
-    await requirePermission(Resource.SYSTEM, Action.MANAGE_TERRITORIES); // Using existing permission check for admin
+    await requirePermission(Resource.USER, Action.READ);
 
     const prisma = withTenant(tenantId);
     

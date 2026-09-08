@@ -1,6 +1,6 @@
 import prisma from '../../../database/utils/prisma';
 import { withTenant } from '../../../database/utils/prisma-tenant';
-import { QuoteStatus, Quote, QuoteLineItem, Resource, Action } from '@prisma/client';
+import { QuoteStatus, Quote, QuoteLineItem, Resource, Action, Prisma } from '@prisma/client';
 import { checkPermissionFast } from '../../lib/auth';
 import { SecurityEventService } from '../security-events/security-event.service';
 import { FieldSecurityService } from '../security/field-security/field-security.service';
@@ -66,28 +66,32 @@ export class RevenueService {
     if (!deal) throw new Error('Deal not found or cross-tenant access denied');
 
     // 3. Resolve Line Items and compute totals (Snapshots price)
-    let subtotal = 0;
-    let discountTotal = 0;
+    let subtotal = new Prisma.Decimal(0);
+    let discountTotal = new Prisma.Decimal(0);
     
     const resolvedItems: {
       tenantId: string,
       priceBookEntryId: string,
       productId: string,
       quantity: number,
-      unitPrice: number,
+      unitPrice: Prisma.Decimal,
       discount: number,
-      subtotal: number
+      subtotal: Prisma.Decimal
     }[] = [];
     
     for (const item of lineItemsInput) {
       const pbe = await prisma.priceBookEntry.findFirst({ where: { id: item.priceBookEntryId, priceBookId, tenantId } });
       if (!pbe) throw new Error('Invalid PriceBookEntry');
 
-      const itemSubtotal = pbe.unitPrice * item.quantity;
-      const itemDiscountTotal = itemSubtotal * (item.discount / 100);
+      const quantityDec = new Prisma.Decimal(item.quantity);
+      const itemSubtotal = pbe.unitPrice.mul(quantityDec).toDecimalPlaces(4, Prisma.Decimal.ROUND_HALF_UP);
+      
+      const discountDec = new Prisma.Decimal(item.discount.toString());
+      const discountRate = discountDec.div(100);
+      const itemDiscountTotal = itemSubtotal.mul(discountRate).toDecimalPlaces(4, Prisma.Decimal.ROUND_HALF_UP);
 
-      subtotal += itemSubtotal;
-      discountTotal += itemDiscountTotal;
+      subtotal = subtotal.add(itemSubtotal);
+      discountTotal = discountTotal.add(itemDiscountTotal);
 
       resolvedItems.push({
         tenantId,
@@ -96,11 +100,11 @@ export class RevenueService {
         quantity: item.quantity,
         unitPrice: pbe.unitPrice, // Snapshotted commercial price
         discount: item.discount,
-        subtotal: itemSubtotal - itemDiscountTotal
+        subtotal: itemSubtotal.sub(itemDiscountTotal)
       });
     }
 
-    const grandTotal = subtotal - discountTotal;
+    const grandTotal = subtotal.sub(discountTotal);
 
     // 4. Create Quote
     const tenantPrisma = withTenant(tenantId);
@@ -139,9 +143,16 @@ export class RevenueService {
   }
 
   static async submitForApproval(tenantId: string, userId: string, quoteId: string) {
+    const hasUpdate = await checkPermissionFast(userId, 'REVENUE', 'UPDATE');
+
     const tenantPrisma = withTenant(tenantId);
     const quote = await tenantPrisma.quote.findFirst({ where: { id: quoteId, tenantId }, include: { lineItems: true } });
     if (!quote) throw new Error('Quote not found');
+
+    if (!hasUpdate || quote.ownerId !== userId) {
+      await SecurityEventService.logEvent(tenantId, { eventType: 'SUSPICIOUS_ACTIVITY', severity: 'HIGH', source: 'RevenueService', metadata: { action: 'submitForApproval' } }, 'USER', userId);
+      throw new Error('Unauthorized: Only the quote owner with REVENUE UPDATE permission can submit it.');
+    }
 
     if (quote.status !== 'DRAFT') throw new Error('Can only submit DRAFT quotes');
 
@@ -235,6 +246,43 @@ export class RevenueService {
     });
   }
 
+  static async sendQuote(tenantId: string, senderId: string, quoteId: string) {
+    const hasUpdate = await checkPermissionFast(senderId, 'REVENUE', 'UPDATE');
+    
+    const tenantPrisma = withTenant(tenantId);
+    const quote = await tenantPrisma.quote.findFirst({ where: { id: quoteId, tenantId } });
+    if (!quote) throw new Error('Quote not found');
+
+    if (!hasUpdate || quote.ownerId !== senderId) {
+      await SecurityEventService.logEvent(tenantId, { eventType: 'SUSPICIOUS_ACTIVITY', severity: 'HIGH', source: 'RevenueService', metadata: { action: 'sendQuote' } }, 'USER', senderId);
+      throw new Error('Unauthorized: Only the quote owner with REVENUE UPDATE permission can send it.');
+    }
+
+    if (!this.isValidTransition(quote.status, 'SENT')) {
+      throw new Error('Invalid state transition to SENT');
+    }
+
+    return tenantPrisma.$transaction(async (tx: any) => {
+      const updated = await tx.quote.update({
+        where: { id: quoteId },
+        data: { status: 'SENT' }
+      });
+
+      await tx.auditLog.create({
+        data: {
+          tenantId,
+          actorId: senderId,
+          actorType: 'USER',
+          action: 'QUOTE_SENT',
+          resource: 'Quote',
+          resourceId: quote.id,
+          metadata: {}
+        }
+      });
+      return updated;
+    });
+  }
+
   static async createQuoteRevision(tenantId: string, userId: string, quoteId: string) {
      // Clone quote logic
      const tenantPrisma = withTenant(tenantId);
@@ -288,9 +336,16 @@ export class RevenueService {
   }
 
   static async acceptQuote(tenantId: string, userId: string, quoteId: string) {
+     const hasUpdate = await checkPermissionFast(userId, 'REVENUE', 'UPDATE');
+
      const tenantPrisma = withTenant(tenantId);
      const quote = await tenantPrisma.quote.findFirst({ where: { id: quoteId, tenantId } });
      if (!quote) throw new Error('Quote not found');
+
+     if (!hasUpdate || quote.ownerId !== userId) {
+        await SecurityEventService.logEvent(tenantId, { eventType: 'SUSPICIOUS_ACTIVITY', severity: 'HIGH', source: 'RevenueService', metadata: { action: 'acceptQuote' } }, 'USER', userId);
+        throw new Error('Unauthorized: Only the quote owner with REVENUE UPDATE permission can accept it.');
+     }
      
      if (quote.status === 'ACCEPTED') return quote; // Idempotent
 

@@ -32,6 +32,8 @@ function KanbanColumn({ stage, handleDragStart, handleDragOver, handleDrop, rout
       setCursor(lastId);
       setDisplayCount(res.data.data.length);
       onCountChange?.(stage.id, res.data.data.length);
+    } else {
+      console.error("Failed to load deals for stage", stage.id, ":", res.error);
     }
     setLoading(false);
   };

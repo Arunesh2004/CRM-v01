@@ -1,9 +1,15 @@
+import { requireAuth, requireTenant, requirePermission } from '@/lib/auth';
+import { Resource, Action } from '@prisma/client';
 import { getUsersAction } from '@/modules/admin/actions/user.actions';
 import { Card } from '@/components/ui/Card';
 import { Users, Shield } from 'lucide-react';
 import { Badge } from '@/components/ui/Badge';
 
 export default async function AdminUsersPage() {
+  await requireTenant();
+  await requireAuth();
+  await requirePermission(Resource.USER, Action.READ);
+
   const result = await getUsersAction();
   const users = result.success ? result.data : [];
 

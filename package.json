@@ -10,7 +10,11 @@
     "lint": "eslint",
     "format": "prettier --write .",
     "seed:demo": "npx ts-node --project tsconfig.json database/seeds/demo/index.ts",
-    "postinstall": "prisma generate"
+    "postinstall": "prisma generate",
+    "test:e2e:db:start": "docker-compose -f docker-compose.e2e.yml --env-file .env.test up -d",
+    "test:e2e:db:migrate": "npx tsx scripts/e2e-migrate.ts",
+    "test:e2e:db:seed": "npx tsx prisma/seed-e2e.ts",
+    "test:e2e:smoke": "playwright test e2e/smoke.spec.ts"
   },
   "dependencies": {
     "@aws-sdk/client-kms": "^3.1106.0",
@@ -56,6 +60,9 @@
     "zod": "^4.4.3"
   },
   "devDependencies": {
+    "@clerk/testing": "^2.2.33",
+    "@csstools/css-parser-algorithms": "^4.0.0",
+    "@csstools/css-tokenizer": "^4.0.0",
     "@playwright/test": "^1.62.1",
     "@prisma/client": "^6.19.3",
     "@tailwindcss/postcss": "^4",

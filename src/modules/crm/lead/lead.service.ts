@@ -30,8 +30,8 @@ export async function createLead(input: CreateLeadInput) {
       data: {
         name: input.name,
         company: input.company,
-        email: input.email,
-        phone: input.phone,
+        email: input.email || null,
+        phone: input.phone || null,
         assignedUserId: input.assignedUserId,
         tenantId
       }
@@ -224,8 +224,8 @@ export async function updateLead(input: UpdateLeadInput) {
       data: {
         name: input.name,
         company: input.company,
-        email: input.email,
-        phone: input.phone,
+        email: input.email === '' ? null : input.email,
+        phone: input.phone === '' ? null : input.phone,
         status: input.status,
         assignedUserId: input.assignedUserId,
       }

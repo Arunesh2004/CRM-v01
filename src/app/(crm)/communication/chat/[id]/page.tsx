@@ -7,13 +7,13 @@ import { MessageSquare, ArrowLeft, Clock } from 'lucide-react';
 import Link from 'next/link';
 import { ChatService } from '@/modules/communication/chat.service';
 
-export default async function ChatDetailPage({ params }: { params: { id: string } }) {
+export default async function ChatDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const user = await requireAuth();
   const tenantId = await requireTenant();
   await requirePermission(Resource.COMMUNICATION, Action.READ);
 
   const prisma = withTenant(tenantId);
-  const conversationId = params.id;
+  const conversationId = (await params).id;
 
   // We fetch the conversation to get the name, but rely on ChatService for messages
   // because ChatService enforces the user participation requirement.

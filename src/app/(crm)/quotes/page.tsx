@@ -3,10 +3,19 @@ import { Badge } from '@/components/ui/Badge';
 import { Card } from '@/components/ui/Card';
 import { FileText, CheckCircle2, Clock, AlertCircle } from 'lucide-react';
 import Link from 'next/link';
+import { requireTenant } from '@/lib/auth';
+import { withTenant } from '@db/utils/prisma-tenant';
+import { QuoteForm } from '@/components/revenue/QuoteForm';
 
 export default async function QuotesPage() {
   const result = await getQuotesAction();
   const quotes = result.success ? result.data : [];
+
+  const tenantId = await requireTenant();
+  const prisma = withTenant(tenantId);
+  const customers = await prisma.customer.findMany({ select: { id: true, name: true } });
+  const deals = await prisma.deal.findMany({ select: { id: true, title: true } });
+  const priceBooks = await prisma.priceBook.findMany({ select: { id: true, name: true } });
 
   const getStatusBadge = (s: string) => {
     switch(s) {
@@ -30,6 +39,7 @@ export default async function QuotesPage() {
           </p>
           <p className="text-sm mt-1 text-[#8891B0]">Manage and track sales quotes.</p>
         </div>
+        <QuoteForm customers={customers} deals={deals} priceBooks={priceBooks} />
       </div>
 
       <Card className="glass-panel overflow-hidden border-none shadow-none">

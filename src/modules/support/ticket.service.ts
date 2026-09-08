@@ -4,6 +4,7 @@ import { checkPermissionFast } from '../../lib/auth';
 import { Action, ActorType, Resource, TicketStatus } from '@prisma/client';
 import { SecurityEventService } from '../security-events/security-event.service';
 import { FieldSecurityService } from '../security/field-security/field-security.service';
+import { withIdempotency, IdempotencyOperations } from '@/lib/idempotency';
 
 export class TicketService {
   static async getTickets(tenantId: string, userId: string) {
@@ -46,7 +47,7 @@ export class TicketService {
   /**
    * Creates a new support ticket.
    */
-  static async createTicket(tenantId: string, userId: string, customerId: string, subject: string, description: string, priority: any) {
+  static async createTicket(tenantId: string, userId: string, customerId: string, subject: string, description: string, priority: any, externalTx?: any, idempotencyKey?: string) {
     const canCreate = await checkPermissionFast(userId, 'TICKET', 'CREATE');
     if (!canCreate) {
       await SecurityEventService.logEvent(tenantId, {
@@ -59,15 +60,16 @@ export class TicketService {
       throw new Error('Forbidden: Insufficient privileges to create ticket');
     }
 
-    return prisma.$transaction(async (baseTx) => {
+    const runTx = async (baseTx: any) => {
       const tx = await withTenantTransaction(baseTx, tenantId);
+
       
       // Enforce parent ownership (BOLA prevention)
       const customer = await tx.customer.findFirst({
-        where: { id: customerId } // RLS guarantees isolation
+        where: { id: customerId, tenantId } // RLS guarantees isolation for HTTP, but background needs explicit tenantId
       });
       if (!customer) {
-        throw new Error('Customer not found or unauthorized');
+        throw new Error('Customer not found or cross-tenant access denied');
       }
       
       const ticket = await tx.ticket.create({
@@ -90,8 +92,27 @@ export class TicketService {
       });
 
       return ticket;
-    });
+    };
+
+    if (idempotencyKey && !externalTx) {
+      return await withIdempotency(
+        tenantId,
+        userId,
+        IdempotencyOperations.CREATE_TICKET,
+        idempotencyKey,
+        { customerId, subject, description, priority },
+        runTx,
+        async (tId, uId, rId) => {
+          const res = await TicketService.getTicketById(tId, uId, rId);
+          return res as any;
+        }
+      );
+    }
+
+    if (externalTx) return runTx(externalTx);
+    return prisma.$transaction(runTx);
   }
+
 
   /**
    * Add a message to an existing ticket.

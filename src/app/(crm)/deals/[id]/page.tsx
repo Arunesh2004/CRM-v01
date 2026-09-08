@@ -8,9 +8,12 @@ import { DealTimeline } from '@/components/crm/DealTimeline';
 import { CRMCommentSection } from '@/components/crm/CRMCommentSection';
 import Link from 'next/link';
 
-export default async function DealDetailPage({ params }: { params: { id: string } }) {
-  const dealRes = await getDealByIdAction(params.id);
-  if (!dealRes.success || !dealRes.data) return notFound();
+export default async function DealDetailPage({ params }: { params: Promise<{ id: string } > }) {
+  const dealRes = await getDealByIdAction((await params).id);
+  if (!dealRes.success) {
+    throw new Error(dealRes.error || 'Failed to load deal details');
+  }
+  if (!dealRes.data) return notFound();
 
   const deal = dealRes.data;
 

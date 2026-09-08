@@ -25,7 +25,7 @@ async function main() {
   console.log(`Verified Canonical Tenant: ${tenant.id}`);
 
   // Ensure necessary global roles exist within the canonical tenant
-  const roles = ['TENANT_ADMIN', 'DEPARTMENT_HEAD', 'MEMBER'];
+  const roles = ['TENANT_ADMIN', 'DEPARTMENT_HEAD', 'MEMBER', 'APPROVER'];
   
   for (const roleName of roles) {
     const role = await prisma.role.findFirst({
@@ -47,13 +47,17 @@ async function main() {
 
   // Assign baseline permissions for functional roles
   const rolePermissionsMap: Record<string, { resource: Resource, actions: Action[] }[]> = {
+    TENANT_ADMIN: [
+      { resource: Resource.PRODUCT, actions: [Action.CREATE, Action.READ, Action.UPDATE, Action.DELETE] }
+    ],
     DEPARTMENT_HEAD: [
       { resource: Resource.USER, actions: [Action.CREATE, Action.READ, Action.UPDATE, Action.DELETE] },
       { resource: Resource.CUSTOMER, actions: [Action.CREATE, Action.READ, Action.UPDATE, Action.DELETE] },
       { resource: Resource.LEAD, actions: [Action.CREATE, Action.READ, Action.UPDATE, Action.DELETE] },
       { resource: Resource.TASK, actions: [Action.CREATE, Action.READ, Action.UPDATE, Action.DELETE] },
       { resource: Resource.COMMUNICATION, actions: [Action.CREATE, Action.READ] },
-      { resource: Resource.SYSTEM, actions: [Action.READ] }
+      { resource: Resource.SYSTEM, actions: [Action.READ] },
+      { resource: Resource.PRODUCT, actions: [Action.READ] }
     ],
     MEMBER: [
       { resource: Resource.USER, actions: [Action.READ] },
@@ -61,7 +65,15 @@ async function main() {
       { resource: Resource.LEAD, actions: [Action.CREATE, Action.READ, Action.UPDATE] },
       { resource: Resource.TASK, actions: [Action.CREATE, Action.READ, Action.UPDATE] },
       { resource: Resource.COMMUNICATION, actions: [Action.CREATE, Action.READ] },
-      { resource: Resource.SYSTEM, actions: [Action.READ] }
+      { resource: Resource.SYSTEM, actions: [Action.READ] },
+      { resource: Resource.PRODUCT, actions: [Action.READ] }
+    ],
+    APPROVER: [
+      { resource: Resource.USER, actions: [Action.READ] },
+      { resource: Resource.CUSTOMER, actions: [Action.READ] },
+      { resource: Resource.TASK, actions: [Action.READ, Action.APPROVE] },
+      { resource: Resource.SYSTEM, actions: [Action.READ] },
+      { resource: Resource.PRODUCT, actions: [Action.READ] }
     ]
   };
 

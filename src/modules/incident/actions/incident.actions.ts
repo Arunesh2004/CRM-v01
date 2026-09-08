@@ -25,16 +25,22 @@ const AssignIncidentSchema = z.object({
   assignedUserId: z.string().uuid()
 }).strip();
 
+import { requireAuth, requireTenant, requirePermission } from '@/lib/auth';
+import { withIdempotency, IdempotencyOperations } from '@/lib/idempotency';
+
 async function _createIncidentAction(data: any) {
   try {
-    const validated = CreateIncidentSchema.parse(data);
-    const result = await incidentService.createIncident(validated);
+    const { idempotencyKey, ...incidentData } = data;
+    const validated = CreateIncidentSchema.parse(incidentData);
+    
+    const result = await incidentService.createIncident({ ...validated, idempotencyKey });
     return { success: true, data: result };
-  } catch (error: any) {
-    Logger.error('createIncidentAction failed', error instanceof Error ? error : new Error(String(error.message)));
+  } catch (error: unknown) {
+    Logger.error('createIncidentAction failed', error instanceof Error ? error : new Error(String(error)));
     return { success: false, error: sanitizeClientError(error) };
   }
 }
+
 
 async function _getIncidentsAction() {
   try {

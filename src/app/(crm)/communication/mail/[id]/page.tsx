@@ -6,13 +6,13 @@ import { Card } from '@/components/ui/Card';
 import { Mail, ArrowLeft, Clock } from 'lucide-react';
 import Link from 'next/link';
 
-export default async function MailDetailPage({ params }: { params: { id: string } }) {
+export default async function MailDetailPage({ params }: { params: Promise<{ id: string } > }) {
   const user = await requireAuth();
   const tenantId = await requireTenant();
   await requirePermission(Resource.COMMUNICATION, Action.READ);
 
   const prisma = withTenant(tenantId);
-  const threadId = params.id;
+  const threadId = (await params).id;
 
   const thread = await prisma.mailThread.findFirst({
     where: { id: threadId, tenantId },

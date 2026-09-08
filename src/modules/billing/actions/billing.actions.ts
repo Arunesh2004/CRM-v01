@@ -1,5 +1,6 @@
 'use server';
 import { withServerActionContext } from '@/lib/observability/server-action';
+import { serializeDecimal } from '@/lib/utils/decimal';
 
 import { sanitizeClientError } from '@/lib/errors/client-safe-error';
 import { requireAuth, requireTenant, requirePermission } from '@/lib/auth';
@@ -50,7 +51,7 @@ async function _getInvoicesAction() {
     await requirePermission(Resource.REVENUE, Action.READ);
 
     const invoices = await BillingService.getInvoices(tenantId);
-    return { success: true, data: invoices };
+    return { success: true, data: serializeDecimal(invoices) };
   } catch (error: any) {
     return { success: false, error: sanitizeClientError(error) };
   }

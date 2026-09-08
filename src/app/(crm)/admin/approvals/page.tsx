@@ -1,30 +1,17 @@
-'use client';
+import { ApprovalService } from '@/modules/approvals/approval.service';
+import { requireAuth, requireTenant, requirePermission } from '@/lib/auth';
+import { Resource, Action } from '@prisma/client';
 
-import { useState, useEffect } from 'react';
+export const dynamic = 'force-dynamic';
 
-export default function ApprovalsPage() {
-  const [approvals, setApprovals] = useState<any[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+export default async function ApprovalsPage() {
+  const tenantId = await requireTenant();
+  const user = await requireAuth();
+  
+  // Checking SYSTEM:READ or similar appropriate permission
+  await requirePermission(Resource.SYSTEM, Action.READ);
 
-  useEffect(() => {
-    fetch('/api/approvals')
-      .then(res => {
-        if (!res.ok) throw new Error('Failed to fetch approvals');
-        return res.json();
-      })
-      .then(data => {
-        setApprovals(data);
-        setLoading(false);
-      })
-      .catch(err => {
-        setError(err.message);
-        setLoading(false);
-      });
-  }, []);
-
-  if (loading) return <div className="p-8">Loading approvals...</div>;
-  if (error) return <div className="p-8 text-red-500">Error: {error}</div>;
+  const approvals = await ApprovalService.getPendingApprovals(tenantId, user.id);
 
   return (
     <div className="p-8">
@@ -40,10 +27,10 @@ export default function ApprovalsPage() {
             </tr>
           </thead>
           <tbody className="divide-y divide-gray-200">
-            {approvals.map(approval => (
+            {approvals.map((approval: any) => (
               <tr key={approval.id}>
-                <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">{approval.entityType}</td>
-                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{approval.entityId}</td>
+                <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">{approval.resource}</td>
+                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{approval.resourceId}</td>
                 <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{approval.status}</td>
                 <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{new Date(approval.createdAt).toLocaleDateString()}</td>
               </tr>

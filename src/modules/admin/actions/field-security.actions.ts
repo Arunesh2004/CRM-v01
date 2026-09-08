@@ -10,7 +10,7 @@ async function _getFieldSecurityAction() {
   try {
     const tenantId = await requireTenant();
     await requireAuth();
-    await requirePermission(Resource.SYSTEM, Action.MANAGE_TERRITORIES); // Admin
+    await requirePermission(Resource.SYSTEM, Action.UPDATE); // Admin
 
     const prisma = withTenant(tenantId);
     

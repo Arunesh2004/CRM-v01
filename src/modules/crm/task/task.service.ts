@@ -6,16 +6,44 @@ import { EventBus } from '../../core/events/event-bus';
 import { QueryParams, PaginatedResponse } from '../../core/types';
 import globalPrisma from '@db/utils/prisma';
 import { TaskCore } from './task.core';
+import { withIdempotency, IdempotencyOperations } from '@/lib/idempotency';
 
-export async function createTask(input: CreateTaskInput) {
+export async function createTask(input: CreateTaskInput & { idempotencyKey?: string }) {
   const user = await requireAuth();
   const tenantId = await requireTenant();
   await requirePermission('TASK', 'CREATE');
 
-  const prisma = withTenant(tenantId);
+  const { idempotencyKey, ...taskData } = input;
+
+  if (idempotencyKey) {
+    return await withIdempotency(
+      tenantId,
+      user.id,
+      IdempotencyOperations.CREATE_TASK,
+      idempotencyKey,
+      taskData,
+      async (baseTx: any) => {
+        const tx = await withTenantTransaction(baseTx, tenantId);
+        return await TaskCore.createTask(tx, tenantId, user.id, taskData);
+      },
+      async (tId, uId, rId) => {
+        const prisma = withTenant(tId);
+        const task = await prisma.task.findFirst({
+          where: { id: rId, tenantId: tId },
+          include: {
+            assignedUser: { select: { id: true, email: true } },
+            customer: { select: { id: true, name: true } },
+            lead: { select: { id: true, name: true, company: true } }
+          }
+        });
+        return task as any;
+      }
+    );
+  }
+
   return await globalPrisma.$transaction(async (baseTx: any) => {
     const tx = await withTenantTransaction(baseTx, tenantId);
-    return await TaskCore.createTask(tx, tenantId, user.id, input);
+    return await TaskCore.createTask(tx, tenantId, user.id, taskData);
   });
 }
 

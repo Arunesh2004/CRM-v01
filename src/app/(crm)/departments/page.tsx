@@ -1,5 +1,6 @@
 import { getDepartments } from '@/modules/departments/department.service';
 import { requireAuth } from '@/lib/auth';
+import { DepartmentForm } from '@/components/departments/DepartmentForm';
 
 export default async function DepartmentsPage() {
   const actor = await requireAuth();
@@ -16,13 +17,10 @@ export default async function DepartmentsPage() {
       <div className="flex justify-between items-center mb-8">
         <div>
           <h1 className="text-3xl font-bold tracking-tight bg-clip-text text-transparent bg-gradient-to-r from-blue-500 to-indigo-600">Departments</h1>
-          <p className="text-sm text-slate-500 mt-1">Manage company divisions and their respective heads.</p>
+          <p className="text-sm text-slate-500 dark:text-slate-400 mt-1">Organize your organization structure.</p>
         </div>
         {isTenantAdmin && (
-          <button className="px-4 py-2 bg-gradient-to-r from-blue-600 to-indigo-600 text-white rounded-xl font-medium shadow-md hover:shadow-lg transition-all active:scale-95 text-sm flex items-center gap-2">
-            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M5 12h14"/><path d="M12 5v14"/></svg>
-            New Department
-          </button>
+          <DepartmentForm />
         )}
       </div>
 
@@ -30,13 +28,11 @@ export default async function DepartmentsPage() {
         {departments.map((dept: any) => (
           <div key={dept.id} className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 p-6 shadow-sm hover:shadow-md transition-all flex flex-col h-full group">
             <div className="flex justify-between items-start mb-4">
-              <div className="w-12 h-12 rounded-xl bg-blue-50 dark:bg-blue-900/20 text-blue-600 dark:text-blue-400 flex items-center justify-center font-bold text-xl">
-                {dept.name.substring(0, 2).toUpperCase()}
+              <div className="w-12 h-12 rounded-xl bg-indigo-50 dark:bg-indigo-500/10 flex items-center justify-center text-indigo-600 dark:text-indigo-400">
+                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M16 20V4a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"/><path d="m22 20-2-2-4 4-4-4-2 2-4-4-4 4"/><path d="M4 14v6"/><path d="M4 10v.01"/><path d="M4 6v.01"/><path d="M20 14v6"/><path d="M20 10v.01"/><path d="M20 6v.01"/></svg>
               </div>
               {isTenantAdmin && (
-                <button className="text-slate-400 hover:text-indigo-600 dark:hover:text-indigo-400 opacity-0 group-hover:opacity-100 transition-opacity">
-                  <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M17 3a2.85 2.83 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z"/><path d="m15 5 4 4"/></svg>
-                </button>
+                <DepartmentForm initialData={{ id: dept.id, name: dept.name, description: dept.description }} />
               )}
             </div>
             

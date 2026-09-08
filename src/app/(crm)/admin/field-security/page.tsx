@@ -1,9 +1,15 @@
+import { requireAuth, requireTenant, requirePermission } from '@/lib/auth';
+import { Resource, Action } from '@prisma/client';
 import { getFieldSecurityAction } from '@/modules/admin/actions/field-security.actions';
 import { Card } from '@/components/ui/Card';
 import { Lock, EyeOff } from 'lucide-react';
 import { Badge } from '@/components/ui/Badge';
 
 export default async function AdminFieldSecurityPage() {
+  await requireTenant();
+  await requireAuth();
+  await requirePermission(Resource.SYSTEM, Action.UPDATE);
+
   const result = await getFieldSecurityAction();
   const configs = result.success ? result.data : [];
 

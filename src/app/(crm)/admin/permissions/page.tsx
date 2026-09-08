@@ -1,9 +1,15 @@
+import { requireAuth, requireTenant, requirePermission } from '@/lib/auth';
+import { Resource, Action } from '@prisma/client';
 import { getRolesAction } from '@/modules/admin/actions/role.actions';
 import { Card } from '@/components/ui/Card';
 import { ShieldCheck } from 'lucide-react';
 import { Badge } from '@/components/ui/Badge';
 
 export default async function AdminPermissionsPage() {
+  await requireTenant();
+  await requireAuth();
+  await requirePermission(Resource.SYSTEM, Action.UPDATE);
+
   const result = await getRolesAction();
   const roles = result.success ? result.data : [];
 

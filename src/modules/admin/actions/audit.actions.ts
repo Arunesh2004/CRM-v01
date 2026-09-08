@@ -10,7 +10,7 @@ async function _getAuditLogsAction() {
   try {
     const tenantId = await requireTenant();
     await requireAuth();
-    await requirePermission(Resource.SYSTEM, Action.MANAGE_TERRITORIES);
+    await requirePermission(Resource.SYSTEM, Action.UPDATE);
 
     const prisma = withTenant(tenantId);
     

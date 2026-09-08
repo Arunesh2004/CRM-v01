@@ -5,8 +5,8 @@ import { Card, CardContent } from '@/components/ui/Card';
 import { AlertCircle, Calendar, CheckCircle2, Clock, Ticket as TicketIcon, ArrowLeft } from 'lucide-react';
 import Link from 'next/link';
 
-export default async function TicketDetailPage({ params }: { params: { id: string } }) {
-  const result = await getTicketByIdAction(params.id);
+export default async function TicketDetailPage({ params }: { params: Promise<{ id: string } > }) {
+  const result = await getTicketByIdAction((await params).id);
   
   if (!result.success || !result.data) {
     notFound();

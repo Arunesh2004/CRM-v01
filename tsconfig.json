@@ -1,7 +1,11 @@
 {
   "compilerOptions": {
     "target": "ES2017",
-    "lib": ["dom", "dom.iterable", "esnext"],
+    "lib": [
+      "dom",
+      "dom.iterable",
+      "esnext"
+    ],
     "allowJs": true,
     "skipLibCheck": true,
     "strict": true,
@@ -19,8 +23,12 @@
       }
     ],
     "paths": {
-      "@/*": ["./src/*"],
-      "@db/*": ["./database/*"]
+      "@/*": [
+        "./src/*"
+      ],
+      "@db/*": [
+        "./database/*"
+      ]
     }
   },
   "include": [
@@ -29,7 +37,19 @@
     "**/*.tsx",
     ".next/types/**/*.ts",
     ".next/dev/types/**/*.ts",
-    "**/*.mts"
+    "**/*.mts",
+    ".next/dev/dev/types/**/*.ts"
   ],
-  "exclude": ["node_modules", "tests", "src/tests", "scripts", "load-test", "check-db.ts", "vitest.config.ts", "playwright.config.ts", "check-users.ts", "services"]
+  "exclude": [
+    "node_modules",
+    "tests",
+    "src/tests",
+    "scripts",
+    "load-test",
+    "check-db.ts",
+    "vitest.config.ts",
+    "playwright.config.ts",
+    "check-users.ts",
+    "services"
+  ]
 }

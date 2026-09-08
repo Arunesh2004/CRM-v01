@@ -9,7 +9,7 @@ import { StatusUpdater } from '@/components/crm/StatusUpdater';
 import { EditLeadForm } from '@/components/crm/EditLeadForm';
 import { LeadActions } from '@/components/crm/LeadActions';
 
-export default async function LeadDetailsPage({ params }: { params: { id: string } }) {
+export default async function LeadDetailsPage({ params }: { params: Promise<{ id: string } > }) {
   await requireAuth();
   const tenantId = await requireTenant();
   await requirePermission('LEAD', 'READ');
@@ -17,7 +17,7 @@ export default async function LeadDetailsPage({ params }: { params: { id: string
   const prisma = withTenant(tenantId);
   const [lead, users, activities] = await Promise.all([
     prisma.lead.findFirst({
-      where: { id: params.id, tenantId, deletedAt: null },
+      where: { id: (await params).id, tenantId, deletedAt: null },
       include: {
         assignedUser: { select: { id: true, email: true } },
         tasks: { orderBy: { createdAt: 'desc' }, where: { deletedAt: null }, take: 20 },
@@ -28,7 +28,7 @@ export default async function LeadDetailsPage({ params }: { params: { id: string
       select: { id: true, email: true }
     }),
     prisma.activityTimeline.findMany({
-      where: { tenantId, entityType: 'LEAD', entityId: params.id },
+      where: { tenantId, entityType: 'LEAD', entityId: (await params).id },
       orderBy: { createdAt: 'desc' },
       take: 20,
       include: { actor: { select: { email: true } } }

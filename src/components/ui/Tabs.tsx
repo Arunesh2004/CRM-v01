@@ -1,7 +1,22 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, createContext, useContext } from 'react';
 import { cn } from '@/lib/utils';
+
+interface TabsContextType {
+  activeTab: string;
+  setActiveTab: (value: string) => void;
+}
+
+const TabsContext = createContext<TabsContextType | undefined>(undefined);
+
+function useTabs() {
+  const context = useContext(TabsContext);
+  if (!context) {
+    throw new Error('Tabs compound components cannot be rendered outside the Tabs provider');
+  }
+  return context;
+}
 
 // Nexus CRM tab system — glass pill container, violet active state
 export function Tabs({
@@ -16,14 +31,11 @@ export function Tabs({
   const [activeTab, setActiveTab] = useState(defaultValue);
 
   return (
-    <div className={cn("flex flex-col", className)}>
-      {React.Children.map(children, (child) => {
-        if (React.isValidElement(child)) {
-          return React.cloneElement(child, { activeTab, setActiveTab } as any);
-        }
-        return child;
-      })}
-    </div>
+    <TabsContext.Provider value={{ activeTab, setActiveTab }}>
+      <div className={cn("flex flex-col", className)}>
+        {children}
+      </div>
+    </TabsContext.Provider>
   );
 }
 
@@ -53,11 +65,15 @@ export function TabsList({
 export function TabsTrigger({
   value,
   children,
-  activeTab,
-  setActiveTab,
   className,
-}: any) {
+}: {
+  value: string;
+  children: React.ReactNode;
+  className?: string;
+}) {
+  const { activeTab, setActiveTab } = useTabs();
   const isActive = activeTab === value;
+  
   return (
     <button
       onClick={() => setActiveTab(value)}
@@ -74,7 +90,17 @@ export function TabsTrigger({
   );
 }
 
-export function TabsContent({ value, children, activeTab, className }: any) {
+export function TabsContent({
+  value,
+  children,
+  className,
+}: {
+  value: string;
+  children: React.ReactNode;
+  className?: string;
+}) {
+  const { activeTab } = useTabs();
+  
   if (activeTab !== value) return null;
   return <div className={cn("mt-4 animate-in", className)}>{children}</div>;
 }

@@ -373,6 +373,14 @@ export async function reassignDepartment(userId: string, newDepartmentId: string
     }
   }
 
+  // Validate that the destination department belongs to this tenant
+  const destDept = await prisma.department.findFirst({
+    where: { id: finalDepartmentId, tenantId }
+  });
+  if (!destDept) {
+    throw new Error("Invalid department target or cross-tenant assignment denied.");
+  }
+
   await prisma.user.update({
     where: { id: userId },
     data: { departmentId: newDepartmentId }

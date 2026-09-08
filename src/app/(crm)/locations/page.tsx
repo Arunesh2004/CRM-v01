@@ -1,9 +1,17 @@
 import { Suspense } from 'react';
 import { getLocationsAction } from '@/modules/crm/actions/location.actions';
+import { getCustomersAction } from '@/modules/crm/actions/customer.actions';
+import { LocationForm } from '@/components/crm/LocationForm';
+
+import { requireTenant } from '@/lib/auth';
+import { withTenant } from '@db/utils/prisma-tenant';
 
 export default async function LocationsPage() {
   const result = await getLocationsAction();
   const locations = result.success ? (result.data || []) : [];
+
+  const customerResult = await getCustomersAction();
+  const customers = customerResult.success ? (customerResult.data?.data || []) : [];
 
   return (
     <div className="space-y-6 max-w-6xl mx-auto py-8 px-4 sm:px-6 lg:px-8">
@@ -14,6 +22,9 @@ export default async function LocationsPage() {
           <div>
             <h1 className="text-2xl font-display font-bold text-white tracking-tight">Locations</h1>
             <p className="text-sm text-[#8891B0] mt-1">Manage physical sites and associated infrastructure.</p>
+          </div>
+          <div>
+            <LocationForm customers={customers} />
           </div>
         </div>
       </div>
@@ -61,7 +72,16 @@ export default async function LocationsPage() {
                     <td className="px-6 py-4 text-[#8891B0]">{location.city || '-'}</td>
                     <td className="px-6 py-4 text-[#8891B0]">0</td> {/* Future CCTV placeholder */}
                     <td className="px-6 py-4 text-right">
-                      <button className="text-violet-400 hover:text-white transition-colors font-medium text-xs bg-violet-500/10 hover:bg-violet-500/20 px-3 py-1.5 rounded-lg">View</button>
+                      <LocationForm 
+                        initialData={{ 
+                          id: location.id, 
+                          name: location.name,
+                          address: location.address,
+                          city: location.city,
+                          state: location.state,
+                          zip: location.zip
+                        }} 
+                      />
                     </td>
                   </tr>
                 ))}

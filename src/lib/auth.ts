@@ -115,7 +115,7 @@ export const getCurrentUser = cache(async function getCurrentUser() {
     if (cached) return cached as any;
   }
 
-  const user = await executeAsSystem(SystemOperation.AUTH_BOOTSTRAP, async (tx) => {
+  let user = await executeAsSystem(SystemOperation.AUTH_BOOTSTRAP, async (tx) => {
     return tx.user.findFirst({
       where: { clerkId },
       include: {
@@ -126,6 +126,23 @@ export const getCurrentUser = cache(async function getCurrentUser() {
       }
     });
   });
+
+  if (!user) {
+    const syncedUser = await ensureUserProvisionedFromClerk(clerkId);
+    if (syncedUser) {
+      user = await executeAsSystem(SystemOperation.AUTH_BOOTSTRAP, async (tx) => {
+        return tx.user.findFirst({
+          where: { clerkId },
+          include: {
+            tenant: true,
+            userRoles: {
+              include: { role: { include: { permissions: { include: { permission: true } } } } }
+            }
+          }
+        });
+      });
+    }
+  }
 
   if (redis && user) {
     await redis.set(`user:${clerkId}`, JSON.stringify(user), { ex: 3600 });
@@ -187,28 +204,10 @@ async function ensureUserProvisionedFromClerk(clerkId: string) {
 
 export async function requireAuth() {
   let user = await getCurrentUser();
+  const clerkAuth = await auth();
+  
   if (!user) {
-    const clerkAuth = await auth();
-    if (clerkAuth.userId) {
-      // Fast path failed (clerkId not found), so attempt synchronization (bootstrap or invite linking)
-      const syncedUser = await ensureUserProvisionedFromClerk(clerkAuth.userId);
-      if (syncedUser) {
-        user = await executeAsSystem(SystemOperation.AUTH_BOOTSTRAP, async (tx) => {
-          return tx.user.findFirst({
-            where: { clerkId: clerkAuth.userId },
-            include: {
-              tenant: true,
-              userRoles: {
-                include: { role: { include: { permissions: { include: { permission: true } } } } }
-              }
-            }
-          });
-        });
-      }
-    }
-    if (!user) {
-      throw new Error('Unauthorized');
-    }
+    throw new Error('Unauthorized');
   }
 
   if (user.status === 'INACTIVE') {

@@ -37,7 +37,7 @@ export async function getDeals(params?: {
     where,
     orderBy: { createdAt: 'desc' },
     include: {
-      customer: { select: { id: true, name: true, company: true } },
+      customer: { select: { id: true, name: true } },
       assignedUser: { select: { id: true, email: true } },
       stage: { select: { id: true, name: true, probability: true, isClosedWon: true, isClosedLost: true, color: true } }
     }

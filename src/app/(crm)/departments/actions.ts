@@ -20,8 +20,9 @@ async function _createDepartmentAction(formData: FormData) {
 }
 export const createDepartmentAction = withServerActionContext(_createDepartmentAction);
 
-async function _updateDepartmentAction(departmentId: string, formData: FormData) {
+async function _updateDepartmentAction(formData: FormData) {
   try {
+    const departmentId = formData.get('id') as string;
     const name = formData.get('name') as string;
     const description = formData.get('description') as string | undefined;
     

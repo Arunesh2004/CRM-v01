@@ -7,14 +7,16 @@ const softDeleteModels = [
 
 const connectionUrl = process.env.DATABASE_URL;
 
-const basePrismaClient = new PrismaClient({
-  log: process.env.NODE_ENV === 'production' 
-    ? ['error', 'warn'] 
-    : ['query', 'error', 'warn'],
-});
+const getBasePrismaClient = () => {
+  return new PrismaClient({
+    log: process.env.NODE_ENV === 'production' 
+      ? ['error', 'warn'] 
+      : ['query', 'error', 'warn'],
+  });
+};
 
-const prismaClientSingleton = () => {
-  return basePrismaClient.$extends({
+const prismaClientSingleton = (baseClient: PrismaClient) => {
+  return baseClient.$extends({
     query: {
       $allModels: {
         async $allOperations({ model, operation, args, query }) {
@@ -56,10 +58,10 @@ declare global {
   var prismaAdminGlobal: undefined | PrismaClient;
 }
 
-const prisma = (globalThis.prismaGlobal ?? prismaClientSingleton()) as unknown as PrismaClient;
-
 // Unfiltered client exclusively for Recovery / Admin / Background tasks
-export const prismaAdmin = globalThis.prismaAdminGlobal ?? basePrismaClient;
+export const prismaAdmin = globalThis.prismaAdminGlobal ?? getBasePrismaClient();
+
+const prisma = (globalThis.prismaGlobal ?? prismaClientSingleton(prismaAdmin)) as unknown as PrismaClient;
 
 export default prisma;
 
@@ -71,12 +73,12 @@ if (process.env.NODE_ENV !== "production") {
 // Graceful shutdown handling for containerized environments
 if (process.env.NODE_ENV === 'production') {
   process.on('SIGINT', async () => {
-    await basePrismaClient.$disconnect();
+    await prismaAdmin.$disconnect();
     process.exit(0);
   });
   
   process.on('SIGTERM', async () => {
-    await basePrismaClient.$disconnect();
+    await prismaAdmin.$disconnect();
     process.exit(0);
   });
 }

@@ -1,9 +1,15 @@
+import { requireAuth, requireTenant, requirePermission } from '@/lib/auth';
+import { Resource, Action } from '@prisma/client';
 import { getWorkflowsAction } from '@/modules/admin/actions/workflow.actions';
 import { Card } from '@/components/ui/Card';
 import { Share2, Play } from 'lucide-react';
 import { Badge } from '@/components/ui/Badge';
 
 export default async function AdminWorkflowsPage() {
+  await requireTenant();
+  await requireAuth();
+  await requirePermission(Resource.SYSTEM, Action.UPDATE);
+
   const result = await getWorkflowsAction();
   const workflows = result.success ? result.data : [];
 

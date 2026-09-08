@@ -4,45 +4,53 @@ import { CreateIncidentInput, UpdateIncidentStatusInput, AssignIncidentInput } f
 import { Logger } from '@/lib/logger/logger';
 import { requireRelationOwnership } from '@/lib/auth/relation-auth';
 import globalPrisma from '@db/utils/prisma';
+import { withIdempotency, IdempotencyOperations } from '@/lib/idempotency';
+import * as incidentService from './incident.service';
 
 
-export async function createIncident(input: CreateIncidentInput) {
-  const user = await requireAuth();
-  const tenantId = await requireTenant();
+export async function createIncident(input: CreateIncidentInput & { idempotencyKey?: string, explicitTenantId?: string, explicitUserId?: string }, externalTx?: any) {
+  const user = input.explicitUserId ? { id: input.explicitUserId } : await requireAuth();
+  const tenantId = input.explicitTenantId || await requireTenant();
   
   // Incidents might use SYSTEM or CUSTOMER permissions depending on the organization. 
-  // Let's use CUSTOMER for now.
-  await requirePermission('CUSTOMER', 'UPDATE');
+  // Let's use CUSTOMER for now. (Check fast if explicit user)
+  if (input.explicitUserId) {
+    const { checkPermissionFast } = await import('@/lib/auth');
+    const hasPerm = await checkPermissionFast(input.explicitUserId, 'CUSTOMER', 'UPDATE');
+    if (!hasPerm) throw new Error('Forbidden: Requires UPDATE on CUSTOMER');
+  } else {
+    await requirePermission('CUSTOMER', 'UPDATE');
+  }
 
-  const prisma = withTenant(tenantId);
+  const { idempotencyKey, explicitTenantId, explicitUserId, ...incidentData } = input;
 
-  const incident = await globalPrisma.$transaction(async (baseTx: any) => {
+  const runTx = async (baseTx: any) => {
     const tx = await withTenantTransaction(baseTx, tenantId);
 
     await requireRelationOwnership(tx, tenantId, {
-      location: input.locationId,
-      camera: input.cameraId,
-      aIEvent: input.aiEventId
+      location: incidentData.locationId,
+      camera: incidentData.cameraId,
+      aIEvent: incidentData.aiEventId
     });
     // 2. Validate Camera Consistency
-    const camera = await tx.camera.findFirst({ where: { id: input.cameraId, tenantId }});
-    if (camera && camera.locationId !== input.locationId) throw new Error("Relationship Consistency Error: Camera does not belong to Location");
+    const camera = await tx.camera.findFirst({ where: { id: incidentData.cameraId, tenantId }});
+    if (camera && camera.locationId !== incidentData.locationId) throw new Error("Relationship Consistency Error: Camera does not belong to Location");
 
     // 3. Validate AIEvent Consistency
-    const aiEvent = await tx.aIEvent.findFirst({ where: { id: input.aiEventId, tenantId }});
-    if (aiEvent && aiEvent.cameraId !== input.cameraId) throw new Error("Relationship Consistency Error: AIEvent does not belong to Camera");
+    const aiEvent = await tx.aIEvent.findFirst({ where: { id: incidentData.aiEventId, tenantId }});
+    if (aiEvent && aiEvent.cameraId !== incidentData.cameraId) throw new Error("Relationship Consistency Error: AIEvent does not belong to Camera");
 
-    const location = await tx.location.findFirst({ where: { id: input.locationId, tenantId }});
+    const location = await tx.location.findFirst({ where: { id: incidentData.locationId, tenantId }});
 
     const incident = await tx.incident.create({
       data: {
         tenantId,
-        locationId: input.locationId,
-        cameraId: input.cameraId,
-        aiEventId: input.aiEventId,
-        title: input.title,
-        description: input.description,
-        severity: input.severity,
+        locationId: incidentData.locationId,
+        cameraId: incidentData.cameraId,
+        aiEventId: incidentData.aiEventId,
+        title: incidentData.title,
+        description: incidentData.description,
+        severity: incidentData.severity,
       }
     });
 
@@ -51,7 +59,7 @@ export async function createIncident(input: CreateIncidentInput) {
         data: {
           tenantId,
           type: 'SYSTEM',
-          content: `Security Incident Generated: ${input.title} [${input.severity}]`,
+          content: `Security Incident Generated: ${incidentData.title} [${incidentData.severity}]`,
           actorId: user.id,
           entityType: 'CUSTOMER',
           entityId: location.customerId
@@ -60,7 +68,25 @@ export async function createIncident(input: CreateIncidentInput) {
     }
 
     return incident;
-  });
+  };
+
+  let incident;
+  if (idempotencyKey && !externalTx) {
+    incident = await withIdempotency(
+      tenantId,
+      user.id,
+      IdempotencyOperations.CREATE_INCIDENT,
+      idempotencyKey,
+      incidentData,
+      runTx,
+      async (tId, uId, rId) => {
+        return await incidentService.getIncidentById(rId) as any;
+      }
+    );
+  } else {
+    incident = externalTx ? await runTx(externalTx) : await globalPrisma.$transaction(runTx);
+  }
+
 
   // Trigger notification asynchronously
   import('../communication/notification.service').then(({ NotificationService }) => {

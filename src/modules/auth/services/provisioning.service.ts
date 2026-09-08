@@ -58,6 +58,16 @@ export async function synchronizeClerkIdentity(clerkId: string, emailStr: string
   if (user.status === 'ACTIVE') {
      if (user.clerkId === clerkId) {
         return user;
+     } else if (user.clerkId === null) {
+        // Bind the identity for pre-provisioned/seeded users
+        await executeAsSystem(SystemOperation.CLERK_PROVISIONING, async (tx) => {
+          await tx.user.update({
+            where: { id: user.id },
+            data: { clerkId: clerkId }
+          });
+        });
+        Logger.info(`[Provisioning] Bound clerkId ${clerkId} to pre-provisioned user ${user.id}`);
+        return { ...user, clerkId };
      } else {
         Logger.warn(`[Provisioning] Identity Reassignment Denied`, { expected: user.clerkId, got: clerkId });
         return null;
