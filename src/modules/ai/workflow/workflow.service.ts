@@ -5,6 +5,8 @@ import { AIPermissionService } from '../../../modules/ai-permissions/ai-permissi
 import { ContextBuilderService } from '../context/context-builder.service';
 import { inngest } from '@/lib/queue/inngest.client';
 import { TaskCore } from '../../crm/task/task.core';
+import { TicketService } from '../../support/ticket.service';
+import { createIncident } from '../../incident/incident.service';
 
 export class WorkflowService {
   static async createWorkflow(tenantId: string, userId: string, data: any) {
@@ -192,6 +194,27 @@ export class WorkflowService {
           case 'CREATE_TASK':
             dispatchResult = await TaskCore.createTask(tx, tenantId, creatorId, config as any);
             break;
+          case 'CREATE_TICKET':
+            dispatchResult = await TicketService.createTicket(
+              tenantId,
+              creatorId,
+              config.customerId,
+              config.subject,
+              config.description,
+              config.priority || 'MEDIUM',
+              tx
+            );
+            break;
+          case 'CREATE_INCIDENT':
+            dispatchResult = await createIncident(
+              {
+                ...config as any,
+                explicitTenantId: tenantId,
+                explicitUserId: creatorId
+              },
+              tx
+            );
+            break;
           default:
             throw new Error(`400: Unknown or unsupported action type: ${action.actionType}`);
         }
@@ -218,7 +241,14 @@ export class WorkflowService {
 
       return { success: true, waitingApproval: false, result };
     } catch (error: any) {
-      if (error.code === 'P2002') {
+      const isIdempotencyCollision = error.code === 'P2002' && (
+        error.message?.includes('idempotencyKey') || 
+        error.message?.includes('IdempotencyKey') || 
+        (Array.isArray(error.meta?.target) && error.meta.target.includes('key')) ||
+        (typeof error.meta?.target === 'string' && error.meta.target.includes('key'))
+      );
+
+      if (isIdempotencyCollision) {
         // Idempotency constraint hit - step already executed by another concurrent worker!
         return { success: true, waitingApproval: false, skipped: true, reason: 'Duplicate execution prevented' };
       }
