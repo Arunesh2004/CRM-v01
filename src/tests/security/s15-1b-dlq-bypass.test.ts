@@ -26,7 +26,8 @@ vi.mock('@/lib/providers/telephony/twilio.provider', () => {
 });
 
 describe('S15.1B HIGH Finding: call-transcription DLQ bypass', () => {
-  const tenantId = 't-dlq-bypass-test';
+  const tenantId = crypto.randomUUID();
+  const callLogId = crypto.randomUUID();
 
   beforeEach(async () => {
     await executeAsSystem(SystemOperation.SECURITY_AUDIT, async (tx) => await tx.deadLetterQueue.deleteMany({ where: { tenantId } })).catch(() => {});
@@ -39,7 +40,7 @@ describe('S15.1B HIGH Finding: call-transcription DLQ bypass', () => {
 
     await executeAsSystem(SystemOperation.SECURITY_AUDIT, async (tx) => await tx.callLog.create({
             data: {
-              id: 'cl-bypass-test',
+              id: callLogId,
               tenantId,
               providerCallId: 'sid-bypass-123',
               status: 'COMPLETED',

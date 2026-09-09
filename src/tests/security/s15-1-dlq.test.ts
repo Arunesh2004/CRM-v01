@@ -5,7 +5,7 @@ import crypto from 'crypto';
 import { executeAsSystem, SystemOperation } from "@db/utils/prisma-system";
 
 describe('S15.1 FND-15-02: Dead Letter Queue Resilience', () => {
-  const tenantId = 't-dlq-test-1';
+  const tenantId = crypto.randomUUID();
   let jobId: string;
   let inngestEventId: string;
   let envelope: SecureJobEnvelope<any>;

@@ -7,8 +7,8 @@ import { ScoringService } from '../../modules/sales-intel/scoring.service';
 
 describe('Sales Intelligence - Security & Adversarial Tests', () => {
   const runId = Date.now().toString();
-  const tenantA = 'tenant-a-si-' + runId;
-  const tenantB = 'tenant-b-si-' + runId;
+  const tenantA = crypto.randomUUID();
+  const tenantB = crypto.randomUUID();
   const adminUserA = 'admin-a-si-' + runId;
   const repUserA = 'rep-a-si-' + runId;
   const repUserB = 'rep-b-si-' + runId;

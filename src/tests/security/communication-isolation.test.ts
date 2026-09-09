@@ -20,8 +20,8 @@ describe('Phase C5 Communication Isolation & Security', () => {
   beforeEach(async () => {
     vi.resetAllMocks();
     
-    tenantAId = 'tenant-A-' + Date.now();
-    tenantBId = 'tenant-B-' + Date.now();
+    tenantAId = crypto.randomUUID();
+    tenantBId = crypto.randomUUID();
     userId = 'user-A-' + Date.now();
     recipientAId = 'recipient-A-' + Date.now();
 
