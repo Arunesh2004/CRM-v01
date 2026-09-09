@@ -1,11 +1,12 @@
+import { Prisma } from '@prisma/client';
 import { CreateTaskInput } from '../crm.types';
 import { requireRelationOwnership } from '@/lib/auth/relation-auth';
 import { EventBus } from '../../core/events/event-bus';
 
 export class TaskCore {
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any -- S2 Residual Debt: Legacy internal payload requires architectural typing
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any -- S2 Residual Debt: Legacy internal payload requires architectural typing
-  static async createTask(tx: any, tenantId: string, actorId: string, input: CreateTaskInput) {
+   
+   
+  static async createTask(tx: Prisma.TransactionClient, tenantId: string, actorId: string, input: CreateTaskInput) {
     await requireRelationOwnership(tx, tenantId, {
       user: input.assignedUserId,
       lead: input.leadId,

@@ -33,7 +33,7 @@ export async function getDeals(params?: {
     ];
   }
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any -- S2 Residual Debt: Legacy internal payload requires architectural typing
+   
   // eslint-disable-next-line @typescript-eslint/no-explicit-any -- S2 Residual Debt: Legacy internal payload requires architectural typing
   const args: any = {
     where,
@@ -110,11 +110,11 @@ export async function createDeal(data: {
   assignedUserId: string;
 }) {
   const user = await requireAuth();
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars -- S2 Residual Debt: Legacy unused local
+   
   const tenantId = await requireTenant();
   // eslint-disable-next-line @typescript-eslint/no-unused-vars -- S2 Residual Debt: Legacy unused local
   const prisma = withTenant(tenantId);
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any -- S2 Residual Debt: Legacy internal payload requires architectural typing
+   
   await requirePermission('CUSTOMER', 'CREATE');
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any -- S2 Residual Debt: Legacy internal payload requires architectural typing
@@ -193,7 +193,7 @@ export async function convertLeadToDeal(leadId: string, assignedUserId: string, 
   const prisma = withTenant(tenantId);
   await requirePermission('CUSTOMER', 'UPDATE');
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any -- S2 Residual Debt: Legacy internal payload requires architectural typing
+   
   const lead = await prisma.lead.findFirst({ where: { id: leadId, tenantId } });
   if (!lead) throw new Error('Lead not found');
 
@@ -248,7 +248,7 @@ export async function convertLeadToDeal(leadId: string, assignedUserId: string, 
       data: { tenantId, dealId: deal.id, toStageId: stageId, changedById: user.id }
     });
     await tx.activityTimeline.create({
-      data: { tenantId, entityType: 'DEAL', entityId: deal.id, actorType: 'USER', actorId: user.id, type: 'SYSTEM', content: `Converted from Lead` }
+      data: { tenantId, entityType: 'DEAL', entityId: deal.id, actorId: user.id, type: 'SYSTEM', content: `Converted from Lead` }
     });
 
     await tx.eventOutbox.create({
@@ -263,11 +263,11 @@ export async function convertLeadToDeal(leadId: string, assignedUserId: string, 
     return deal;
   });
 }
-// eslint-disable-next-line @typescript-eslint/no-unused-vars -- S2 Residual Debt: Legacy unused local
+ 
 
 export async function moveDealStage(dealId: string, newStageId: string, lostReason?: string, lostCompetitor?: string, lostNotes?: string) {
   const user = await requireAuth();
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any -- S2 Residual Debt: Legacy internal payload requires architectural typing
+   
   const tenantId = await requireTenant();
   // eslint-disable-next-line @typescript-eslint/no-unused-vars -- S2 Residual Debt: Legacy unused local
   const prisma = withTenant(tenantId);
@@ -326,7 +326,7 @@ export async function moveDealStage(dealId: string, newStageId: string, lostReas
 
     await tx.activityTimeline.create({
       data: {
-        tenantId, entityType: 'DEAL', entityId: dealId, actorType: 'USER', actorId: user.id, type: 'SYSTEM',
+        tenantId, entityType: 'DEAL', entityId: dealId, actorId: user.id, type: 'SYSTEM',
         content: `Moved to stage: ${newStage.name}`,
       }
     });
@@ -418,7 +418,7 @@ export async function getDealTimeline(
   limit: number = 50
 ) {
   const tenantId = await requireTenant();
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any -- S2 Residual Debt: Legacy internal payload requires architectural typing
+   
   const prisma = withTenant(tenantId);
   await requirePermission('CUSTOMER', 'READ');
 

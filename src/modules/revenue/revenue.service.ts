@@ -108,7 +108,7 @@ export class RevenueService {
 
     // 4. Create Quote
     const tenantPrisma = withTenant(tenantId);
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any -- S2 Residual Debt: Legacy internal payload requires architectural typing
+     
     // eslint-disable-next-line @typescript-eslint/no-explicit-any -- S2 Residual Debt: Legacy internal payload requires architectural typing
     return tenantPrisma.$transaction(async (tx: any) => {
       const quote = await tx.quote.create({
@@ -164,7 +164,7 @@ export class RevenueService {
       orderBy: { priority: 'desc' }
     });
 
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any -- S2 Residual Debt: Legacy internal payload requires architectural typing
+     
     let maxRequestedDiscount = 0;
     // eslint-disable-next-line @typescript-eslint/no-explicit-any -- S2 Residual Debt: Legacy internal payload requires architectural typing
     quote.lineItems.forEach((item: any) => { if (item.discount > maxRequestedDiscount) maxRequestedDiscount = item.discount; });
@@ -180,7 +180,7 @@ export class RevenueService {
       }
     }
 
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any -- S2 Residual Debt: Legacy internal payload requires architectural typing
+     
     const nextStatus = requiresApproval ? 'PENDING_APPROVAL' : 'APPROVED';
 
     // eslint-disable-next-line @typescript-eslint/no-explicit-any -- S2 Residual Debt: Legacy internal payload requires architectural typing
@@ -228,7 +228,7 @@ export class RevenueService {
     }
 
     const tenantPrisma = withTenant(tenantId);
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any -- S2 Residual Debt: Legacy internal payload requires architectural typing
+     
     const quote = await tenantPrisma.quote.findFirst({ where: { id: quoteId, tenantId } });
     if (!quote || quote.status !== 'PENDING_APPROVAL') throw new Error('Invalid quote state for approval');
 
@@ -266,7 +266,7 @@ export class RevenueService {
       throw new Error('Unauthorized: Only the quote owner with REVENUE UPDATE permission can send it.');
     }
 
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any -- S2 Residual Debt: Legacy internal payload requires architectural typing
+     
     if (!this.isValidTransition(quote.status, 'SENT')) {
       throw new Error('Invalid state transition to SENT');
     }
@@ -297,7 +297,7 @@ export class RevenueService {
      // Clone quote logic
      const tenantPrisma = withTenant(tenantId);
      const quote = await tenantPrisma.quote.findFirst({ where: { id: quoteId, tenantId }, include: { lineItems: true } });
-     // eslint-disable-next-line @typescript-eslint/no-explicit-any -- S2 Residual Debt: Legacy internal payload requires architectural typing
+      
      if (!quote) throw new Error('Not found');
      
      // Immutable historical lock check
@@ -312,7 +312,7 @@ export class RevenueService {
              customerId: quote.customerId,
              ownerId: quote.ownerId,
              priceBookId: quote.priceBookId,
-             // eslint-disable-next-line @typescript-eslint/no-explicit-any -- S2 Residual Debt: Legacy internal payload requires architectural typing
+              
              status: 'DRAFT',
              subtotal: quote.subtotal,
              discountTotal: quote.discountTotal,
@@ -360,7 +360,7 @@ export class RevenueService {
         await SecurityEventService.logEvent(tenantId, { eventType: 'SUSPICIOUS_ACTIVITY', severity: 'HIGH', source: 'RevenueService', metadata: { action: 'acceptQuote' } }, 'USER', userId);
         throw new Error('Unauthorized: Only the quote owner with REVENUE UPDATE permission can accept it.');
      }
-     // eslint-disable-next-line @typescript-eslint/no-explicit-any -- S2 Residual Debt: Legacy internal payload requires architectural typing
+      
      
      if (quote.status === 'ACCEPTED') return quote; // Idempotent
 
@@ -379,7 +379,7 @@ export class RevenueService {
         await tx.deal.update({
           where: { id: quote.dealId },
           data: { 
-            value: quote.grandTotal,
+            value: quote.grandTotal.toNumber(),
             // Advance pipeline stage dynamically if needed
           }
         });
