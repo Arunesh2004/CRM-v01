@@ -10,8 +10,8 @@ import { inngest } from '@/lib/queue/inngest.client';
 import { POST } from '@/app/api/webhooks/ingest/route';
 
 const prisma = new PrismaClient();
-const tenantId = 'test-tenant-id';
-const otherTenantId = 'other-tenant-id';
+const tenantId = crypto.randomUUID();
+const otherTenantId = crypto.randomUUID();
 
 describe('Phase 11: Async Infrastructure & Scalability Security', () => {
   beforeAll(async () => {
