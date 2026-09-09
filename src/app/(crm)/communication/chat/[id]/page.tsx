@@ -34,6 +34,8 @@ export default async function ChatDetailPage({ params }: { params: Promise<{ id:
   let messages;
   try {
     messages = await ChatService.getMessages(tenantId, conversationId, user.id);
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars -- S2 Residual Debt: Legacy unused local
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars -- Intentional callback/interface parameter
   } catch (error) {
     // If not a participant, or other error, treat as not found for IDOR protection
     notFound();

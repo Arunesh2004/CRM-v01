@@ -1,5 +1,4 @@
 import { describe, it, expect, beforeAll, afterAll } from 'vitest';
-import prisma from '@db/utils/prisma';
 import { EmbeddingService } from '@/modules/ai/rag/embedding.service';
 import { AIMemoryService } from '@/modules/ai/memory/memory.service';
 import { ContextBuilderService } from '@/modules/ai/context/context-builder.service';

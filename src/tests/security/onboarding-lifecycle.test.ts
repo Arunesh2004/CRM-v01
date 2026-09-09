@@ -1,5 +1,4 @@
 import { describe, it, expect, beforeAll, afterAll, vi } from 'vitest';
-import prisma from '@db/utils/prisma';
 import { executeAsSystem, SystemOperation } from '@db/utils/prisma-system';
 import { inviteEmployee } from '@/modules/users/user.service';
 import { ensureUserProvisioned } from '@/modules/auth/services/provisioning.service';
@@ -176,7 +175,8 @@ describe('Onboarding Lifecycle & Security Invariants', () => {
     
     const webhookPayload = {
       id: `c_dup_${uniqueSuffix}`,
-      email_addresses: [{ email_address: email }]
+      primary_email_address_id: 'test_email_id',
+      email_addresses: [{ id: 'test_email_id', email_address: email }]
     };
     
     const res1 = await ensureUserProvisioned(webhookPayload);

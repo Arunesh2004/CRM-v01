@@ -7,7 +7,8 @@ async function _getAIEventsAction(params?: { cameraId?: string; limit?: number; 
   try {
     const result = await aiEventService.getAIEvents(params);
     return { success: true, data: result };
-  } catch (error: any) {
+  } catch (errorRaw: unknown) {
+    const error = errorRaw instanceof Error ? errorRaw : new Error(String(errorRaw));
     return { success: false, error: sanitizeClientError(error) };
   }
 }

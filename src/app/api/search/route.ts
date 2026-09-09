@@ -74,7 +74,8 @@ const _orig_GET = async function (req: NextRequest) {
       }))
     });
 
-  } catch (error: any) {
+  } catch (errorRaw: unknown) {
+    const error = errorRaw instanceof Error ? errorRaw : new Error(String(errorRaw));
     Logger.error('[API] GET Search failed', error);
     if (error.message?.includes('Forbidden') || error.message?.includes('Unauthorized') || error.message?.includes('Missing tenant')) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 403 });

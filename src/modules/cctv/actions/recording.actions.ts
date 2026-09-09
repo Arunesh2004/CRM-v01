@@ -7,7 +7,8 @@ async function _getCameraRecordingsAction(cameraId: string, limit?: number, curs
   try {
     const result = await recordingService.getCameraRecordings(cameraId, limit, cursor);
     return { success: true, data: result };
-  } catch (error: any) {
+  } catch (errorRaw: unknown) {
+    const error = errorRaw instanceof Error ? errorRaw : new Error(String(errorRaw));
     return { success: false, error: sanitizeClientError(error) };
   }
 }
@@ -16,7 +17,8 @@ async function _generateRecordingDownloadUrlAction(recordingId: string) {
   try {
     const result = await recordingService.generateRecordingDownloadUrl(recordingId);
     return { success: true, data: result };
-  } catch (error: any) {
+  } catch (errorRaw: unknown) {
+    const error = errorRaw instanceof Error ? errorRaw : new Error(String(errorRaw));
     return { success: false, error: sanitizeClientError(error) };
   }
 }

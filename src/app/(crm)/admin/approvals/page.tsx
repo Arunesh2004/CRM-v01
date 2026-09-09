@@ -27,6 +27,8 @@ export default async function ApprovalsPage() {
             </tr>
           </thead>
           <tbody className="divide-y divide-gray-200">
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any -- S2 Residual Debt: Legacy internal payload requires architectural typing
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any -- S2 Residual Debt: Legacy internal payload requires architectural typing
             {approvals.map((approval: any) => (
               <tr key={approval.id}>
                 <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">{approval.resource}</td>

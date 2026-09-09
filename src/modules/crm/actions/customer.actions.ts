@@ -16,7 +16,8 @@ async function _createCustomerAction(payload: z.infer<typeof CreateCustomerSchem
     
     const result = await customerService.createCustomer(validatedData);
     return { success: true, data: result };
-  } catch (error: any) {
+  } catch (errorRaw: unknown) {
+    const error = errorRaw instanceof Error ? errorRaw : new Error(String(errorRaw));
     return { success: false, error: sanitizeClientError(error) };
   }
 }
@@ -30,7 +31,8 @@ async function _updateCustomerAction(payload: z.infer<typeof UpdateCustomerSchem
     
     const result = await customerService.updateCustomer(validatedData);
     return { success: true, data: result };
-  } catch (error: any) {
+  } catch (errorRaw: unknown) {
+    const error = errorRaw instanceof Error ? errorRaw : new Error(String(errorRaw));
     return { success: false, error: sanitizeClientError(error) };
   }
 }
@@ -41,7 +43,8 @@ async function _getCustomersAction(params?: QueryParams) {
   try {
     const result = await customerService.getCustomers(params);
     return { success: true, data: result };
-  } catch (error: any) {
+  } catch (errorRaw: unknown) {
+    const error = errorRaw instanceof Error ? errorRaw : new Error(String(errorRaw));
     return { success: false, error: sanitizeClientError(error) };
   }
 }
@@ -50,7 +53,8 @@ async function _getCustomerByIdAction(id: string) {
   try {
     const result = await customerService.getCustomerById(id);
     return { success: true, data: result };
-  } catch (error: any) {
+  } catch (errorRaw: unknown) {
+    const error = errorRaw instanceof Error ? errorRaw : new Error(String(errorRaw));
     return { success: false, error: sanitizeClientError(error) };
   }
 }
@@ -59,7 +63,8 @@ async function _deleteCustomerAction(customerId: string) {
   try {
     const result = await customerService.deleteCustomer(customerId);
     return { success: true, data: result };
-  } catch (error: any) {
+  } catch (errorRaw: unknown) {
+    const error = errorRaw instanceof Error ? errorRaw : new Error(String(errorRaw));
     return { success: false, error: sanitizeClientError(error) };
   }
 }
@@ -84,6 +89,8 @@ const CreateLocationSchema = z.object({
   country: z.string().optional()
 }).strip();
 
+// eslint-disable-next-line @typescript-eslint/no-explicit-any -- S2 Residual Debt: Legacy internal payload requires architectural typing
+// eslint-disable-next-line @typescript-eslint/no-explicit-any -- S2 Residual Debt: Legacy internal payload requires architectural typing
 async function _createContactAction(payload: any) {
   try {
     const validated = CreateContactSchema.parse(payload);
@@ -93,11 +100,14 @@ async function _createContactAction(payload: any) {
     const result = await customerService.createContact(validated);
     revalidatePath(`/customers/${validated.customerId}`);
     return { success: true, data: result };
-  } catch (error: any) {
+  } catch (errorRaw: unknown) {
+    const error = errorRaw instanceof Error ? errorRaw : new Error(String(errorRaw));
     return { success: false, error: sanitizeClientError(error) };
   }
 }
+// eslint-disable-next-line @typescript-eslint/no-explicit-any -- S2 Residual Debt: Legacy internal payload requires architectural typing
 
+// eslint-disable-next-line @typescript-eslint/no-explicit-any -- S2 Residual Debt: Legacy internal payload requires architectural typing
 async function _createLocationAction(payload: any) {
   try {
     const validated = CreateLocationSchema.parse(payload);
@@ -107,7 +117,8 @@ async function _createLocationAction(payload: any) {
     const result = await customerService.createLocation(validated);
     revalidatePath(`/customers/${validated.customerId}`);
     return { success: true, data: result };
-  } catch (error: any) {
+  } catch (errorRaw: unknown) {
+    const error = errorRaw instanceof Error ? errorRaw : new Error(String(errorRaw));
     return { success: false, error: sanitizeClientError(error) };
   }
 }
@@ -122,7 +133,8 @@ async function _getCustomerTimelineAction(params: {
   try {
     const result = await getCustomerTimeline(params);
     return { success: true, data: result };
-  } catch (error: any) {
+  } catch (errorRaw: unknown) {
+    const error = errorRaw instanceof Error ? errorRaw : new Error(String(errorRaw));
     return { success: false, error: sanitizeClientError(error) };
   }
 }

@@ -54,7 +54,7 @@ describe('Phase C7 - AI Copilot Security & Isolation', () => {
 
       let errorMsg = '';
       try {
-        await updateLeadTool!.execute({ leadId: '123', status: 'QUALIFIED' }, { tenantId: tenantA.id, userId: userC.id });
+        await updateLeadTool!.execute({ leadId: '123', status: 'QUALIFIED' }, { tenantId: tenantA.id, user: { id: userC.id }, permissions: [] });
       } catch (err: any) {
         errorMsg = err.message;
       }
@@ -78,7 +78,7 @@ describe('Phase C7 - AI Copilot Security & Isolation', () => {
 
       // Execute search_crm as User A (Tenant A)
       const searchTool = crmTools.find(t => t.name === 'search_crm');
-      const results = await searchTool!.execute({ query: 'Acme' }, { tenantId: tenantA.id, userId: userA.id });
+      const results = await searchTool!.execute({ query: 'Acme' }, { tenantId: tenantA.id, user: { id: userA.id }, permissions: [] });
       
       // Results should be empty because 'Secret Acme Corp' is in Tenant B
       expect(results.length).toBe(0);

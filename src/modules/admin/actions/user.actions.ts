@@ -28,7 +28,8 @@ async function _getUsersAction() {
     });
 
     return { success: true, data: users };
-  } catch (error: any) {
+  } catch (errorRaw: unknown) {
+    const error = errorRaw instanceof Error ? errorRaw : new Error(String(errorRaw));
     return { success: false, error: sanitizeClientError(error) };
   }
 }

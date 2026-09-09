@@ -23,11 +23,15 @@ export class BackupSchedulerService {
   /**
    * Prevents duplicate generation through Postgres transaction constraints.
    */
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any -- S2 Residual Debt: Legacy internal payload requires architectural typing
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any -- S2 Residual Debt: Legacy internal payload requires architectural typing
   async triggerTenantBackup(tenantId: string, requestedBy: string): Promise<any> {
     try {
       // Idempotency constraint using raw SQL to prevent concurrency race conditions.
       // If Worker A and B hit this simultaneously, only one will insert successfully.
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any -- S2 Residual Debt: Legacy internal payload requires architectural typing
       const newJobId = crypto.randomUUID();
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any -- S2 Residual Debt: Legacy internal payload requires architectural typing
       const insertResult: any[] = await executeAsSystem(SystemOperation.PLATFORM_CRON, async (tx) => {
         // Obtain an advisory transaction lock based on the tenant ID hash
         await tx.$executeRawUnsafe(`SELECT pg_advisory_xact_lock(hashtext($1))`, tenantId);
@@ -59,13 +63,15 @@ export class BackupSchedulerService {
         const result = await exportTenant(tenantId, requestedBy, newJobId);
         
         return { success: true, result };
-      } catch (error: any) {
+      } catch (errorRaw: unknown) {
+        const error = errorRaw instanceof Error ? errorRaw : new Error(String(errorRaw));
         // Failsafe: if export throws, update the job to FAILED. (exportTenant also does this internally if it has the job ID, but since we created the job here, we must handle it).
         // Wait, exportTenant creates its own Job!
         // We need to modify exportTenant to optionally accept an existing jobId, or we use our job.
         return { success: false, reason: error.message };
       }
-    } catch (e: any) {
+    } catch (eRaw: unknown) {
+      const e = eRaw instanceof Error ? eRaw : new Error(String(eRaw));
       Logger.error('Backup trigger failed:', e);
       return { success: false, reason: e.message };
     }

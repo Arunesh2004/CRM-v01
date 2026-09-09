@@ -34,7 +34,8 @@ async function _getTenantIntegrationsAction() {
     });
 
     return { success: true, data: integrations };
-  } catch (error: any) {
+  } catch (errorRaw: unknown) {
+    const error = errorRaw instanceof Error ? errorRaw : new Error(String(errorRaw));
     return { success: false, error: sanitizeClientError(error) };
   }
 }
@@ -78,7 +79,8 @@ async function _testIntegrationConnectionAction(providerType: IntegrationProvide
 
     revalidatePath('/settings/integrations');
     return { success: true };
-  } catch (error: any) {
+  } catch (errorRaw: unknown) {
+    const error = errorRaw instanceof Error ? errorRaw : new Error(String(errorRaw));
     return { success: false, error: sanitizeClientError(error) };
   }
 }
@@ -132,7 +134,8 @@ async function _updateIntegrationCredentialsAction(providerType: IntegrationProv
 
     revalidatePath('/settings/integrations');
     return { success: true };
-  } catch (error: any) {
+  } catch (errorRaw: unknown) {
+    const error = errorRaw instanceof Error ? errorRaw : new Error(String(errorRaw));
     return { success: false, error: sanitizeClientError(error) };
   }
 }
@@ -170,7 +173,8 @@ async function _deleteIntegrationAction(providerType: IntegrationProvider) {
 
     revalidatePath('/settings/integrations');
     return { success: true };
-  } catch (error: any) {
+  } catch (errorRaw: unknown) {
+    const error = errorRaw instanceof Error ? errorRaw : new Error(String(errorRaw));
     return { success: false, error: sanitizeClientError(error) };
   }
 }

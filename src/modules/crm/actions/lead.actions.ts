@@ -32,7 +32,8 @@ async function _updateLeadStatusAction(payload: { id: string; status: string }) 
     const result = await leadService.updateLead({ id, status });
     revalidatePath('/leads');
     return { success: true, data: result };
-  } catch (error: any) {
+  } catch (errorRaw: unknown) {
+    const error = errorRaw instanceof Error ? errorRaw : new Error(String(errorRaw));
     return { success: false, error: sanitizeClientError(error) };
   }
 }
@@ -45,7 +46,8 @@ async function _createLeadAction(payload: z.infer<typeof CreateLeadSchema>) {
     
     const result = await leadService.createLead(validatedData);
     return { success: true, data: result };
-  } catch (error: any) {
+  } catch (errorRaw: unknown) {
+    const error = errorRaw instanceof Error ? errorRaw : new Error(String(errorRaw));
     return { success: false, error: sanitizeClientError(error) };
   }
 }
@@ -56,7 +58,8 @@ async function _updateLeadAction(payload: z.infer<typeof UpdateLeadSchema>) {
     
     const result = await leadService.updateLead(validatedData);
     return { success: true, data: result };
-  } catch (error: any) {
+  } catch (errorRaw: unknown) {
+    const error = errorRaw instanceof Error ? errorRaw : new Error(String(errorRaw));
     return { success: false, error: sanitizeClientError(error) };
   }
 }
@@ -67,7 +70,8 @@ async function _getLeadsAction(params?: QueryParams) {
   try {
     const result = await leadService.getLeads(params);
     return { success: true, data: result };
-  } catch (error: any) {
+  } catch (errorRaw: unknown) {
+    const error = errorRaw instanceof Error ? errorRaw : new Error(String(errorRaw));
     return { success: false, error: sanitizeClientError(error) };
   }
 }
@@ -77,7 +81,8 @@ async function _assignLeadAction(leadId: string, assignedUserId: string) {
     // updateLead handles assignment timeline and audit logs if assignedUserId changes
     const result = await leadService.updateLead({ id: leadId, assignedUserId });
     return { success: true, data: result };
-  } catch (error: any) {
+  } catch (errorRaw: unknown) {
+    const error = errorRaw instanceof Error ? errorRaw : new Error(String(errorRaw));
     return { success: false, error: sanitizeClientError(error) };
   }
 }
@@ -86,7 +91,8 @@ async function _convertLeadAction(leadId: string) {
   try {
     const result = await leadService.convertLeadToCustomer(leadId);
     return { success: true, data: result };
-  } catch (error: any) {
+  } catch (errorRaw: unknown) {
+    const error = errorRaw instanceof Error ? errorRaw : new Error(String(errorRaw));
     return { success: false, error: sanitizeClientError(error) };
   }
 }
@@ -95,7 +101,8 @@ async function _deleteLeadAction(leadId: string) {
   try {
     const result = await leadService.deleteLead(leadId);
     return { success: true, data: result };
-  } catch (error: any) {
+  } catch (errorRaw: unknown) {
+    const error = errorRaw instanceof Error ? errorRaw : new Error(String(errorRaw));
     return { success: false, error: sanitizeClientError(error) };
   }
 }

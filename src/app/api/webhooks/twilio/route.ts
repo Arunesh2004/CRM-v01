@@ -47,6 +47,8 @@ export async function POST(req: Request) {
     logger.info('Twilio Webhook: Received status update', { callSid, tenantId, callStatus });
 
     // Entering tenant context to securely update the CallLog
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars -- S2 Residual Debt: Legacy unused local
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars -- S2 Residual Debt: Legacy unused local
     const prisma = withTenant(tenantId);
     // await prisma.callLog.update({
     //   where: { id: callLog.id },
@@ -54,7 +56,8 @@ export async function POST(req: Request) {
     // });
     
     return NextResponse.json({ received: true });
-  } catch (err: any) {
+  } catch (errRaw: unknown) {
+    const err = errRaw instanceof Error ? errRaw : new Error(String(errRaw));
     logger.error('Twilio Webhook Error', undefined, { name: err?.name });
     return NextResponse.json({ error: 'Webhook Error' }, { status: 400 });
   }

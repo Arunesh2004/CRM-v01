@@ -7,6 +7,8 @@ import { Button } from '../ui/button';
 import { Loader2, X, Plus } from 'lucide-react';
 import { createTicketAction } from '@/modules/support/actions/ticket.actions';
 
+// eslint-disable-next-line @typescript-eslint/no-explicit-any -- S2 Residual Debt: Legacy internal payload requires architectural typing
+// eslint-disable-next-line @typescript-eslint/no-explicit-any -- S2 Residual Debt: Legacy internal payload requires architectural typing
 export function TicketForm({ customers }: { customers: any[] }) {
   const [isOpen, setIsOpen] = useState(false);
   const [isLoading, setIsLoading] = useState(false);

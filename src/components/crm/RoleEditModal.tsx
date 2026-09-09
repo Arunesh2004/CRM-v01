@@ -26,7 +26,8 @@ export function RoleEditModal({
         toast.success("Role updated successfully");
         setOpen(false);
       }
-    } catch (e: any) {
+    } catch (eRaw: unknown) {
+      const e = eRaw instanceof Error ? eRaw : new Error(String(eRaw));
       toast.error(e.message || "Something went wrong");
     } finally {
       setLoading(false);

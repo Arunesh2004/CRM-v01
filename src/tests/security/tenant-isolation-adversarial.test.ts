@@ -1,5 +1,4 @@
 import { describe, it, expect, beforeAll, afterAll, vi } from 'vitest';
-import prisma from '@db/utils/prisma';
 import { executeAsSystem, SystemOperation } from '@db/utils/prisma-system';
 import { disableEmployee, reassignDepartment, getEmployees } from '@/modules/users/user.service';
 import * as authLib from '@/lib/auth';

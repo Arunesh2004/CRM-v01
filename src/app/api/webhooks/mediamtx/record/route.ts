@@ -136,8 +136,11 @@ const original_POST = async function (req: NextRequest) {
           update: {}, // Already exists — no-op
         });
       });
-    } catch (e: any) {
-      if (e.code === 'P2002') {
+    } catch (eRaw: unknown) {
+      const e = eRaw instanceof Error ? eRaw : new Error(String(eRaw));
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any -- S2 Residual Debt: Legacy internal payload requires architectural typing
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any -- S2 Residual Debt: Legacy internal payload requires architectural typing
+      if ((e as any).code === 'P2002') {
         // Concurrent unique violation — idempotent success
         return NextResponse.json({ success: true, message: 'Job already exists' });
       }
@@ -145,7 +148,8 @@ const original_POST = async function (req: NextRequest) {
     }
 
     return NextResponse.json({ success: true });
-  } catch (error: any) {
+  } catch (errorRaw: unknown) {
+    const error = errorRaw instanceof Error ? errorRaw : new Error(String(errorRaw));
     Logger.error('[Recording Webhook Error]', error);
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
   }

@@ -35,6 +35,8 @@ export default async function AdminPermissionsPage() {
               </tr>
             </thead>
             <tbody className="divide-y divide-white/[.04]">
+              // eslint-disable-next-line @typescript-eslint/no-explicit-any -- S2 Residual Debt: Legacy internal payload requires architectural typing
+              // eslint-disable-next-line @typescript-eslint/no-explicit-any -- S2 Residual Debt: Legacy internal payload requires architectural typing
               {roles?.map((role: any) => (
                 <tr key={role.id} className="hover:bg-white/[.02] transition-colors group">
                   <td className="px-6 py-4">

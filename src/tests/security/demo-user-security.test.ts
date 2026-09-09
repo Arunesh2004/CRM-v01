@@ -1,7 +1,8 @@
 import { expect, test, describe, beforeAll, afterAll } from 'vitest';
 import { PrismaClient } from '@prisma/client';
-import { checkPermissionFast, requirePermissionFast } from '@/lib/auth';
+import { checkPermissionFast } from '@/lib/auth';
 import { AIProviderFactory } from '@/lib/providers/ai/ai-provider.factory';
+import { executeAsSystem, SystemOperation } from "@db/utils/prisma-system";
 
 const prisma = new PrismaClient();
 
@@ -12,48 +13,48 @@ describe('Phase S16.1A.2M.4 Demo User Security Boundaries', () => {
 
   beforeAll(async () => {
     // Scaffold test tenant and DEMO_USER role
-    const tenant = await prisma.tenant.create({ data: { name: 'Test Demo Boundary Tenant' } });
+    const tenant = await executeAsSystem(SystemOperation.SECURITY_AUDIT, async (tx) => await tx.tenant.create({ data: { name: 'Test Demo Boundary Tenant' } }));
     tenantId = tenant.id;
 
     // Create required basic permissions
-    const p1 = await prisma.permission.upsert({ where: { resource_action: { resource: 'CUSTOMER', action: 'READ' } }, update: {}, create: { resource: 'CUSTOMER', action: 'READ' } });
-    const p2 = await prisma.permission.upsert({ where: { resource_action: { resource: 'CUSTOMER', action: 'CREATE' } }, update: {}, create: { resource: 'CUSTOMER', action: 'CREATE' } });
-    const p3 = await prisma.permission.upsert({ where: { resource_action: { resource: 'CAMERA', action: 'READ' } }, update: {}, create: { resource: 'CAMERA', action: 'READ' } });
+    const p1 = await executeAsSystem(SystemOperation.SECURITY_AUDIT, async (tx) => await tx.permission.upsert({ where: { resource_action: { resource: 'CUSTOMER', action: 'READ' } }, update: {}, create: { resource: 'CUSTOMER', action: 'READ' } }));
+    const p2 = await executeAsSystem(SystemOperation.SECURITY_AUDIT, async (tx) => await tx.permission.upsert({ where: { resource_action: { resource: 'CUSTOMER', action: 'CREATE' } }, update: {}, create: { resource: 'CUSTOMER', action: 'CREATE' } }));
+    const p3 = await executeAsSystem(SystemOperation.SECURITY_AUDIT, async (tx) => await tx.permission.upsert({ where: { resource_action: { resource: 'CAMERA', action: 'READ' } }, update: {}, create: { resource: 'CAMERA', action: 'READ' } }));
 
-    const role = await prisma.role.create({
-      data: {
-        name: 'DEMO_USER',
-        tenantId,
-        permissions: {
-          create: [
-            { permissionId: p1.id, tenantId },
-            { permissionId: p2.id, tenantId },
-            { permissionId: p3.id, tenantId },
-          ]
-        }
-      }
-    });
+    const role = await executeAsSystem(SystemOperation.SECURITY_AUDIT, async (tx) => await tx.role.create({
+          data: {
+            name: 'DEMO_USER',
+            tenantId,
+            permissions: {
+              create: [
+                { permissionId: p1.id, tenantId },
+                { permissionId: p2.id, tenantId },
+                { permissionId: p3.id, tenantId },
+              ]
+            }
+          }
+        }));
     demoRoleId = role.id;
 
-    const user = await prisma.user.create({
-      data: {
-        email: 'test_demo_user@demo.com',
-        clerkId: 'test_demo_clerk_123',
-        tenantId,
-        userRoles: {
-          create: { roleId: role.id, tenantId }
-        }
-      }
-    });
+    const user = await executeAsSystem(SystemOperation.SECURITY_AUDIT, async (tx) => await tx.user.create({
+          data: {
+            email: 'test_demo_user@demo.com',
+            clerkId: 'test_demo_clerk_123',
+            tenantId,
+            userRoles: {
+              create: { roleId: role.id, tenantId }
+            }
+          }
+        }));
     demoUserId = user.id;
   });
 
   afterAll(async () => {
-    await prisma.userRole.deleteMany({ where: { tenantId } });
-    await prisma.rolePermission.deleteMany({ where: { tenantId } });
-    await prisma.role.deleteMany({ where: { tenantId } });
-    await prisma.user.deleteMany({ where: { tenantId } });
-    await prisma.tenant.delete({ where: { id: tenantId } });
+    await executeAsSystem(SystemOperation.SECURITY_AUDIT, async (tx) => await tx.userRole.deleteMany({ where: { tenantId } })).catch(() => {});
+    await executeAsSystem(SystemOperation.SECURITY_AUDIT, async (tx) => await tx.rolePermission.deleteMany({ where: { tenantId } })).catch(() => {});
+    await executeAsSystem(SystemOperation.SECURITY_AUDIT, async (tx) => await tx.role.deleteMany({ where: { tenantId } })).catch(() => {});
+    await executeAsSystem(SystemOperation.SECURITY_AUDIT, async (tx) => await tx.user.deleteMany({ where: { tenantId } })).catch(() => {});
+    await executeAsSystem(SystemOperation.SECURITY_AUDIT, async (tx) => await tx.tenant.delete({ where: { id: tenantId } })).catch(() => {});
     await prisma.$disconnect();
   });
 
@@ -88,7 +89,7 @@ describe('Phase S16.1A.2M.4 Demo User Security Boundaries', () => {
   test('6. DEMO_USER cannot cross tenants', async () => {
     // Tenant isolation is inherently enforced by Prisma RLS and where clauses in our test architecture.
     // Ensure the role is tied to the correct tenant.
-    const role = await prisma.role.findUnique({ where: { id: demoRoleId } });
+    const role = await executeAsSystem(SystemOperation.SECURITY_AUDIT, async (tx) => await tx.role.findUnique({ where: { id: demoRoleId } }));
     expect(role?.tenantId).toBe(tenantId);
   });
 
@@ -98,7 +99,7 @@ describe('Phase S16.1A.2M.4 Demo User Security Boundaries', () => {
   });
 
   test('8/9. AI paths reachable by DEMO_USER use MockAIProvider', async () => {
-    const userRoles = await prisma.userRole.findMany({ where: { userId: demoUserId }, include: { role: true } });
+    const userRoles = await executeAsSystem(SystemOperation.SECURITY_AUDIT, async (tx) => await tx.userRole.findMany({ where: { userId: demoUserId }, include: { role: true } }));
     const isDemoUser = userRoles.some(ur => ur.role.name === 'DEMO_USER');
     
     expect(isDemoUser).toBe(true);
@@ -117,23 +118,23 @@ describe('Phase S16.1A.2M.4 Demo User Security Boundaries', () => {
   });
 
   test('11. Security behavior does not depend on tenant name', async () => {
-    const tenant2 = await prisma.tenant.create({ data: { name: 'CRM Client Demo' } });
+    const tenant2 = await executeAsSystem(SystemOperation.SECURITY_AUDIT, async (tx) => await tx.tenant.create({ data: { name: 'CRM Client Demo' } }));
     
     // A regular user in the "CRM Client Demo" tenant without the DEMO_USER role
-    const user2 = await prisma.user.create({
-      data: {
-        email: 'regular@demo.com',
-        clerkId: 'test_clerk_regular',
-        tenantId: tenant2.id
-      }
-    });
+    const user2 = await executeAsSystem(SystemOperation.SECURITY_AUDIT, async (tx) => await tx.user.create({
+          data: {
+            email: 'regular@demo.com',
+            clerkId: 'test_clerk_regular',
+            tenantId: tenant2.id
+          }
+        }));
 
-    const userRoles = await prisma.userRole.findMany({ where: { userId: user2.id }, include: { role: true } });
+    const userRoles = await executeAsSystem(SystemOperation.SECURITY_AUDIT, async (tx) => await tx.userRole.findMany({ where: { userId: user2.id }, include: { role: true } }));
     const isDemoUser = userRoles.some(ur => ur.role.name === 'DEMO_USER');
     
     expect(isDemoUser).toBe(false); // Validates that tenant name is completely irrelevant
     
-    await prisma.user.delete({ where: { id: user2.id } });
-    await prisma.tenant.delete({ where: { id: tenant2.id } });
+    await executeAsSystem(SystemOperation.SECURITY_AUDIT, async (tx) => await tx.user.delete({ where: { id: user2.id } })).catch(() => {});
+    await executeAsSystem(SystemOperation.SECURITY_AUDIT, async (tx) => await tx.tenant.delete({ where: { id: tenant2.id } })).catch(() => {});
   });
 });

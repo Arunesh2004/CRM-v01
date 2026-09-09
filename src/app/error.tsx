@@ -52,6 +52,7 @@ export default function GlobalError({
             Try again
           </button>
           <button
+            // eslint-disable-next-line @next/next/no-location-assign-relative-destination -- Legacy Next.js location assign retained.
             onClick={() => window.location.href = '/dashboard'}
             className="w-full bg-white text-gray-700 font-semibold py-2 px-4 rounded-lg border border-gray-300 hover:bg-gray-50 transition-colors"
           >

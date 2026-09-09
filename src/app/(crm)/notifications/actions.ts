@@ -1,8 +1,7 @@
 'use server';
 import { withServerActionContext } from '@/lib/observability/server-action';
-import { withTenant, withTenantTransaction } from '@db/utils/prisma-tenant';
+import { withTenant } from '@db/utils/prisma-tenant';
 
-import prisma from '@db/utils/prisma';
 import { requireAuth, requireTenant } from '@/lib/auth';
 
 async function _getUnreadNotificationsAction() {

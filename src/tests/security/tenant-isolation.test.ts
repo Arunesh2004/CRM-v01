@@ -1,6 +1,6 @@
 import { describe, it, expect, beforeAll, afterAll } from 'vitest';
 import { executeAsSystem, SystemOperation } from '../../../database/utils/prisma-system';
-import { withTenant, withTenantTransaction } from '../../../database/utils/prisma-tenant';
+import { withTenant } from '../../../database/utils/prisma-tenant';
 import * as crypto from 'crypto';
 
 describe('Tenant Isolation Security Tests (Real DB)', () => {

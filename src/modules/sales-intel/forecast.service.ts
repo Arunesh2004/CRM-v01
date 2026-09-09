@@ -1,8 +1,7 @@
 import prisma from '@db/utils/prisma';
-import { withTenant, withTenantTransaction } from '@db/utils/prisma-tenant';
+import { withTenantTransaction } from '@db/utils/prisma-tenant';
 import { requirePermissionFast } from '@/lib/auth';
 import { Action, Resource } from '@prisma/client';
-import { FieldSecurityService, SecurityLevel } from '../security/field-security/field-security.service';
 
 export class ForecastService {
   /**

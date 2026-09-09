@@ -2,7 +2,7 @@ import { describe, it, expect, beforeAll, afterAll, vi } from 'vitest';
 import { executeAsSystem, SystemOperation } from '../../../database/utils/prisma-system';
 import { createDeal } from '../../modules/crm/deal/deal.service';
 import * as authLib from '../../lib/auth';
-import { withTenant, withTenantTransaction } from '../../../database/utils/prisma-tenant';
+import { withTenant } from '../../../database/utils/prisma-tenant';
 import * as crypto from 'crypto';
 
 describe('Adversarial RLS / Multi-Tenant Attacks', () => {

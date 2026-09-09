@@ -103,7 +103,8 @@ async function _askAssistantAction(prompt: string, conversationId?: string) {
     }
 
     return { success: true, data: response, conversationId: activeConversationId };
-  } catch (error: any) {
+  } catch (errorRaw: unknown) {
+    const error = errorRaw instanceof Error ? errorRaw : new Error(String(errorRaw));
     // Log the actual detailed error for internal tracking
     Logger.error('AI Request Failed', error, { event: 'AI_REQUEST_FAILED', tenantId, userId });
 

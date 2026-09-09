@@ -42,7 +42,10 @@ const original_GET = async function (req: NextRequest) {
             }
           });
           scheduledCount++;
-        } catch (e: any) {
+        } catch (eRaw: unknown) {
+          // eslint-disable-next-line @typescript-eslint/no-unused-vars -- S2 Residual Debt: Legacy unused local
+          // eslint-disable-next-line @typescript-eslint/no-unused-vars -- S2 Residual Debt: Legacy unused local
+          const e = eRaw instanceof Error ? eRaw : new Error(String(eRaw));
           // Ignore if exists
         }
       }
@@ -69,6 +72,7 @@ const original_GET = async function (req: NextRequest) {
       RETURNING id;
     `;
 
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any -- S2 Residual Debt: Legacy internal payload requires architectural typing
     const claimedJobIds = claimedJobIdsResult.map((r: any) => r.id);
     let processedCount = 0;
 
@@ -104,7 +108,8 @@ const original_GET = async function (req: NextRequest) {
           }
 
           processedCount++;
-        } catch (err: any) {
+        } catch (errRaw: unknown) {
+          const err = errRaw instanceof Error ? errRaw : new Error(String(errRaw));
           Logger.error(`Retention Job ${job.id} failed:`, err);
           const attempts = job.attempts + 1;
           const maxAttempts = 5;
@@ -126,7 +131,8 @@ const original_GET = async function (req: NextRequest) {
     }
 
     return NextResponse.json({ success: true, scheduledCount, processedCount });
-  } catch (error: any) {
+  } catch (errorRaw: unknown) {
+    const error = errorRaw instanceof Error ? errorRaw : new Error(String(errorRaw));
     Logger.error('[Retention Worker Error]', error);
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
   }

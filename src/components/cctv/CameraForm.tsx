@@ -10,6 +10,8 @@ export function CameraForm() {
   const [isOpen, setIsOpen] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState('');
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any -- S2 Residual Debt: Legacy internal payload requires architectural typing
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any -- S2 Residual Debt: Legacy internal payload requires architectural typing
   const [locations, setLocations] = useState<any[]>([]);
   const [requiresAuth, setRequiresAuth] = useState(false);
   const router = useRouter();

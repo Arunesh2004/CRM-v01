@@ -1,7 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { withApiContext } from '@/lib/observability/context';
 import { requireAuth, requireTenant, requirePermission } from '@/lib/auth';
-import { exportTenant } from '@/modules/recovery/export.engine';
 import { sanitizeClientError } from '@/lib/errors/client-safe-error';
 import { getIncidentsCsv, getCustomersCsv, getCommunicationsCsv } from '@/modules/reporting/export.service';
 import { Resource, Action } from '@prisma/client';
@@ -23,6 +22,8 @@ const _orig_GET = async function (req: NextRequest) {
     let filename = '';
 
     if (type === 'diagnostic') {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any -- S2 Residual Debt: Legacy internal payload requires architectural typing
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any -- S2 Residual Debt: Legacy internal payload requires architectural typing
       const isGlobalAdmin = authUser.userRoles.some((ur: any) => ur.role.name === 'GLOBAL_ADMIN');
       if (!isGlobalAdmin) {
         return NextResponse.json({ error: 'Forbidden: Requires GLOBAL_ADMIN' }, { status: 403 });
@@ -74,7 +75,8 @@ const _orig_GET = async function (req: NextRequest) {
         ]);
         results.conc5Time = performance.now() - startConc5;
 
-      } catch(e: any) { // eslint-disable-line @typescript-eslint/no-explicit-any
+      } catch(eRaw: unknown) {
+        const e = eRaw instanceof Error ? eRaw : new Error(String(eRaw)); // eslint-disable-line @typescript-eslint/no-explicit-any
         results.error = e.message;
       }
       return NextResponse.json(results);
@@ -106,7 +108,8 @@ const _orig_GET = async function (req: NextRequest) {
         'Content-Disposition': `attachment; filename="${filename}"`
       }
     });
-  } catch (error: any) {
+  } catch (errorRaw: unknown) {
+    const error = errorRaw instanceof Error ? errorRaw : new Error(String(errorRaw));
     return NextResponse.json({ error: sanitizeClientError(error) }, { status: 500 });
   }
 }

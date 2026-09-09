@@ -3,6 +3,8 @@ export interface ChatMessagePayload {
   senderId: string;
   content: string;
   type?: 'TEXT' | 'FILE' | 'SYSTEM';
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any -- S2 Residual Debt: Legacy internal payload requires architectural typing
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any -- S2 Residual Debt: Legacy internal payload requires architectural typing
   metadata?: any;
 }
 
@@ -15,7 +17,9 @@ export interface ChatProvider {
 
   /**
    * Subscribes to a conversation for realtime events.
+   // eslint-disable-next-line @typescript-eslint/no-explicit-any -- S2 Residual Debt: Legacy internal payload requires architectural typing
    */
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any -- S2 Residual Debt: Legacy internal payload requires architectural typing
   subscribeToConversation(conversationId: string, callback: (event: any) => void): void;
 
   /**

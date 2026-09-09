@@ -1,6 +1,7 @@
 import { Prisma } from '@prisma/client';
 import crypto from 'crypto';
 import globalPrisma from '@db/utils/prisma';
+import { executeAsSystem, SystemOperation } from '@db/utils/prisma-system';
 import { IdempotencyConflictError } from '@/infrastructure/errors';
 
 export const IdempotencyOperations = {
@@ -38,6 +39,8 @@ function sortObjectKeys(obj: unknown): unknown {
 }
 
 export function canonicalHash(payload: object): string {
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars -- S2 Residual Debt: Legacy unused local
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars -- Intentional unused destructuring exclusion
   const { idempotencyKey: _, ...rest } = payload as Record<string, unknown>;
   const sorted = sortObjectKeys(rest);
   const stringified = JSON.stringify(sorted);
@@ -56,8 +59,10 @@ export async function withIdempotency<T extends { id: string }>(
   const reqHash = canonicalHash(validatedDto);
   const now = new Date();
 
-  const existingKey = await globalPrisma.idempotencyKey.findUnique({
-    where: { tenantId_key: { tenantId, key: idempotencyKey } },
+  const existingKey = await executeAsSystem(SystemOperation.SECURITY_AUDIT, async (tx) => {
+    return tx.idempotencyKey.findUnique({
+      where: { tenantId_key: { tenantId, key: idempotencyKey } },
+    });
   });
 
   if (existingKey) {
@@ -83,6 +88,7 @@ export async function withIdempotency<T extends { id: string }>(
 
   try {
     const result = await globalPrisma.$transaction(async (tx) => {
+      await tx.$executeRawUnsafe(`SELECT set_config('app.current_tenant_id', '${tenantId}', true)`);
       await tx.idempotencyKey.deleteMany({
         where: {
           tenantId,
@@ -114,8 +120,10 @@ export async function withIdempotency<T extends { id: string }>(
     return result;
   } catch (error) {
     if (isIdempotencyKeyConflict(error)) {
-      const winner = await globalPrisma.idempotencyKey.findUnique({
-        where: { tenantId_key: { tenantId, key: idempotencyKey } },
+      const winner = await executeAsSystem(SystemOperation.SECURITY_AUDIT, async (tx) => {
+        return tx.idempotencyKey.findUnique({
+          where: { tenantId_key: { tenantId, key: idempotencyKey } },
+        });
       });
 
       if (!winner || winner.expiresAt <= now) {

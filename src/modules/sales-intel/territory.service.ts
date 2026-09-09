@@ -1,5 +1,5 @@
 import prisma from '@db/utils/prisma';
-import { withTenant, withTenantTransaction } from '@db/utils/prisma-tenant';
+import { withTenantTransaction } from '@db/utils/prisma-tenant';
 import { requirePermissionFast } from '@/lib/auth';
 import { Action, Resource } from '@prisma/client';
 import { FieldSecurityService } from '../security/field-security/field-security.service';
@@ -13,6 +13,8 @@ export class TerritoryService {
         where: { tenantId },
         orderBy: { createdAt: 'desc' }
       });
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any -- S2 Residual Debt: Legacy internal payload requires architectural typing
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any -- S2 Residual Debt: Legacy internal payload requires architectural typing
       return Promise.all(territories.map((t: any) => FieldSecurityService.maskFields(tenantId, userId, 'Territory', t)));
     });
   }

@@ -58,6 +58,8 @@ export class NotificationService {
     const prismaTenant = withTenant(tenantId);
     const limit = params?.limit || 20;
 
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any -- S2 Residual Debt: Legacy internal payload requires architectural typing
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any -- S2 Residual Debt: Legacy internal payload requires architectural typing
     const where: any = { tenantId };
     if (params?.userId) {
       where.userId = params.userId;

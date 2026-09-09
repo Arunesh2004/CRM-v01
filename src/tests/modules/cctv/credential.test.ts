@@ -1,4 +1,4 @@
-import { describe, it, expect, beforeEach, vi } from 'vitest';
+import { describe, it, expect } from 'vitest';
 import { CreateCameraSchema, UpdateCameraSchema } from '@/modules/cctv/validators/camera.schema';
 
 describe('CCTV Credential Semantics', () => {

@@ -14,6 +14,8 @@ export function StatusUpdater({ leadId, currentStatus }: { leadId: string, curre
     const newStatus = e.target.value;
     setIsUpdating(true);
     
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any -- S2 Residual Debt: Legacy internal payload requires architectural typing
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any -- S2 Residual Debt: Legacy internal payload requires architectural typing
     const res = await updateLeadAction({ id: leadId, status: newStatus as any });
     
     setIsUpdating(false);

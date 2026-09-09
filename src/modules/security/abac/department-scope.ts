@@ -1,4 +1,3 @@
-import { User } from '@prisma/client';
 
 /**
  * Validates department and role scope for operations like inviting or reassigning users.

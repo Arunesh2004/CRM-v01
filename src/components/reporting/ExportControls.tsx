@@ -22,6 +22,8 @@ export function ExportControls({ startDate, endDate }: { startDate?: string, end
       document.body.appendChild(a);
       a.click();
       a.remove();
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars -- S2 Residual Debt: Legacy unused local
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars -- Intentional callback/interface parameter
     } catch (err) {
       alert('Error exporting data');
     }

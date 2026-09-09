@@ -1,10 +1,10 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { withServerActionContext } from '@/lib/observability/server-action';
-import { getContext, setTenantContext, withContext, requestContext } from '@/lib/observability/context';
+import { getContext, setTenantContext, withContext } from '@/lib/observability/context';
 import { requireTenant } from '@/lib/auth';
 
 // Mock headers
-let mockHeaders: Map<string, string> = new Map();
+const mockHeaders: Map<string, string> = new Map();
 vi.mock('next/headers', () => ({
   headers: vi.fn(async () => mockHeaders),
 }));

@@ -2,8 +2,8 @@ import { withApiContext } from '@/lib/observability/context';
 import { Logger } from '@/lib/logger/logger';
 import { NextRequest, NextResponse } from 'next/server';
 import crypto from 'crypto';
-import { auth, clerkClient } from '@clerk/nextjs/server';
-import globalPrisma from '@db/utils/prisma';
+import { auth } from '@clerk/nextjs/server';
+import { executeAsSystem, SystemOperation } from '@db/utils/prisma-system';
 
 const original_POST = async function (req: NextRequest) {
   try {
@@ -13,9 +13,12 @@ const original_POST = async function (req: NextRequest) {
     }
 
     // Look up the user's tenantId from the database using their Clerk ID
-    const user = await globalPrisma.user.findFirst({
-      where: { clerkId: userId },
-      select: { id: true, tenantId: true },
+    // We must bypass RLS because we don't know the tenant ID yet
+    const user = await executeAsSystem(SystemOperation.CLERK_PROVISIONING, async (tx) => {
+      return tx.user.findFirst({
+        where: { clerkId: userId },
+        select: { id: true, tenantId: true },
+      });
     });
     if (!user) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });

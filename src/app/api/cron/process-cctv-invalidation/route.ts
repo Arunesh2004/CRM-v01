@@ -3,7 +3,6 @@ import { Logger } from '@/lib/logger/logger';
 import { NextRequest, NextResponse } from 'next/server';
 import globalPrisma from '@db/utils/prisma';
 import { ENV } from '@/lib/config/env';
-import { CameraStreamInvalidationStatus } from '@prisma/client';
 
 const original_GET = async function (req: NextRequest) {
   const authHeader = req.headers.get('authorization');
@@ -81,7 +80,8 @@ const original_GET = async function (req: NextRequest) {
         } else {
           throw new Error(`MediaMTX responded with status ${response.status}`);
         }
-      } catch (err: any) {
+      } catch (errRaw: unknown) {
+        const err = errRaw instanceof Error ? errRaw : new Error(String(errRaw));
         const attempts = job.attempts + 1;
         if (attempts >= 5) {
           // Permanent failure, no more retries.

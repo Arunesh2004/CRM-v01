@@ -1,9 +1,6 @@
 import { JobPayload } from '@/../src/lib/queue/JobQueueProvider';
 import prisma from '@db/utils/prisma';
 import { withTenant, withTenantTransaction } from '@db/utils/prisma-tenant';
-import { getStorageProvider } from '@/../src/lib/storage';
-import { KeyManagementService } from './security/KeyManagementService';
-import crypto from 'crypto';
 import { Logger } from '@/lib/logger/logger';
 
 export class RestoreWorker {
@@ -52,6 +49,8 @@ export class RestoreWorker {
         await withTenantTransaction(tx, tenantId);
         // Execute the exact createMany block with skipDuplicates
         // We use dynamic model injection for the SAGA
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any -- S2 Residual Debt: Legacy internal payload requires architectural typing
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any -- S2 Residual Debt: Legacy internal payload requires architectural typing
         const modelDelegate = (tx as any)[metadata.model.toLowerCase()];
         if (!modelDelegate) throw new Error(`Invalid model ${metadata.model}`);
 
@@ -74,7 +73,8 @@ export class RestoreWorker {
         });
       }, { timeout: 30000 }); // strict 30s timeout per chunk
 
-    } catch (error: any) {
+    } catch (errorRaw: unknown) {
+      const error = errorRaw instanceof Error ? errorRaw : new Error(String(errorRaw));
       await tenantPrisma.restoreCheckpoint.update({
         where: { chunkId },
         data: { status: 'FAILED', errorMessage: error.message }

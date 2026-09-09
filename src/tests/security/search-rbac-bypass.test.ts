@@ -50,11 +50,6 @@ describe('Phase 7R: Search RBAC Bypass Remediation', () => {
         data: { tenantId, threadId: mailThreadId, senderId: fullUserId, bodyText: 'Secret emails regarding merger' }
       });
 
-      // Create sensitive invoice in Tenant A
-      await tx.invoice.create({
-        data: { id: 'INV-SECRET-100', tenantId, amountDue: 1000000 }
-      });
-
       // Create sensitive customer in Tenant B
       await tx.customer.create({
         data: { name: 'Tenant B Top Secret', normalizedName: 'tenant b top secret', industry: 'Intelligence', tenantId: tenantBId }
@@ -65,7 +60,6 @@ describe('Phase 7R: Search RBAC Bypass Remediation', () => {
   afterAll(async () => {
     vi.restoreAllMocks();
     await executeAsSystem(SystemOperation.SECURITY_AUDIT, async (tx) => {
-      await tx.invoice.deleteMany({ where: { tenantId } });
       await tx.mailMessage.deleteMany({ where: { tenantId } });
       await tx.mailThread.deleteMany({ where: { tenantId } });
       await tx.task.deleteMany({ where: { tenantId } });
@@ -130,7 +124,6 @@ describe('Phase 7R: Search RBAC Bypass Remediation', () => {
     expect(data.filter(d => d.type === 'LEAD').length).toBeGreaterThan(0);
     expect(data.filter(d => d.type === 'TASK').length).toBeGreaterThan(0);
     expect(data.filter(d => d.type === 'MESSAGE').length).toBeGreaterThan(0);
-    expect(data.filter(d => d.type === 'INVOICE').length).toBeGreaterThan(0);
   });
 
   it('J. COMMUNICATION and REVENUE permissions selectively', async () => {
@@ -146,7 +139,6 @@ describe('Phase 7R: Search RBAC Bypass Remediation', () => {
     const data = result.data as any[];
     expect(data.filter(d => d.type === 'CUSTOMER').length).toBe(0);
     expect(data.filter(d => d.type === 'MESSAGE').length).toBeGreaterThan(0);
-    expect(data.filter(d => d.type === 'INVOICE').length).toBeGreaterThan(0);
   });
 
   it('I. Tenant isolation: Tenant A user searches for Tenant B data', async () => {

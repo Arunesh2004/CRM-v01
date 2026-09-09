@@ -1,4 +1,3 @@
-import prisma from '@db/utils/prisma';
 import { executeAsSystem, SystemOperation } from '@db/utils/prisma-system';
 import { AIConfig } from '@/lib/config/ai.config';
 import { Logger } from '@/lib/logger/logger';

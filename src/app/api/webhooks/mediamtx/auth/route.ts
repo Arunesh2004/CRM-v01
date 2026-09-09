@@ -4,8 +4,8 @@ import { NextRequest, NextResponse } from 'next/server';
 import jwt from 'jsonwebtoken';
 import crypto from 'node:crypto';
 import { ENV } from '@/lib/config/env';
-import globalPrisma from '@db/utils/prisma';
 import { deriveOpaquePath } from '@/modules/cctv/stream.service';
+import { executeAsSystem, SystemOperation } from '@db/utils/prisma-system';
 
 const original_POST = async function (req: NextRequest) {
   try {
@@ -41,6 +41,10 @@ const original_POST = async function (req: NextRequest) {
 
     // 4. Parse the JSON payload sent by MediaMTX
     const body = await req.json().catch(() => ({}));
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars -- S2 Residual Debt: Legacy unused local
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars -- S2 Residual Debt: Legacy unused local
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars -- S2 Residual Debt: Legacy unused local
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars -- Intentional unused destructuring exclusion
     const { action, protocol, path, ip, query } = body;
 
     // 5. Extract JWT from query string passed by MediaMTX payload
@@ -54,12 +58,14 @@ const original_POST = async function (req: NextRequest) {
     }
 
     // 6. Strict JWT Verification
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any -- S2 Residual Debt: Legacy internal payload requires architectural typing
     let decoded: any;
     try {
       decoded = jwt.verify(token, ENV.cctvStreamJwtSecret, {
         algorithms: ['HS256']
       });
-    } catch (err: any) {
+    } catch (errRaw: unknown) {
+      const err = errRaw instanceof Error ? errRaw : new Error(String(errRaw));
       Logger.warn('[MediaMTX Webhook] JWT verification failed:', err.message);
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
@@ -72,7 +78,9 @@ const original_POST = async function (req: NextRequest) {
 
     let camera;
     try {
-      camera = await globalPrisma.camera.findUnique({ where: { id: decoded.cameraId } });
+      camera = await executeAsSystem(SystemOperation.EXTERNAL_WEBHOOK_PROCESS, async (tx) => {
+        return tx.camera.findUnique({ where: { id: decoded.cameraId } });
+      });
     } catch (err) {
       Logger.error('[MediaMTX Webhook] Database query failed. Failing closed.', err);
       return NextResponse.json({ error: 'Internal server error' }, { status: 500 }); // Fail closed

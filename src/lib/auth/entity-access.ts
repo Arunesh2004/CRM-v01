@@ -1,6 +1,6 @@
 import { withTenant } from '@db/utils/prisma-tenant';
-import { requireAuth, requireTenant, requirePermission } from '@/lib/auth';
-import { EntityType, PrismaClient } from '@prisma/client';
+import { requirePermission } from '@/lib/auth';
+import { EntityType } from '@prisma/client';
 
 export async function verifyEntityAccess(tenantId: string, entityType: EntityType, entityId: string) {
   // First ensure they are authenticated and have basic USER read permissions.

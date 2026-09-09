@@ -1,6 +1,6 @@
 import { getCallsAction } from '@/modules/communication/actions/call.actions';
 import { Card } from '@/components/ui/Card';
-import { Phone, Clock, FileText } from 'lucide-react';
+import { Phone } from 'lucide-react';
 import { Badge } from '@/components/ui/Badge';
 import Link from 'next/link';
 
@@ -32,6 +32,8 @@ export default async function CommunicationCallsPage() {
               </tr>
             </thead>
             <tbody className="divide-y divide-white/[.04]">
+              // eslint-disable-next-line @typescript-eslint/no-explicit-any -- S2 Residual Debt: Legacy internal payload requires architectural typing
+              // eslint-disable-next-line @typescript-eslint/no-explicit-any -- S2 Residual Debt: Legacy internal payload requires architectural typing
               {calls?.map((call: any) => (
                 <tr key={call.id} className="hover:bg-white/[.02] transition-colors group">
                   <td className="px-6 py-4 text-[#8891B0]">

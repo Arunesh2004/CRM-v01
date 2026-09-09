@@ -1,6 +1,5 @@
 import { withTenant } from '@db/utils/prisma-tenant';
 import { requireAuth, requireTenant, requirePermission } from '@/lib/auth';
-import { Prisma } from '@prisma/client';
 
 export async function getPipelines() {
   const tenantId = await requireTenant();

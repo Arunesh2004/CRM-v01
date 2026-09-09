@@ -1,8 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { withApiContext } from '@/lib/observability/context';
 import { Logger } from '@/lib/logger/logger';
-import { requireTenant, requireAuthIdentity, requirePermissionFast } from '@/lib/auth';
-import prisma from '@db/utils/prisma';
+import { requireTenant, requireAuthIdentity } from '@/lib/auth';
+import { requireDocumentAccess } from '@/modules/crm/document/document.service';
 import { ProviderFactory } from '@/infrastructure/provider.factory';
 import { StorageProvider } from '@/infrastructure/storage/storage.interface';
 
@@ -20,24 +20,15 @@ const _orig_GET = async function (
       return new NextResponse('Missing ID', { status: 400 });
     }
 
-    const document = await prisma.document.findFirst({
-      where: {
-        id,
-        tenantId, // Canonical tenant isolation
+    let document;
+    try {
+      document = await requireDocumentAccess(tenantId, identity.id, id, 'READ');
+    } catch (eRaw: unknown) {
+      const e = eRaw instanceof Error ? eRaw : new Error(String(eRaw));
+      if (e.message === 'Document not found') {
+        return new NextResponse('Document not found', { status: 404 });
       }
-    });
-
-    if (!document) {
-      return new NextResponse('Document not found', { status: 404 });
-    }
-
-    // Verify parent CRM resource ownership & user permission
-    if (document.uploadedById !== identity.id) {
-      if (document.customerId) {
-        await requirePermissionFast(identity.id, 'CUSTOMER', 'READ');
-      } else if (document.taskId) {
-        await requirePermissionFast(identity.id, 'TASK', 'READ');
-      }
+      throw e;
     }
 
     // Resolve Provider and get signed URL
@@ -53,9 +44,10 @@ const _orig_GET = async function (
     // External provider URL (e.g., S3 presigned URL)
     return NextResponse.redirect(signedUrl);
 
-  } catch (error: any) {
+  } catch (errorRaw: unknown) {
+    const error = errorRaw instanceof Error ? errorRaw : new Error(String(errorRaw));
     Logger.error('Document download route error:', error);
-    if (error.message && error.message.includes('Permission denied')) {
+    if (error.message && (error.message.includes('Permission denied') || error.message.includes('Forbidden'))) {
       return new NextResponse('Forbidden', { status: 403 });
     }
     return new NextResponse('Unauthorized or Internal Error', { status: 401 });

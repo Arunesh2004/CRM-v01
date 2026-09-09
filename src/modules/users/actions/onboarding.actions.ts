@@ -1,9 +1,8 @@
 "use server";
 import { withServerActionContext } from '@/lib/observability/server-action';
-import { withTenant, withTenantTransaction } from '@db/utils/prisma-tenant';
+import { withTenant } from '@db/utils/prisma-tenant';
 
 import { requireAuth } from '@/lib/auth';
-import prisma from '@db/utils/prisma';
 import { revalidatePath } from 'next/cache';
 import { redirect } from 'next/navigation';
 
@@ -23,6 +22,8 @@ async function _completeProfileAction(formData: FormData) {
     throw new Error('All fields are required.');
   }
 
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars -- S2 Residual Debt: Legacy unused local
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars -- S2 Residual Debt: Legacy unused local
   const updatedUser = await withTenant(user.tenantId).user.update({
     where: { id: user.id },
     data: {

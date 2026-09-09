@@ -1,9 +1,19 @@
 import { describe, it, expect, beforeAll, afterAll, vi } from 'vitest';
-import prisma from '../../../database/utils/prisma';
 import { sendEmail } from '@/modules/communication/email/email.service';
 import { createCall } from '@/modules/communication/telephony/telephony.service';
 import { sendMessage } from '@/modules/communication/messaging/messaging.service';
-import { executeAsSystem, SystemOperation } from '../../../database/utils/prisma-system';
+import { executeAsSystem, SystemOperation } from '@db/utils/prisma-system';
+
+vi.mock('@/lib/providers/provider.factory', () => ({
+  ProviderFactory: {
+    getEmailProvider: () => ({
+      sendEmail: vi.fn().mockResolvedValue({ success: true, data: { id: 'test' } })
+    }),
+    getTelephonyProvider: () => ({
+      makeCall: vi.fn().mockResolvedValue({ success: true, callId: 'test-call-id' })
+    })
+  }
+}));
 
 // Mock auth module
 let mockUserId = '';

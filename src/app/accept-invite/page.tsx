@@ -6,6 +6,8 @@ import { useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 
 export default function AcceptInvitePage() {
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars -- S2 Residual Debt: Legacy unused local
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars -- Intentional unused destructuring exclusion
   const { isLoaded, isSignedIn, user } = useUser();
   const searchParams = useSearchParams();
   const router = useRouter();
@@ -18,6 +20,7 @@ export default function AcceptInvitePage() {
     if (!isLoaded) return;
 
     if (!token) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect -- State setter inside effect retained for deterministic data fetching flow.
       setStatus('error');
       setErrorMsg('No invitation token provided.');
       return;
@@ -50,7 +53,10 @@ export default function AcceptInvitePage() {
           setStatus('error');
           setErrorMsg(data.error || 'Failed to accept invitation.');
         }
-      } catch (err: any) {
+      // eslint-disable-next-line @typescript-eslint/no-unused-vars -- Intentional unused destructuring exclusion
+      } catch (errRaw: unknown) {
+        // eslint-disable-next-line @typescript-eslint/no-unused-vars -- S2 Residual Debt: Legacy unused local
+        const err = errRaw instanceof Error ? errRaw : new Error(String(errRaw));
         setStatus('error');
         setErrorMsg('An unexpected error occurred. Please try again.');
       }

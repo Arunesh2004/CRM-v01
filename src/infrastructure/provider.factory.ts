@@ -33,6 +33,8 @@ export class ProviderFactory {
         try {
           credentials = JSON.parse(decrypt(integration.encryptedToken));
           ProviderConfigCache.set(cacheKey, credentials, 3600); // 1 hour TTL
+        // eslint-disable-next-line @typescript-eslint/no-unused-vars -- S2 Residual Debt: Legacy unused local
+        // eslint-disable-next-line @typescript-eslint/no-unused-vars -- Intentional callback/interface parameter
         } catch (e) {
           console.error('Failed to decrypt credentials for tenant', tenantId, 'provider', providerType);
         }

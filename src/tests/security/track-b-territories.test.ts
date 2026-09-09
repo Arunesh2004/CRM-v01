@@ -79,9 +79,9 @@ describe('Track B - Territories Security Tests', () => {
   afterAll(async () => {
     await executeAsSystem(SystemOperation.SECURITY_AUDIT, async (tx) => {
       // Temporarily bypass trigger to clean up audit logs for test
-      await tx.$executeRawUnsafe(`ALTER TABLE "AuditLog" DISABLE TRIGGER ALL`);
+      await tx.$executeRawUnsafe(`ALTER TABLE "AuditLog" DISABLE TRIGGER USER`);
       await tx.$executeRawUnsafe(`DELETE FROM "AuditLog" WHERE "tenantId" IN ('${tenantAId}', '${tenantBId}')`);
-      await tx.$executeRawUnsafe(`ALTER TABLE "AuditLog" ENABLE TRIGGER ALL`);
+      await tx.$executeRawUnsafe(`ALTER TABLE "AuditLog" ENABLE TRIGGER USER`);
       
       await tx.userTerritory.deleteMany({ where: { tenantId: { in: [tenantAId, tenantBId] } } });
       await tx.territory.deleteMany({ where: { tenantId: { in: [tenantAId, tenantBId] } } });

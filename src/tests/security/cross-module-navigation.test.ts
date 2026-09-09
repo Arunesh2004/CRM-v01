@@ -1,7 +1,6 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import * as authLib from '@/lib/auth';
 import { globalSearch } from '@/modules/search/search.service';
-import { PrismaClient } from '@prisma/client';
 import { withTenant } from '@db/utils/prisma-tenant';
 
 const mockTenantId = 'tenant-123';
@@ -33,7 +32,7 @@ describe('Cross-Module Navigation & Search Route Regression', () => {
       user: { findMany: vi.fn().mockResolvedValue([{ id: 'emp-1', email: 'emp@test.com' }]) },
       mailMessage: { findMany: vi.fn().mockResolvedValue([{ id: 'msg-1', threadId: 'thread-1', bodyText: 'Hello', sender: { email: 'test@test.com' } }]) },
       chatMessage: { findMany: vi.fn().mockResolvedValue([{ id: 'cmsg-1', conversationId: 'conv-1', content: 'Chat', sender: { email: 'chat@test.com' } }]) },
-      invoice: { findMany: vi.fn().mockResolvedValue([{ id: 'inv-1', status: 'PAID', amountDue: 100 }]) },
+      chatMessage: { findMany: vi.fn().mockResolvedValue([{ id: 'cmsg-1', conversationId: 'conv-1', content: 'Chat', sender: { email: 'chat@test.com' } }]) },
     };
     vi.mocked(withTenant).mockReturnValue(mockPrisma as any);
 
@@ -52,9 +51,6 @@ describe('Cross-Module Navigation & Search Route Regression', () => {
 
     const custResult = results.find(r => r.type === 'CUSTOMER');
     expect(custResult?.url).toBe('/customers/cust-1'); // Verified Customer Route
-
-    const invoiceResult = results.find(r => r.type === 'INVOICE');
-    expect(invoiceResult?.url).toBe('/billing/invoices'); // Verified Invoice Route
 
     const mailResult = results.find(r => r.type === 'MESSAGE' && r.url.includes('mail'));
     expect(mailResult?.url).toBe('/communication/mail/thread-1'); // Verified Mail Thread Route

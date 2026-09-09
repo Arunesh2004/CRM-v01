@@ -5,8 +5,13 @@ export class MockAIProvider implements AIProvider {
   async generateResponse(
     prompt: string,
     tools: AITool[],
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars -- S2 Residual Debt: Legacy unused local
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars -- S2 Residual Debt: Legacy unused local
     systemInstruction?: string,
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars -- S2 Residual Debt: Legacy unused local
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars -- S2 Residual Debt: Legacy unused local
     requestId?: string,
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars -- Intentional unused destructuring exclusion
     history?: {role: 'user'|'assistant', content: string}[]
   ): Promise<AIResponse> {
     Logger.info(`[MOCK AI] Generation requested`, { tools: tools.length, prompt });
@@ -78,7 +83,8 @@ export class MockAIProvider implements AIProvider {
           }
         }
       }
-    } catch (error: any) {
+    } catch (errorRaw: unknown) {
+      const error = errorRaw instanceof Error ? errorRaw : new Error(String(errorRaw));
       Logger.error('[MOCK AI] Tool execution failed', error);
       // Determine if error is an authorization failure (from AIPermissionService)
       if (error.message?.includes('403') || error.message?.includes('Forbidden') || error.message?.includes('unauthorized') || error.message?.includes('denied')) {
@@ -100,9 +106,11 @@ export class MockAIProvider implements AIProvider {
     return { text, ...baseTelemetry };
   }
 
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any -- S2 Residual Debt: External provider boundary lacks strict types
   // ---------------------------------------------------------------------------
   // SUBPHASE B: NEW PROVIDER-NEUTRAL INTERFACE
   // ---------------------------------------------------------------------------
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any -- S2 Residual Debt: External provider boundary lacks strict types
   createSession(aiContext: any): import('./ai-provider.interface').AISession {
     // We treat aiContext as immutable. We freeze it as defense-in-depth, though it's not the real boundary.
     Object.freeze(aiContext);

@@ -3,7 +3,6 @@ import { withServerActionContext } from '@/lib/observability/server-action';
 
 import { createDocument, deleteDocument } from './document.service';
 import { revalidatePath } from 'next/cache';
-import { requireAuthIdentity, requireTenantFromIdentity } from '@/lib/auth';
 import { fileTypeFromBuffer } from 'file-type';
 import path from 'path';
 import { Logger } from '@/lib/logger/logger';
@@ -89,7 +88,8 @@ async function _uploadDocumentAction(formData: FormData) {
     if (taskId) revalidatePath(`/tasks/${taskId}`);
 
     return { success: true };
-  } catch (error: any) {
+  } catch (errorRaw: unknown) {
+    const error = errorRaw instanceof Error ? errorRaw : new Error(String(errorRaw));
     Logger.error('Upload error:', error);
     return { error: error.message || 'Failed to upload document' };
   }
@@ -101,7 +101,8 @@ async function _deleteDocumentAction(id: string, customerId?: string, taskId?: s
     if (customerId) revalidatePath(`/customers/${customerId}`);
     if (taskId) revalidatePath(`/tasks/${taskId}`);
     return { success: true };
-  } catch (error: any) {
+  } catch (errorRaw: unknown) {
+    const error = errorRaw instanceof Error ? errorRaw : new Error(String(errorRaw));
     Logger.error('Delete error:', error);
     return { error: error.message || 'Failed to delete document' };
   }

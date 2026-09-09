@@ -1,5 +1,4 @@
 import { describe, it, expect, beforeAll, afterAll } from 'vitest';
-import globalPrisma from '@db/utils/prisma';
 import { executeAsSystem, SystemOperation } from '@db/utils/prisma-system';
 import { withJobContext } from '@/lib/queue/worker';
 import { SecureJobEnvelope } from '@/lib/queue/types';

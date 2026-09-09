@@ -1,7 +1,6 @@
 import { auth, clerkClient } from '@clerk/nextjs/server';
-import prisma from '@db/utils/prisma';
 import { Action, Resource } from '@prisma/client';
-import { ensureUserProvisioned, synchronizeClerkIdentity } from '@/modules/auth/services/provisioning.service';
+import { synchronizeClerkIdentity } from '@/modules/auth/services/provisioning.service';
 import { Logger } from '@/lib/observability/logger';
 import { headers } from 'next/headers';
 import jwt from 'jsonwebtoken';
@@ -112,6 +111,8 @@ export const getCurrentUser = cache(async function getCurrentUser() {
 
   if (redis) {
     const cached = await redis.get(`user:${clerkId}`);
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any -- S2 Residual Debt: Legacy internal payload requires architectural typing
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any -- S2 Residual Debt: Legacy internal payload requires architectural typing
     if (cached) return cached as any;
   }
 
@@ -203,7 +204,9 @@ async function ensureUserProvisionedFromClerk(clerkId: string) {
 }
 
 export async function requireAuth() {
-  let user = await getCurrentUser();
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars -- S2 Residual Debt: Legacy unused local
+  const user = await getCurrentUser();
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars -- S2 Residual Debt: Legacy unused local
   const clerkAuth = await auth();
   
   if (!user) {

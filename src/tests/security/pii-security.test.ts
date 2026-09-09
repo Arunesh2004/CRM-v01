@@ -1,7 +1,6 @@
 import { describe, it, expect, beforeAll, afterAll } from 'vitest';
 import { executeAsSystem, SystemOperation } from '../../../database/utils/prisma-system';
 import { FieldSecurityService } from '../../modules/security/field-security/field-security.service';
-import prisma from '../../../database/utils/prisma';
 import { withTenant } from '../../../database/utils/prisma-tenant';
 import * as crypto from 'crypto';
 

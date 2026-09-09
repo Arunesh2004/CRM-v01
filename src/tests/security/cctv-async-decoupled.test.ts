@@ -1,5 +1,4 @@
 import { describe, it, expect, beforeAll, afterAll, vi } from 'vitest';
-import globalPrisma from '@db/utils/prisma';
 import { executeAsSystem, SystemOperation } from '@db/utils/prisma-system';
 import { outboxWorker } from '@/lib/queue/functions/outbox.worker';
 import { simulateAIEvent } from '@/modules/cctv/camera.service';

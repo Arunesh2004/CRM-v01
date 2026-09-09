@@ -49,7 +49,7 @@ export class RedisRateLimiter implements RateLimiter {
     
     try {
       // Inline import to avoid circular dependencies or early init issues
-      const { getRedisClient } = require('../redis/redis.client');
+      const { getRedisClient } = await import('../redis/redis.client');
       const redis = getRedisClient();
       
       const luaScript = `
@@ -63,7 +63,8 @@ export class RedisRateLimiter implements RateLimiter {
       const env = process.env.VERCEL_ENV || process.env.NODE_ENV || 'development';
       const currentRaw = await redis.eval(luaScript, 1, `ratelimit:v2:${env}:${identifier}`, windowMs);
       return Number(currentRaw) <= limit;
-    } catch (e: any) {
+    } catch (eRaw: unknown) {
+      const e = eRaw instanceof Error ? eRaw : new Error(String(eRaw));
       const safeMsg = e?.message?.replace(/redis:\/\/[^@]+@/, 'redis://***@');
       Logger.warn('Redis Rate Limiter Error (message sanitized)', { safeMsg });
       // Fail open if Redis is down, or implement memory fallback here

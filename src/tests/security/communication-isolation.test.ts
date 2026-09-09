@@ -1,8 +1,7 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import prisma from '@db/utils/prisma';
 import { withTenant } from '@db/utils/prisma-tenant';
 import * as authLib from '@/lib/auth';
-import { sendEmailAction, sendMessageAction } from '@/app/(crm)/customers/[id]/actions';
+import { sendEmailAction } from '@/app/(crm)/customers/[id]/actions';
 import { getCustomerTimelineAction } from '@/modules/crm/actions/customer.actions';
 import { globalSearch } from '@/modules/search/search.service';
 

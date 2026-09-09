@@ -1,5 +1,4 @@
 import { describe, it, expect } from 'vitest';
-import prisma from '../../../database/utils/prisma';
 import crypto from 'crypto';
 import { executeAsSystem, SystemOperation } from '../../../database/utils/prisma-system';
 import { BackupSchedulerService } from '../../modules/recovery/scheduler/BackupSchedulerService';

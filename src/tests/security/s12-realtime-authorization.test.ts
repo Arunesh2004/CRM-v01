@@ -3,7 +3,6 @@ import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { NextRequest } from 'next/server';
 import { POST } from '@/app/api/pusher/auth/route';
 import { processOutbox } from '@/modules/core/events/outbox.service';
-import globalPrisma from '@db/utils/prisma';
 import { withTenant } from '@db/utils/prisma-tenant';
 
 // Mock Clerk auth
@@ -20,6 +19,7 @@ vi.mock('@/lib/queue/inngest.client', () => ({
 }));
 
 import { auth } from '@clerk/nextjs/server';
+import { executeAsSystem } from "@db/utils/prisma-system";
 
 describe('Phase S12 - Realtime Authorization \u0026 Pipeline Tests', () => {
   let tenantA: any;
@@ -29,23 +29,23 @@ describe('Phase S12 - Realtime Authorization \u0026 Pipeline Tests', () => {
 
   beforeEach(async () => {
     // Setup Database State
-    tenantA = await globalPrisma.tenant.create({ data: { name: 'Tenant A - S12' } });
-    tenantB = await globalPrisma.tenant.create({ data: { name: 'Tenant B - S12' } });
+    tenantA = await executeAsSystem(SystemOperation.SECURITY_AUDIT, async (tx) => await tx.tenant.create({ data: { name: 'Tenant A - S12' } }));
+    tenantB = await executeAsSystem(SystemOperation.SECURITY_AUDIT, async (tx) => await tx.tenant.create({ data: { name: 'Tenant B - S12' } }));
 
-    userA = await globalPrisma.user.create({
-      data: { email: 'usera_s12@test.com', clerkId: 'clerk_a', tenantId: tenantA.id, status: 'ACTIVE' }
-    });
-    userB = await globalPrisma.user.create({
-      data: { email: 'userb_s12@test.com', clerkId: 'clerk_b', tenantId: tenantB.id, status: 'ACTIVE' }
-    });
+    userA = await executeAsSystem(SystemOperation.SECURITY_AUDIT, async (tx) => await tx.user.create({
+          data: { email: 'usera_s12@test.com', clerkId: 'clerk_a', tenantId: tenantA.id, status: 'ACTIVE' }
+        }));
+    userB = await executeAsSystem(SystemOperation.SECURITY_AUDIT, async (tx) => await tx.user.create({
+          data: { email: 'userb_s12@test.com', clerkId: 'clerk_b', tenantId: tenantB.id, status: 'ACTIVE' }
+        }));
 
     process.env.PUSHER_SECRET = 'test_secret';
     process.env.PUSHER_KEY = 'test_key';
   });
 
   afterEach(async () => {
-    await globalPrisma.user.deleteMany({ where: { id: { in: [userA.id, userB.id] } } });
-    await globalPrisma.tenant.deleteMany({ where: { id: { in: [tenantA.id, tenantB.id] } } });
+    await executeAsSystem(SystemOperation.SECURITY_AUDIT, async (tx) => await tx.user.deleteMany({ where: { id: { in: [userA.id, userB.id] } } })).catch(() => {});
+    await executeAsSystem(SystemOperation.SECURITY_AUDIT, async (tx) => await tx.tenant.deleteMany({ where: { id: { in: [tenantA.id, tenantB.id] } } })).catch(() => {});
     vi.resetAllMocks();
   });
 

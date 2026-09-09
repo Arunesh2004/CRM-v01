@@ -1,6 +1,5 @@
 import { Logger } from '@/lib/logger/logger';
-import { withTenant, withTenantTransaction } from '@db/utils/prisma-tenant';
-import prisma from '../../../../database/utils/prisma';
+import { withTenant } from '@db/utils/prisma-tenant';
 import { TokenUsage } from '../providers/ai-provider.interface';
 
 export class AIObservabilityService {
@@ -35,6 +34,8 @@ export class AIObservabilityService {
         }
       });
     } catch (error) {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any -- S2 Residual Debt: Legacy internal payload requires architectural typing
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any -- S2 Residual Debt: Legacy internal payload requires architectural typing
       Logger.error('Failed to track AI token usage', { error: (error as any).message });
       // We don't throw here to avoid failing the primary business logic just because observability failed
     }

@@ -1,4 +1,3 @@
-import http from 'http';
 
 const CONCURRENCY_LEVELS = [1, 5, 10, 15];
 const ITERATIONS = 20;

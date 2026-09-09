@@ -1,10 +1,11 @@
-import { withTenant, withTenantTransaction } from '@db/utils/prisma-tenant';
-import prisma from '@db/utils/prisma';
+import { withTenant } from '@db/utils/prisma-tenant';
 import { redis } from '@/lib/cache/redis.client';
 
 export async function getTenantConfig(tenantId: string) {
   if (redis) {
     const cached = await redis.get(`tenant:${tenantId}`);
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any -- S2 Residual Debt: Legacy internal payload requires architectural typing
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any -- S2 Residual Debt: Legacy internal payload requires architectural typing
     if (cached) return cached as any;
   }
 

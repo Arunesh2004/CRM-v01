@@ -1,5 +1,4 @@
-import { requireTenant, requireAuthIdentity, requirePermissionFast, requireTenantFromIdentity } from '@/lib/auth';
-import prisma from '@db/utils/prisma';
+import { requireAuthIdentity, requirePermissionFast, requireTenantFromIdentity } from '@/lib/auth';
 import { withTenant } from '@db/utils/prisma-tenant';
 import { ProviderFactory } from '../../../infrastructure/provider.factory';
 import { StorageProvider } from '../../../infrastructure/storage/storage.interface';

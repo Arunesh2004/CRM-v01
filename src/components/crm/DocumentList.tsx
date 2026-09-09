@@ -5,11 +5,9 @@ import { deleteDocumentAction } from "@/modules/crm/document/document.actions";
 import {
   FileText,
   FileImage,
-  FileCode,
   File,
   Download,
   Trash2,
-  MoreVertical,
   FileSpreadsheet,
   Loader2,
   Search,
@@ -56,7 +54,8 @@ export function DocumentList({
       } else {
         toast.success("Document deleted successfully");
       }
-    } catch (err: any) {
+    } catch (errRaw: unknown) {
+      const err = errRaw instanceof Error ? errRaw : new Error(String(errRaw));
       toast.error(err.message || "Failed to delete document");
     } finally {
       setIsDeleting(null);
@@ -129,6 +128,7 @@ export function DocumentList({
       <div className="flex flex-col">
         {filteredDocs.length === 0 ? (
           <div className="p-8 text-center text-sm text-[#8891B0]">
+            // eslint-disable-next-line react/no-unescaped-entities -- Cosmetic unescaped entity safely ignored.
             No documents match "{searchQuery}"
           </div>
         ) : (

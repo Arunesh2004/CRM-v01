@@ -14,7 +14,8 @@ async function _createDepartmentAction(formData: FormData) {
     await createDepartment(name, description);
     revalidatePath('/departments');
     return { success: true };
-  } catch (error: any) {
+  } catch (errorRaw: unknown) {
+    const error = errorRaw instanceof Error ? errorRaw : new Error(String(errorRaw));
     return { error: error.message || 'Failed to create department' };
   }
 }
@@ -31,7 +32,8 @@ async function _updateDepartmentAction(formData: FormData) {
     await updateDepartment(departmentId, name, description);
     revalidatePath('/departments');
     return { success: true };
-  } catch (error: any) {
+  } catch (errorRaw: unknown) {
+    const error = errorRaw instanceof Error ? errorRaw : new Error(String(errorRaw));
     return { error: error.message || 'Failed to update department' };
   }
 }
@@ -42,7 +44,8 @@ async function _deleteDepartmentAction(departmentId: string) {
     await deleteDepartment(departmentId);
     revalidatePath('/departments');
     return { success: true };
-  } catch (error: any) {
+  } catch (errorRaw: unknown) {
+    const error = errorRaw instanceof Error ? errorRaw : new Error(String(errorRaw));
     return { error: error.message || 'Failed to delete department' };
   }
 }

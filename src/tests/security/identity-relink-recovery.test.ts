@@ -4,7 +4,7 @@
  * Tests ALL guard conditions for scripts/recover-demo-admin-identity.ts.
  * Uses mocked DB and Clerk state — NEVER touches Production.
  */
-import { describe, it, expect, vi, beforeEach, afterAll } from 'vitest';
+import { describe, it, expect, vi, beforeEach, afterEach, afterAll } from 'vitest';
 import { executeAsSystem, SystemOperation } from '@db/utils/prisma-system';
 import { ensureUserProvisioned, synchronizeClerkIdentity } from '@/modules/auth/services/provisioning.service';
 
@@ -45,13 +45,22 @@ describe('S16.1A.2M.16.2R — Identity Guard: synchronizeClerkIdentity', () => {
         data: {
           email: EXPECTED_OLD_EMAIL,
           clerkId: EXPECTED_OLD_CLERK_ID,
+          firstName: 'Demo Admin',
           status: 'ACTIVE',
           tenantId: testTenantId,
-          name: 'Demo Admin',
         }
       });
       testCrmUserId = user.id;
       await tx.userRole.create({ data: { userId: testCrmUserId, roleId: testRole.id, tenantId: testTenantId } });
+    });
+  });
+
+  afterEach(async () => {
+    await executeAsSystem(SystemOperation.SECURITY_AUDIT, async (tx) => {
+      await tx.userRole.deleteMany({ where: { userId: testCrmUserId } }).catch(() => {});
+      await tx.user.deleteMany({ where: { id: testCrmUserId } }).catch(() => {});
+      await tx.role.deleteMany({ where: { tenantId: testTenantId } }).catch(() => {});
+      await tx.tenant.deleteMany({ where: { id: testTenantId } }).catch(() => {});
     });
   });
 
@@ -218,7 +227,6 @@ describe('S16.1A.2M.16.2R — Identity Guard: synchronizeClerkIdentity', () => {
     expect(result).not.toBeNull();
     expect(result!.id).toBe(testCrmUserId);
   });
-});
 });
 
 // ──────────────────────────────────────────────────────────────────────────────

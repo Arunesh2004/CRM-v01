@@ -1,6 +1,6 @@
 import { requireAuth, requireTenant, requirePermission } from '@/lib/auth';
 import { withTenant } from '@db/utils/prisma-tenant';
-import { UnifiedTimelineItem, UnifiedTimelineType } from '../crm.types';
+import { UnifiedTimelineItem } from '../crm.types';
 
 export async function getCustomerTimeline({
   customerId,

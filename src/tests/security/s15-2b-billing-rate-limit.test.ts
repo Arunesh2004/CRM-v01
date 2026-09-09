@@ -1,4 +1,4 @@
-import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
+import { describe, it, expect, vi } from 'vitest';
 import { NextRequest } from 'next/server';
 // We must mock the redis client BEFORE importing proxy
 vi.mock('../../lib/cache/redis.client', () => {

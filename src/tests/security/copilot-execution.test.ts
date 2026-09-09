@@ -1,4 +1,4 @@
-import { describe, it, expect, vi, beforeAll, afterAll } from 'vitest';
+import { describe, it, expect, vi, beforeAll } from 'vitest';
 import { executeAsSystem, SystemOperation } from '../../../database/utils/prisma-system';
 import * as crypto from 'crypto';
 import prisma from '@db/utils/prisma';
@@ -56,7 +56,7 @@ describe('Phase 10.5-E Copilot Execution Security', () => {
       expect(res).toHaveProperty('_type', 'PENDING_CONFIRMATION');
       expect(res).toHaveProperty('executionId');
 
-      const execution = await prisma.aIExecution.findUnique({ where: { id: res.executionId } });
+      const execution = await executeAsSystem(SystemOperation.SECURITY_AUDIT, async (tx) => await tx.aIExecution.findUnique({ where: { id: res.executionId } }));
       expect(execution?.status).toBe('PENDING');
       expect(execution?.toolId).toBe(toolId);
     });
@@ -82,9 +82,9 @@ describe('Phase 10.5-E Copilot Execution Security', () => {
   describe('Security Boundaries (The 32-case equivalents)', () => {
     it('must reject execution mutation if AIExecution is not PENDING', async () => {
       const executionId = crypto.randomUUID();
-      await prisma.aIExecution.create({
-        data: { id: executionId, tenantId, userId, toolId, status: 'REJECTED', input: '{}' }
-      });
+      await executeAsSystem(SystemOperation.SECURITY_AUDIT, async (tx) => await tx.aIExecution.create({
+                data: { id: executionId, tenantId, userId, toolId, status: 'REJECTED', input: '{}' }
+              }));
 
       const claimed = await prisma.$executeRaw`
         UPDATE "AIExecution" SET "status" = 'IN_PROGRESS'
@@ -95,9 +95,9 @@ describe('Phase 10.5-E Copilot Execution Security', () => {
 
     it('must enforce tenant isolation on execution claim', async () => {
       const executionId = crypto.randomUUID();
-      await prisma.aIExecution.create({
-        data: { id: executionId, tenantId, userId, toolId, status: 'PENDING', input: '{}' }
-      });
+      await executeAsSystem(SystemOperation.SECURITY_AUDIT, async (tx) => await tx.aIExecution.create({
+                data: { id: executionId, tenantId, userId, toolId, status: 'PENDING', input: '{}' }
+              }));
 
       const fakeTenantId = crypto.randomUUID();
       const claimed = await prisma.$executeRaw`

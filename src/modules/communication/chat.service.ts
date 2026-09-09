@@ -62,6 +62,8 @@ export class ChatService {
    * Verifies the sender is a participant in the conversation before creating the message.
    * All queries use withTenant(tenantId) to enforce RLS at the database level.
    */
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any -- S2 Residual Debt: Legacy internal payload requires architectural typing
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any -- S2 Residual Debt: Legacy internal payload requires architectural typing
   static async sendMessage(tenantId: string, conversationId: string, senderId: string, content: string, metadata?: any) {
     const prisma = withTenant(tenantId);
 

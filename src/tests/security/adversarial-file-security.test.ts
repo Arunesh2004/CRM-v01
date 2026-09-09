@@ -1,7 +1,6 @@
 import { describe, it, expect, vi } from 'vitest';
 import { executeAsSystem, SystemOperation } from '../../../database/utils/prisma-system';
 import { createDocument } from '../../modules/crm/document/document.service';
-import crypto from 'crypto';
 
 const { userId, tenantId, customerId } = vi.hoisted(() => {
   const crypto = require('crypto');

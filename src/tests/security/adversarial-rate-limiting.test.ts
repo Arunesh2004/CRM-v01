@@ -1,13 +1,27 @@
-import { describe, it, expect, beforeEach } from 'vitest';
+import { describe, it, expect, beforeEach, vi } from 'vitest';
 import { DistributedRateLimiter } from '../../lib/rate-limit/rate-limiter';
+import * as redisClient from '../../lib/redis/redis.client';
 import crypto from 'crypto';
 
 describe('Adversarial Rate Limiting (Stage 7)', () => {
+  beforeEach(() => {
+    vi.restoreAllMocks();
+  });
+
   it('ATTACK: Attempt to bypass rate limiting limits', async () => {
     const tenantId = crypto.randomUUID();
     const userId = crypto.randomUUID();
     const limit = 5; // max 5 requests
     const windowSecs = 60; // 1 minute
+
+    const store = new Map<string, number>();
+    vi.spyOn(redisClient, 'getRedisClient').mockReturnValue({
+      eval: async (script: string, numKeys: number, key: string, arg1: any) => {
+        const count = (store.get(key) || 0) + 1;
+        store.set(key, count);
+        return count;
+      }
+    } as any);
 
     // We will spam the rate limiter with 10 requests. 
     // The first 5 should be accepted (isAllowed: true), the next 5 should be blocked (isAllowed: false).
@@ -43,6 +57,15 @@ describe('Adversarial Rate Limiting (Stage 7)', () => {
     const userId = crypto.randomUUID();
     const limit = 10;
     const windowSecs = 60;
+    
+    const store = new Map<string, number>();
+    vi.spyOn(redisClient, 'getRedisClient').mockReturnValue({
+      eval: async (script: string, numKeys: number, key: string, arg1: any) => {
+        const count = (store.get(key) || 0) + 1;
+        store.set(key, count);
+        return count;
+      }
+    } as any);
     
     // Fire 50 concurrent requests
     const promises = [];

@@ -1,6 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import * as crypto from 'crypto';
-import prisma from '../../../database/utils/prisma';
 import { requireAuth, requireTenant, requirePermission } from '../../lib/auth';
 import { createCamera, setCameraCredentials } from '../../modules/cctv/camera.service';
 import { generateStreamToken, deriveOpaquePath } from '../../modules/cctv/stream.service';
@@ -104,13 +103,13 @@ describe('CCTV Concurrency & Rotation Tests (Phase C10.5)', () => {
     );
 
     // Verify database version was incremented
-    const updatedCamera = await prisma.camera.findUnique({ where: { id: camera.id } });
+    const updatedCamera = await executeAsSystem(SystemOperation.SECURITY_AUDIT, async (tx) => await tx.camera.findUnique({ where: { id: camera.id } }));
     expect(updatedCamera!.streamVersion).toBe(1);
 
     // Verify durable invalidation outbox was created
-    const outbox = await prisma.cameraStreamInvalidation.findFirst({
-      where: { cameraId: camera.id, streamVersion: initialStreamVersion }
-    });
+    const outbox = await executeAsSystem(SystemOperation.SECURITY_AUDIT, async (tx) => await tx.cameraStreamInvalidation.findFirst({
+          where: { cameraId: camera.id, streamVersion: initialStreamVersion }
+        }));
     expect(outbox).not.toBeNull();
     expect(outbox!.opaquePath).toBe(expectedInitialPath);
 
@@ -193,13 +192,13 @@ describe('CCTV Concurrency & Rotation Tests (Phase C10.5)', () => {
 
     // 5. Verify camera is soft-deleted (deletedAt set), outbox survives, new stream connections rejected
     // Note: deleteCamera uses soft-delete — row remains with deletedAt set, not hard-deleted.
-    const deletedCamera = await prisma.camera.findUnique({ where: { id: camera.id } });
+    const deletedCamera = await executeAsSystem(SystemOperation.SECURITY_AUDIT, async (tx) => await tx.camera.findUnique({ where: { id: camera.id } }));
     expect(deletedCamera).not.toBeNull();
     expect(deletedCamera!.deletedAt).not.toBeNull();
 
-    const outbox = await prisma.cameraStreamInvalidation.findFirst({
-      where: { cameraId: camera.id, streamVersion: initialStreamVersion }
-    });
+    const outbox = await executeAsSystem(SystemOperation.SECURITY_AUDIT, async (tx) => await tx.cameraStreamInvalidation.findFirst({
+          where: { cameraId: camera.id, streamVersion: initialStreamVersion }
+        }));
     expect(outbox).not.toBeNull();
     expect(outbox!.status).toBe('PENDING');
 
@@ -241,9 +240,9 @@ describe('CCTV Concurrency & Rotation Tests (Phase C10.5)', () => {
     );
 
     // 10. Verify job becomes COMPLETED
-    const updatedOutbox = await prisma.cameraStreamInvalidation.findUnique({
-      where: { id: outbox!.id }
-    });
+    const updatedOutbox = await executeAsSystem(SystemOperation.SECURITY_AUDIT, async (tx) => await tx.cameraStreamInvalidation.findUnique({
+          where: { id: outbox!.id }
+        }));
     expect(updatedOutbox!.status).toBe('COMPLETED');
   });
 });

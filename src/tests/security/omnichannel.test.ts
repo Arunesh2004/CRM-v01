@@ -1,10 +1,8 @@
 import { describe, it, expect, beforeAll, afterAll } from 'vitest';
-import prisma from '../../../database/utils/prisma';
 import { executeAsSystem, SystemOperation } from '../../../database/utils/prisma-system';
 import { withTenant } from '../../../database/utils/prisma-tenant';
 import { TicketService } from '../../modules/support/ticket.service';
 import { SLAService } from '../../modules/support/sla.service';
-import { SecurityEventService } from '../../modules/security-events/security-event.service';
 
 describe('Phase 10.4 - Omni-channel Support - Adversarial Security Tests', () => {
   let tenantA: string;

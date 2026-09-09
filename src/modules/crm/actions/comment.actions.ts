@@ -14,7 +14,8 @@ async function _createCRMCommentAction(
   try {
     const result = await createCRMComment(entityType, entityId, content, parentId);
     return { success: true, data: result };
-  } catch (error: any) {
+  } catch (errorRaw: unknown) {
+    const error = errorRaw instanceof Error ? errorRaw : new Error(String(errorRaw));
     return { success: false, error: sanitizeClientError(error) };
   }
 }
@@ -28,7 +29,8 @@ async function _getCRMCommentsAction(
   try {
     const result = await getCRMComments(entityType, entityId, cursor, limit);
     return { success: true, data: result };
-  } catch (error: any) {
+  } catch (errorRaw: unknown) {
+    const error = errorRaw instanceof Error ? errorRaw : new Error(String(errorRaw));
     return { success: false, error: sanitizeClientError(error) };
   }
 }
@@ -37,7 +39,8 @@ async function _updateCRMCommentAction(commentId: string, content: string) {
   try {
     const result = await updateCRMComment(commentId, content);
     return { success: true, data: result };
-  } catch (error: any) {
+  } catch (errorRaw: unknown) {
+    const error = errorRaw instanceof Error ? errorRaw : new Error(String(errorRaw));
     return { success: false, error: sanitizeClientError(error) };
   }
 }
@@ -46,7 +49,8 @@ async function _deleteCRMCommentAction(commentId: string) {
   try {
     const result = await deleteCRMComment(commentId);
     return { success: true, data: result };
-  } catch (error: any) {
+  } catch (errorRaw: unknown) {
+    const error = errorRaw instanceof Error ? errorRaw : new Error(String(errorRaw));
     return { success: false, error: sanitizeClientError(error) };
   }
 }

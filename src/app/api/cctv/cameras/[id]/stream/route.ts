@@ -22,7 +22,8 @@ const original_GET = async function (req: NextRequest,
         'Pragma': 'no-cache'
       }
     });
-  } catch (error: any) {
+  } catch (errorRaw: unknown) {
+    const error = errorRaw instanceof Error ? errorRaw : new Error(String(errorRaw));
     Logger.error('[Stream API] Error generating stream token:', error);
     if (error.message === 'CCTV module is disabled') {
       return NextResponse.json({ error: 'Service Unavailable', message: 'CCTV features are currently disabled.' }, { status: 503 });

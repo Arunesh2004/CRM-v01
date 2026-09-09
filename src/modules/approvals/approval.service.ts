@@ -69,6 +69,8 @@ export class ApprovalService {
       const tx = await withTenantTransaction(baseTx, tenantId);
       // 1. Fetch step and lock the row using a raw query for FOR UPDATE (or rely on Prisma's sequential serializability if applicable, but explicit locking is safer).
       // Prisma doesn't support SELECT FOR UPDATE directly on generic queries without $queryRaw.
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any -- S2 Residual Debt: Legacy internal payload requires architectural typing
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any -- S2 Residual Debt: Legacy internal payload requires architectural typing
       const lockedStep = await tx.$queryRaw<any[]>`
         SELECT id, "status", "approvalRequestId", "approverId", "approverRoleId"
         FROM "ApprovalStep"

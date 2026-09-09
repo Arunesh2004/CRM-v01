@@ -1,6 +1,7 @@
 import { describe, it, expect, beforeAll, afterAll } from 'vitest';
 import { PrismaClient, Prisma } from '@prisma/client';
 import { randomUUID } from 'crypto';
+import { executeAsSystem, SystemOperation } from "@db/utils/prisma-system";
 
 const prisma = new PrismaClient();
 
@@ -11,49 +12,49 @@ describe('Phase 10.5-D Workflow Schema Invariants', () => {
 
   beforeAll(async () => {
     tenantId = randomUUID();
-    await prisma.tenant.create({
-      data: {
-        id: tenantId,
-        name: 'Workflow Schema Test Tenant',
-      }
-    });
+    await executeAsSystem(SystemOperation.SECURITY_AUDIT, async (tx) => await tx.tenant.create({
+            data: {
+              id: tenantId,
+              name: 'Workflow Schema Test Tenant',
+            }
+          }));
 
-    const admin = await prisma.user.create({
-      data: {
-        id: randomUUID(),
-        email: `admin-${Date.now()}@test.com`,
-        tenantId,
-      }
-    });
+    const admin = await executeAsSystem(SystemOperation.SECURITY_AUDIT, async (tx) => await tx.user.create({
+          data: {
+            id: randomUUID(),
+            email: `admin-${Date.now()}@test.com`,
+            tenantId,
+          }
+        }));
     adminId = admin.id;
 
-    const normal = await prisma.user.create({
-      data: {
-        id: randomUUID(),
-        email: `user-${Date.now()}@test.com`,
-        tenantId,
-      }
-    });
+    const normal = await executeAsSystem(SystemOperation.SECURITY_AUDIT, async (tx) => await tx.user.create({
+          data: {
+            id: randomUUID(),
+            email: `user-${Date.now()}@test.com`,
+            tenantId,
+          }
+        }));
     normalUserId = normal.id;
   });
 
   afterAll(async () => {
-    await prisma.workflowExecution.deleteMany({ where: { tenantId } });
-    await prisma.workflow.deleteMany({ where: { tenantId } });
-    await prisma.user.deleteMany({ where: { tenantId } });
-    await prisma.tenant.delete({ where: { id: tenantId } });
+    await executeAsSystem(SystemOperation.SECURITY_AUDIT, async (tx) => await tx.workflowExecution.deleteMany({ where: { tenantId } })).catch(() => {});
+    await executeAsSystem(SystemOperation.SECURITY_AUDIT, async (tx) => await tx.workflow.deleteMany({ where: { tenantId } })).catch(() => {});
+    await executeAsSystem(SystemOperation.SECURITY_AUDIT, async (tx) => await tx.user.deleteMany({ where: { tenantId } })).catch(() => {});
+    await executeAsSystem(SystemOperation.SECURITY_AUDIT, async (tx) => await tx.tenant.delete({ where: { id: tenantId } })).catch(() => {});
     await prisma.$disconnect();
   });
 
   it('allows creating a workflow with a valid createdById', async () => {
-    const wf = await prisma.workflow.create({
-      data: {
-        id: randomUUID(),
-        tenantId,
-        name: 'Valid Workflow',
-        createdById: adminId,
-      }
-    });
+    const wf = await executeAsSystem(SystemOperation.SECURITY_AUDIT, async (tx) => await tx.workflow.create({
+          data: {
+            id: randomUUID(),
+            tenantId,
+            name: 'Valid Workflow',
+            createdById: adminId,
+          }
+        }));
     expect(wf.id).toBeDefined();
     expect(wf.createdById).toBe(adminId);
   });
@@ -65,85 +66,85 @@ describe('Phase 10.5-D Workflow Schema Invariants', () => {
   });
 
   it('allows initiatedById to be NULL for scheduled executions', async () => {
-    const wf = await prisma.workflow.create({
-      data: {
-        id: randomUUID(),
-        tenantId,
-        name: 'Scheduled Workflow',
-        createdById: adminId,
-      }
-    });
+    const wf = await executeAsSystem(SystemOperation.SECURITY_AUDIT, async (tx) => await tx.workflow.create({
+          data: {
+            id: randomUUID(),
+            tenantId,
+            name: 'Scheduled Workflow',
+            createdById: adminId,
+          }
+        }));
 
-    const exec = await prisma.workflowExecution.create({
-      data: {
-        id: randomUUID(),
-        tenantId,
-        workflowId: wf.id,
-        // initiatedById is implicitly NULL
-      }
-    });
+    const exec = await executeAsSystem(SystemOperation.SECURITY_AUDIT, async (tx) => await tx.workflowExecution.create({
+          data: {
+            id: randomUUID(),
+            tenantId,
+            workflowId: wf.id,
+            // initiatedById is implicitly NULL
+          }
+        }));
 
     expect(exec.id).toBeDefined();
     expect(exec.initiatedById).toBeNull();
   });
 
   it('sets initiatedById to NULL if the initiator user is deleted', async () => {
-    const wf = await prisma.workflow.create({
-      data: {
-        id: randomUUID(),
-        tenantId,
-        name: 'Manual Workflow',
-        createdById: adminId,
-      }
-    });
+    const wf = await executeAsSystem(SystemOperation.SECURITY_AUDIT, async (tx) => await tx.workflow.create({
+          data: {
+            id: randomUUID(),
+            tenantId,
+            name: 'Manual Workflow',
+            createdById: adminId,
+          }
+        }));
 
-    const tempUser = await prisma.user.create({
-      data: {
-        id: randomUUID(),
-        email: `temp-${Date.now()}@test.com`,
-        tenantId,
-      }
-    });
+    const tempUser = await executeAsSystem(SystemOperation.SECURITY_AUDIT, async (tx) => await tx.user.create({
+          data: {
+            id: randomUUID(),
+            email: `temp-${Date.now()}@test.com`,
+            tenantId,
+          }
+        }));
 
-    const exec = await prisma.workflowExecution.create({
-      data: {
-        id: randomUUID(),
-        tenantId,
-        workflowId: wf.id,
-        initiatedById: tempUser.id,
-      }
-    });
+    const exec = await executeAsSystem(SystemOperation.SECURITY_AUDIT, async (tx) => await tx.workflowExecution.create({
+          data: {
+            id: randomUUID(),
+            tenantId,
+            workflowId: wf.id,
+            initiatedById: tempUser.id,
+          }
+        }));
 
     expect(exec.initiatedById).toBe(tempUser.id);
 
     // Hard delete user
-    await prisma.user.delete({ where: { id: tempUser.id } });
+    await executeAsSystem(SystemOperation.SECURITY_AUDIT, async (tx) => await tx.user.delete({ where: { id: tempUser.id } })).catch(() => {});
 
     // Fetch execution again
-    const updatedExec = await prisma.workflowExecution.findUnique({
-      where: { id: exec.id }
-    });
+    const updatedExec = await executeAsSystem(SystemOperation.SECURITY_AUDIT, async (tx) => await tx.workflowExecution.findUnique({
+          where: { id: exec.id }
+        }));
 
     expect(updatedExec?.initiatedById).toBeNull();
   });
 
   it('restricts deleting a user who is a workflow creator (onDelete: Restrict)', async () => {
-    const essentialUser = await prisma.user.create({
-      data: {
-        id: randomUUID(),
-        email: `creator-${Date.now()}@test.com`,
-        tenantId,
-      }
-    });
+    const essentialUser = await executeAsSystem(SystemOperation.SECURITY_AUDIT, async (tx) => await tx.user.create({
+          data: {
+            id: randomUUID(),
+            email: `creator-${Date.now()}@test.com`,
+            tenantId,
+          }
+        }));
 
-    await prisma.workflow.create({
-      data: {
-        id: randomUUID(),
-        tenantId,
-        name: 'Critical Workflow',
-        createdById: essentialUser.id,
-      }
-    });
+    await executeAsSystem(SystemOperation.SECURITY_AUDIT, async (tx) => await tx.workflow.create({
+            data: {
+              id: randomUUID(),
+              tenantId,
+              name: 'Critical Workflow',
+              createdById: essentialUser.id,
+            }
+          }));
 
     await expect(
       prisma.user.delete({ where: { id: essentialUser.id } })

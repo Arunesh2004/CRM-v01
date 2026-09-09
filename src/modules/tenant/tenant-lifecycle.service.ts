@@ -1,5 +1,4 @@
-import { withTenant, withTenantTransaction } from '@db/utils/prisma-tenant';
-import prisma from '@db/utils/prisma';
+import { withTenant } from '@db/utils/prisma-tenant';
 import { requireAuth } from '@/lib/auth';
 import { invalidateTenantCache } from '@/modules/tenant/tenant.service';
 

@@ -1,7 +1,6 @@
 import { describe, it, expect, beforeAll, afterAll } from 'vitest';
 import { executeAsSystem, SystemOperation } from '../../../database/utils/prisma-system';
 import { checkPermissionFast, requirePermissionFast } from '../../lib/auth';
-import prisma from '../../../database/utils/prisma';
 import * as crypto from 'crypto';
 
 describe('RBAC Privilege Escalation Security Tests', () => {

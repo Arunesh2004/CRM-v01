@@ -1,12 +1,11 @@
-import { describe, it, expect, beforeAll, afterAll, vi, beforeEach } from 'vitest';
+import { describe, it, expect, beforeAll, vi, beforeEach } from 'vitest';
 import * as crypto from 'crypto';
-import prisma from '../../../database/utils/prisma';
 import { withTenant } from '../../../database/utils/prisma-tenant';
 import { executeAsSystem, SystemOperation } from '../../../database/utils/prisma-system';
 import { encrypt, decrypt } from '../../lib/encryption';
 import { requireAuth, requireTenant, requirePermission } from '../../lib/auth';
-import { createCamera, updateCamera, getCameraById, getCameras, setCameraCredentials } from '../../modules/cctv/camera.service';
-import { CameraProtocol, CameraStatus } from '@prisma/client';
+import { createCamera, getCameraById, setCameraCredentials } from '../../modules/cctv/camera.service';
+import { CameraProtocol } from '@prisma/client';
 
 vi.mock('../../lib/auth', () => ({
   requireAuth: vi.fn(),

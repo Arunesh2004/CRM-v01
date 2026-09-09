@@ -1,6 +1,5 @@
 import { requireAuth, requireTenant, requirePermission } from '@/lib/auth';
 import { withTenant } from '@db/utils/prisma-tenant';
-import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/Card';
 import { Badge } from '@/components/ui/Badge';
 import { ShieldAlert, User, Activity, Clock } from 'lucide-react';
 import { format } from 'date-fns';
@@ -17,6 +16,8 @@ export default async function AuditLogsPage(props: {
   const prisma = withTenant(tenantId);
   const actionFilter = typeof searchParams.action === 'string' ? searchParams.action : undefined;
   
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any -- S2 Residual Debt: Legacy internal payload requires architectural typing
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any -- S2 Residual Debt: Legacy internal payload requires architectural typing
   const where: any = { tenantId };
   if (actionFilter) {
     where.action = actionFilter;

@@ -44,8 +44,9 @@ export class DistributedRateLimiter {
       }
 
       return { allowed, remaining };
-    } catch (err: any) {
-      Logger.error('Redis Rate Limiter Failed', err instanceof Error ? err : new Error(String(err?.message ?? 'unknown')), { event: 'REDIS_FAILURE', fallback: true, failureMode });
+    } catch (errRaw: unknown) {
+      const err = errRaw instanceof Error ? errRaw : new Error(String(errRaw));
+      Logger.error('Redis Rate Limiter Failed', err, { event: 'REDIS_FAILURE', fallback: true, failureMode });
       
       if (failureMode === 'fail-closed') {
         return { allowed: false, remaining: 0 };

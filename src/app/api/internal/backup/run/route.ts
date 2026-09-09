@@ -44,7 +44,8 @@ const _orig_POST = async function (request: Request) {
     scheduler.triggerBackupCycle().catch(console.error);
 
     return NextResponse.json({ success: true, message: 'Backup cycle initiated' }, { status: 202 });
-  } catch (error: any) {
+  } catch (errorRaw: unknown) {
+    const error = errorRaw instanceof Error ? errorRaw : new Error(String(errorRaw));
     Logger.error('Backup Trigger API Error:', error);
     return NextResponse.json({ error: 'Internal Server Error' }, { status: 500 });
   }

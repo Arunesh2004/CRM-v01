@@ -13,7 +13,8 @@ async function _getProductsAction() {
     
     const products = await ProductService.getProducts(tenantId, user.id);
     return { success: true, data: products };
-  } catch (error: any) {
+  } catch (errorRaw: unknown) {
+    const error = errorRaw instanceof Error ? errorRaw : new Error(String(errorRaw));
     return { success: false, error: sanitizeClientError(error) };
   }
 }
@@ -25,7 +26,8 @@ async function _createProductAction(data: z.infer<typeof productCreateSchema>) {
     
     const product = await ProductService.createProduct(tenantId, user.id, data);
     return { success: true, data: product };
-  } catch (error: any) {
+  } catch (errorRaw: unknown) {
+    const error = errorRaw instanceof Error ? errorRaw : new Error(String(errorRaw));
     return { success: false, error: sanitizeClientError(error) };
   }
 }
@@ -37,7 +39,8 @@ async function _updateProductAction(productId: string, data: z.infer<typeof prod
     
     const product = await ProductService.updateProduct(tenantId, user.id, productId, data);
     return { success: true, data: product };
-  } catch (error: any) {
+  } catch (errorRaw: unknown) {
+    const error = errorRaw instanceof Error ? errorRaw : new Error(String(errorRaw));
     return { success: false, error: sanitizeClientError(error) };
   }
 }
@@ -49,7 +52,8 @@ async function _deactivateProductAction(productId: string) {
     
     const product = await ProductService.deactivateProduct(tenantId, user.id, productId);
     return { success: true, data: product };
-  } catch (error: any) {
+  } catch (errorRaw: unknown) {
+    const error = errorRaw instanceof Error ? errorRaw : new Error(String(errorRaw));
     return { success: false, error: sanitizeClientError(error) };
   }
 }

@@ -1,7 +1,6 @@
-import { describe, it, expect, beforeAll, afterAll, vi } from 'vitest';
+import { describe, it, expect, beforeAll, afterAll } from 'vitest';
 import { NextRequest } from 'next/server';
 import crypto from 'crypto';
-import twilio from 'twilio';
 import { POST as inboundWebhook } from '../../app/api/webhooks/twilio/inbound/route';
 import { POST as recordingWebhook } from '../../app/api/webhooks/twilio/recording/route';
 import { POST as statusWebhook } from '../../app/api/webhooks/twilio/route';
@@ -24,7 +23,7 @@ describe('PHASE 12.3: Twilio Communication Security', () => {
   const SECRET = 'test_secret_123';
   let victimTenantId: string;
   let callLogId: string;
-  let callSid: string = 'CA_test_call_sid_123';
+  const callSid: string = 'CA_test_call_sid_123';
 
   beforeAll(async () => {
     process.env.TWILIO_WEBHOOK_SECRET = SECRET;

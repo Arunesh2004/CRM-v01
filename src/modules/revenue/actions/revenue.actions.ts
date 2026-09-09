@@ -3,7 +3,7 @@
 import { withServerActionContext } from '@/lib/observability/server-action';
 
 import { sanitizeClientError } from '@/lib/errors/client-safe-error';
-import { requireAuth, requireTenant, requirePermission } from '@/lib/auth';
+import { requireAuth, requireTenant } from '@/lib/auth';
 import { RevenueService } from '../revenue.service';
 
 async function _getQuotesAction() {
@@ -12,7 +12,8 @@ async function _getQuotesAction() {
     const session = await requireAuth();
     const result = await RevenueService.getQuotes(tenantId, session.id);
     return { success: true, data: serializeDecimal(result) };
-  } catch (error: any) {
+  } catch (errorRaw: unknown) {
+    const error = errorRaw instanceof Error ? errorRaw : new Error(String(errorRaw));
     return { success: false, error: sanitizeClientError(error) };
   }
 }
@@ -39,7 +40,8 @@ async function _createQuoteAction(payload: { dealId: string, customerId: string,
     );
     revalidatePath('/quotes');
     return { success: true, data: serializeDecimal(result) };
-  } catch (error: any) {
+  } catch (errorRaw: unknown) {
+    const error = errorRaw instanceof Error ? errorRaw : new Error(String(errorRaw));
     return { success: false, error: sanitizeClientError(error) };
   }
 }
@@ -53,7 +55,8 @@ async function _submitQuoteForApprovalAction(quoteId: string) {
     const result = await RevenueService.submitForApproval(tenantId, session.id, quoteId);
     revalidatePath(`/quotes/${quoteId}`);
     return { success: true, data: serializeDecimal(result) };
-  } catch (error: any) {
+  } catch (errorRaw: unknown) {
+    const error = errorRaw instanceof Error ? errorRaw : new Error(String(errorRaw));
     return { success: false, error: sanitizeClientError(error) };
   }
 }
@@ -67,7 +70,8 @@ async function _approveQuoteAction(quoteId: string) {
     const result = await RevenueService.approveQuote(tenantId, session.id, quoteId);
     revalidatePath(`/quotes/${quoteId}`);
     return { success: true, data: serializeDecimal(result) };
-  } catch (error: any) {
+  } catch (errorRaw: unknown) {
+    const error = errorRaw instanceof Error ? errorRaw : new Error(String(errorRaw));
     return { success: false, error: sanitizeClientError(error) };
   }
 }
@@ -81,7 +85,8 @@ async function _sendQuoteAction(quoteId: string) {
     const result = await RevenueService.sendQuote(tenantId, session.id, quoteId);
     revalidatePath(`/quotes/${quoteId}`);
     return { success: true, data: serializeDecimal(result) };
-  } catch (error: any) {
+  } catch (errorRaw: unknown) {
+    const error = errorRaw instanceof Error ? errorRaw : new Error(String(errorRaw));
     return { success: false, error: sanitizeClientError(error) };
   }
 }
@@ -95,7 +100,8 @@ async function _acceptQuoteAction(quoteId: string) {
     const result = await RevenueService.acceptQuote(tenantId, session.id, quoteId);
     revalidatePath(`/quotes/${quoteId}`);
     return { success: true, data: serializeDecimal(result) };
-  } catch (error: any) {
+  } catch (errorRaw: unknown) {
+    const error = errorRaw instanceof Error ? errorRaw : new Error(String(errorRaw));
     return { success: false, error: sanitizeClientError(error) };
   }
 }

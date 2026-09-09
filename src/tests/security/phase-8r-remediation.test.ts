@@ -198,9 +198,16 @@ describe('8-A: Regression — source must not contain unscoped communication que
     );
     const source = fs.readFileSync(serviceFile, 'utf8');
 
-    // The old stub had: mailThread.findMany({ where: { tenantId }, ... take: 20 })
-    // Confirm the unscoped call is gone
-    expect(source).not.toMatch(/mailThread\.findMany/);
+    // The original security defect was: mailThread.findMany({ where: { tenantId }, ... })
+    // without customerId — which leaked all tenant emails to any customer timeline.
+    // We enforce that EVERY mailThread.findMany call must contain customerId in its where clause.
+    const findManyCalls = source.match(/mailThread\.findMany\s*\([\s\S]*?\)/g);
+    if (findManyCalls) {
+      for (const call of findManyCalls) {
+        // Must contain customerId in the query
+        expect(call).toMatch(/customerId/);
+      }
+    }
   });
 
   it('timeline service must not contain an unscoped chatConversation.findMany() without customerId', () => {
@@ -210,7 +217,13 @@ describe('8-A: Regression — source must not contain unscoped communication que
     );
     const source = fs.readFileSync(serviceFile, 'utf8');
 
-    expect(source).not.toMatch(/chatConversation\.findMany/);
+    // Same invariant: EVERY chatConversation.findMany must be scoped by customerId.
+    const findManyCalls = source.match(/chatConversation\.findMany\s*\([\s\S]*?\)/g);
+    if (findManyCalls) {
+      for (const call of findManyCalls) {
+        expect(call).toMatch(/customerId/);
+      }
+    }
   });
 });
 

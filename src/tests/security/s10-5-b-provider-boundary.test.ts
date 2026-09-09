@@ -4,7 +4,7 @@ import { AIProviderFactory } from '@/lib/providers/ai/ai-provider.factory';
 import { ContextBuilderService, AIContext } from '@/modules/ai/context/context-builder.service';
 import { ToolRegistry } from '@/modules/ai/tools/registry';
 import { AIToolRequest } from '@/lib/providers/ai/ai-provider.interface';
-import prisma from '@db/utils/prisma';
+import { executeAsSystem, SystemOperation } from "@db/utils/prisma-system";
 
 // Mocks
 vi.mock('@/lib/auth', () => ({
@@ -17,9 +17,9 @@ describe('10.5 Subphase B — Provider Boundary Security', () => {
 
   beforeAll(async () => {
     // We assume the DB has the seed tenant from setup
-    const seedUser = await prisma.user.findFirst({
-      include: { tenant: true, userRoles: { include: { role: true } } }
-    });
+    const seedUser = await executeAsSystem(SystemOperation.SECURITY_AUDIT, async (tx) => await tx.user.findFirst({
+          include: { tenant: true, userRoles: { include: { role: true } } }
+        }));
     
     if (!seedUser) throw new Error("Seed DB not available");
     

@@ -1,7 +1,7 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { processCallCompleted } from '@/modules/communication/jobs/call-transcription.worker';
 import { SecureJobEnvelope } from '@/lib/queue/types';
-import prisma from '@db/utils/prisma';
+import { executeAsSystem, SystemOperation } from "@db/utils/prisma-system";
 
 // Mock dependencies to force a transcription failure
 vi.mock('@/lib/providers/ai/gemini.provider', () => {
@@ -29,23 +29,23 @@ describe('S15.1B HIGH Finding: call-transcription DLQ bypass', () => {
   const tenantId = 't-dlq-bypass-test';
 
   beforeEach(async () => {
-    await prisma.deadLetterQueue.deleteMany({ where: { tenantId } });
-    await prisma.callLog.deleteMany({ where: { tenantId } });
-    await prisma.tenant.deleteMany({ where: { id: tenantId } });
+    await executeAsSystem(SystemOperation.SECURITY_AUDIT, async (tx) => await tx.deadLetterQueue.deleteMany({ where: { tenantId } })).catch(() => {});
+    await executeAsSystem(SystemOperation.SECURITY_AUDIT, async (tx) => await tx.callLog.deleteMany({ where: { tenantId } })).catch(() => {});
+    await executeAsSystem(SystemOperation.SECURITY_AUDIT, async (tx) => await tx.tenant.deleteMany({ where: { id: tenantId } })).catch(() => {});
 
-    await prisma.tenant.create({
-      data: { id: tenantId, name: 'Test Tenant DLQ Bypass' }
-    });
+    await executeAsSystem(SystemOperation.SECURITY_AUDIT, async (tx) => await tx.tenant.create({
+            data: { id: tenantId, name: 'Test Tenant DLQ Bypass' }
+          }));
 
-    await prisma.callLog.create({
-      data: {
-        id: 'cl-bypass-test',
-        tenantId,
-        providerCallId: 'sid-bypass-123',
-        status: 'COMPLETED',
-        metadata: { transcriptStatus: 'PENDING' }
-      }
-    });
+    await executeAsSystem(SystemOperation.SECURITY_AUDIT, async (tx) => await tx.callLog.create({
+            data: {
+              id: 'cl-bypass-test',
+              tenantId,
+              providerCallId: 'sid-bypass-123',
+              status: 'COMPLETED',
+              metadata: { transcriptStatus: 'PENDING' }
+            }
+          }));
   });
 
   it('STRONG: MUST NOT manually create a DLQ record but MUST rethrow the error for Inngest to handle', async () => {
@@ -68,9 +68,9 @@ describe('S15.1B HIGH Finding: call-transcription DLQ bypass', () => {
     await expect(processCallCompleted(envelope)).rejects.toThrow('Simulated transcription failure for DLQ bypass test');
 
     // Assert that the manual bypass is gone (no DLQ record should be created internally by processCallCompleted)
-    const dlqRecords = await prisma.deadLetterQueue.findMany({
-      where: { tenantId, jobId: 'job-dlq-bypass' }
-    });
+    const dlqRecords = await executeAsSystem(SystemOperation.SECURITY_AUDIT, async (tx) => await tx.deadLetterQueue.findMany({
+          where: { tenantId, jobId: 'job-dlq-bypass' }
+        }));
 
     expect(dlqRecords.length).toBe(0); // Proves the manual catch block is gone
   });

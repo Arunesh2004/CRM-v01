@@ -1,13 +1,10 @@
-import { SystemOperation } from '@db/utils/prisma-system';
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { generateStreamToken } from '@/modules/cctv/stream.service';
 import { POST as authWebhook } from '@/app/api/webhooks/mediamtx/auth/route';
 import { NextRequest } from 'next/server';
 import jwt from 'jsonwebtoken';
-import { ENV } from '@/lib/config/env';
 import * as auth from '@/lib/auth';
 import globalPrisma from '@db/utils/prisma';
-import crypto from 'crypto';
 
 // Mocks
 vi.mock('@/lib/auth');

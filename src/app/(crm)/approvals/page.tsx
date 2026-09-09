@@ -1,7 +1,6 @@
 import { getApprovalsAction } from '@/modules/revenue/actions/approval.actions';
-import { Badge } from '@/components/ui/Badge';
 import { Card } from '@/components/ui/Card';
-import { FileText, CheckCircle2, Clock, AlertCircle } from 'lucide-react';
+import { CheckCircle2 } from 'lucide-react';
 import Link from 'next/link';
 
 export default async function ApprovalsPage() {
@@ -32,6 +31,8 @@ export default async function ApprovalsPage() {
               </tr>
             </thead>
             <tbody className="divide-y divide-white/[.04]">
+              // eslint-disable-next-line @typescript-eslint/no-explicit-any -- S2 Residual Debt: Legacy internal payload requires architectural typing
+              // eslint-disable-next-line @typescript-eslint/no-explicit-any -- S2 Residual Debt: Legacy internal payload requires architectural typing
               {approvals?.map((quote: any) => (
                 <tr key={quote.id} className="hover:bg-white/[.02] transition-colors group">
                   <td className="px-6 py-4 font-medium text-white">

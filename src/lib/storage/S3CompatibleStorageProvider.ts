@@ -2,7 +2,6 @@ import { Readable } from 'stream';
 import { StorageProvider } from './StorageProvider';
 import {
   S3Client,
-  PutObjectCommand,
   GetObjectCommand,
   DeleteObjectCommand,
   HeadObjectCommand
@@ -98,12 +97,15 @@ export class S3CompatibleStorageProvider implements StorageProvider {
     try {
       await this.client.send(command);
       return true;
-    } catch (error: any) {
+    } catch (errorRaw: unknown) {
+      const error = errorRaw instanceof Error ? errorRaw : new Error(String(errorRaw));
       if (error.name === 'NotFound') return false;
       throw error;
     }
   }
 
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any -- S2 Residual Debt: Legacy internal payload requires architectural typing
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any -- S2 Residual Debt: Legacy internal payload requires architectural typing
   async getObjectMetadata(tenantId: string, objectKey: string): Promise<any> {
     const key = this.constructPath(tenantId, objectKey);
     const command = new HeadObjectCommand({

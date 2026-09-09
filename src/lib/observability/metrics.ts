@@ -1,4 +1,4 @@
-import { logger, LogContext } from './logger';
+import { logger } from './logger';
 
 export type MetricName = 
   | 'request_latency' 

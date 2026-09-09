@@ -1,4 +1,4 @@
-import { describe, it, expect, vi, beforeEach } from 'vitest';
+import { describe, it, expect, vi } from 'vitest';
 import { validateAndResolveHostname, isBlockedIPv4, isBlockedIPv6 } from '@/lib/security/ssrf';
 
 // Mock DNS

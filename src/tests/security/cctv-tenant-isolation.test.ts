@@ -1,5 +1,4 @@
 import { describe, it, expect, beforeAll, afterAll, vi, beforeEach } from 'vitest';
-import globalPrisma from '@db/utils/prisma';
 import { executeAsSystem, SystemOperation } from '@db/utils/prisma-system';
 import * as authLib from '@/lib/auth';
 import { createCamera, getCameraById, updateCamera, deleteCamera, simulateAIEvent } from '@/modules/cctv/camera.service';

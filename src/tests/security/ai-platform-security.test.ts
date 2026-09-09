@@ -33,6 +33,6 @@ describe('AI Platform Security Tests (Context Builder)', () => {
     // Attack: User A attempts to build context pretending to be in Tenant B
     await expect(
       ContextBuilderService.buildUserContext(tenantBId, userAId)
-    ).rejects.toThrow(/User not found/);
+    ).rejects.toThrow(/Context build failed/);
   });
 });

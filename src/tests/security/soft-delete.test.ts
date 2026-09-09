@@ -1,6 +1,6 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { updateCustomer } from '@/modules/crm/customer/customer.service';
-import globalPrisma from '@db/utils/prisma';
+import { executeAsSystem, SystemOperation } from "@db/utils/prisma-system";
 
 const mockAuth = { user: { id: 'test_user_id' }, tenantId: 'test_tenant_id', permission: true };
 
@@ -19,16 +19,16 @@ describe('Soft Delete Vulnerability', () => {
   let customerA: any;
 
   beforeEach(async () => {
-    tenantA = await globalPrisma.tenant.create({ data: { name: 'Tenant A - SoftDel' } });
-    userA = await globalPrisma.user.create({ data: { email: 'user@softdel.com', clerkId: 'c1', tenantId: tenantA.id, status: 'ACTIVE' } });
+    tenantA = await executeAsSystem(SystemOperation.SECURITY_AUDIT, async (tx) => await tx.tenant.create({ data: { name: 'Tenant A - SoftDel' } }));
+    userA = await executeAsSystem(SystemOperation.SECURITY_AUDIT, async (tx) => await tx.user.create({ data: { email: 'user@softdel.com', clerkId: 'c1', tenantId: tenantA.id, status: 'ACTIVE' } }));
     mockAuth.user = userA; mockAuth.tenantId = tenantA.id;
-    customerA = await globalPrisma.customer.create({ data: { tenantId: tenantA.id, name: 'Del Cust', normalizedName: 'del cust', deletedAt: new Date() } });
+    customerA = await executeAsSystem(SystemOperation.SECURITY_AUDIT, async (tx) => await tx.customer.create({ data: { tenantId: tenantA.id, name: 'Del Cust', normalizedName: 'del cust', deletedAt: new Date() } }));
   });
 
   afterEach(async () => {
-    await globalPrisma.customer.deleteMany({});
-    await globalPrisma.user.deleteMany({});
-    await globalPrisma.tenant.deleteMany({});
+    await executeAsSystem(SystemOperation.SECURITY_AUDIT, async (tx) => await tx.customer.deleteMany({})).catch(() => {});
+    await executeAsSystem(SystemOperation.SECURITY_AUDIT, async (tx) => await tx.user.deleteMany({})).catch(() => {});
+    await executeAsSystem(SystemOperation.SECURITY_AUDIT, async (tx) => await tx.tenant.deleteMany({})).catch(() => {});
     vi.resetAllMocks();
   });
 

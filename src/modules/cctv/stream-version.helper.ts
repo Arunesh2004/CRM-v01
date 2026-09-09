@@ -11,6 +11,8 @@ import { ENV } from '@/lib/config/env';
  * 2. Create durable outbox record (CameraStreamInvalidation)
  */
 export async function invalidateCurrentStreamGeneration(
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any -- S2 Residual Debt: Legacy internal payload requires architectural typing
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any -- S2 Residual Debt: Legacy internal payload requires architectural typing
   tx: any, 
   tenantId: string, 
   cameraId: string, 
@@ -49,7 +51,9 @@ export async function attemptImmediateInvalidation(opaquePath: string) {
     const mediamtxUrl = ENV.mediamtxApiUrl;
     await fetch(`${mediamtxUrl}/v3/config/paths/delete/${opaquePath}`, {
       method: 'DELETE'
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars -- Intentional callback/interface parameter
     }).catch(() => {});
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars -- Intentional callback/interface parameter
   } catch (err) {
     // We intentionally swallow errors here. The durable worker handles retry.
   }

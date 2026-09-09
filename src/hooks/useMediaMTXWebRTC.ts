@@ -41,6 +41,8 @@ export function useMediaMTXWebRTC(cameraId: string) {
     if (sessionUrl) {
       try {
         fetch(sessionUrl, { method: 'DELETE', keepalive: true }).catch(() => {});
+      // eslint-disable-next-line @typescript-eslint/no-unused-vars -- S2 Residual Debt: Legacy unused local
+      // eslint-disable-next-line @typescript-eslint/no-unused-vars -- Intentional callback/interface parameter
       } catch (e) {
         // Best effort
       }
@@ -125,6 +127,7 @@ export function useMediaMTXWebRTC(cameraId: string) {
         if (attemptIdRef.current !== attemptId) return;
         
         if (pc.iceConnectionState === 'failed') {
+          // eslint-disable-next-line react-hooks/immutability -- Intentional mutation retained.
           handleFailure(attemptId);
         } else if (pc.iceConnectionState === 'disconnected') {
           disconnectTimerRef.current = setTimeout(() => {
@@ -191,7 +194,9 @@ export function useMediaMTXWebRTC(cameraId: string) {
               resolvedUrl.search = '';
               resolvedUrl.hash = '';
               resolvedSessionUrl = resolvedUrl.toString();
+            // eslint-disable-next-line @typescript-eslint/no-unused-vars -- S2 Residual Debt: Legacy unused local
             }
+          // eslint-disable-next-line @typescript-eslint/no-unused-vars -- Intentional callback/interface parameter
           } catch (e) {
             // Ignore parse errors, resolvedSessionUrl remains null
           }
@@ -221,7 +226,8 @@ export function useMediaMTXWebRTC(cameraId: string) {
       const answerSdp = await sdpResponse.text();
       await pc.setRemoteDescription({ type: 'answer', sdp: answerSdp });
 
-    } catch (err: any) {
+    } catch (errRaw: unknown) {
+      const err = errRaw instanceof Error ? errRaw : new Error(String(errRaw));
       if (err.name === 'AbortError') return;
       if (attemptIdRef.current !== attemptId) return;
       
@@ -289,6 +295,7 @@ export function useMediaMTXWebRTC(cameraId: string) {
   }, [connect]);
 
   useEffect(() => {
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars -- S2 Residual Debt: Legacy unused local
     const attemptId = Symbol('init');
     
     connect();

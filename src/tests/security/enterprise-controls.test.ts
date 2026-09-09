@@ -4,7 +4,6 @@ import { ABACPolicyService } from '../../modules/security/abac/abac-policy.servi
 import { ApprovalService } from '../../modules/approvals/approval.service';
 import { AIPermissionService } from '../../modules/ai-permissions/ai-permission.service';
 import { executeAsSystem, SystemOperation } from '../../../database/utils/prisma-system';
-import prisma from '../../../database/utils/prisma';
 import { describe, it, expect, beforeAll, afterAll } from 'vitest';
 
 describe('Phase 10.3 - Enterprise Controls - Adversarial Security Tests', () => {
@@ -193,11 +192,11 @@ describe('Phase 10.3 - Enterprise Controls - Adversarial Security Tests', () => 
       // AIPermissionService and AIExecution tracking.
       
       // Try to execute a tool that requires 'SYSTEM' 'UPDATE' which AI doesn't have by default unless user has it.
-      await prisma.aITool.upsert({
-        where: { name: 'admin_tool_ent_test' },
-        update: {},
-        create: { name: 'admin_tool_ent_test', requiredPermission: 'SYSTEM:UPDATE', riskLevel: 'HIGH' }
-      });
+      await executeAsSystem(SystemOperation.SECURITY_AUDIT, async (tx) => await tx.aITool.upsert({
+                where: { name: 'admin_tool_ent_test' },
+                update: {},
+                create: { name: 'admin_tool_ent_test', requiredPermission: 'SYSTEM:UPDATE', riskLevel: 'HIGH' }
+              }));
 
       await expect(
         AIPermissionService.requestToolExecution({ toolName: 'admin_tool_ent_test', input: {} }, { user: { id: hackerId }, tenantId: tenant1Id })

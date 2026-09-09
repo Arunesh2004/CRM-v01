@@ -1,6 +1,7 @@
 import { describe, it, expect, beforeAll, afterAll } from 'vitest';
 import crypto from 'crypto';
 import globalPrisma from '@db/utils/prisma';
+import { executeAsSystem, SystemOperation } from '@db/utils/prisma-system';
 
 describe('Phase S11 Chaos / Data-Loss / Failure-Recovery Tests', () => {
   let tenantA: any;
@@ -10,34 +11,37 @@ describe('Phase S11 Chaos / Data-Loss / Failure-Recovery Tests', () => {
   let node: any;
 
   beforeAll(async () => {
-    // Basic setup
-    tenantA = await globalPrisma.tenant.create({ data: { name: 'S11 Chaos Tenant A' } });
-    tenantB = await globalPrisma.tenant.create({ data: { name: 'S11 Chaos Tenant B' } });
-    
-    cameraA = await globalPrisma.camera.create({
-      data: { tenantId: tenantA.id, name: 'S11 Cam A', ipAddress: '0.0.0.0', protocol: 'RTSP', streamVersion: 1 }
-    });
-    cameraB = await globalPrisma.camera.create({
-      data: { tenantId: tenantB.id, name: 'S11 Cam B', ipAddress: '0.0.0.0', protocol: 'RTSP', streamVersion: 1 }
-    });
+    await executeAsSystem(SystemOperation.SECURITY_AUDIT, async (tx) => {
+      tenantA = await tx.tenant.create({ data: { name: 'S11 Chaos Tenant A' } });
+      tenantB = await tx.tenant.create({ data: { name: 'S11 Chaos Tenant B' } });
+      
+      cameraA = await tx.camera.create({
+        data: { tenantId: tenantA.id, name: 'S11 Cam A', ipAddress: '0.0.0.0', protocol: 'RTSP', streamVersion: 1 }
+      });
+      cameraB = await tx.camera.create({
+        data: { tenantId: tenantB.id, name: 'S11 Cam B', ipAddress: '0.0.0.0', protocol: 'RTSP', streamVersion: 1 }
+      });
 
-    node = await globalPrisma.cCTVNode.create({
-      data: {
-        id: crypto.randomUUID(),
-        name: 'S11 Chaos Node',
-        status: 'HEALTHY',
-        webhookKeyId: 'test-chaos-key-id',
-        webhookSecretRef: 'TEST_SECRET'
-      }
+      node = await tx.cCTVNode.create({
+        data: {
+          id: crypto.randomUUID(),
+          name: 'S11 Chaos Node',
+          status: 'HEALTHY',
+          webhookKeyId: 'test-chaos-key-id',
+          webhookSecretRef: 'TEST_SECRET'
+        }
+      });
     });
   });
 
   afterAll(async () => {
     // Cleanup
-    await globalPrisma.recordingIngestionJob.deleteMany({ where: { recordingNodeId: node.id } });
-    await globalPrisma.cCTVNode.delete({ where: { id: node.id } });
-    await globalPrisma.camera.deleteMany({ where: { tenantId: { in: [tenantA.id, tenantB.id] } } });
-    await globalPrisma.tenant.deleteMany({ where: { id: { in: [tenantA.id, tenantB.id] } } });
+    await executeAsSystem(SystemOperation.SECURITY_AUDIT, async (tx) => {
+      await tx.recordingIngestionJob.deleteMany({ where: { recordingNodeId: node.id } }).catch(() => {});
+      await tx.cCTVNode.delete({ where: { id: node.id } }).catch(() => {});
+      await tx.camera.deleteMany({ where: { tenantId: { in: [tenantA.id, tenantB.id] } } }).catch(() => {});
+      await tx.tenant.deleteMany({ where: { id: { in: [tenantA.id, tenantB.id] } } }).catch(() => {});
+    });
   });
 
   // 1. INGESTION: CRASH AFTER DB COMMIT / BEFORE FILE CLEANUP
@@ -54,7 +58,7 @@ describe('Phase S11 Chaos / Data-Loss / Failure-Recovery Tests', () => {
     });
 
     // Simulate Worker picking up and committing DB transaction
-    await globalPrisma.$transaction(async (tx) => {
+    await executeAsSystem(SystemOperation.SECURITY_AUDIT, async (tx) => {
       const rec = await tx.recording.upsert({
         where: { segmentId },
         create: {
@@ -103,7 +107,7 @@ describe('Phase S11 Chaos / Data-Loss / Failure-Recovery Tests', () => {
     
     let caughtError = false;
     try {
-      await globalPrisma.$transaction(async (tx) => {
+      await executeAsSystem(SystemOperation.SECURITY_AUDIT, async (tx) => {
         const rec = await tx.recording.create({
           data: {
             segmentId, tenantId: tenantA.id, cameraId: cameraA.id, streamVersion: 1,
@@ -137,20 +141,23 @@ describe('Phase S11 Chaos / Data-Loss / Failure-Recovery Tests', () => {
   // 7. LEASE EXPIRATION / CLOCK DRIFT & 8. HEARTBEAT FAILURE
   it('7 & 8. should strictly prevent stale worker from committing (Hard Fencing)', async () => {
     const segmentId = crypto.randomBytes(16).toString('hex');
-    const rec = await globalPrisma.recording.create({
-      data: {
-        segmentId, tenantId: tenantA.id, cameraId: cameraA.id, streamVersion: 1,
-        storageKey: `s3://${segmentId}.mp4`, status: 'COMPLETED',
-        startTime: new Date(), sizeBytes: 1024, sourceNodeId: node.id
-      }
-    });
+    const { rec, job } = await executeAsSystem(SystemOperation.SECURITY_AUDIT, async (tx) => {
+      const rec = await tx.recording.create({
+        data: {
+          segmentId, tenantId: tenantA.id, cameraId: cameraA.id, streamVersion: 1,
+          storageKey: `s3://${segmentId}.mp4`, status: 'COMPLETED',
+          startTime: new Date(), sizeBytes: 1024, sourceNodeId: node.id
+        }
+      });
 
-    const job = await globalPrisma.aIAnalysisJob.create({
-      data: {
-        recordingId: rec.id, analysisType: 'vision', dedupeKey: segmentId + '-vision',
-        status: 'PROCESSING', workerId: 'Worker-A',
-        leaseExpiresAt: new Date(Date.now() - 1000) // EXPIRED!
-      }
+      const job = await tx.aIAnalysisJob.create({
+        data: {
+          recordingId: rec.id, analysisType: 'vision', dedupeKey: segmentId + '-vision',
+          status: 'PROCESSING', workerId: 'Worker-A',
+          leaseExpiresAt: new Date(Date.now() - 1000) // EXPIRED!
+        }
+      });
+      return { rec, job };
     });
 
     // Worker B steals it (as it's expired)
@@ -217,25 +224,28 @@ describe('Phase S11 Chaos / Data-Loss / Failure-Recovery Tests', () => {
   // 4. CRASH AFTER AI EVENT COMMIT
   it('4. should prevent duplicate AIEvent on retry via upsert logic', async () => {
     const segmentId = crypto.randomBytes(16).toString('hex');
-    const rec = await globalPrisma.recording.create({
-      data: {
-        segmentId, tenantId: tenantA.id, cameraId: cameraA.id, streamVersion: 1,
-        storageKey: `s3://${segmentId}.mp4`, status: 'COMPLETED',
-        startTime: new Date(), sizeBytes: 1024, sourceNodeId: node.id
-      }
-    });
-    
-    // In production AI worker code:
-    // AI worker creates AIEvent but worker crashes right before `status = 'COMPLETED'` update
-    const aiEvent = await globalPrisma.aIEvent.create({
-      data: {
-        tenantId: tenantA.id,
-        cameraId: cameraA.id,
-        recordingId: rec.id,
-        model: 'vision-mock',
-        confidence: 0.9,
-        detectedObject: 'test'
-      }
+    const { rec, aiEvent } = await executeAsSystem(SystemOperation.SECURITY_AUDIT, async (tx) => {
+      const rec = await tx.recording.create({
+        data: {
+          segmentId, tenantId: tenantA.id, cameraId: cameraA.id, streamVersion: 1,
+          storageKey: `s3://${segmentId}.mp4`, status: 'COMPLETED',
+          startTime: new Date(), sizeBytes: 1024, sourceNodeId: node.id
+        }
+      });
+      
+      // In production AI worker code:
+      // AI worker creates AIEvent but worker crashes right before `status = 'COMPLETED'` update
+      const aiEvent = await tx.aIEvent.create({
+        data: {
+          tenantId: tenantA.id,
+          cameraId: cameraA.id,
+          recordingId: rec.id,
+          model: 'vision-mock',
+          confidence: 0.9,
+          detectedObject: 'test'
+        }
+      });
+      return { rec, aiEvent };
     });
     
     // Wait, the production AI worker uses `aIEvent.create`, not `upsert`!
@@ -249,7 +259,9 @@ describe('Phase S11 Chaos / Data-Loss / Failure-Recovery Tests', () => {
     
     expect(aiEvent.id).toBeDefined();
     
-    await globalPrisma.aIEvent.delete({ where: { id: aiEvent.id } });
-    await globalPrisma.recording.deleteMany({ where: { segmentId } });
+    await executeAsSystem(SystemOperation.SECURITY_AUDIT, async (tx) => {
+      await tx.aIEvent.deleteMany({ where: { id: aiEvent.id } });
+      await tx.recording.deleteMany({ where: { segmentId } });
+    });
   });
 });

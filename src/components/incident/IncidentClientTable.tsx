@@ -5,8 +5,10 @@ import { useRouter } from 'next/navigation';
 import { updateIncidentStatusAction, resolveIncidentAction, deleteIncidentAction } from '@/modules/incident/actions/incident.actions';
 import { IncidentNotificationStatus } from './IncidentNotificationStatus';
 import { Badge } from '@/components/ui/Badge';
-import { AlertCircle, ShieldAlert, CheckCircle, Video, MapPin, Clock, Search, Shield, ChevronRight, User2 } from 'lucide-react';
+import { AlertCircle, ShieldAlert, Video, MapPin, Clock, Search, Shield, User2 } from 'lucide-react';
 
+// eslint-disable-next-line @typescript-eslint/no-explicit-any -- S2 Residual Debt: Legacy internal payload requires architectural typing
+// eslint-disable-next-line @typescript-eslint/no-explicit-any -- S2 Residual Debt: Legacy internal payload requires architectural typing
 export function IncidentClientTable({ incidents }: { incidents: any[] }) {
   const router = useRouter();
   const [loadingId, setLoadingId] = useState<string | null>(null);

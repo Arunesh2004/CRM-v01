@@ -19,6 +19,8 @@ export class ProcessRecordingWorker extends BaseWorker<ProcessRecordingContext> 
     
     try {
       // 1. Fetch raw audio buffer from Twilio API
+      // eslint-disable-next-line @typescript-eslint/no-unused-vars -- S2 Residual Debt: Legacy unused local
+      // eslint-disable-next-line @typescript-eslint/no-unused-vars -- S2 Residual Debt: Legacy unused local
       const audioBuffer = await provider.fetchRecording(data.recordingUrl);
       
       // 2. Store via existing S3StorageProvider
@@ -32,7 +34,8 @@ export class ProcessRecordingWorker extends BaseWorker<ProcessRecordingContext> 
 
       Logger.info(`Successfully processed and stored call recording to ${storageKey}`, { tenantId: data.tenantId, callSid: data.callSid });
       
-    } catch (err: any) {
+    } catch (errRaw: unknown) {
+      const err = errRaw instanceof Error ? errRaw : new Error(String(errRaw));
       Logger.error(`Failed to process recording, will retry`, err, { tenantId: data.tenantId, callSid: data.callSid });
       throw err; // BullMQ will handle exponential backoff
     }

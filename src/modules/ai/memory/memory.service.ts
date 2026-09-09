@@ -1,5 +1,4 @@
-import { withTenant, withTenantTransaction } from '@db/utils/prisma-tenant';
-import prisma from '../../../../database/utils/prisma';
+import { withTenant } from '@db/utils/prisma-tenant';
 import { AIContext } from '../context/context-builder.service';
 import { SecurityEventService } from '../../../../src/modules/security-events/security-event.service';
 import { AIMemoryType, AIMemoryVisibility } from '@prisma/client';
@@ -50,6 +49,8 @@ export class AIMemoryService {
     }
   }
 
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars -- S2 Residual Debt: Legacy unused local
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars -- Intentional callback/interface parameter
   static async retrieveRelevantMemories(context: AIContext, query: string) {
     if (!context || !context.tenantId || !context.user?.id || !Object.isFrozen(context)) {
       throw new Error('Missing or forged trusted AIContext');
@@ -78,7 +79,9 @@ export class AIMemoryService {
       take: 10
     });
 
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any -- S2 Residual Debt: External provider boundary lacks strict types
     // Output Minimization: Return strictly what the provider needs, stripping internal Prisma metadata
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any -- S2 Residual Debt: Legacy internal payload requires architectural typing
     return memories.map((memory: any) => ({
       id: memory.id,
       content: memory.content,

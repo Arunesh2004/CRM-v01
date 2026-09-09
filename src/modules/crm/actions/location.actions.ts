@@ -17,7 +17,8 @@ async function _createLocationAction(payload: z.infer<typeof CreateLocationSchem
     
     const result = await locationService.createLocation(validatedData);
     return { success: true, data: result };
-  } catch (error: any) {
+  } catch (errorRaw: unknown) {
+    const error = errorRaw instanceof Error ? errorRaw : new Error(String(errorRaw));
     return { success: false, error: sanitizeClientError(error) };
   }
 }
@@ -30,9 +31,12 @@ async function _updateLocationAction(payload: z.infer<typeof UpdateLocationSchem
     await requireTenant();
     await requirePermission('CUSTOMER', 'UPDATE');
     
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any -- S2 Residual Debt: Legacy internal payload requires architectural typing
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any -- S2 Residual Debt: Legacy internal payload requires architectural typing
     const result = await locationService.updateLocation(validatedData as any);
     return { success: true, data: result };
-  } catch (error: any) {
+  } catch (errorRaw: unknown) {
+    const error = errorRaw instanceof Error ? errorRaw : new Error(String(errorRaw));
     return { success: false, error: sanitizeClientError(error) };
   }
 }
@@ -45,7 +49,8 @@ async function _getLocationsAction() {
     
     const result = await locationService.getLocations();
     return { success: true, data: result };
-  } catch (error: any) {
+  } catch (errorRaw: unknown) {
+    const error = errorRaw instanceof Error ? errorRaw : new Error(String(errorRaw));
     return { success: false, error: sanitizeClientError(error) };
   }
 }
@@ -58,7 +63,8 @@ async function _deleteLocationAction(id: string) {
     
     const result = await locationService.deleteLocation(id);
     return { success: true, data: result };
-  } catch (error: any) {
+  } catch (errorRaw: unknown) {
+    const error = errorRaw instanceof Error ? errorRaw : new Error(String(errorRaw));
     return { success: false, error: sanitizeClientError(error) };
   }
 }

@@ -1,4 +1,3 @@
-import { Suspense } from 'react';
 import { getIncidentsAction } from '@/modules/incident/actions/incident.actions';
 import Link from 'next/link';
 import { ShieldAlert, AlertTriangle, AlertOctagon, Info } from 'lucide-react';
@@ -63,6 +62,8 @@ export default async function IncidentsDashboard() {
                   </td>
                 </tr>
               )}
+              // eslint-disable-next-line @typescript-eslint/no-explicit-any -- S2 Residual Debt: Legacy internal payload requires architectural typing
+              // eslint-disable-next-line @typescript-eslint/no-explicit-any -- S2 Residual Debt: Legacy internal payload requires architectural typing
               {incidents.map((incident: any) => (
                 <tr key={incident.id} className="hover:bg-white/[.02] transition-colors group cursor-pointer">
                   <td className="p-4 font-medium text-white group-hover:text-violet-400 transition-colors">

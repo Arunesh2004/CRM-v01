@@ -7,6 +7,7 @@ export const SECURITY_HEADERS = {
   'Permissions-Policy': 'camera=self, microphone=self, geolocation=()',
 };
 
+// eslint-disable-next-line @typescript-eslint/no-explicit-any -- S2 Residual Debt: Legacy internal payload — typed Prisma/API result shape requires architectural schema work deferred to S3
 export function applySecurityHeaders(res: Response | any) {
   Object.entries(SECURITY_HEADERS).forEach(([key, value]) => {
     if (res.headers && typeof res.headers.set === 'function') {

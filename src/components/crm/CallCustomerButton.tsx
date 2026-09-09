@@ -3,7 +3,7 @@
 import { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
-import { Phone, PhoneCall, PhoneOff, Loader2, CheckCircle2 } from 'lucide-react';
+import { Phone, PhoneOff, CheckCircle2 } from 'lucide-react';
 import { toast } from 'sonner';
 // Assume a server action exists in crm/actions/call.actions.ts
 import { initiateCallAction } from '@/app/(crm)/customers/[id]/actions'; 
@@ -38,7 +38,8 @@ export function CallCustomerButton({ customerId, phoneNumber }: { customerId: st
         setCallState('IDLE');
         setOpen(false);
       }
-    } catch (e: any) {
+    } catch (eRaw: unknown) {
+      const e = eRaw instanceof Error ? eRaw : new Error(String(eRaw));
       toast.error('Call error: ' + e.message);
       setCallState('IDLE');
     }

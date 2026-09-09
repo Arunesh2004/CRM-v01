@@ -2,7 +2,7 @@
 import { withServerActionContext } from '@/lib/observability/server-action';
 
 import { sanitizeClientError } from '@/lib/errors/client-safe-error';
-import { requireAuth, requireTenant, requirePermission } from '@/lib/auth';
+import { requireAuth, requireTenant } from '@/lib/auth';
 import { TicketService } from '../ticket.service';
 
 async function _getTicketsAction() {
@@ -11,13 +11,15 @@ async function _getTicketsAction() {
     const session = await requireAuth();
     const result = await TicketService.getTickets(tenantId, session.id);
     return { success: true, data: result };
-  } catch (error: any) {
+  } catch (errorRaw: unknown) {
+    const error = errorRaw instanceof Error ? errorRaw : new Error(String(errorRaw));
     return { success: false, error: sanitizeClientError(error) };
   }
 }
 
-import { withIdempotency, IdempotencyOperations } from '@/lib/idempotency';
 
+// eslint-disable-next-line @typescript-eslint/no-explicit-any -- S2 Residual Debt: Legacy internal payload requires architectural typing
+// eslint-disable-next-line @typescript-eslint/no-explicit-any -- S2 Residual Debt: Legacy internal payload requires architectural typing
 async function _createTicketAction(payload: any) {
   try {
     const tenantId = await requireTenant();
@@ -47,7 +49,8 @@ async function _getTicketByIdAction(ticketId: string) {
     const session = await requireAuth();
     const result = await TicketService.getTicketById(tenantId, session.id, ticketId);
     return { success: true, data: result };
-  } catch (error: any) {
+  } catch (errorRaw: unknown) {
+    const error = errorRaw instanceof Error ? errorRaw : new Error(String(errorRaw));
     return { success: false, error: sanitizeClientError(error) };
   }
 }

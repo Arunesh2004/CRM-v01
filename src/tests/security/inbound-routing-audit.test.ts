@@ -1,7 +1,6 @@
 import { describe, it, expect, beforeAll, afterAll } from 'vitest';
 import { executeAsSystem, SystemOperation } from '@db/utils/prisma-system';
 import prisma from '@db/utils/prisma';
-import { PrismaClientKnownRequestError } from '@prisma/client/runtime/library';
 
 describe('Phase 12.3: TenantPhoneNumber Schema & Isolation Tests', () => {
   let tenantAId: string;

@@ -5,9 +5,12 @@ import { simulateAIEventAction } from '@/modules/cctv/actions/camera.actions';
 import { useRouter } from 'next/navigation';
 import { Video } from 'lucide-react';
 
+// eslint-disable-next-line @typescript-eslint/no-explicit-any -- S2 Residual Debt: camera prop type requires typed Prisma result with relations; architectural typing deferred to S3
 export function CameraStreamCard({ camera }: { camera: any }) {
   const [isSimulating, setIsSimulating] = useState(false);
   const router = useRouter();
+  // Stable channel number derived from camera id — avoids Math.random() on render (purity violation)
+  const channelNum = camera?.id ? (camera.id.charCodeAt(0) % 9) + 1 : 1;
 
   async function handleSimulateEvent() {
     setIsSimulating(true);
@@ -56,7 +59,7 @@ export function CameraStreamCard({ camera }: { camera: any }) {
               LIVE
             </div>
             <div className="absolute bottom-3 left-3 font-mono text-[10px] text-white/50 tracking-wider">
-              {new Date().toISOString().split('T')[1].substring(0,8)} • CH-0{Math.floor(Math.random()*9)+1}
+              {new Date().toISOString().split('T')[1].substring(0,8)} • CH-0{channelNum}
             </div>
           </>
         )}

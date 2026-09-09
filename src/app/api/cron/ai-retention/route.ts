@@ -53,8 +53,9 @@ const _orig_GET = async function (req: Request) {
     });
 
     return NextResponse.json({ ok: true, ...result });
-  } catch (err: any) {
-    Logger.error('AI Retention Cycle Failed', err instanceof Error ? err : new Error(String(err?.message ?? 'unknown')), { event: 'AI_RETENTION_FAILED', jobId });
+  } catch (errRaw: unknown) {
+    const err = errRaw instanceof Error ? errRaw : new Error(String(errRaw));
+    Logger.error('AI Retention Cycle Failed', err, { event: 'AI_RETENTION_FAILED', jobId });
     return NextResponse.json({ ok: false, error: 'Internal failure' }, { status: 500 });
   } finally {
     if (lockKey.lockKey) {

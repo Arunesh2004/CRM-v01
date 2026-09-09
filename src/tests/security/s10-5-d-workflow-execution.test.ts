@@ -2,10 +2,9 @@ import { describe, it, expect, beforeAll, afterAll, vi } from 'vitest';
 import { WorkflowService } from '@/modules/ai/workflow/workflow.service';
 import { ContextBuilderService } from '@/modules/ai/context/context-builder.service';
 import { AIPermissionService } from '@/modules/ai-permissions/ai-permission.service';
-import { inngest } from '@/lib/queue/inngest.client';
 import { randomUUID } from 'crypto';
-import globalPrisma from '@db/utils/prisma';
 import { z } from 'zod';
+import { executeAsSystem, SystemOperation } from "@db/utils/prisma-system";
 
 vi.mock('@/lib/queue/inngest.client', () => ({
   inngest: { send: vi.fn(), createFunction: vi.fn() }
@@ -31,86 +30,86 @@ describe('Phase 10.5-D - Secure Workflow Execution Engine', () => {
     regularUserId = randomUUID();
     inactiveUserId = randomUUID();
 
-    await globalPrisma.tenant.create({
-      data: { id: tenantId, name: 'Workflow Exec Tenant', status: 'ACTIVE' }
-    });
+    await executeAsSystem(SystemOperation.SECURITY_AUDIT, async (tx) => await tx.tenant.create({
+            data: { id: tenantId, name: 'Workflow Exec Tenant', status: 'ACTIVE' }
+          }));
 
-    await globalPrisma.user.createMany({
-      data: [
-        { id: adminId, clerkId: adminId, email: 'admin@wf.com', firstName: 'Admin', tenantId, status: 'ACTIVE' },
-        { id: regularUserId, clerkId: regularUserId, email: 'user@wf.com', firstName: 'User', tenantId, status: 'ACTIVE' },
-        { id: inactiveUserId, clerkId: inactiveUserId, email: 'inact@wf.com', firstName: 'Inact', tenantId, status: 'INACTIVE' },
-      ]
-    });
+    await executeAsSystem(SystemOperation.SECURITY_AUDIT, async (tx) => await tx.user.createMany({
+            data: [
+              { id: adminId, clerkId: adminId, email: 'admin@wf.com', firstName: 'Admin', tenantId, status: 'ACTIVE' },
+              { id: regularUserId, clerkId: regularUserId, email: 'user@wf.com', firstName: 'User', tenantId, status: 'ACTIVE' },
+              { id: inactiveUserId, clerkId: inactiveUserId, email: 'inact@wf.com', firstName: 'Inact', tenantId, status: 'INACTIVE' },
+            ]
+          }));
 
-    await globalPrisma.aITool.upsert({
-      where: { name: 'CREATE_TASK' },
-      update: { requiresApproval: false, requiredPermission: 'TASK:CREATE' },
-      create: {
-        name: 'CREATE_TASK',
-        description: 'Creates a task',
-        requiresApproval: false,
-        requiredPermission: 'TASK:CREATE'
-      }
-    });
+    await executeAsSystem(SystemOperation.SECURITY_AUDIT, async (tx) => await tx.aITool.upsert({
+            where: { name: 'CREATE_TASK' },
+            update: { requiresApproval: false, requiredPermission: 'TASK:CREATE' },
+            create: {
+              name: 'CREATE_TASK',
+              description: 'Creates a task',
+              requiresApproval: false,
+              requiredPermission: 'TASK:CREATE'
+            }
+          }));
 
-    const permission = await globalPrisma.permission.upsert({
-      where: { resource_action: { resource: 'TASK', action: 'CREATE' } },
-      update: {},
-      create: { resource: 'TASK', action: 'CREATE' }
-    });
+    const permission = await executeAsSystem(SystemOperation.SECURITY_AUDIT, async (tx) => await tx.permission.upsert({
+          where: { resource_action: { resource: 'TASK', action: 'CREATE' } },
+          update: {},
+          create: { resource: 'TASK', action: 'CREATE' }
+        }));
 
-    const role = await globalPrisma.role.create({
-      data: { tenantId, name: 'Admin' }
-    });
+    const role = await executeAsSystem(SystemOperation.SECURITY_AUDIT, async (tx) => await tx.role.create({
+          data: { tenantId, name: 'Admin' }
+        }));
 
-    await globalPrisma.rolePermission.create({
-      data: { tenantId, roleId: role.id, permissionId: permission.id }
-    });
+    await executeAsSystem(SystemOperation.SECURITY_AUDIT, async (tx) => await tx.rolePermission.create({
+            data: { tenantId, roleId: role.id, permissionId: permission.id }
+          }));
 
     // Both admin and regular user have TASK:CREATE via the Admin role for test simplicity
     // To test "permission missing", we can either use inactiveUserId, or explicitly remove it.
-    await globalPrisma.userRole.createMany({
-      data: [
-        { tenantId, userId: adminId, roleId: role.id },
-        { tenantId, userId: regularUserId, roleId: role.id }
-      ]
-    });
+    await executeAsSystem(SystemOperation.SECURITY_AUDIT, async (tx) => await tx.userRole.createMany({
+            data: [
+              { tenantId, userId: adminId, roleId: role.id },
+              { tenantId, userId: regularUserId, roleId: role.id }
+            ]
+          }));
   });
 
   afterAll(async () => {
     vi.restoreAllMocks();
-    await globalPrisma.idempotencyKey.deleteMany({ where: { tenantId } });
-    await globalPrisma.activityTimeline.deleteMany({ where: { tenantId } });
-    await globalPrisma.task.deleteMany({ where: { tenantId } });
-    await globalPrisma.workflowExecutionStep.deleteMany({ where: { tenantId } });
-    await globalPrisma.workflowAction.deleteMany({ where: { tenantId } });
-    await globalPrisma.workflowExecution.deleteMany({ where: { tenantId } });
-    await globalPrisma.workflow.deleteMany({ where: { tenantId } });
-    await globalPrisma.aIExecution.deleteMany({ where: { tenantId } });
+    await executeAsSystem(SystemOperation.SECURITY_AUDIT, async (tx) => await tx.idempotencyKey.deleteMany({ where: { tenantId } })).catch(() => {});
+    await executeAsSystem(SystemOperation.SECURITY_AUDIT, async (tx) => await tx.activityTimeline.deleteMany({ where: { tenantId } })).catch(() => {});
+    await executeAsSystem(SystemOperation.SECURITY_AUDIT, async (tx) => await tx.task.deleteMany({ where: { tenantId } })).catch(() => {});
+    await executeAsSystem(SystemOperation.SECURITY_AUDIT, async (tx) => await tx.workflowExecutionStep.deleteMany({ where: { tenantId } })).catch(() => {});
+    await executeAsSystem(SystemOperation.SECURITY_AUDIT, async (tx) => await tx.workflowAction.deleteMany({ where: { tenantId } })).catch(() => {});
+    await executeAsSystem(SystemOperation.SECURITY_AUDIT, async (tx) => await tx.workflowExecution.deleteMany({ where: { tenantId } })).catch(() => {});
+    await executeAsSystem(SystemOperation.SECURITY_AUDIT, async (tx) => await tx.workflow.deleteMany({ where: { tenantId } })).catch(() => {});
+    await executeAsSystem(SystemOperation.SECURITY_AUDIT, async (tx) => await tx.aIExecution.deleteMany({ where: { tenantId } })).catch(() => {});
     
-    await globalPrisma.userRole.deleteMany({ where: { tenantId } });
-    await globalPrisma.rolePermission.deleteMany({ where: { tenantId } });
-    await globalPrisma.role.deleteMany({ where: { tenantId } });
-    await globalPrisma.user.deleteMany({ where: { tenantId } });
+    await executeAsSystem(SystemOperation.SECURITY_AUDIT, async (tx) => await tx.userRole.deleteMany({ where: { tenantId } })).catch(() => {});
+    await executeAsSystem(SystemOperation.SECURITY_AUDIT, async (tx) => await tx.rolePermission.deleteMany({ where: { tenantId } })).catch(() => {});
+    await executeAsSystem(SystemOperation.SECURITY_AUDIT, async (tx) => await tx.role.deleteMany({ where: { tenantId } })).catch(() => {});
+    await executeAsSystem(SystemOperation.SECURITY_AUDIT, async (tx) => await tx.user.deleteMany({ where: { tenantId } })).catch(() => {});
     
     // Some foreign keys might block Tenant deletion, best effort
     try {
-      await globalPrisma.tenant.delete({ where: { id: tenantId } });
+      await executeAsSystem(SystemOperation.SECURITY_AUDIT, async (tx) => await tx.tenant.delete({ where: { id: tenantId } })).catch(() => {});
     } catch (e) {}
   });
 
   async function seedWorkflow(userId: string) {
-    const wf = await globalPrisma.workflow.create({
-      data: { tenantId, createdById: userId, name: 'Test WF', status: 'ACTIVE' }
-    });
+    const wf = await executeAsSystem(SystemOperation.SECURITY_AUDIT, async (tx) => await tx.workflow.create({
+          data: { tenantId, createdById: userId, name: 'Test WF', status: 'ACTIVE' }
+        }));
     return wf.id;
   }
 
   async function seedAction(workflowId: string, actionType: string, config: any = {}) {
-    return await globalPrisma.workflowAction.create({
-      data: { tenantId, workflowId, actionType, config, orderIndex: 0 }
-    });
+    return await executeAsSystem(SystemOperation.SECURITY_AUDIT, async (tx) => await tx.workflowAction.create({
+          data: { tenantId, workflowId, actionType, config, orderIndex: 0 }
+        }));
   }
 
   // 1. Unauthenticated creation denied
@@ -175,7 +174,7 @@ describe('Phase 10.5-D - Secure Workflow Execution Engine', () => {
   it('Scenario 10: Retry does not mutate initiator', async () => {
     const wfId = await seedWorkflow(adminId);
     const exec = await WorkflowService.executeWorkflow(tenantId, regularUserId, wfId);
-    const executionDb = await globalPrisma.workflowExecution.findUnique({ where: { id: exec.id } });
+    const executionDb = await executeAsSystem(SystemOperation.SECURITY_AUDIT, async (tx) => await tx.workflowExecution.findUnique({ where: { id: exec.id } }));
     expect(executionDb?.initiatedById).toBe(regularUserId);
   });
 
@@ -190,7 +189,7 @@ describe('Phase 10.5-D - Secure Workflow Execution Engine', () => {
   // 12. Execution denied if creator is deleted
   it('Scenario 12: Deleted creator denied', async () => {
     const delUser = randomUUID();
-    await globalPrisma.user.create({ data: { id: delUser, clerkId: delUser, email: 'd@x.com', firstName: 'D', tenantId, status: 'ACTIVE', deletedAt: new Date() } });
+    await executeAsSystem(SystemOperation.SECURITY_AUDIT, async (tx) => await tx.user.create({ data: { id: delUser, clerkId: delUser, email: 'd@x.com', firstName: 'D', tenantId, status: 'ACTIVE', deletedAt: new Date() } }));
     const wfId = await seedWorkflow(delUser);
     const exec = await WorkflowService.executeWorkflow(tenantId, null, wfId);
     const action = await seedAction(wfId, 'CREATE_TASK', { title: 'Test' });
@@ -285,7 +284,7 @@ describe('Phase 10.5-D - Secure Workflow Execution Engine', () => {
 
   // 23. Unapproved action cannot execute
   it('Scenario 23: Unapproved action cannot execute', async () => {
-    await globalPrisma.aITool.update({ where: { name: 'CREATE_TASK' }, data: { requiresApproval: true } });
+    await executeAsSystem(SystemOperation.SECURITY_AUDIT, async (tx) => await tx.aITool.update({ where: { name: 'CREATE_TASK' }, data: { requiresApproval: true } }));
     
     const wfId = await seedWorkflow(adminId);
     const exec = await WorkflowService.executeWorkflow(tenantId, null, wfId);
@@ -294,10 +293,10 @@ describe('Phase 10.5-D - Secure Workflow Execution Engine', () => {
     const res = await WorkflowService.executeAction(tenantId, wfId, exec.id, action);
     expect(res.waitingApproval).toBe(true);
     
-    const step = await globalPrisma.workflowExecutionStep.findFirst({ where: { actionId: action.id } });
+    const step = await executeAsSystem(SystemOperation.SECURITY_AUDIT, async (tx) => await tx.workflowExecutionStep.findFirst({ where: { actionId: action.id } }));
     expect(step?.status).toBe('PENDING'); // Returned to PENDING so it can be re-run after approval
     
-    await globalPrisma.aITool.update({ where: { name: 'CREATE_TASK' }, data: { requiresApproval: false } });
+    await executeAsSystem(SystemOperation.SECURITY_AUDIT, async (tx) => await tx.aITool.update({ where: { name: 'CREATE_TASK' }, data: { requiresApproval: false } }));
   });
 
   // 24. Expired approval cannot execute
@@ -313,7 +312,7 @@ describe('Phase 10.5-D - Secure Workflow Execution Engine', () => {
     const action = await seedAction(wfId, 'CREATE_TASK', { title: 'Should fail' });
     await expect(WorkflowService.executeAction(tenantId, wfId, exec.id, action)).rejects.toThrow('Workflow execution is not active');
     
-    const tasks = await globalPrisma.task.findMany({ where: { title: 'Should fail' } });
+    const tasks = await executeAsSystem(SystemOperation.SECURITY_AUDIT, async (tx) => await tx.task.findMany({ where: { title: 'Should fail', tenantId } }));
     expect(tasks.length).toBe(0);
   });
 
@@ -349,7 +348,7 @@ describe('Phase 10.5-D - Secure Workflow Execution Engine', () => {
     const res2 = await WorkflowService.executeAction(tenantId, wfId, exec.id, action);
     expect(res2.message).toBe('Already processed');
     
-    const count = await globalPrisma.task.count({ where: { title: 'Idempotent Task 27' } });
+    const count = await executeAsSystem(SystemOperation.SECURITY_AUDIT, async (tx) => await tx.task.count({ where: { title: 'Idempotent Task 27', tenantId } }));
     expect(count).toBe(1); // Ensures it wasn't created twice
   });
 
@@ -430,7 +429,7 @@ describe('Phase 10.5-D - Secure Workflow Execution Engine', () => {
     const exec = await WorkflowService.executeWorkflow(tenantId, null, wfId);
     const action = await seedAction(wfId, 'CREATE_TASK', { title: 'Normal Title' });
     await WorkflowService.executeAction(tenantId, wfId, exec.id, action);
-    const audit = await globalPrisma.auditLog.findFirst({ where: { resourceId: { endsWith: action.id } } });
+    const audit = await executeAsSystem(SystemOperation.SECURITY_AUDIT, async (tx) => await tx.auditLog.findFirst({ where: { resourceId: { endsWith: action.id }, tenantId } }));
     expect(audit).toBeDefined();
     // Assuming no secrets were passed, it's safe.
   });
@@ -453,13 +452,13 @@ describe('Phase 10.5-D - Secure Workflow Execution Engine', () => {
   it('Scenario 37: Creator deactivation race condition blocks execution', async () => {
     // We create a user and then deactivate them before execution
     const tempUser = randomUUID();
-    await globalPrisma.user.create({ data: { id: tempUser, clerkId: tempUser, email: 't@x.com', firstName: 'T', tenantId, status: 'ACTIVE' } });
+    await executeAsSystem(SystemOperation.SECURITY_AUDIT, async (tx) => await tx.user.create({ data: { id: tempUser, clerkId: tempUser, email: 't@x.com', firstName: 'T', tenantId, status: 'ACTIVE' } }));
     const wfId = await seedWorkflow(tempUser);
     const exec = await WorkflowService.executeWorkflow(tenantId, null, wfId);
     const action = await seedAction(wfId, 'CREATE_TASK', { title: 'Test 37' });
     
     // Deactivate
-    await globalPrisma.user.update({ where: { id: tempUser }, data: { status: 'INACTIVE' } });
+    await executeAsSystem(SystemOperation.SECURITY_AUDIT, async (tx) => await tx.user.update({ where: { id: tempUser }, data: { status: 'INACTIVE' } }));
     
     await expect(WorkflowService.executeAction(tenantId, wfId, exec.id, action)).rejects.toThrow('403');
   });
@@ -470,7 +469,7 @@ describe('Phase 10.5-D - Secure Workflow Execution Engine', () => {
     const exec = await WorkflowService.executeWorkflow(tenantId, null, wfId);
     const action = await seedAction(wfId, 'CREATE_TASK', { title: 'Concurrent Race' });
     
-    await globalPrisma.idempotencyKey.deleteMany({ where: { tenantId } });
+    await executeAsSystem(SystemOperation.SECURITY_AUDIT, async (tx) => await tx.idempotencyKey.deleteMany({ where: { tenantId } })).catch(() => {});
 
     const p1 = WorkflowService.executeAction(tenantId, wfId, exec.id, action);
     const p2 = WorkflowService.executeAction(tenantId, wfId, exec.id, action);
@@ -487,7 +486,7 @@ describe('Phase 10.5-D - Secure Workflow Execution Engine', () => {
     expect(skipped).toBeDefined();
     expect((skipped as any).value.reason).toBe('Duplicate execution prevented');
     
-    const taskCount = await globalPrisma.task.count({ where: { title: 'Concurrent Race' } });
+    const taskCount = await executeAsSystem(SystemOperation.SECURITY_AUDIT, async (tx) => await tx.task.count({ where: { title: 'Concurrent Race', tenantId } }));
     expect(taskCount).toBe(1);
   });
 });

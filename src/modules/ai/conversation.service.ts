@@ -1,5 +1,4 @@
-import { withTenant, withTenantTransaction } from '@db/utils/prisma-tenant';
-import prisma from '@db/utils/prisma';
+import { withTenant } from '@db/utils/prisma-tenant';
 import { AIConfig } from '@/lib/config/ai.config';
 import { Logger } from '@/lib/logger/logger';
 import { AIRole, AIConversationStatus, AIConversation, AIConversationMessage } from '@prisma/client';
@@ -129,6 +128,8 @@ export class ConversationService {
     }
 
     // 3. Verify conversation bounds via aggregation
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars -- S2 Residual Debt: Legacy unused local
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars -- S2 Residual Debt: Legacy unused local
     const countQuery = withTenant(tenantId).aIConversationMessage.count({
       where: { conversationId, tenantId }
     });

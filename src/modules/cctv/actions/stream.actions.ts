@@ -7,7 +7,8 @@ async function _generateStreamTokenAction(cameraId: string) {
   try {
     const result = await streamService.generateStreamToken(cameraId);
     return { success: true, data: result };
-  } catch (error: any) {
+  } catch (errorRaw: unknown) {
+    const error = errorRaw instanceof Error ? errorRaw : new Error(String(errorRaw));
     return { success: false, error: sanitizeClientError(error) };
   }
 }

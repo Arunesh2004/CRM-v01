@@ -20,7 +20,8 @@ async function _getApprovalsAction() {
     });
 
     return { success: true, data: serializeDecimal(pendingQuotes) };
-  } catch (error: any) {
+  } catch (errorRaw: unknown) {
+    const error = errorRaw instanceof Error ? errorRaw : new Error(String(errorRaw));
     return { success: false, error: sanitizeClientError(error) };
   }
 }

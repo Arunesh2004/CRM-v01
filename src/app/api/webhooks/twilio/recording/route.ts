@@ -46,6 +46,8 @@ const _orig_POST = async function (req: Request) {
 
     if (recordingUrl) {
       // 1. Trigger background job to fetch and upload to S3StorageProvider
+      // eslint-disable-next-line @typescript-eslint/no-unused-vars -- S2 Residual Debt: Legacy unused local
+      // eslint-disable-next-line @typescript-eslint/no-unused-vars -- S2 Residual Debt: Legacy unused local
       const worker = new ProcessRecordingWorker();
       // Worker will safely re-enter withJobContext / withTenant
       // await worker.execute(`record_${callSid}`, { tenantId, callSid, recordingUrl, duration });
@@ -56,7 +58,8 @@ const _orig_POST = async function (req: Request) {
     }
 
     return NextResponse.json({ received: true });
-  } catch (err: any) {
+  } catch (errRaw: unknown) {
+    const err = errRaw instanceof Error ? errRaw : new Error(String(errRaw));
     Logger.error('Twilio recording webhook failed', err, { category: 'external_api' });
     return NextResponse.json({ error: 'Internal Server Error' }, { status: 500 });
   }

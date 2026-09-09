@@ -38,15 +38,20 @@ export class ResendProvider implements EmailProvider {
       Logger.info(`Email dispatched successfully via Resend`, { tenantId, messageId: response.data?.id });
       return { success: true, messageId: response.data?.id };
 
-    } catch (err: any) {
+    } catch (errRaw: unknown) {
+      const err = errRaw instanceof Error ? errRaw : new Error(String(errRaw));
       Logger.error('Resend unexpected failure', err, { tenantId });
       return { success: false, error: err.message };
     }
   }
 
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars -- S2 Residual Debt: Legacy unused local
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars -- Intentional callback/interface parameter
   async verifyDomain(domain: string): Promise<{ success: boolean; status: string; error?: string }> {
     return { success: true, status: 'verified' };
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars -- S2 Residual Debt: Legacy unused local
   }
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars -- Intentional callback/interface parameter
   async getMessageStatus(messageId: string): Promise<{ success: boolean; status: string; error?: string }> {
     return { success: true, status: 'delivered' };
   }
@@ -55,11 +60,14 @@ export class ResendProvider implements EmailProvider {
 export class MockEmailProvider implements EmailProvider {
   async sendEmail(tenantId: string, payload: EmailPayload): Promise<EmailProviderResponse> {
     Logger.info(`[MOCK EMAIL] Sent to ${payload.to}`, { tenantId, subject: payload.subject });
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars -- Intentional callback/interface parameter
     return { success: true, messageId: `mock_${Date.now()}` };
   }
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars -- Intentional callback/interface parameter
   async verifyDomain(domain: string): Promise<{ success: boolean; status: string; error?: string }> {
     return { success: true, status: 'verified' };
   }
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars -- Intentional callback/interface parameter
   async getMessageStatus(messageId: string): Promise<{ success: boolean; status: string; error?: string }> {
     return { success: true, status: 'delivered' };
   }

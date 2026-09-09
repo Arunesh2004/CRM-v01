@@ -1,5 +1,4 @@
 import { describe, it, expect, beforeAll, afterAll, vi } from 'vitest';
-import prisma from '@db/utils/prisma';
 import { ContextBuilderService, AIContext } from '@/modules/ai/context/context-builder.service';
 import { ToolRegistry } from '@/modules/ai/tools/registry';
 import * as prismaSystem from '@db/utils/prisma-system';
@@ -266,7 +265,8 @@ describe('Phase 10.5 Subphase A - AI Context & Authorization Security', () => {
       // When the CRM tool executes, it delegates to the actual CRM layer (updateLead).
       // That layer pulls tenantId from requireTenant(), completely ignoring the forged fakeContext.tenantId!
       // Therefore, the CRM relation auth boundary remains strictly enforced.
-      const result = ToolRegistry.executeTool('update_lead', { leadId: 'non-existent', status: 'NEW' }, fakeContext);
+      // We pass idempotencyKey to bypass the PENDING_CONFIRMATION state and force actual execution.
+      const result = ToolRegistry.executeTool('update_lead', { leadId: 'non-existent', status: 'NEW', idempotencyKey: 'test-12' }, fakeContext);
       
       // It will throw "Lead not found" because it's searching in standardContext.tenantId, NOT hackerTenantId!
       await expect(result).rejects.toThrow('Lead not found');
@@ -285,7 +285,7 @@ describe('Phase 10.5 Subphase A - AI Context & Authorization Security', () => {
        await expect(result).rejects.toThrow('Unauthorized: Tool drop_database not found');
 
        // Attempt to pass system flags in an existing tool payload
-       const exploitResult = ToolRegistry.executeTool('update_lead', { leadId: '1', status: 'NEW', __executeAsSystem: true }, adminContext);
+       const exploitResult = ToolRegistry.executeTool('update_lead', { leadId: '1', status: 'NEW', __executeAsSystem: true, idempotencyKey: 'test-14' }, adminContext);
        // It rejects identity overrides explicitly, but other extra args are either ignored by CRM or fail validation.
        await expect(exploitResult).rejects.toThrow('Lead not found');
     });

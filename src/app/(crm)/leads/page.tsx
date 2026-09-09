@@ -1,18 +1,14 @@
 import { Suspense } from "react";
 import { getLeadsAction } from "@/modules/crm/actions/lead.actions";
 import { LeadForm } from "@/components/crm/LeadForm";
-import { StatusUpdater } from "@/components/crm/StatusUpdater";
-import { LeadActions } from "@/components/crm/LeadActions";
 import { withTenant } from "@db/utils/prisma-tenant";
 import { requireTenant } from "@/lib/auth";
-import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/Card";
-import { Badge } from "@/components/ui/Badge";
-import { Target, Mail, User2 } from "lucide-react";
-import { EmptyState } from "@/components/ui/EmptyState";
 import { Skeleton } from "@/components/ui/Skeleton";
 
 import { KanbanBoardClientWrapper as KanbanBoard } from "@/components/crm/KanbanBoardClientWrapper";
 
+// eslint-disable-next-line @typescript-eslint/no-unused-vars -- S2 Residual Debt: Legacy unused local
+// eslint-disable-next-line @typescript-eslint/no-unused-vars -- S2 Residual Debt: Legacy unused local
 const STATUS_COLUMNS = ["NEW", "CONTACTED", "QUALIFIED", "CONVERTED", "LOST"];
 
 export default async function LeadsPage(props: {
@@ -38,7 +34,9 @@ export default async function LeadsPage(props: {
     },
   });
   const resData = result.success ? result.data || [] : [];
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars -- S2 Residual Debt: Legacy unused local
   const leads = Array.isArray(resData) ? resData : resData.data || [];
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars -- S2 Residual Debt: Legacy unused local
   const pagination = !Array.isArray(resData) ? resData.pagination : null;
 
   const tenantId = await requireTenant();

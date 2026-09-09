@@ -1,5 +1,4 @@
 import { describe, it, expect, beforeAll, afterAll, vi } from 'vitest';
-import prisma from '../../../database/utils/prisma';
 import { executeAsSystem, SystemOperation } from '../../../database/utils/prisma-system';
 import crypto from 'crypto';
 import { emailProvider } from '../../modules/core/providers/email.provider';

@@ -13,7 +13,8 @@ async function _getPipelinesAction() {
   try {
     const data = await getPipelines();
     return { success: true, data };
-  } catch (error: any) {
+  } catch (errorRaw: unknown) {
+    const error = errorRaw instanceof Error ? errorRaw : new Error(String(errorRaw));
     return { success: false, error: sanitizeClientError(error) };
   }
 }
@@ -22,16 +23,20 @@ async function _seedDefaultPipelineAction(tenantId: string) {
   try {
     const data = await seedDefaultPipeline(tenantId);
     return { success: true, data };
-  } catch (error: any) {
+  } catch (errorRaw: unknown) {
+    const error = errorRaw instanceof Error ? errorRaw : new Error(String(errorRaw));
     return { success: false, error: sanitizeClientError(error) };
   }
 }
 
+// eslint-disable-next-line @typescript-eslint/no-explicit-any -- S2 Residual Debt: Legacy internal payload requires architectural typing
+// eslint-disable-next-line @typescript-eslint/no-explicit-any -- S2 Residual Debt: Legacy internal payload requires architectural typing
 async function _getDealsAction(params: any) {
   try {
     const data = await getDeals(params);
     return { success: true, data };
-  } catch (error: any) {
+  } catch (errorRaw: unknown) {
+    const error = errorRaw instanceof Error ? errorRaw : new Error(String(errorRaw));
     return { success: false, error: sanitizeClientError(error) };
   }
 }
@@ -40,7 +45,8 @@ async function _getDealsByStageAction(stageId: string, cursor?: string) {
   try {
     const data = await getDeals({ stageId, cursor, limit: 50 });
     return { success: true, data };
-  } catch (error: any) {
+  } catch (errorRaw: unknown) {
+    const error = errorRaw instanceof Error ? errorRaw : new Error(String(errorRaw));
     return { success: false, error: sanitizeClientError(error) };
   }
 }
@@ -49,7 +55,8 @@ async function _getDealByIdAction(id: string) {
   try {
     const data = await getDealById(id);
     return { success: true, data };
-  } catch (error: any) {
+  } catch (errorRaw: unknown) {
+    const error = errorRaw instanceof Error ? errorRaw : new Error(String(errorRaw));
     return { success: false, error: sanitizeClientError(error) };
   }
 }
@@ -60,7 +67,8 @@ async function _moveDealStageAction(dealId: string, newStageId: string, lostReas
     revalidatePath('/deals');
     revalidatePath(`/deals/${dealId}`);
     return { success: true, data };
-  } catch (error: any) {
+  } catch (errorRaw: unknown) {
+    const error = errorRaw instanceof Error ? errorRaw : new Error(String(errorRaw));
     return { success: false, error: sanitizeClientError(error) };
   }
 }
@@ -89,18 +97,22 @@ async function _getAssignableUsersAction() {
       orderBy: { email: 'asc' }
     });
     return { success: true, data: users };
-  } catch (error: any) {
+  } catch (errorRaw: unknown) {
+    const error = errorRaw instanceof Error ? errorRaw : new Error(String(errorRaw));
     return { success: false, error: sanitizeClientError(error) };
   }
 }
+// eslint-disable-next-line @typescript-eslint/no-explicit-any -- S2 Residual Debt: Legacy internal payload requires architectural typing
 
+// eslint-disable-next-line @typescript-eslint/no-explicit-any -- S2 Residual Debt: Legacy internal payload requires architectural typing
 async function _createDealAction(data: any) {
   try {
     const validatedData = createDealSchema.parse(data);
     const result = await createDeal(validatedData);
     revalidatePath('/deals');
     return { success: true, data: result };
-  } catch (error: any) {
+  } catch (errorRaw: unknown) {
+    const error = errorRaw instanceof Error ? errorRaw : new Error(String(errorRaw));
     return { success: false, error: sanitizeClientError(error) };
   }
 }
@@ -111,7 +123,8 @@ async function _convertLeadToDealAction(leadId: string, assignedUserId: string, 
     revalidatePath('/deals');
     revalidatePath('/leads');
     return { success: true, data };
-  } catch (error: any) {
+  } catch (errorRaw: unknown) {
+    const error = errorRaw instanceof Error ? errorRaw : new Error(String(errorRaw));
     return { success: false, error: sanitizeClientError(error) };
   }
 }
@@ -120,7 +133,8 @@ async function _getDealAnalyticsAction() {
   try {
     const data = await getDealAnalytics();
     return { success: true, data };
-  } catch (error: any) {
+  } catch (errorRaw: unknown) {
+    const error = errorRaw instanceof Error ? errorRaw : new Error(String(errorRaw));
     return { success: false, error: sanitizeClientError(error) };
   }
 }
@@ -129,7 +143,8 @@ async function _getDealTimelineAction(dealId: string, cursor?: string, limit?: n
   try {
     const data = await getDealTimeline(dealId, cursor, limit);
     return { success: true, data };
-  } catch (error: any) {
+  } catch (errorRaw: unknown) {
+    const error = errorRaw instanceof Error ? errorRaw : new Error(String(errorRaw));
     return { success: false, error: sanitizeClientError(error) };
   }
 }

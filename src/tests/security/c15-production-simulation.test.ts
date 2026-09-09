@@ -1,8 +1,8 @@
 import { test, expect, describe, beforeAll, afterAll } from 'vitest';
-import globalPrisma from '@db/utils/prisma';
 import { TwilioProvider } from '@/infrastructure/providers/communication/TwilioProvider';
 import { S3StorageProvider } from '@/infrastructure/providers/storage/S3StorageProvider';
 import { GeminiProvider } from '@/lib/providers/ai/gemini.provider';
+import { executeAsSystem, SystemOperation } from "@db/utils/prisma-system";
 
 describe('C15 Production Deployment Simulation', () => {
 
@@ -42,30 +42,30 @@ describe('C15 Production Deployment Simulation', () => {
 
   describe('C15.2 Idempotency Simulation', () => {
     test('DB uniquely constrains IdempotencyKey', async () => {
-      const tenant = await globalPrisma.tenant.create({ data: { name: 'Idempotency Test Tenant' } });
+      const tenant = await executeAsSystem(SystemOperation.SECURITY_AUDIT, async (tx) => await tx.tenant.create({ data: { name: 'Idempotency Test Tenant' } }));
       
       const key = `webhook_sim_${Date.now()}`;
       
-      await globalPrisma.idempotencyKey.create({
-        data: {
-          tenantId: tenant.id,
-          key,
-          expiresAt: new Date(Date.now() + 100000)
-        }
-      });
+      await executeAsSystem(SystemOperation.SECURITY_AUDIT, async (tx) => await tx.idempotencyKey.create({
+                data: {
+                  tenantId: tenant.id,
+                  key,
+                  expiresAt: new Date(Date.now() + 100000)
+                }
+              }));
 
       // Second attempt should throw Prisma error P2002
       await expect(
-        globalPrisma.idempotencyKey.create({
+        executeAsSystem(SystemOperation.SECURITY_AUDIT, async (tx) => await tx.idempotencyKey.create({
           data: {
             tenantId: tenant.id,
             key,
             expiresAt: new Date(Date.now() + 100000)
           }
-        })
+        }))
       ).rejects.toThrow(/Unique constraint failed/);
 
-      await globalPrisma.tenant.delete({ where: { id: tenant.id } });
+      await executeAsSystem(SystemOperation.SECURITY_AUDIT, async (tx) => await tx.tenant.delete({ where: { id: tenant.id } })).catch(() => {});
     });
   });
 });

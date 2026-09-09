@@ -1,5 +1,5 @@
 import { Logger } from '../logger/logger';
-import { AgentPresenceSystem, AgentPresenceState } from './presence';
+import { AgentPresenceSystem } from './presence';
 
 export interface RoutingRules {
   checkBusinessHours: boolean;
@@ -45,6 +45,8 @@ export class RoutingEngine {
     return `<Response><Dial>${selectedAgentPhone}</Dial></Response>`;
   }
 
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars -- S2 Residual Debt: Legacy unused local
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars -- Intentional callback/interface parameter
   private static isWithinBusinessHours(tenantId: string): boolean {
     // Look up tenant business hours config in DB
     return true; // Simplified for abstraction

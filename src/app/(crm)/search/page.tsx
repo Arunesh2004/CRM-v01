@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect } from 'react';
 import { searchAction } from '@/modules/search/actions/search.actions';
 import { SearchResult } from '@/modules/search/search.service';
 import Link from 'next/link';
@@ -14,6 +14,7 @@ export default function GlobalSearchPage() {
   // Debounced search effect
   useEffect(() => {
     if (query.trim().length < 2) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect -- State setter inside effect retained for deterministic data fetching flow.
       setResults([]);
       setLoading(false);
       return;
@@ -72,6 +73,7 @@ export default function GlobalSearchPage() {
          
          {!loading && !error && query.trim().length >= 2 && results.length === 0 && (
            <div className="p-12 text-center text-[#8891B0]">
+             // eslint-disable-next-line react/no-unescaped-entities -- Cosmetic unescaped entity safely ignored.
              No accessible results found for "{query}".
            </div>
          )}

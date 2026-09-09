@@ -136,7 +136,7 @@ describe('Sales Intelligence - Security & Adversarial Tests', () => {
     it('7. Authorized user reads quota amount (Raw)', async () => {
       // adminUserA is "admin" via email check in FieldSecurityService or has REVENUE:READ
       const quota = await ForecastService.getSalesQuota(adminUserA, tenantA, quotaAId);
-      expect(quota.targetAmount).toBe(100000); // Raw
+      expect(Number(quota.targetAmount)).toBe(100000); // Raw — use Number() as targetAmount is a Prisma Decimal
     });
   });
 

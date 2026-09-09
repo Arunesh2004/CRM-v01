@@ -1,10 +1,11 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { withApiContext } from '@/lib/observability/context';
-import { requireAuth, requireTenant, requirePermissionFast } from '@/lib/auth';
-import prisma from '@db/utils/prisma';
+import { requireAuth, requireTenant } from '@/lib/auth';
 import { ApprovalService } from '@/modules/approvals/approval.service';
 import { Logger } from '@/lib/logger/logger';
 
+// eslint-disable-next-line @typescript-eslint/no-unused-vars -- S2 Residual Debt: Legacy unused local
+// eslint-disable-next-line @typescript-eslint/no-unused-vars -- Intentional callback/interface parameter
 const _orig_GET = async function (req: NextRequest) {
   try {
     const { id: userId } = await requireAuth();
@@ -15,7 +16,8 @@ const _orig_GET = async function (req: NextRequest) {
     const approvals = await ApprovalService.getPendingApprovals(tenantId, userId);
 
     return NextResponse.json(approvals);
-  } catch (error: any) {
+  } catch (errorRaw: unknown) {
+    const error = errorRaw instanceof Error ? errorRaw : new Error(String(errorRaw));
     Logger.error('[API] GET Approvals failed', error);
     if (error.message?.includes('Forbidden') || error.message?.includes('Unauthorized')) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 403 });

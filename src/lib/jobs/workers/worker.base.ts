@@ -39,7 +39,8 @@ export abstract class BaseWorker<T extends JobContext> {
       
       const durationMs = endTimer();
       Logger.info(`Completed job ${jobId}`, { tenantId: data.tenantId, queue: this.queueName, jobId, durationMs });
-    } catch (err: any) {
+    } catch (errRaw: unknown) {
+      const err = errRaw instanceof Error ? errRaw : new Error(String(errRaw));
       const durationMs = endTimer();
       Logger.error(`Job ${jobId} failed on attempt ${attempt}`, err, { 
         tenantId: data.tenantId, 

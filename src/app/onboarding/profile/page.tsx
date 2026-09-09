@@ -1,7 +1,7 @@
 import { redirect } from 'next/navigation';
 import { requireAuth } from '@/lib/auth';
 import { completeProfileAction } from '@/modules/users/actions/onboarding.actions';
-import { ShieldCheck, User as UserIcon, Phone, Briefcase, Mail, BadgeInfo } from 'lucide-react';
+import { ShieldCheck, Phone, Briefcase, Mail, BadgeInfo } from 'lucide-react';
 
 export default async function ProfileOnboardingPage() {
   const user = await requireAuth();

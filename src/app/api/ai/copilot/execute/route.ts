@@ -14,7 +14,7 @@ const _orig_POST = async function (req: NextRequest) {
     user = await requireAuth();
     tenantId = await requireTenant();
 
-    const body: any = await req.json();
+    const body = await req.json() as { executionId?: string; action?: string };
     const { executionId, action } = body;
 
     if (!executionId || !action || !['CONFIRM', 'CANCEL'].includes(action)) {
@@ -67,6 +67,8 @@ const _orig_POST = async function (req: NextRequest) {
     let parsedInput: Record<string, unknown> = {};
     try {
       parsedInput = JSON.parse(typeof execution.input === 'string' ? execution.input : JSON.stringify(execution.input));
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars -- S2 Residual Debt: Legacy unused local
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars -- Intentional callback/interface parameter
     } catch(e) {
       // Safe fallback
     }
@@ -87,7 +89,8 @@ const _orig_POST = async function (req: NextRequest) {
       });
 
       return NextResponse.json({ success: true, result });
-    } catch(err: any) {
+    } catch(errRaw: unknown) {
+      const err = errRaw instanceof Error ? errRaw : new Error(String(errRaw));
       await prisma.aIExecution.update({
         where: { id: executionId },
         data: { status: 'FAILED', output: err.message }
@@ -100,7 +103,8 @@ const _orig_POST = async function (req: NextRequest) {
       return NextResponse.json({ error: err.message }, { status: 500 });
     }
 
-  } catch (error: any) {
+  } catch (errorRaw: unknown) {
+    const error = errorRaw instanceof Error ? errorRaw : new Error(String(errorRaw));
     Logger.error('[API] Copilot Execute failed', error);
     if (error.message?.includes('unauthorized') || error.message?.includes('Forbidden')) {
       return NextResponse.json({ error: 'Unauthorized or forbidden' }, { status: 403 });

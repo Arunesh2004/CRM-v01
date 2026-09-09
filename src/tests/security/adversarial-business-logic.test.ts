@@ -1,6 +1,5 @@
 import { describe, it, expect, beforeAll, afterAll } from 'vitest';
 import { moveDealStage } from '../../modules/crm/deal/deal.service';
-import { withTenant } from '../../../database/utils/prisma-tenant';
 import { executeAsSystem, SystemOperation } from '../../../database/utils/prisma-system';
 import crypto from 'crypto';
 
@@ -8,7 +7,6 @@ import crypto from 'crypto';
 // We mock auth to return a specific user who does NOT have DEAL UPDATE permissions
 import * as authLib from '../../lib/auth';
 import { vi } from 'vitest';
-import prisma from '../../../database/utils/prisma';
 
 const tenantId = crypto.randomUUID();
 const userId = crypto.randomUUID();

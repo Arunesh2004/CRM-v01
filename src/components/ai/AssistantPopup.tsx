@@ -1,7 +1,7 @@
 'use client';
 import { useState, useRef, useEffect } from 'react';
 import { askAssistantAction } from '@/modules/ai/actions/assistant.actions';
-import { X, Maximize2, Minimize2, MessageSquare, Loader2, Sparkles, Send } from 'lucide-react';
+import { X, Maximize2, Minimize2, Loader2, Sparkles, Send } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 export function AssistantPopup() {

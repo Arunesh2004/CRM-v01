@@ -2,7 +2,7 @@ import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { createDeal } from '@/modules/crm/deal/deal.service';
 import { createPipeline, createPipelineStage } from '@/modules/crm/deal/pipeline.service';
 import { TicketService } from '@/modules/support/ticket.service';
-import globalPrisma from '@db/utils/prisma';
+import { executeAsSystem, SystemOperation } from "@db/utils/prisma-system";
 
 const mockAuth = {
   user: { id: 'test_user_id' },
@@ -30,19 +30,19 @@ describe('Deal and Ticket Assignment Security', () => {
   let stageA: any;
 
   beforeEach(async () => {
-    tenantA = await globalPrisma.tenant.create({ data: { name: 'Tenant A' } });
-    tenantB = await globalPrisma.tenant.create({ data: { name: 'Tenant B' } });
+    tenantA = await executeAsSystem(SystemOperation.SECURITY_AUDIT, async (tx) => await tx.tenant.create({ data: { name: 'Tenant A' } }));
+    tenantB = await executeAsSystem(SystemOperation.SECURITY_AUDIT, async (tx) => await tx.tenant.create({ data: { name: 'Tenant B' } }));
 
-    userA = await globalPrisma.user.create({
-      data: { email: 'usera_deal@test.com', clerkId: 'clerk_a_deal', tenantId: tenantA.id, status: 'ACTIVE' }
-    });
-    userB = await globalPrisma.user.create({
-      data: { email: 'userb_deal@test.com', clerkId: 'clerk_b_deal', tenantId: tenantB.id, status: 'ACTIVE' }
-    });
+    userA = await executeAsSystem(SystemOperation.SECURITY_AUDIT, async (tx) => await tx.user.create({
+          data: { email: 'usera_deal@test.com', clerkId: 'clerk_a_deal', tenantId: tenantA.id, status: 'ACTIVE' }
+        }));
+    userB = await executeAsSystem(SystemOperation.SECURITY_AUDIT, async (tx) => await tx.user.create({
+          data: { email: 'userb_deal@test.com', clerkId: 'clerk_b_deal', tenantId: tenantB.id, status: 'ACTIVE' }
+        }));
 
-    customerA = await globalPrisma.customer.create({
-      data: { tenantId: tenantA.id, name: 'Cust A', normalizedName: 'cust a', status: 'ACTIVE' }
-    });
+    customerA = await executeAsSystem(SystemOperation.SECURITY_AUDIT, async (tx) => await tx.customer.create({
+          data: { tenantId: tenantA.id, name: 'Cust A', normalizedName: 'cust a', status: 'ACTIVE' }
+        }));
 
     mockAuth.user = userA;
     mockAuth.tenantId = tenantA.id;
@@ -52,14 +52,14 @@ describe('Deal and Ticket Assignment Security', () => {
   });
 
   afterEach(async () => {
-    await globalPrisma.ticketMessage.deleteMany({});
-    await globalPrisma.ticket.deleteMany({});
-    await globalPrisma.activityTimeline.deleteMany({});
-    await globalPrisma.dealStageHistory.deleteMany({});
-    await globalPrisma.deal.deleteMany({});
-    await globalPrisma.pipelineStage.deleteMany({});
-    await globalPrisma.pipeline.deleteMany({});
-    await globalPrisma.customer.deleteMany({});
+    await executeAsSystem(SystemOperation.SECURITY_AUDIT, async (tx) => await tx.ticketMessage.deleteMany({})).catch(() => {});
+    await executeAsSystem(SystemOperation.SECURITY_AUDIT, async (tx) => await tx.ticket.deleteMany({})).catch(() => {});
+    await executeAsSystem(SystemOperation.SECURITY_AUDIT, async (tx) => await tx.activityTimeline.deleteMany({})).catch(() => {});
+    await executeAsSystem(SystemOperation.SECURITY_AUDIT, async (tx) => await tx.dealStageHistory.deleteMany({})).catch(() => {});
+    await executeAsSystem(SystemOperation.SECURITY_AUDIT, async (tx) => await tx.deal.deleteMany({})).catch(() => {});
+    await executeAsSystem(SystemOperation.SECURITY_AUDIT, async (tx) => await tx.pipelineStage.deleteMany({})).catch(() => {});
+    await executeAsSystem(SystemOperation.SECURITY_AUDIT, async (tx) => await tx.pipeline.deleteMany({})).catch(() => {});
+    await executeAsSystem(SystemOperation.SECURITY_AUDIT, async (tx) => await tx.customer.deleteMany({})).catch(() => {});
     vi.resetAllMocks();
   });
 
@@ -146,10 +146,10 @@ describe('Deal and Ticket Assignment Security', () => {
     );
     
     // Attempt assignment
-    const updated = await globalPrisma.ticket.update({
-      where: { id: ticket.id },
-      data: { assignedUserId: userA.id }
-    });
+    const updated = await executeAsSystem(SystemOperation.SECURITY_AUDIT, async (tx) => await tx.ticket.update({
+          where: { id: ticket.id },
+          data: { assignedUserId: userA.id }
+        }));
     expect(updated.assignedUserId).toBe(userA.id);
   });
 });

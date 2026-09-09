@@ -3,7 +3,7 @@ import * as routeLive from '@/app/api/health/live/route';
 import * as routeReady from '@/app/api/health/ready/route';
 import * as routeLegacy from '@/app/api/health/route';
 import prisma from '@db/utils/prisma';
-import { NextResponse, NextRequest } from 'next/server';
+import { NextRequest } from 'next/server';
 
 describe('S15.2 FND-15-Operational: Health Endpoints', () => {
   beforeEach(() => {

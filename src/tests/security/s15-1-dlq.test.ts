@@ -1,8 +1,8 @@
 import { describe, it, expect, beforeAll, beforeEach, afterAll, afterEach } from 'vitest';
 import { sendToDeadLetterQueue } from '@/lib/queue/worker';
 import { SecureJobEnvelope } from '@/lib/queue/types';
-import prisma from '@db/utils/prisma';
 import crypto from 'crypto';
+import { executeAsSystem, SystemOperation } from "@db/utils/prisma-system";
 
 describe('S15.1 FND-15-02: Dead Letter Queue Resilience', () => {
   const tenantId = 't-dlq-test-1';
@@ -12,11 +12,11 @@ describe('S15.1 FND-15-02: Dead Letter Queue Resilience', () => {
 
   beforeAll(async () => {
     // Create test tenant
-    await prisma.tenant.upsert({
-      where: { id: tenantId },
-      create: { id: tenantId, name: 'DLQ Test Tenant' },
-      update: {}
-    });
+    await executeAsSystem(SystemOperation.SECURITY_AUDIT, async (tx) => await tx.tenant.upsert({
+            where: { id: tenantId },
+            create: { id: tenantId, name: 'DLQ Test Tenant' },
+            update: {}
+          }));
   });
 
   beforeEach(() => {
@@ -38,20 +38,20 @@ describe('S15.1 FND-15-02: Dead Letter Queue Resilience', () => {
   });
 
   afterEach(async () => {
-    await prisma.deadLetterQueue.deleteMany({ where: { tenantId } });
-    await prisma.idempotencyKey.deleteMany({ where: { tenantId } });
+    await executeAsSystem(SystemOperation.SECURITY_AUDIT, async (tx) => await tx.deadLetterQueue.deleteMany({ where: { tenantId } })).catch(() => {});
+    await executeAsSystem(SystemOperation.SECURITY_AUDIT, async (tx) => await tx.idempotencyKey.deleteMany({ where: { tenantId } })).catch(() => {});
   });
 
   afterAll(async () => {
-    await prisma.tenant.delete({ where: { id: tenantId } });
+    await executeAsSystem(SystemOperation.SECURITY_AUDIT, async (tx) => await tx.tenant.delete({ where: { id: tenantId } })).catch(() => {});
   });
 
   it('MUST durably persist a terminal failure and sanitize sensitive payloads', async () => {
     await sendToDeadLetterQueue(envelope, new Error('Terminal Failure'), 5, inngestEventId);
 
-    const dlqRecord = await prisma.deadLetterQueue.findFirst({
-      where: { jobId, tenantId }
-    });
+    const dlqRecord = await executeAsSystem(SystemOperation.SECURITY_AUDIT, async (tx) => await tx.deadLetterQueue.findFirst({
+          where: { jobId, tenantId }
+        }));
 
     expect(dlqRecord).not.toBeNull();
     expect(dlqRecord?.lastError).toBe('Terminal Failure');
@@ -71,9 +71,9 @@ describe('S15.1 FND-15-02: Dead Letter Queue Resilience', () => {
     // Duplicate delivery of exactly the same terminal event
     await sendToDeadLetterQueue(envelope, new Error('Terminal Failure 2 (Duplicate)'), 5, inngestEventId);
 
-    const dlqRecords = await prisma.deadLetterQueue.findMany({
-      where: { jobId, tenantId }
-    });
+    const dlqRecords = await executeAsSystem(SystemOperation.SECURITY_AUDIT, async (tx) => await tx.deadLetterQueue.findMany({
+          where: { jobId, tenantId }
+        }));
 
     // Should only be one record, P2002 was handled gracefully
     expect(dlqRecords.length).toBe(1);
@@ -88,9 +88,9 @@ describe('S15.1 FND-15-02: Dead Letter Queue Resilience', () => {
     await sendToDeadLetterQueue(envelope, new Error('Terminal Failure 1'), 5, inngestEventId);
     await sendToDeadLetterQueue(envelope, new Error('Terminal Failure 2'), 5, inngestEventId2);
 
-    const dlqRecords = await prisma.deadLetterQueue.findMany({
-      where: { jobId, tenantId }
-    });
+    const dlqRecords = await executeAsSystem(SystemOperation.SECURITY_AUDIT, async (tx) => await tx.deadLetterQueue.findMany({
+          where: { jobId, tenantId }
+        }));
 
     expect(dlqRecords.length).toBe(2);
   });

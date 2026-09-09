@@ -1,5 +1,4 @@
-import { withTenant, withTenantTransaction } from '@db/utils/prisma-tenant';
-import prisma from '../../../database/utils/prisma';
+import { withTenant } from '@db/utils/prisma-tenant';
 import { AttachmentType } from '@prisma/client';
 
 export class AttachmentService {

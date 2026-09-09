@@ -1,7 +1,7 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { createDeal } from '@/modules/crm/deal/deal.service';
 import { createPipeline, createPipelineStage } from '@/modules/crm/deal/pipeline.service';
-import globalPrisma from '@db/utils/prisma';
+import { executeAsSystem, SystemOperation } from "@db/utils/prisma-system";
 
 const mockAuth = {
   user: { id: 'test_user_id' },
@@ -27,15 +27,15 @@ describe('Mass Assignment Vulnerability', () => {
   let stageA: any;
 
   beforeEach(async () => {
-    tenantA = await globalPrisma.tenant.create({ data: { name: 'Tenant A - Mass' } });
-    tenantB = await globalPrisma.tenant.create({ data: { name: 'Tenant B - Mass' } });
+    tenantA = await executeAsSystem(SystemOperation.SECURITY_AUDIT, async (tx) => await tx.tenant.create({ data: { name: 'Tenant A - Mass' } }));
+    tenantB = await executeAsSystem(SystemOperation.SECURITY_AUDIT, async (tx) => await tx.tenant.create({ data: { name: 'Tenant B - Mass' } }));
 
-    userA = await globalPrisma.user.create({
-      data: { email: 'usera_mass@test.com', clerkId: 'clerk_a_mass', tenantId: tenantA.id, status: 'ACTIVE' }
-    });
-    userB = await globalPrisma.user.create({
-      data: { email: 'userb_mass@test.com', clerkId: 'clerk_b_mass', tenantId: tenantB.id, status: 'ACTIVE' }
-    });
+    userA = await executeAsSystem(SystemOperation.SECURITY_AUDIT, async (tx) => await tx.user.create({
+          data: { email: 'usera_mass@test.com', clerkId: 'clerk_a_mass', tenantId: tenantA.id, status: 'ACTIVE' }
+        }));
+    userB = await executeAsSystem(SystemOperation.SECURITY_AUDIT, async (tx) => await tx.user.create({
+          data: { email: 'userb_mass@test.com', clerkId: 'clerk_b_mass', tenantId: tenantB.id, status: 'ACTIVE' }
+        }));
 
     mockAuth.user = userA;
     mockAuth.tenantId = tenantA.id;
@@ -45,13 +45,13 @@ describe('Mass Assignment Vulnerability', () => {
   });
 
   afterEach(async () => {
-    await globalPrisma.activityTimeline.deleteMany({});
-    await globalPrisma.dealStageHistory.deleteMany({});
-    await globalPrisma.deal.deleteMany({});
-    await globalPrisma.pipelineStage.deleteMany({});
-    await globalPrisma.pipeline.deleteMany({});
-    await globalPrisma.user.deleteMany({ where: { id: { in: [userA.id, userB.id] } } });
-    await globalPrisma.tenant.deleteMany({ where: { id: { in: [tenantA.id, tenantB.id] } } });
+    await executeAsSystem(SystemOperation.SECURITY_AUDIT, async (tx) => await tx.activityTimeline.deleteMany({})).catch(() => {});
+    await executeAsSystem(SystemOperation.SECURITY_AUDIT, async (tx) => await tx.dealStageHistory.deleteMany({})).catch(() => {});
+    await executeAsSystem(SystemOperation.SECURITY_AUDIT, async (tx) => await tx.deal.deleteMany({})).catch(() => {});
+    await executeAsSystem(SystemOperation.SECURITY_AUDIT, async (tx) => await tx.pipelineStage.deleteMany({})).catch(() => {});
+    await executeAsSystem(SystemOperation.SECURITY_AUDIT, async (tx) => await tx.pipeline.deleteMany({})).catch(() => {});
+    await executeAsSystem(SystemOperation.SECURITY_AUDIT, async (tx) => await tx.user.deleteMany({ where: { id: { in: [userA.id, userB.id] } } })).catch(() => {});
+    await executeAsSystem(SystemOperation.SECURITY_AUDIT, async (tx) => await tx.tenant.deleteMany({ where: { id: { in: [tenantA.id, tenantB.id] } } })).catch(() => {});
     vi.resetAllMocks();
   });
 
@@ -71,7 +71,7 @@ describe('Mass Assignment Vulnerability', () => {
     const deal = await createDeal(dealData);
 
     // Assert
-    const check = await globalPrisma.deal.findUnique({ where: { id: deal.id } });
+    const check = await executeAsSystem(SystemOperation.SECURITY_AUDIT, async (tx) => await tx.deal.findUnique({ where: { id: deal.id } }));
     expect(check).toBeDefined();
     
     // The deal must belong to Tenant A and user A.

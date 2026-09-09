@@ -12,6 +12,7 @@ vi.mock('@/lib/auth', () => ({
 
 import { requireTenant, requirePermission } from '@/lib/auth';
 import { getInvoicesAction, getUsageAction, upgradeSubscriptionAction } from '@/modules/billing/actions/billing.actions';
+import { executeAsSystem, SystemOperation } from "@db/utils/prisma-system";
 
 describe('Billing Security & Tenant Isolation', () => {
   const tenantAId = 'tenant-a-billing-test';
@@ -26,13 +27,13 @@ describe('Billing Security & Tenant Isolation', () => {
     await globalPrisma.$executeRawUnsafe(`DELETE FROM "Tenant" WHERE id IN ('${tenantAId}', '${tenantBId}')`);
 
     // Create tenants
-    await globalPrisma.tenant.createMany({
-      data: [
-        { id: tenantAId, name: 'Tenant A Billing' },
-        { id: tenantBId, name: 'Tenant B Billing' },
-      ],
-      skipDuplicates: true
-    });
+    await executeAsSystem(SystemOperation.SECURITY_AUDIT, async (tx) => await tx.tenant.createMany({
+            data: [
+              { id: tenantAId, name: 'Tenant A Billing' },
+              { id: tenantBId, name: 'Tenant B Billing' },
+            ],
+            skipDuplicates: true
+          }));
     
     // Create subscription and invoice for Tenant A
     const tenantAPrisma = withTenant(tenantAId);

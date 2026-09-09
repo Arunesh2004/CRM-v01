@@ -1,8 +1,7 @@
-import { describe, it, expect, beforeAll, afterAll } from 'vitest';
+import { describe, it, expect, beforeAll } from 'vitest';
 import prisma from '../../../database/utils/prisma';
 import { executeAsSystem, SystemOperation } from '../../../database/utils/prisma-system';
 import { RevenueService } from '../../modules/revenue/revenue.service';
-import { AIPermissionService } from '../../modules/ai-permissions/ai-permission.service';
 
 describe('Phase 10.1: Revenue Security & Adversarial Tests', () => {
   let tenantA = '00000000-0000-0000-0000-000000000001';
@@ -39,7 +38,7 @@ describe('Phase 10.1: Revenue Security & Adversarial Tests', () => {
          });
        });
        
-       const pbQuery = await prisma.priceBook.findFirst({ where: { id: pb.id, tenantId: tenantB } });
+       const pbQuery = await executeAsSystem(SystemOperation.SECURITY_AUDIT, async (tx) => await tx.priceBook.findFirst({ where: { id: pb.id, tenantId: tenantB } }));
        expect(pbQuery).toBeNull();
     });
   });
@@ -47,7 +46,7 @@ describe('Phase 10.1: Revenue Security & Adversarial Tests', () => {
   describe('Quote Engine Security', () => {
      it('Unauthorized Quote access should throw error', async () => {
        // Direct DB access with mismatching tenantId returns null
-       const fakeQuote = await prisma.quote.findFirst({ where: { id: 'some-quote', tenantId: tenantB }});
+       const fakeQuote = await executeAsSystem(SystemOperation.SECURITY_AUDIT, async (tx) => await tx.quote.findFirst({ where: { id: 'some-quote', tenantId: tenantB }}));
        expect(fakeQuote).toBeNull();
      });
 

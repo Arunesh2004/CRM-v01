@@ -18,7 +18,8 @@ async function _searchAction(query: string) {
     const user = await requireAuth();
     const results = await globalSearch(tenantId, query.trim(), user.id);
     return { success: true, data: results };
-  } catch (error: any) {
+  } catch (errorRaw: unknown) {
+    const error = errorRaw instanceof Error ? errorRaw : new Error(String(errorRaw));
     return { success: false, error: sanitizeClientError(error) };
   }
 }

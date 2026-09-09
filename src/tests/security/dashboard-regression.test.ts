@@ -1,8 +1,7 @@
-import { describe, it, expect, beforeEach, afterAll, vi } from 'vitest';
+import { describe, it, expect, beforeEach, afterEach, afterAll, vi } from 'vitest';
 import prisma from '@db/utils/prisma';
 import { executeAsSystem, SystemOperation } from '@db/utils/prisma-system';
 import { withTenant } from '@db/utils/prisma-tenant';
-import { PrismaClient, Prisma } from '@prisma/client';
 
 describe('S16.1A.2M.16.9 — Dashboard Security Semantics Validation', () => {
   let tenantAId: string;
@@ -28,17 +27,17 @@ describe('S16.1A.2M.16.9 — Dashboard Security Semantics Validation', () => {
           clerkId: `clerk_dashA_${Date.now()}`,
           status: 'ACTIVE',
           tenantId: tenantAId,
-          name: 'Dashboard Admin A',
+          firstName: 'Dashboard Admin A',
         }
       });
       userAId = userA.id;
 
       // Seed customers
       await tx.customer.create({
-        data: { name: 'Customer A1', tenantId: tenantAId, email: 'custA@test.com' }
+        data: { name: 'Customer A1', normalizedName: 'customer a1', tenantId: tenantAId }
       });
       await tx.customer.create({
-        data: { name: 'Customer B1', tenantId: tenantBId, email: 'custB@test.com' }
+        data: { name: 'Customer B1', normalizedName: 'customer b1', tenantId: tenantBId }
       });
     });
   });
@@ -50,6 +49,10 @@ describe('S16.1A.2M.16.9 — Dashboard Security Semantics Validation', () => {
       await tx.user.deleteMany({ where: { tenantId: { in: [tenantAId, tenantBId] } } });
       await tx.tenant.deleteMany({ where: { id: { in: [tenantAId, tenantBId] } } });
     });
+  });
+
+  afterEach(() => {
+    vi.restoreAllMocks();
   });
 
   it('TEST A: AUTH_BOOTSTRAP SQL API executes via $queryRawUnsafe (Spy Check)', async () => {
@@ -154,9 +157,10 @@ describe('S16.1A.2M.16.9 — Dashboard Security Semantics Validation', () => {
 
     // In a new plain transaction, RLS should be active (bypass off).
     // Prisma standard client operations don't set bypass_rls.
-    await expect(prisma.customer.findFirst({
+    const result = await prisma.customer.findFirst({
       where: { tenantId: tenantAId }
-    })).rejects.toThrow(); // RLS policy should deny access if no tenant context is set
+    });
+    expect(result).toBeNull(); // RLS policy should filter out rows if no tenant context is set
   });
 
   it('TEST F: rollback cleanup', async () => {

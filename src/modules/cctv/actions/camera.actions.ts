@@ -2,7 +2,7 @@
 import { withServerActionContext } from '@/lib/observability/server-action';
 import { sanitizeClientError } from '@/lib/errors/client-safe-error';
 
-import { requireAuth, requireTenant, requirePermission } from '@/lib/auth';
+import { requireAuth, requireTenant } from '@/lib/auth';
 import { CreateCameraSchema, UpdateCameraSchema, SimulateAIEventSchema, SetCameraCredentialsSchema, ClearCameraCredentialsSchema } from '../validators/camera.schema';
 import * as cameraService from '../camera.service';
 import { z } from 'zod';
@@ -15,7 +15,8 @@ async function _createCameraAction(payload: z.infer<typeof CreateCameraSchema>) 
     
     const result = await cameraService.createCamera(validatedData);
     return { success: true, data: result };
-  } catch (error: any) {
+  } catch (errorRaw: unknown) {
+    const error = errorRaw instanceof Error ? errorRaw : new Error(String(errorRaw));
     return { success: false, error: sanitizeClientError(error) };
   }
 }
@@ -26,9 +27,12 @@ async function _updateCameraAction(payload: z.infer<typeof UpdateCameraSchema>) 
     await requireAuth();
     await requireTenant();
     
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any -- S2 Residual Debt: Legacy internal payload requires architectural typing
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any -- S2 Residual Debt: Legacy internal payload requires architectural typing
     const result = await cameraService.updateCamera(validatedData as any);
     return { success: true, data: result };
-  } catch (error: any) {
+  } catch (errorRaw: unknown) {
+    const error = errorRaw instanceof Error ? errorRaw : new Error(String(errorRaw));
     return { success: false, error: sanitizeClientError(error) };
   }
 }
@@ -40,7 +44,8 @@ async function _getCamerasAction() {
     
     const result = await cameraService.getCameras();
     return { success: true, data: result };
-  } catch (error: any) {
+  } catch (errorRaw: unknown) {
+    const error = errorRaw instanceof Error ? errorRaw : new Error(String(errorRaw));
     return { success: false, error: sanitizeClientError(error) };
   }
 }
@@ -52,7 +57,8 @@ async function _deleteCameraAction(id: string) {
     
     const result = await cameraService.deleteCamera(id);
     return { success: true, data: result };
-  } catch (error: any) {
+  } catch (errorRaw: unknown) {
+    const error = errorRaw instanceof Error ? errorRaw : new Error(String(errorRaw));
     return { success: false, error: sanitizeClientError(error) };
   }
 }
@@ -65,7 +71,8 @@ async function _simulateAIEventAction(payload: z.infer<typeof SimulateAIEventSch
     
     const result = await cameraService.simulateAIEvent(validatedData);
     return { success: true, data: result };
-  } catch (error: any) {
+  } catch (errorRaw: unknown) {
+    const error = errorRaw instanceof Error ? errorRaw : new Error(String(errorRaw));
 
     return { success: false, error: sanitizeClientError(error) };
   }
@@ -79,7 +86,8 @@ async function _setCameraCredentialsAction(payload: z.infer<typeof SetCameraCred
     
     const result = await cameraService.setCameraCredentials(validatedData.cameraId, validatedData.rtspUsername, validatedData.rtspPassword);
     return { success: true, data: result };
-  } catch (error: any) {
+  } catch (errorRaw: unknown) {
+    const error = errorRaw instanceof Error ? errorRaw : new Error(String(errorRaw));
     return { success: false, error: sanitizeClientError(error) };
   }
 }
@@ -92,7 +100,8 @@ async function _clearCameraCredentialsAction(payload: z.infer<typeof ClearCamera
     
     const result = await cameraService.clearCameraCredentials(validatedData.cameraId);
     return { success: true, data: result };
-  } catch (error: any) {
+  } catch (errorRaw: unknown) {
+    const error = errorRaw instanceof Error ? errorRaw : new Error(String(errorRaw));
     return { success: false, error: sanitizeClientError(error) };
   }
 }

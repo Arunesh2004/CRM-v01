@@ -1,5 +1,5 @@
-import { withTenant, withTenantTransaction } from '@db/utils/prisma-tenant';
-import prisma from '@db/utils/prisma';
+import { withTenant } from '@db/utils/prisma-tenant';
+import crypto from 'crypto';
 
 export async function getSystemUser(tenantId: string) {
   const systemClerkId = `SYSTEM_${tenantId}`;
@@ -9,7 +9,6 @@ export async function getSystemUser(tenantId: string) {
   });
 
   if (!user) {
-    const crypto = require('crypto');
     const empId = `EMP-${crypto.randomBytes(4).toString('hex').toUpperCase()}`;
     user = await withTenant(tenantId).user.create({
       data: {

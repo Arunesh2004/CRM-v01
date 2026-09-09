@@ -1,4 +1,4 @@
-import { describe, it, expect } from 'vitest';
+import { describe, it, expect, beforeAll, afterAll } from 'vitest';
 import { assertValidTenantId } from '../../../database/utils/tenant-id';
 
 describe('assertValidTenantId', () => {
@@ -38,6 +38,17 @@ describe('assertValidTenantId', () => {
 
   it('should reject strings with newlines', () => {
     expect(() => assertValidTenantId('123e4567-e89b-12d3-a456-426614174000\n')).toThrow('SECURITY_ERROR');
+  });
+
+  let originalEnv: string | undefined;
+
+  beforeAll(() => {
+    originalEnv = process.env.NODE_ENV;
+    process.env.NODE_ENV = 'production';
+  });
+
+  afterAll(() => {
+    process.env.NODE_ENV = originalEnv;
   });
 
   it('should reject arbitrary non-UUID strings', () => {

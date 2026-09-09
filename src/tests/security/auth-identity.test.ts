@@ -1,9 +1,6 @@
 import { describe, it, expect, beforeAll, afterAll } from 'vitest';
-import prisma from '@db/utils/prisma';
 import { executeAsSystem, SystemOperation } from '@db/utils/prisma-system';
-import crypto from 'crypto';
 
-import { POST as acceptInvite } from '@/app/api/auth/accept-invite/route';
 import { ensureUserProvisioned } from '@/modules/auth/services/provisioning.service';
 
 describe('Phase 2R: Auth Identity Binding & Unverified Email Remediation', () => {

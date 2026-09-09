@@ -1,6 +1,6 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
-import { createContact, createCustomer, updateCustomer, deleteCustomer } from '@/modules/crm/customer/customer.service';
-import globalPrisma from '@db/utils/prisma';
+import { createContact, updateCustomer, deleteCustomer } from '@/modules/crm/customer/customer.service';
+import { executeAsSystem, SystemOperation } from "@db/utils/prisma-system";
 
 // Mock auth to allow dynamic tenant/user swapping
 const mockAuth = {
@@ -33,24 +33,24 @@ describe('Phase S13 - Critical Path Authorization Audit', () => {
 
   beforeEach(async () => {
     // Setup Data
-    tenantA = await globalPrisma.tenant.create({ data: { name: 'Tenant A - S13' } });
-    tenantB = await globalPrisma.tenant.create({ data: { name: 'Tenant B - S13' } });
+    tenantA = await executeAsSystem(SystemOperation.SECURITY_AUDIT, async (tx) => await tx.tenant.create({ data: { name: 'Tenant A - S13' } }));
+    tenantB = await executeAsSystem(SystemOperation.SECURITY_AUDIT, async (tx) => await tx.tenant.create({ data: { name: 'Tenant B - S13' } }));
 
-    userA = await globalPrisma.user.create({
-      data: { email: 'usera_s13@test.com', clerkId: 'clerk_a', tenantId: tenantA.id, status: 'ACTIVE' }
-    });
-    userB = await globalPrisma.user.create({
-      data: { email: 'userb_s13@test.com', clerkId: 'clerk_b', tenantId: tenantB.id, status: 'ACTIVE' }
-    });
+    userA = await executeAsSystem(SystemOperation.SECURITY_AUDIT, async (tx) => await tx.user.create({
+          data: { email: 'usera_s13@test.com', clerkId: 'clerk_a', tenantId: tenantA.id, status: 'ACTIVE' }
+        }));
+    userB = await executeAsSystem(SystemOperation.SECURITY_AUDIT, async (tx) => await tx.user.create({
+          data: { email: 'userb_s13@test.com', clerkId: 'clerk_b', tenantId: tenantB.id, status: 'ACTIVE' }
+        }));
 
-    customerB = await globalPrisma.customer.create({
-      data: {
-        tenantId: tenantB.id,
-        name: 'Target Customer B',
-        normalizedName: 'target customer b',
-        assignedUserId: userB.id
-      }
-    });
+    customerB = await executeAsSystem(SystemOperation.SECURITY_AUDIT, async (tx) => await tx.customer.create({
+          data: {
+            tenantId: tenantB.id,
+            name: 'Target Customer B',
+            normalizedName: 'target customer b',
+            assignedUserId: userB.id
+          }
+        }));
 
     // Reset mocks for each test
     mockAuth.user = userA;
@@ -59,10 +59,10 @@ describe('Phase S13 - Critical Path Authorization Audit', () => {
   });
 
   afterEach(async () => {
-    await globalPrisma.customerContact.deleteMany({});
-    await globalPrisma.customer.deleteMany({});
-    await globalPrisma.user.deleteMany({ where: { id: { in: [userA.id, userB.id] } } });
-    await globalPrisma.tenant.deleteMany({ where: { id: { in: [tenantA.id, tenantB.id] } } });
+    await executeAsSystem(SystemOperation.SECURITY_AUDIT, async (tx) => await tx.customerContact.deleteMany({})).catch(() => {});
+    await executeAsSystem(SystemOperation.SECURITY_AUDIT, async (tx) => await tx.customer.deleteMany({})).catch(() => {});
+    await executeAsSystem(SystemOperation.SECURITY_AUDIT, async (tx) => await tx.user.deleteMany({ where: { id: { in: [userA.id, userB.id] } } })).catch(() => {});
+    await executeAsSystem(SystemOperation.SECURITY_AUDIT, async (tx) => await tx.tenant.deleteMany({ where: { id: { in: [tenantA.id, tenantB.id] } } })).catch(() => {});
     vi.resetAllMocks();
   });
 
@@ -77,7 +77,7 @@ describe('Phase S13 - Critical Path Authorization Audit', () => {
       ).rejects.toThrow('Customer not found');
 
       // Assert it didn't change
-      const check = await globalPrisma.customer.findUnique({ where: { id: customerB.id } });
+      const check = await executeAsSystem(SystemOperation.SECURITY_AUDIT, async (tx) => await tx.customer.findUnique({ where: { id: customerB.id } }));
       expect(check?.name).toBe('Target Customer B');
     });
 
@@ -109,9 +109,9 @@ describe('Phase S13 - Critical Path Authorization Audit', () => {
       // If it passes, it's a vulnerability.
       
       // To strictly verify, let's check if the contact was created.
-      const contacts = await globalPrisma.customerContact.findMany({
-        where: { email: 'hacked@test.com' }
-      });
+      const contacts = await executeAsSystem(SystemOperation.SECURITY_AUDIT, async (tx) => await tx.customerContact.findMany({
+              where: { email: 'hacked@test.com' }
+            }));
       
       if (!errorOccurred) {
          // If we get here and the contact was created, we have an IDOR!

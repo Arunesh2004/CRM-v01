@@ -70,7 +70,7 @@ describe('Phase C7.1 - AI Demo Provider Security & Execution', () => {
       const tools = ToolRegistry.getTools();
       const wrappedTools = tools.map(t => ({
         ...t,
-        execute: async (args: any) => await t.execute(args, { tenantId: tenantA.id, userId: userA.id })
+        execute: async (args: any) => await t.execute(args, { tenantId: tenantA.id, user: { id: userA.id } })
       }));
 
       const res = await provider.generateResponse('search for Acme', wrappedTools);
@@ -100,7 +100,7 @@ describe('Phase C7.1 - AI Demo Provider Security & Execution', () => {
       const tools = ToolRegistry.getTools();
       const wrappedTools = tools.map(t => ({
         ...t,
-        execute: async (args: any) => await t.execute(args, { tenantId: tenantA.id, userId: userA.id })
+        execute: async (args: any) => await t.execute(args, { tenantId: tenantA.id, user: { id: userA.id } })
       }));
 
       const res = await provider.generateResponse(`get customer ${customer.id}`, wrappedTools);
@@ -129,7 +129,7 @@ describe('Phase C7.1 - AI Demo Provider Security & Execution', () => {
       const tools = ToolRegistry.getTools();
       const wrappedTools = tools.map(t => ({
         ...t,
-        execute: async (args: any) => await t.execute(args, { tenantId: tenantA.id, userId: userC.id }) // userC has no permissions
+        execute: async (args: any) => await t.execute(args, { tenantId: tenantA.id, user: { id: userC.id } }) // userC has no permissions
       }));
 
       const res = await provider.generateResponse(`update lead ${lead.id} to LOST`, wrappedTools);
@@ -158,7 +158,7 @@ describe('Phase C7.1 - AI Demo Provider Security & Execution', () => {
       const tools = ToolRegistry.getTools();
       const wrappedTools = tools.map(t => ({
         ...t,
-        execute: async (args: any) => await t.execute(args, { tenantId: tenantA.id, userId: userA.id })
+        execute: async (args: any) => await t.execute(args, { tenantId: tenantA.id, user: { id: userA.id } })
       }));
 
       const res = await provider.generateResponse('search for Globex', wrappedTools);

@@ -91,7 +91,8 @@ const _orig_POST = async function (req: Request) {
     }
 
     return NextResponse.json({ received: true });
-  } catch (err: any) {
+  } catch (errRaw: unknown) {
+    const err = errRaw instanceof Error ? errRaw : new Error(String(errRaw));
     Logger.error('WhatsApp webhook processing failed', err, { category: 'external_api' });
     return NextResponse.json({ error: 'Internal Server Error' }, { status: 500 });
   }

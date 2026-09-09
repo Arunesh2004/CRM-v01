@@ -1,9 +1,8 @@
-import { Suspense } from 'react';
 import { notFound } from 'next/navigation';
 import { getIncidentByIdAction } from '@/modules/incident/actions/incident.actions';
 import { generateStreamTokenAction } from '@/modules/cctv/actions/stream.actions';
 import Link from 'next/link';
-import { ArrowLeft, ShieldAlert, AlertTriangle, Video, MapPin, User, Activity } from 'lucide-react';
+import { ArrowLeft, ShieldAlert, Video, MapPin, User, Activity } from 'lucide-react';
 
 export default async function IncidentInvestigationPage({ params }: { params: Promise<{ id: string } > }) {
   const result = await getIncidentByIdAction((await params).id);

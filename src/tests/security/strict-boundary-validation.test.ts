@@ -1,9 +1,9 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import globalPrisma from '@db/utils/prisma';
 import { createDealAction } from '@/modules/crm/actions/deal.actions';
-import { createTicketAction } from '@/modules/support/actions/ticket.actions';
 import { createIncidentAction } from '@/modules/incident/actions/incident.actions';
 import * as auth from '@/lib/auth';
+import { executeAsSystem, SystemOperation } from "@db/utils/prisma-system";
 
 vi.mock('@/lib/auth', async () => {
   const actual = await vi.importActual('@/lib/auth') as any;
@@ -37,9 +37,9 @@ describe('S14 Strict Boundary Validation Tests', () => {
   beforeEach(async () => {
     vi.clearAllMocks();
 
-    tenantA = await globalPrisma.tenant.create({ data: { name: 'Tenant A' } });
-    tenantB = await globalPrisma.tenant.create({ data: { name: 'Tenant B - Target' } });
-    userA = await globalPrisma.user.create({ data: { tenantId: tenantA.id, email: 'usera@a.com', clerkId: 'user_a', firstName: 'A', lastName: 'A' } });
+    tenantA = await executeAsSystem(SystemOperation.SECURITY_AUDIT, async (tx) => await tx.tenant.create({ data: { name: 'Tenant A' } }));
+    tenantB = await executeAsSystem(SystemOperation.SECURITY_AUDIT, async (tx) => await tx.tenant.create({ data: { name: 'Tenant B - Target' } }));
+    userA = await executeAsSystem(SystemOperation.SECURITY_AUDIT, async (tx) => await tx.user.create({ data: { tenantId: tenantA.id, email: 'usera@a.com', clerkId: 'user_a', firstName: 'A', lastName: 'A' } }));
     
     vi.mocked(auth.requireAuth).mockResolvedValue({ id: userA.id, role: 'USER' } as any);
     vi.mocked(auth.requireTenant).mockResolvedValue(tenantA.id);
@@ -48,35 +48,35 @@ describe('S14 Strict Boundary Validation Tests', () => {
     vi.mocked(auth.requireTenantFromIdentity).mockResolvedValue(tenantA.id);
     vi.mocked(auth.requirePermissionFast).mockResolvedValue(true as any);
 
-    pipelineA = await globalPrisma.pipeline.create({ data: { tenantId: tenantA.id, name: 'P' } });
-    stageA = await globalPrisma.pipelineStage.create({ data: { tenantId: tenantA.id, pipelineId: pipelineA.id, name: 'S', order: 1, probability: 10 } });
-    customerA = await globalPrisma.customer.create({ data: { tenantId: tenantA.id, name: 'C', normalizedName: 'c' } });
-    locationA = await globalPrisma.location.create({ data: { tenantId: tenantA.id, customerId: customerA.id, name: 'L' } });
-    cameraA = await globalPrisma.camera.create({ data: { tenantId: tenantA.id, locationId: locationA.id, name: 'Cam', status: 'ONLINE', ipAddress: '192.168.1.1', protocol: 'RTSP' } });
-    aiEventA = await globalPrisma.aIEvent.create({ data: { tenantId: tenantA.id, cameraId: cameraA.id, confidence: 0.99, timestamp: new Date(), model: 'yolov8', detectedObject: 'person' } });
+    pipelineA = await executeAsSystem(SystemOperation.SECURITY_AUDIT, async (tx) => await tx.pipeline.create({ data: { tenantId: tenantA.id, name: 'P' } }));
+    stageA = await executeAsSystem(SystemOperation.SECURITY_AUDIT, async (tx) => await tx.pipelineStage.create({ data: { tenantId: tenantA.id, pipelineId: pipelineA.id, name: 'S', order: 1, probability: 10 } }));
+    customerA = await executeAsSystem(SystemOperation.SECURITY_AUDIT, async (tx) => await tx.customer.create({ data: { tenantId: tenantA.id, name: 'C', normalizedName: 'c' } }));
+    locationA = await executeAsSystem(SystemOperation.SECURITY_AUDIT, async (tx) => await tx.location.create({ data: { tenantId: tenantA.id, customerId: customerA.id, name: 'L' } }));
+    cameraA = await executeAsSystem(SystemOperation.SECURITY_AUDIT, async (tx) => await tx.camera.create({ data: { tenantId: tenantA.id, locationId: locationA.id, name: 'Cam', status: 'ONLINE', ipAddress: '192.168.1.1', protocol: 'RTSP' } }));
+    aiEventA = await executeAsSystem(SystemOperation.SECURITY_AUDIT, async (tx) => await tx.aIEvent.create({ data: { tenantId: tenantA.id, cameraId: cameraA.id, confidence: 0.99, timestamp: new Date(), model: 'yolov8', detectedObject: 'person' } }));
   });
 
   afterEach(async () => {
-    await globalPrisma.activityTimeline.deleteMany({});
-    await globalPrisma.document.deleteMany({});
-    await globalPrisma.mailMessage.deleteMany({});
-    await globalPrisma.mailThread.deleteMany({});
-    await globalPrisma.aIConversationMessage.deleteMany({});
-    await globalPrisma.aIConversation.deleteMany({});
-    await globalPrisma.userInvitation.deleteMany({});
-    await globalPrisma.aIConversation.deleteMany({});
-    await globalPrisma.aIEvent.deleteMany({});
-    await globalPrisma.camera.deleteMany({});
-    await globalPrisma.location.deleteMany({});
-    await globalPrisma.deal.deleteMany({});
-    await globalPrisma.pipelineStage.deleteMany({});
-    await globalPrisma.pipeline.deleteMany({});
-    await globalPrisma.customer.deleteMany({});
-    await globalPrisma.incident.deleteMany({});
-    await globalPrisma.ticket.deleteMany({});
-    await globalPrisma.user.deleteMany({});
-    await globalPrisma.role.deleteMany({});
-    await globalPrisma.lead.deleteMany({});
+    await executeAsSystem(SystemOperation.SECURITY_AUDIT, async (tx) => await tx.activityTimeline.deleteMany({})).catch(() => {});
+    await executeAsSystem(SystemOperation.SECURITY_AUDIT, async (tx) => await tx.document.deleteMany({})).catch(() => {});
+    await executeAsSystem(SystemOperation.SECURITY_AUDIT, async (tx) => await tx.mailMessage.deleteMany({})).catch(() => {});
+    await executeAsSystem(SystemOperation.SECURITY_AUDIT, async (tx) => await tx.mailThread.deleteMany({})).catch(() => {});
+    await executeAsSystem(SystemOperation.SECURITY_AUDIT, async (tx) => await tx.aIConversationMessage.deleteMany({})).catch(() => {});
+    await executeAsSystem(SystemOperation.SECURITY_AUDIT, async (tx) => await tx.aIConversation.deleteMany({})).catch(() => {});
+    await executeAsSystem(SystemOperation.SECURITY_AUDIT, async (tx) => await tx.userInvitation.deleteMany({})).catch(() => {});
+    await executeAsSystem(SystemOperation.SECURITY_AUDIT, async (tx) => await tx.aIConversation.deleteMany({})).catch(() => {});
+    await executeAsSystem(SystemOperation.SECURITY_AUDIT, async (tx) => await tx.aIEvent.deleteMany({})).catch(() => {});
+    await executeAsSystem(SystemOperation.SECURITY_AUDIT, async (tx) => await tx.camera.deleteMany({})).catch(() => {});
+    await executeAsSystem(SystemOperation.SECURITY_AUDIT, async (tx) => await tx.location.deleteMany({})).catch(() => {});
+    await executeAsSystem(SystemOperation.SECURITY_AUDIT, async (tx) => await tx.deal.deleteMany({})).catch(() => {});
+    await executeAsSystem(SystemOperation.SECURITY_AUDIT, async (tx) => await tx.pipelineStage.deleteMany({})).catch(() => {});
+    await executeAsSystem(SystemOperation.SECURITY_AUDIT, async (tx) => await tx.pipeline.deleteMany({})).catch(() => {});
+    await executeAsSystem(SystemOperation.SECURITY_AUDIT, async (tx) => await tx.customer.deleteMany({})).catch(() => {});
+    await executeAsSystem(SystemOperation.SECURITY_AUDIT, async (tx) => await tx.incident.deleteMany({})).catch(() => {});
+    await executeAsSystem(SystemOperation.SECURITY_AUDIT, async (tx) => await tx.ticket.deleteMany({})).catch(() => {});
+    await executeAsSystem(SystemOperation.SECURITY_AUDIT, async (tx) => await tx.user.deleteMany({})).catch(() => {});
+    await executeAsSystem(SystemOperation.SECURITY_AUDIT, async (tx) => await tx.role.deleteMany({})).catch(() => {});
+    await executeAsSystem(SystemOperation.SECURITY_AUDIT, async (tx) => await tx.lead.deleteMany({})).catch(() => {});
     await globalPrisma.$executeRawUnsafe(`TRUNCATE TABLE "Tenant" CASCADE;`);
   });
 
@@ -98,7 +98,7 @@ describe('S14 Strict Boundary Validation Tests', () => {
     if (!res.success) require('fs').writeFileSync('deal_err_test1.json', JSON.stringify(res.error, null, 2));
     expect(res.success).toBe(true);
 
-    const deal = await globalPrisma.deal.findFirst({ where: { id: res.data.id } });
+    const deal = await executeAsSystem(SystemOperation.SECURITY_AUDIT, async (tx) => await tx.deal.findFirst({ where: { id: res.data.id } }));
     expect(deal).toBeDefined();
     
     // Zod must have stripped the fields, and service explicitly mapped tenantId and createdById
@@ -123,7 +123,7 @@ describe('S14 Strict Boundary Validation Tests', () => {
     if (!res.success) require('fs').writeFileSync('incident_err.json', JSON.stringify(res.error, null, 2));
     expect(res.success).toBe(true);
 
-    const incident = await globalPrisma.incident.findFirst({ where: { id: res.data.id } });
+    const incident = await executeAsSystem(SystemOperation.SECURITY_AUDIT, async (tx) => await tx.incident.findFirst({ where: { id: res.data.id } }));
     expect(incident).toBeDefined();
     expect(incident?.tenantId).toBe(tenantA.id);
     expect(incident?.status).toBe('OPEN'); // Did not override default status

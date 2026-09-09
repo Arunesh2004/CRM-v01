@@ -1,7 +1,6 @@
 import { describe, it, expect, beforeAll, afterAll } from 'vitest';
 import { executeAsSystem, SystemOperation } from '../../../database/utils/prisma-system';
 import { encrypt, decrypt } from '../../lib/encryption';
-import prisma from '../../../database/utils/prisma';
 import * as crypto from 'crypto';
 
 describe('AI Provider Config Security Tests', () => {

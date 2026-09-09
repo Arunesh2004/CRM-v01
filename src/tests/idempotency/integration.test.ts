@@ -1,6 +1,5 @@
 import { describe, it, expect, beforeAll, afterAll } from 'vitest';
 import crypto from 'crypto';
-import prisma from '@db/utils/prisma';
 import { executeAsSystem, SystemOperation } from '@db/utils/prisma-system';
 import { withIdempotency, IdempotencyOperations } from '@/lib/idempotency';
 import { IdempotencyConflictError } from '@/infrastructure/errors';
@@ -42,7 +41,7 @@ describe('Idempotency Integration Tests (PostgreSQL)', () => {
     );
     expect(result.id).toBe('res-1');
 
-    const key = await prisma.idempotencyKey.findUnique({ where: { tenantId_key: { tenantId, key: idempotencyKey } } });
+    const key = await executeAsSystem(SystemOperation.SECURITY_AUDIT, async (tx) => await tx.idempotencyKey.findUnique({ where: { tenantId_key: { tenantId, key: idempotencyKey } } }));
     expect(key).toBeDefined();
     expect(key?.resourceId).toBe('res-1');
   });
@@ -84,9 +83,9 @@ describe('Idempotency Integration Tests (PostgreSQL)', () => {
   it('6. should allow a new request to reuse the key if the previous key expired', async () => {
     const idempotencyKey = crypto.randomUUID();
     // Insert expired key
-    await prisma.idempotencyKey.create({
-      data: { tenantId, key: idempotencyKey, operation: 'UNKNOWN', requestHash: '123', expiresAt: new Date(Date.now() - 1000) }
-    });
+    await executeAsSystem(SystemOperation.SECURITY_AUDIT, async (tx) => await tx.idempotencyKey.create({
+            data: { tenantId, key: idempotencyKey, operation: 'UNKNOWN', requestHash: '123', expiresAt: new Date(Date.now() - 1000) }
+          }));
 
     const result = await withIdempotency(tenantId, userId, IdempotencyOperations.CREATE_TASK, idempotencyKey, { a: 1 }, async () => ({ id: 'res-6' }), fetchMockResource);
     expect(result.id).toBe('res-6');
@@ -104,9 +103,9 @@ describe('Idempotency Integration Tests (PostgreSQL)', () => {
   // Since space is short, I will group some of the remaining 8 logic-flow cases:
   it('8. should successfully retrieve an existing resource even if the original request was days ago (simulated)', async () => {
     const idempotencyKey = crypto.randomUUID();
-    await prisma.idempotencyKey.create({
-      data: { tenantId, key: idempotencyKey, operation: IdempotencyOperations.CREATE_TASK, requestHash: crypto.createHash('sha256').update(JSON.stringify({a:1})).digest('hex'), resourceId: 'res-8', expiresAt: new Date(Date.now() + 100000) }
-    });
+    await executeAsSystem(SystemOperation.SECURITY_AUDIT, async (tx) => await tx.idempotencyKey.create({
+            data: { tenantId, key: idempotencyKey, operation: IdempotencyOperations.CREATE_TASK, requestHash: crypto.createHash('sha256').update(JSON.stringify({a:1})).digest('hex'), resourceId: 'res-8', expiresAt: new Date(Date.now() + 100000) }
+          }));
     const result = await withIdempotency(tenantId, userId, IdempotencyOperations.CREATE_TASK, idempotencyKey, { a: 1 }, async () => { throw new Error('fail'); }, fetchMockResource);
     expect(result.id).toBe('res-8');
   });
@@ -141,15 +140,15 @@ describe('Idempotency Integration Tests (PostgreSQL)', () => {
     expect(fulfilled.length).toBeGreaterThan(0);
     
     // Check that exactly one task was created
-    const tasks = await prisma.task.findMany({
-      where: { tenantId, title: 'Concurrent Task' }
-    });
+    const tasks = await executeAsSystem(SystemOperation.SECURITY_AUDIT, async (tx) => await tx.task.findMany({
+          where: { tenantId, title: 'Concurrent Task' }
+        }));
     expect(tasks.length).toBe(1);
     
     // Check exactly one key exists
-    const keys = await prisma.idempotencyKey.findMany({
-      where: { tenantId, key: idempotencyKey }
-    });
+    const keys = await executeAsSystem(SystemOperation.SECURITY_AUDIT, async (tx) => await tx.idempotencyKey.findMany({
+          where: { tenantId, key: idempotencyKey }
+        }));
     expect(keys.length).toBe(1);
   });
 
@@ -158,9 +157,9 @@ describe('Idempotency Integration Tests (PostgreSQL)', () => {
     let businessCalls = 0;
     const ticketPayload = { b: 'ticket-concurrent' };
 
-    const customer = await prisma.customer.create({
-      data: { tenantId, name: 'Ticket Customer', normalizedName: 'ticket customer' }
-    });
+    const customer = await executeAsSystem(SystemOperation.SECURITY_AUDIT, async (tx) => await tx.customer.create({
+          data: { tenantId, name: 'Ticket Customer', normalizedName: 'ticket customer' }
+        }));
 
     const ticketBusinessFn = async (tx: Prisma.TransactionClient) => {
       businessCalls++;
@@ -188,9 +187,9 @@ describe('Idempotency Integration Tests (PostgreSQL)', () => {
     expect(fulfilled.length).toBeGreaterThan(0);
     
     // Check that exactly one ticket was created
-    const tickets = await prisma.ticket.findMany({
-      where: { tenantId, subject: 'Concurrent Ticket' }
-    });
+    const tickets = await executeAsSystem(SystemOperation.SECURITY_AUDIT, async (tx) => await tx.ticket.findMany({
+          where: { tenantId, subject: 'Concurrent Ticket' }
+        }));
     expect(tickets.length).toBe(1);
   });
 
@@ -212,11 +211,11 @@ describe('Idempotency Integration Tests (PostgreSQL)', () => {
       }, async (t, u, r) => ({ id: r }))
     ]);
 
-    const keys = await prisma.idempotencyKey.findMany({ where: { tenantId, key: idempotencyKey }});
+    const keys = await executeAsSystem(SystemOperation.SECURITY_AUDIT, async (tx) => await tx.idempotencyKey.findMany({ where: { tenantId, key: idempotencyKey }}));
     expect(keys.length).toBe(1);
     expect(businessCalls).toBe(1);
 
-    const tasks = await prisma.task.findMany({ where: { tenantId, title: { startsWith: 'Diff' } }});
+    const tasks = await executeAsSystem(SystemOperation.SECURITY_AUDIT, async (tx) => await tx.task.findMany({ where: { tenantId, title: { startsWith: 'Diff' } }}));
     expect(tasks.length).toBe(1);
 
     const rejected = results.filter(r => r.status === 'rejected');
@@ -233,7 +232,7 @@ describe('Idempotency Integration Tests (PostgreSQL)', () => {
       }, fetchMockResource)
     ).rejects.toThrow('Business logic failure');
     
-    const keys = await prisma.idempotencyKey.findMany({ where: { tenantId, key: idempotencyKey }});
+    const keys = await executeAsSystem(SystemOperation.SECURITY_AUDIT, async (tx) => await tx.idempotencyKey.findMany({ where: { tenantId, key: idempotencyKey }}));
     expect(keys.length).toBe(0);
   });
 
@@ -258,7 +257,7 @@ describe('Idempotency Integration Tests (PostgreSQL)', () => {
     expect(businessCalls).toBe(1);
     
     // Because the transaction rolled back, the IdempotencyKey should NOT exist
-    const keys = await prisma.idempotencyKey.findMany({ where: { tenantId, key: idempotencyKey }});
+    const keys = await executeAsSystem(SystemOperation.SECURITY_AUDIT, async (tx) => await tx.idempotencyKey.findMany({ where: { tenantId, key: idempotencyKey }}));
     expect(keys.length).toBe(0);
   });
 
@@ -266,15 +265,15 @@ describe('Idempotency Integration Tests (PostgreSQL)', () => {
     const idempotencyKey = crypto.randomUUID();
     
     // Insert an EXPIRED key initially
-    await prisma.idempotencyKey.create({
-      data: {
-        tenantId,
-        key: idempotencyKey,
-        operation: IdempotencyOperations.CREATE_TASK,
-        requestHash: 'old-hash',
-        expiresAt: new Date(Date.now() - 10000)
-      }
-    });
+    await executeAsSystem(SystemOperation.SECURITY_AUDIT, async (tx) => await tx.idempotencyKey.create({
+            data: {
+              tenantId,
+              key: idempotencyKey,
+              operation: IdempotencyOperations.CREATE_TASK,
+              requestHash: 'old-hash',
+              expiresAt: new Date(Date.now() - 10000)
+            }
+          }));
 
     let businessCalls = 0;
     
@@ -298,9 +297,9 @@ describe('Idempotency Integration Tests (PostgreSQL)', () => {
     ]);
 
     // Check exactly one task was created
-    const tasks = await prisma.task.findMany({
-      where: { tenantId, title: 'Expiration Race Task' }
-    });
+    const tasks = await executeAsSystem(SystemOperation.SECURITY_AUDIT, async (tx) => await tx.task.findMany({
+          where: { tenantId, title: 'Expiration Race Task' }
+        }));
     expect(tasks.length).toBe(1);
     expect(businessCalls).toBe(1); // The loser should wait and then fetch the winner's result (which might not be ready, but here fetchMockResource is used)
 
@@ -309,7 +308,7 @@ describe('Idempotency Integration Tests (PostgreSQL)', () => {
     // Let's actually provide a custom fetchResource to fetch the real task so it passes cleanly.
     expect(fulfilled.length).toBeGreaterThan(0);
     
-    const keys = await prisma.idempotencyKey.findMany({ where: { tenantId, key: idempotencyKey }});
+    const keys = await executeAsSystem(SystemOperation.SECURITY_AUDIT, async (tx) => await tx.idempotencyKey.findMany({ where: { tenantId, key: idempotencyKey }}));
     expect(keys.length).toBe(1);
   });
 });

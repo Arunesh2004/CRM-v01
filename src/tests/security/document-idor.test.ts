@@ -1,8 +1,7 @@
-import { describe, it, expect, beforeAll, afterAll, vi } from 'vitest';
-import prisma from '@db/utils/prisma';
+import { describe, it, expect, beforeAll, vi } from 'vitest';
 import { executeAsSystem, SystemOperation } from '@db/utils/prisma-system';
 import { GET } from '@/app/api/documents/[id]/download/route';
-import { deleteDocument, requireDocumentAccess } from '@/modules/crm/document/document.service';
+import { deleteDocument } from '@/modules/crm/document/document.service';
 import { NextRequest } from 'next/server';
 import crypto from 'crypto';
 

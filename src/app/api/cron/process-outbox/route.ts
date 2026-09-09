@@ -30,7 +30,8 @@ const _orig_GET = async function (req: Request) {
   try {
     const result = await processOutbox();
     return NextResponse.json(result);
-  } catch (error: any) {
+  } catch (errorRaw: unknown) {
+    const error = errorRaw instanceof Error ? errorRaw : new Error(String(errorRaw));
     return NextResponse.json({ success: false, error: sanitizeClientError(error) }, { status: 500 });
   }
 }
@@ -42,7 +43,8 @@ const _orig_POST = async function (req: Request) {
   try {
     const result = await processOutbox();
     return NextResponse.json(result);
-  } catch (error: any) {
+  } catch (errorRaw: unknown) {
+    const error = errorRaw instanceof Error ? errorRaw : new Error(String(errorRaw));
     return NextResponse.json({ success: false, error: sanitizeClientError(error) }, { status: 500 });
   }
 }

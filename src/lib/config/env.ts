@@ -51,6 +51,13 @@ export function validateEnvironment(): void {
     throw new Error(`CRITICAL STARTUP FAILURE: COMPANY_TENANT_ID must be a valid UUID.`);
   }
 
+  // Email / Resend constraints
+  if (isProduction) {
+    if (!process.env.RESEND_API_KEY) {
+      throw new Error(`CRITICAL STARTUP FAILURE: RESEND_API_KEY missing in production`);
+    }
+  }
+
   // Twilio constraints
   if (isProduction) {
     if (!process.env.TWILIO_ACCOUNT_SID || !process.env.TWILIO_AUTH_TOKEN) {
@@ -95,6 +102,7 @@ export const ENV = {
   get isProduction() { return process.env.NODE_ENV === 'production' && process.env.VERCEL_ENV === 'production'; },
   get databaseUrl() { return process.env.DATABASE_URL!; },
   get redisUrl() { return process.env.REDIS_URL || 'redis://localhost:6379'; },
+  // eslint-disable-next-line @typescript-eslint/no-non-null-asserted-optional-chain -- Non-null assertion safely retained.
   get companyTenantId() { return process.env.COMPANY_TENANT_ID?.trim()!; },
   get initialAdminEmails(): string[] { 
     const val = process.env.INITIAL_ADMIN_EMAIL?.trim().toLowerCase();

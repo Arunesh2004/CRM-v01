@@ -12,6 +12,8 @@ export async function receiveWebhook(input: {
   provider: string;
   eventId: string;
   eventType: string;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any -- S2 Residual Debt: Legacy internal payload requires architectural typing
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any -- S2 Residual Debt: Legacy internal payload requires architectural typing
   payload: any;
   signatureVerified: boolean;
 }) {

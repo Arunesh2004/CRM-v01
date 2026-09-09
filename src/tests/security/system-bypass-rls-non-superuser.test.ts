@@ -1,19 +1,10 @@
 import { describe, it, expect, beforeAll, afterAll } from 'vitest';
-import { PrismaClient } from '@prisma/client';
 import { executeAsSystem, SystemOperation } from '@db/utils/prisma-system';
 import prisma from '@db/utils/prisma';
 import { withTenant } from '@db/utils/prisma-tenant';
 import crypto from 'crypto';
 
-// Use a direct client for setup/teardown to ensure it works outside connection pool interference,
-// or we can just use executeAsSystem for seeding.
-const adminPrisma = new PrismaClient({
-  datasources: {
-    db: {
-      url: "postgresql://postgres:postgres@127.0.0.1:5435/crm_migration_safety_test"
-    }
-  }
-});
+// We use executeAsSystem for setup/teardown to seed data reliably without RLS blocking it.
 
 describe('PHASE S4.2B: System Bypass RLS Non-Superuser Environment Validation', () => {
   let tenantAId: string;
@@ -28,20 +19,24 @@ describe('PHASE S4.2B: System Bypass RLS Non-Superuser Environment Validation', 
     customerAId = crypto.randomUUID();
     customerBId = crypto.randomUUID();
 
-    await adminPrisma.$executeRawUnsafe(`INSERT INTO "Tenant" (id, name, "createdAt", "updatedAt") VALUES ('${tenantAId}', 'Tenant A', now(), now())`);
-    await adminPrisma.$executeRawUnsafe(`INSERT INTO "Tenant" (id, name, "createdAt", "updatedAt") VALUES ('${tenantBId}', 'Tenant B', now(), now())`);
+    await executeAsSystem(SystemOperation.SECURITY_AUDIT, async (tx) => {
+      await tx.$executeRawUnsafe(`INSERT INTO "Tenant" (id, name, "createdAt", "updatedAt") VALUES ('${tenantAId}', 'Tenant A', now(), now())`);
+      await tx.$executeRawUnsafe(`INSERT INTO "Tenant" (id, name, "createdAt", "updatedAt") VALUES ('${tenantBId}', 'Tenant B', now(), now())`);
 
-    await adminPrisma.$executeRawUnsafe(`INSERT INTO "Customer" (id, "tenantId", name, "normalizedName", "createdAt", "updatedAt") VALUES ('${customerAId}', '${tenantAId}', 'Customer A', 'customer_a', now(), now())`);
-    await adminPrisma.$executeRawUnsafe(`INSERT INTO "Customer" (id, "tenantId", name, "normalizedName", "createdAt", "updatedAt") VALUES ('${customerBId}', '${tenantBId}', 'Customer B', 'customer_b', now(), now())`);
+      await tx.$executeRawUnsafe(`INSERT INTO "Customer" (id, "tenantId", name, "normalizedName", "createdAt", "updatedAt") VALUES ('${customerAId}', '${tenantAId}', 'Customer A', 'customer_a', now(), now())`);
+      await tx.$executeRawUnsafe(`INSERT INTO "Customer" (id, "tenantId", name, "normalizedName", "createdAt", "updatedAt") VALUES ('${customerBId}', '${tenantBId}', 'Customer B', 'customer_b', now(), now())`);
+    });
   });
 
   afterAll(async () => {
-    await adminPrisma.$executeRawUnsafe(`DELETE FROM "Customer" WHERE id IN ('${customerAId}', '${customerBId}')`);
-    await adminPrisma.$executeRawUnsafe(`DELETE FROM "Tenant" WHERE id IN ('${tenantAId}', '${tenantBId}')`);
-    await adminPrisma.$disconnect();
+    await executeAsSystem(SystemOperation.SECURITY_AUDIT, async (tx) => {
+      await tx.$executeRawUnsafe(`DELETE FROM "Customer" WHERE id IN ('${customerAId}', '${customerBId}')`);
+      await tx.$executeRawUnsafe(`DELETE FROM "Tenant" WHERE id IN ('${tenantAId}', '${tenantBId}')`);
+    });
   });
 
   it('Part 3 - Scenario A: Normal application query with NO tenant context returns 0 rows (RLS active)', async () => {
+    // Normal query without withTenant context will return 0 due to RLS.
     const customers = await prisma.customer.findMany({ where: { id: { in: [customerAId, customerBId] } } });
     expect(customers.length).toBe(0);
   });
@@ -76,6 +71,7 @@ describe('PHASE S4.2B: System Bypass RLS Non-Superuser Environment Validation', 
     // Note: It might or might not be the same PID, but regardless it should be cleaned up.
     expect(pids2[0].bypass).toBeNull();
 
+    // Normal query should not see the records
     const customersAfter = await prisma.customer.findMany({ where: { id: { in: [customerAId, customerBId] } } });
     expect(customersAfter.length).toBe(0);
   });

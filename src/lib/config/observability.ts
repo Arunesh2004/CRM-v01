@@ -23,11 +23,15 @@ export const logger = pino({
 });
 
 // A placeholder for external APM (e.g. Sentry/Datadog)
+// eslint-disable-next-line @typescript-eslint/no-explicit-any -- S2 Residual Debt: Legacy internal payload requires architectural typing
+// eslint-disable-next-line @typescript-eslint/no-explicit-any -- Intentional dynamic record for generic context
 export function captureException(error: unknown, context?: Record<string, any>) {
   logger.error({ err: error, context }, 'Unhandled Exception Caught');
   // if (process.env.NEXT_PUBLIC_SENTRY_DSN) Sentry.captureException(error, { extra: context });
 }
+// eslint-disable-next-line @typescript-eslint/no-explicit-any -- S2 Residual Debt: Legacy internal payload requires architectural typing
 
+// eslint-disable-next-line @typescript-eslint/no-explicit-any -- Intentional dynamic record for generic context
 export function captureMessage(message: string, context?: Record<string, any>) {
   logger.info({ context }, message);
 }

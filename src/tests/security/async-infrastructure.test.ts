@@ -32,8 +32,8 @@ describe('Phase 11: Async Infrastructure & Scalability Security', () => {
 
   afterAll(async () => {
     // Cleanup
-    await prisma.securityEvent.deleteMany({ where: { tenantId } });
-    await prisma.webhookEvent.deleteMany({ where: { tenantId } });
+    await executeAsSystem(SystemOperation.SECURITY_AUDIT, async (tx) => await tx.securityEvent.deleteMany({ where: { tenantId } })).catch(() => {});
+    await executeAsSystem(SystemOperation.SECURITY_AUDIT, async (tx) => await tx.webhookEvent.deleteMany({ where: { tenantId } })).catch(() => {});
   });
 
   it('should initialize Inngest without runtime panic', () => {
@@ -65,9 +65,9 @@ describe('Phase 11: Async Infrastructure & Scalability Security', () => {
       const res = await POST(req);
       expect(res.status).toBe(401);
       
-      const secEvent = await prisma.securityEvent.findFirst({
-        where: { tenantId, eventType: 'WEBHOOK_SIGNATURE_FAILURE' }
-      });
+      const secEvent = await executeAsSystem(SystemOperation.SECURITY_AUDIT, async (tx) => await tx.securityEvent.findFirst({
+              where: { tenantId, eventType: 'WEBHOOK_SIGNATURE_FAILURE' }
+            }));
       expect(secEvent).toBeDefined();
     });
 

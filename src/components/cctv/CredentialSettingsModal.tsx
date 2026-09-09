@@ -4,7 +4,6 @@ import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { setCameraCredentialsAction, clearCameraCredentialsAction } from '@/modules/cctv/actions/camera.actions';
 import { Loader2, Key, AlertTriangle } from 'lucide-react';
-import { Button } from '@/components/ui/button';
 
 interface Props {
   cameraId: string;

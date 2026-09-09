@@ -2,7 +2,7 @@ import { describe, it, expect } from 'vitest';
 import { sanitizeClientError } from '@/lib/errors/client-safe-error';
 import { Prisma } from '@prisma/client';
 import { ZodError } from 'zod';
-import { executeAsSystem, SystemOperation } from '@db/utils/prisma-system';
+import { executeAsSystem } from '@db/utils/prisma-system';
 import { FieldSecurityService } from '@/modules/security/field-security/field-security.service';
 import { askAssistant } from '@/modules/ai/assistant.service';
 

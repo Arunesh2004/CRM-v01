@@ -5,7 +5,9 @@ import { Logger } from '@/lib/logger/logger';
 
 const _orig_POST = async function (req: NextRequest) {
   try {
-    const body: any = await req.json();
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any -- S2 Residual Debt: Legacy internal payload requires architectural typing
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any -- S2 Residual Debt: Legacy internal payload requires architectural typing
+    const body = await req.json() as { message?: string; history?: any[] };
     const { message, history } = body;
     const requestId = req.headers.get('x-request-id') || `req_${Date.now()}`;
 
@@ -20,7 +22,8 @@ const _orig_POST = async function (req: NextRequest) {
           for await (const chunk of generator) {
             controller.enqueue(`data: ${JSON.stringify(chunk)}\n\n`);
           }
-        } catch (e: any) {
+        } catch (eRaw: unknown) {
+            const e = eRaw instanceof Error ? eRaw : new Error(String(eRaw));
           controller.enqueue(`data: ${JSON.stringify({ type: 'error', message: e.message || 'Stream error' })}\n\n`);
         } finally {
           controller.close();
@@ -35,7 +38,8 @@ const _orig_POST = async function (req: NextRequest) {
         'Connection': 'keep-alive',
       }
     });
-  } catch (error: any) {
+  } catch (errorRaw: unknown) {
+    const error = errorRaw instanceof Error ? errorRaw : new Error(String(errorRaw));
     Logger.error('[API] Copilot Chat Stream failed', error);
     return NextResponse.json({ error: 'Internal Server Error' }, { status: 500 });
   }

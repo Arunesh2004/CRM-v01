@@ -3,7 +3,7 @@ import { POST as clerkPost } from '../../app/api/webhooks/clerk/route';
 import { NextRequest } from 'next/server';
 
 // Mock the system execution to avoid needing a live database
-let mockUpdateMany = vi.fn();
+const mockUpdateMany = vi.fn();
 vi.mock('@db/utils/prisma-system', () => ({
   executeAsSystem: vi.fn(async (operation, callback) => {
     const tx = {

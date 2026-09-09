@@ -105,6 +105,7 @@ const handleRateLimiting = async (request: NextRequest, ip: string) => {
       if (!success) {
         return new NextResponse('Too Many Requests', { status: 429 });
       }
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars -- Intentional callback/interface parameter
     } catch (error) {
       // On Redis failure, high-risk fails closed, low-risk degrades (fails open)
       if (isHighRisk) {
@@ -115,6 +116,7 @@ const handleRateLimiting = async (request: NextRequest, ip: string) => {
   return null;
 };
 
+// eslint-disable-next-line @typescript-eslint/no-explicit-any -- S2 Residual Debt: Legacy internal payload — typed Prisma/API result shape requires architectural schema work deferred to S3
 const middlewareHandler = async (auth: any, request: NextRequest) => {
   const ip = request.headers.get('x-forwarded-for') || '127.0.0.1';
   

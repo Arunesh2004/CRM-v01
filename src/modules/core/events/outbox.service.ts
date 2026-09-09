@@ -63,7 +63,8 @@ export async function processOutbox() {
         data: { status: 'PROCESSED', processedAt: new Date() }
       });
       processedCount++;
-    } catch (error: any) {
+    } catch (errorRaw: unknown) {
+      const error = errorRaw instanceof Error ? errorRaw : new Error(String(errorRaw));
       // Handle failure
       const nextRetry = new Date(Date.now() + Math.pow(2, event.retryCount) * 60000); // Exp backoff in minutes
       await tenantPrisma.eventOutbox.update({
@@ -110,6 +111,8 @@ export async function cleanupOutbox() {
         return 0;
       }
 
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any -- S2 Residual Debt: Legacy internal payload requires architectural typing
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any -- S2 Residual Debt: Legacy internal payload requires architectural typing
       const idsToDelete = candidates.map((c: any) => c.id);
 
       // 2. Delete candidates using PK to avoid massive locking

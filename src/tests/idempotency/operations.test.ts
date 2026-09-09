@@ -1,6 +1,5 @@
 import { describe, it, expect, beforeAll, afterAll, vi } from 'vitest';
 import crypto from 'crypto';
-import prisma from '@db/utils/prisma';
 import { executeAsSystem, SystemOperation } from '@db/utils/prisma-system';
 import { IdempotencyConflictError } from '@/infrastructure/errors';
 
@@ -84,10 +83,10 @@ describe('Service Level Idempotency Integration Tests (PostgreSQL)', () => {
       const fulfilled = results.filter(r => r.status === 'fulfilled');
       expect(fulfilled.length).toBeGreaterThan(0);
 
-      const tasks = await prisma.task.findMany({ where: { tenantId, title: 'Concurrent Task Service' } });
+      const tasks = await executeAsSystem(SystemOperation.SECURITY_AUDIT, async (tx) => await tx.task.findMany({ where: { tenantId, title: 'Concurrent Task Service' } }));
       expect(tasks.length).toBe(1);
 
-      const keys = await prisma.idempotencyKey.findMany({ where: { tenantId, key: idempotencyKey } });
+      const keys = await executeAsSystem(SystemOperation.SECURITY_AUDIT, async (tx) => await tx.idempotencyKey.findMany({ where: { tenantId, key: idempotencyKey } }));
       expect(keys.length).toBe(1);
     });
 
@@ -113,7 +112,7 @@ describe('Service Level Idempotency Integration Tests (PostgreSQL)', () => {
       const fulfilled = results.filter(r => r.status === 'fulfilled');
       expect(fulfilled.length).toBeGreaterThan(0);
 
-      const tickets = await prisma.ticket.findMany({ where: { tenantId, subject: 'Concurrent Ticket Subj' } });
+      const tickets = await executeAsSystem(SystemOperation.SECURITY_AUDIT, async (tx) => await tx.ticket.findMany({ where: { tenantId, subject: 'Concurrent Ticket Subj' } }));
       expect(tickets.length).toBe(1);
     });
   });
@@ -123,9 +122,9 @@ describe('Service Level Idempotency Integration Tests (PostgreSQL)', () => {
       const idempotencyKey = crypto.randomUUID();
       const aiEventId = crypto.randomUUID();
 
-      await prisma.aIEvent.create({
-        data: { id: aiEventId, tenantId, cameraId, confidence: 0.99, model: 'yolov8', detectedObject: 'person' }
-      });
+      await executeAsSystem(SystemOperation.SECURITY_AUDIT, async (tx) => await tx.aIEvent.create({
+                data: { id: aiEventId, tenantId, cameraId, confidence: 0.99, model: 'yolov8', detectedObject: 'person' }
+              }));
 
       const input = {
         locationId,
@@ -144,15 +143,15 @@ describe('Service Level Idempotency Integration Tests (PostgreSQL)', () => {
       const fulfilled = results.filter(r => r.status === 'fulfilled');
       expect(fulfilled.length).toBeGreaterThan(0);
 
-      const incidents = await prisma.incident.findMany({ where: { tenantId, title: 'Concurrent Incident' } });
+      const incidents = await executeAsSystem(SystemOperation.SECURITY_AUDIT, async (tx) => await tx.incident.findMany({ where: { tenantId, title: 'Concurrent Incident' } }));
       expect(incidents.length).toBe(1);
     });
 
     it('should preserve business P2002 if aiEventId is duplicated across different idempotency keys', async () => {
       const aiEventId = crypto.randomUUID();
-      await prisma.aIEvent.create({
-        data: { id: aiEventId, tenantId, cameraId, confidence: 0.99, model: 'yolov8', detectedObject: 'person' }
-      });
+      await executeAsSystem(SystemOperation.SECURITY_AUDIT, async (tx) => await tx.aIEvent.create({
+                data: { id: aiEventId, tenantId, cameraId, confidence: 0.99, model: 'yolov8', detectedObject: 'person' }
+              }));
 
       const key1 = crypto.randomUUID();
       const key2 = crypto.randomUUID();

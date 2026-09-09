@@ -1,6 +1,5 @@
 import { NextRequest } from 'next/server';
 import { describe, it, expect, beforeAll, afterAll, vi } from 'vitest';
-import prisma from '@db/utils/prisma';
 import { executeAsSystem, SystemOperation } from '@db/utils/prisma-system';
 import crypto from 'crypto';
 import { POST } from '@/app/api/auth/accept-invite/route';

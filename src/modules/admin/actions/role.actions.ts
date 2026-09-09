@@ -23,7 +23,8 @@ async function _getRolesAction() {
     });
 
     return { success: true, data: roles };
-  } catch (error: any) {
+  } catch (errorRaw: unknown) {
+    const error = errorRaw instanceof Error ? errorRaw : new Error(String(errorRaw));
     return { success: false, error: sanitizeClientError(error) };
   }
 }

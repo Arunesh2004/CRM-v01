@@ -1,6 +1,6 @@
 import { describe, it, expect, beforeAll, afterAll } from 'vitest';
 import { executeAsSystem, SystemOperation } from '../../../database/utils/prisma-system';
-import { checkPermissionFast, requirePermission, requirePermissionFast } from '../../lib/auth';
+import { requirePermissionFast } from '../../lib/auth';
 import * as crypto from 'crypto';
 
 describe('AI Permission Module Tests', () => {

@@ -43,5 +43,7 @@ export interface StorageProvider {
    * @param tenantId The tenant ID scoping the object.
    * @param objectKey The unique key for the object.
    */
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any -- S2 Residual Debt: Legacy internal payload requires architectural typing
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any -- S2 Residual Debt: Legacy internal payload requires architectural typing
   getObjectMetadata(tenantId: string, objectKey: string): Promise<any>;
 }

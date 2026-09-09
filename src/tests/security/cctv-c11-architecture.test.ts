@@ -1,7 +1,7 @@
 import { describe, it, expect, beforeAll, afterAll } from 'vitest';
 import crypto from 'crypto';
 import globalPrisma from '@db/utils/prisma';
-import { deriveOpaquePath } from '@/modules/cctv/opaque-path.helper';
+import { executeAsSystem, SystemOperation } from '@db/utils/prisma-system';
 
 describe('Phase C11 Adversarial Architecture Tests', () => {
   let tenant: any;
@@ -11,34 +11,38 @@ describe('Phase C11 Adversarial Architecture Tests', () => {
   beforeAll(async () => {
     process.env.CCTV_OPAQUE_PATH_SECRET = 'c11-test-secret';
     
-    tenant = await globalPrisma.tenant.create({
-      data: { name: 'C11 Test Tenant' }
-    });
+    await executeAsSystem(SystemOperation.SECURITY_AUDIT, async (tx) => {
+      tenant = await tx.tenant.create({
+        data: { name: 'C11 Test Tenant' }
+      });
 
-    camera = await globalPrisma.camera.create({
-      data: {
-        tenantId: tenant.id,
-        name: 'C11 Camera',
-        ipAddress: '192.168.1.100',
-        protocol: 'RTSP',
-        streamVersion: 1
-      }
-    });
+      camera = await tx.camera.create({
+        data: {
+          tenantId: tenant.id,
+          name: 'C11 Camera',
+          ipAddress: '192.168.1.100',
+          protocol: 'RTSP',
+          streamVersion: 1
+        }
+      });
 
-    node = await globalPrisma.cCTVNode.create({
-      data: {
-        name: 'c11-test-node',
-        status: 'HEALTHY',
-        webhookKeyId: 'c11-test-webhook-key-id',
-        webhookSecretRef: 'C11_TEST_WEBHOOK_SECRET'
-      }
+      node = await tx.cCTVNode.create({
+        data: {
+          name: `c11-test-node-${crypto.randomBytes(4).toString('hex')}`,
+          status: 'HEALTHY',
+          webhookKeyId: `c11-test-webhook-${crypto.randomBytes(4).toString('hex')}`,
+          webhookSecretRef: 'C11_TEST_WEBHOOK_SECRET'
+        }
+      });
     });
   });
 
   afterAll(async () => {
-    await globalPrisma.camera.delete({ where: { id: camera.id } });
-    await globalPrisma.cCTVNode.delete({ where: { id: node.id } });
-    await globalPrisma.tenant.delete({ where: { id: tenant.id } });
+    await executeAsSystem(SystemOperation.SECURITY_AUDIT, async (tx) => {
+      if (camera) await tx.camera.deleteMany({ where: { id: camera.id } });
+      if (node) await tx.cCTVNode.deleteMany({ where: { id: node.id } });
+      if (tenant) await tx.tenant.deleteMany({ where: { id: tenant.id } });
+    });
   });
 
   it('should reject terminal FAILED jobs from being reclaimed', async () => {
@@ -103,26 +107,29 @@ describe('Phase C11 Adversarial Architecture Tests', () => {
   });
 
   it('should prevent stale workers from overwriting database state after lease loss', async () => {
-    const recording = await globalPrisma.recording.create({
-      data: {
-        tenantId: tenant.id,
-        cameraId: camera.id,
-        segmentId: 'mock-seg-id',
-        streamVersion: 1,
-        storageKey: 'mock/key',
-        startTime: new Date()
-      }
-    });
+    let recording: any, job: any;
+    await executeAsSystem(SystemOperation.SECURITY_AUDIT, async (tx) => {
+      recording = await tx.recording.create({
+        data: {
+          tenantId: tenant.id,
+          cameraId: camera.id,
+          segmentId: 'mock-seg-id',
+          streamVersion: 1,
+          storageKey: 'mock/key',
+          startTime: new Date()
+        }
+      });
 
-    const job = await globalPrisma.aIAnalysisJob.create({
-      data: {
-        recordingId: recording.id,
-        analysisType: 'test',
-        dedupeKey: 'stale-worker-test',
-        status: 'PROCESSING',
-        workerId: 'worker-b', // Worker B stole the lease
-        leaseExpiresAt: new Date(Date.now() + 600000)
-      }
+      job = await tx.aIAnalysisJob.create({
+        data: {
+          recordingId: recording.id,
+          analysisType: 'test',
+          dedupeKey: 'stale-worker-test',
+          status: 'PROCESSING',
+          workerId: 'worker-b', // Worker B stole the lease
+          leaseExpiresAt: new Date(Date.now() + 600000)
+        }
+      });
     });
 
     // Worker A tries to complete the job
@@ -138,7 +145,9 @@ describe('Phase C11 Adversarial Architecture Tests', () => {
     expect(dbJob?.status).toBe('PROCESSING'); // Status unchanged
     expect(dbJob?.workerId).toBe('worker-b'); // Worker B still owns it
     
-    await globalPrisma.aIAnalysisJob.delete({ where: { id: job.id } });
-    await globalPrisma.recording.delete({ where: { id: recording.id } });
+    await executeAsSystem(SystemOperation.SECURITY_AUDIT, async (tx) => {
+      await tx.aIAnalysisJob.delete({ where: { id: job.id } });
+      await tx.recording.delete({ where: { id: recording.id } });
+    });
   });
 });

@@ -1,7 +1,9 @@
 import { getDashboardMetricsAction } from '@/modules/reporting/actions/reporting.actions';
 import { BarChart3, Activity, Users, Phone, ShieldAlert } from 'lucide-react';
-import { Card, KpiCard } from '@/components/ui/Card';
+import { KpiCard } from '@/components/ui/Card';
 
+// eslint-disable-next-line @typescript-eslint/no-explicit-any -- S2 Residual Debt: Legacy internal payload requires architectural typing
+// eslint-disable-next-line @typescript-eslint/no-explicit-any -- S2 Residual Debt: Legacy internal payload requires architectural typing
 function AnalyticsKpiCard({ title, value, trend, icon: Icon }: { title: string, value: string | number, trend?: string, icon: any }) {
   return (
     <KpiCard>

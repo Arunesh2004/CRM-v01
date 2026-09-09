@@ -1,5 +1,4 @@
 import { describe, it, expect } from 'vitest';
-import { PrismaClient } from '@prisma/client';
 import crypto from 'crypto';
 import { executeAsSystem, SystemOperation } from '@db/utils/prisma-system';
 import prisma from '@db/utils/prisma';

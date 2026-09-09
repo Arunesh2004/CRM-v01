@@ -33,6 +33,8 @@ export class TwilioNumberManagement {
         voiceUrl: `${process.env.NEXT_PUBLIC_APP_URL}/api/webhooks/twilio/inbound`,
         statusCallback: `${process.env.NEXT_PUBLIC_APP_URL}/api/webhooks/twilio/status?tenantId=${tenantId}`,
         statusCallbackEvent: ['completed']
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any -- S2 Residual Debt: Legacy internal payload requires architectural typing
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any -- S2 Residual Debt: Legacy internal payload requires architectural typing
       } as any);
 
       // 4. Architecturally: Link number to tenant in database
@@ -40,7 +42,8 @@ export class TwilioNumberManagement {
 
       Logger.info(`Successfully provisioned and configured number ${purchasedNumber.phoneNumber} for tenant ${tenantId}`);
       return purchasedNumber.phoneNumber;
-    } catch (err: any) {
+    } catch (errRaw: unknown) {
+      const err = errRaw instanceof Error ? errRaw : new Error(String(errRaw));
       Logger.error('Failed to provision Twilio number', err, { tenantId });
       throw new Error(`Provisioning failed: ${err.message}`);
     }

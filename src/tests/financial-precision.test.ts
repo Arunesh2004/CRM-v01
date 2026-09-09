@@ -1,6 +1,5 @@
 import { describe, it, expect } from 'vitest';
 import { Prisma } from '@prisma/client';
-import { RevenueService } from '../../src/modules/revenue/revenue.service';
 import { serializeDecimal } from '../../src/lib/utils/decimal';
 
 describe('Financial Precision and Decimal Handling', () => {

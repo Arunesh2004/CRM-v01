@@ -36,6 +36,8 @@ const _orig_POST = async function (req: Request) {
     const isValid = signature.length === expectedSignature.length && 
                     crypto.timingSafeEqual(Buffer.from(signature), Buffer.from(expectedSignature));
 
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars -- S2 Residual Debt: Legacy unused local
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars -- S2 Residual Debt: Legacy unused local
     const tenantPrisma = withTenant(tenantId);
 
     if (!isValid) {

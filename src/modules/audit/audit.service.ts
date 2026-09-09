@@ -1,5 +1,4 @@
-import { withTenant, withTenantTransaction } from '@db/utils/prisma-tenant';
-import prisma from '@db/utils/prisma';
+import { withTenant } from '@db/utils/prisma-tenant';
 import { ActorType } from '@prisma/client';
 import { Logger } from '@/lib/logger/logger';
 
@@ -10,6 +9,8 @@ export type AuditLogPayload = {
   action: string;
   resource: string;
   resourceId: string;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any -- S2 Residual Debt: Legacy internal payload requires architectural typing
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any -- S2 Residual Debt: Legacy internal payload requires architectural typing
   metadata?: any;
   ipAddress?: string;
 };

@@ -39,7 +39,8 @@ export function DocumentUploader({
         toast.success("Document uploaded successfully");
         if (onUploadSuccess) onUploadSuccess();
       }
-    } catch (err: any) {
+    } catch (errRaw: unknown) {
+      const err = errRaw instanceof Error ? errRaw : new Error(String(errRaw));
       toast.error(err.message || "An unexpected error occurred during upload.");
     } finally {
       setIsUploading(false);

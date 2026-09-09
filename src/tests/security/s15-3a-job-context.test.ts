@@ -3,17 +3,24 @@ import { withJobContext } from '../../lib/queue/worker';
 import { getContext } from '../../lib/observability/context';
 import { SecureJobEnvelope } from '../../lib/queue/types';
 
+// Use proper RFC 4122 UUIDs so assertValidTenantId passes.
+// The security hardening in database/utils/tenant-id.ts enforces UUID-only tenant IDs
+// to prevent SQL injection in raw queries.
+const TENANT_1 = '11111111-aaaa-4111-8111-000000000001';
+const TENANT_2 = '22222222-bbbb-4222-9222-000000000002';
+const TENANT_A = 'aaaaaaaa-cccc-4aaa-8aaa-000000000001';
+const TENANT_B = 'bbbbbbbb-dddd-4bbb-9bbb-000000000002';
+const TENANT_5 = '55555555-eeee-4555-8555-000000000005';
+const TENANT_6 = '66666666-ffff-4666-9666-000000000006';
+const TENANT_8 = '88888888-aaaa-4888-8888-000000000008';
+
 describe('S15.3A Background Job Observability Context', () => {
 
-  const mockTx = {
-    $executeRawUnsafe: vi.fn(),
-    idempotencyKey: { create: vi.fn() },
-  };
-
-  // Mock withTenant from prisma-tenant
+  // Mock withTenant from prisma-tenant — must be at top-level (vitest hoists vi.mock)
   vi.mock('../../../database/utils/prisma-tenant', () => {
     const mockTx = {
       $executeRawUnsafe: vi.fn(),
+      $queryRawUnsafe: vi.fn().mockResolvedValue([]),
       idempotencyKey: { create: vi.fn() },
     };
     return {
@@ -45,7 +52,7 @@ describe('S15.3A Background Job Observability Context', () => {
     const envelope: SecureJobEnvelope<any> = {
       jobId: 'job-1',
       jobType: 'TEST',
-      tenantId: 'tenant-1',
+      tenantId: TENANT_1,
       actorType: 'SYSTEM',
       payload: {},
       schemaVersion: '1.0',
@@ -66,7 +73,7 @@ describe('S15.3A Background Job Observability Context', () => {
     const envelope: SecureJobEnvelope<any> = {
       jobId: 'job-2',
       jobType: 'TEST',
-      tenantId: 'trusted-tenant-123',
+      tenantId: TENANT_2,
       actorType: 'SYSTEM',
       payload: {},
       schemaVersion: '1.0',
@@ -79,14 +86,14 @@ describe('S15.3A Background Job Observability Context', () => {
       return true;
     });
 
-    expect(capturedContext.tenantId).toBe('trusted-tenant-123');
+    expect(capturedContext.tenantId).toBe(TENANT_2);
   });
 
   it('Test 4: Two concurrent jobs with different tenants never cross context', async () => {
     const envelopeA: SecureJobEnvelope<any> = {
       jobId: 'job-a',
       jobType: 'TEST',
-      tenantId: 'tenant-a',
+      tenantId: TENANT_A,
       actorType: 'SYSTEM',
       payload: {},
       schemaVersion: '1.0',
@@ -96,7 +103,7 @@ describe('S15.3A Background Job Observability Context', () => {
     const envelopeB: SecureJobEnvelope<any> = {
       jobId: 'job-b',
       jobType: 'TEST',
-      tenantId: 'tenant-b',
+      tenantId: TENANT_B,
       actorType: 'SYSTEM',
       payload: {},
       schemaVersion: '1.0',
@@ -118,15 +125,15 @@ describe('S15.3A Background Job Observability Context', () => {
 
     await Promise.all([promiseA, promiseB]);
 
-    expect(contextA.tenantId).toBe('tenant-a');
-    expect(contextB.tenantId).toBe('tenant-b');
+    expect(contextA.tenantId).toBe(TENANT_A);
+    expect(contextB.tenantId).toBe(TENANT_B);
   });
 
   it('Test 5: Context cleared after successful completion', async () => {
     const envelope: SecureJobEnvelope<any> = {
       jobId: 'job-5',
       jobType: 'TEST',
-      tenantId: 'tenant-5',
+      tenantId: TENANT_5,
       actorType: 'SYSTEM',
       payload: {},
       schemaVersion: '1.0',
@@ -144,7 +151,7 @@ describe('S15.3A Background Job Observability Context', () => {
     const envelope: SecureJobEnvelope<any> = {
       jobId: 'job-6',
       jobType: 'TEST',
-      tenantId: 'tenant-6',
+      tenantId: TENANT_6,
       actorType: 'SYSTEM',
       payload: {},
       schemaVersion: '1.0',
@@ -163,7 +170,7 @@ describe('S15.3A Background Job Observability Context', () => {
     const envelope: SecureJobEnvelope<any> = {
       jobId: 'job-8',
       jobType: 'TEST',
-      tenantId: 'tenant-8',
+      tenantId: TENANT_8,
       actorType: 'SYSTEM',
       payload: {},
       schemaVersion: '1.0',
