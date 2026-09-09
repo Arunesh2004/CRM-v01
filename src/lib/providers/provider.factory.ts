@@ -13,7 +13,13 @@ import { MockMessagingProvider } from './messaging/whatsapp.provider';
 
 export class ProviderFactory {
   static getEmailProvider(): EmailProvider {
-    if (process.env.APP_MODE === 'demo') return new MockEmailProvider();
+    if (process.env.NODE_ENV === 'production' || process.env.VERCEL_ENV === 'production') {
+      if (!process.env.RESEND_API_KEY) {
+        throw new Error('EMAIL_PROVIDER_NOT_CONFIGURED: Production environment requires RESEND_API_KEY');
+      }
+      return new ResendProvider();
+    }
+    if (process.env.APP_MODE === 'demo' || !process.env.RESEND_API_KEY) return new MockEmailProvider();
     return new ResendProvider();
   }
 

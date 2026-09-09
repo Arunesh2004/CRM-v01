@@ -1,7 +1,26 @@
 import { describe, it, expect, beforeAll, afterAll, vi } from 'vitest';
 import { WorkflowService } from '@/modules/ai/workflow/workflow.service';
-import globalPrisma from '@db/utils/prisma';
+import actualPrisma from '@db/utils/prisma';
+import { executeAsSystem, SystemOperation } from '@db/utils/prisma-system';
 import { randomUUID } from 'crypto';
+import { ToolRegistry } from '@/modules/ai/tools/registry';
+
+const globalPrisma = new Proxy(actualPrisma, {
+  get(target: any, prop: string) {
+    if (prop === '$queryRaw') return async (...args: any[]) => executeAsSystem(SystemOperation.SECURITY_AUDIT, (tx: any) => tx.$queryRaw(...args));
+    if (typeof target[prop] === 'object' && target[prop] !== null) {
+      return new Proxy(target[prop], {
+        get(modelTarget: any, modelProp: string) {
+          if (typeof modelTarget[modelProp] === 'function') {
+            return async (...args: any[]) => executeAsSystem(SystemOperation.SECURITY_AUDIT, (tx: any) => tx[prop][modelProp](...args));
+          }
+          return modelTarget[modelProp];
+        }
+      });
+    }
+    return target[prop];
+  }
+}) as any;
 
 vi.mock('@/lib/queue/inngest.client', () => ({
   inngest: { send: vi.fn(), createFunction: vi.fn() }
@@ -66,17 +85,11 @@ describe('Wave 5 - Workflow Engine Integration', () => {
       ]
     });
 
-    // Provision Tools
-    await globalPrisma.aITool.createMany({
-      data: [
-        { name: 'CREATE_TICKET', description: 'Creates ticket', requiresApproval: false, requiredPermission: 'TICKET:CREATE' },
-        { name: 'CREATE_INCIDENT', description: 'Creates incident', requiresApproval: false, requiredPermission: 'CUSTOMER:UPDATE' },
-        { name: 'CREATE_TASK', description: 'Creates task', requiresApproval: false, requiredPermission: 'TASK:CREATE' }
-      ]
-    });
+    // Provision Tools using the idempotent registry bootstrap
+    await ToolRegistry.bootstrapTools();
 
     const permTicket = await globalPrisma.permission.upsert({ where: { resource_action: { resource: 'TICKET', action: 'CREATE' } }, update: {}, create: { resource: 'TICKET', action: 'CREATE' } });
-    const permIncident = await globalPrisma.permission.upsert({ where: { resource_action: { resource: 'CUSTOMER', action: 'UPDATE' } }, update: {}, create: { resource: 'CUSTOMER', action: 'UPDATE' } });
+    const permIncident = await globalPrisma.permission.upsert({ where: { resource_action: { resource: 'INCIDENT', action: 'CREATE' } }, update: {}, create: { resource: 'INCIDENT', action: 'CREATE' } });
     const permTask = await globalPrisma.permission.upsert({ where: { resource_action: { resource: 'TASK', action: 'CREATE' } }, update: {}, create: { resource: 'TASK', action: 'CREATE' } });
 
     const roleAdmin = await globalPrisma.role.create({ data: { tenantId, name: 'AdminRole' } });
@@ -122,10 +135,11 @@ describe('Wave 5 - Workflow Engine Integration', () => {
     await globalPrisma.rolePermission.deleteMany({ where: { OR: [{ tenantId }, { tenantId: tenantB }] } });
     await globalPrisma.role.deleteMany({ where: { OR: [{ tenantId }, { tenantId: tenantB }] } });
     await globalPrisma.user.deleteMany({ where: { OR: [{ tenantId }, { tenantId: tenantB }] } });
-    await globalPrisma.permission.deleteMany({ where: { OR: [{ resource: 'TICKET' }, { resource: 'CUSTOMER' }, { resource: 'TASK' }] } });
-    await globalPrisma.aITool.deleteMany({ where: { OR: [{ name: 'CREATE_TICKET' }, { name: 'CREATE_INCIDENT' }, { name: 'CREATE_TASK' }] } });
-    await globalPrisma.tenant.delete({ where: { id: tenantId } });
-    await globalPrisma.tenant.delete({ where: { id: tenantB } });
+    await globalPrisma.permission.deleteMany({ where: { OR: [{ resource: 'TICKET' }, { resource: 'INCIDENT' }, { resource: 'TASK' }] } });
+    // Architectural Note: aITool is intentionally globally scoped. We do not delete them in teardown
+    // because Vitest runs in parallel and deleting global tools here would break other concurrent tests.
+    try { await globalPrisma.tenant.delete({ where: { id: tenantId } }); } catch (e) {}
+    try { await globalPrisma.tenant.delete({ where: { id: tenantB } }); } catch (e) {}
   });
 
   async function runWorkflowAction(userId: string, actionType: string, config: any) {
