@@ -23,7 +23,7 @@ export async function createNotification(input: CreateNotificationInput) {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any -- S2 Residual Debt: Legacy internal payload requires architectural typing
   
   // eslint-disable-next-line @typescript-eslint/no-explicit-any -- S2 Residual Debt: Legacy internal payload requires architectural typing
-  return await globalPrisma.$transaction(async (baseTx: any) => {
+  return await globalPrisma.$transaction(async (baseTx) => {
     const tx = await withTenantTransaction(baseTx, tenantId);
 
     await requireRelationOwnership(tx, tenantId, { user: input.userId });

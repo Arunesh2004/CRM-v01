@@ -23,7 +23,7 @@ export async function createTask(input: CreateTaskInput & { idempotencyKey?: str
       taskData,
       // eslint-disable-next-line @typescript-eslint/no-explicit-any -- S2 Residual Debt: Legacy internal payload requires architectural typing
       // eslint-disable-next-line @typescript-eslint/no-explicit-any -- S2 Residual Debt: Legacy internal payload requires architectural typing
-      async (baseTx: any) => {
+      async (baseTx) => {
         const tx = await withTenantTransaction(baseTx, tenantId);
         return await TaskCore.createTask(tx, tenantId, user.id, taskData);
       },
@@ -46,7 +46,7 @@ export async function createTask(input: CreateTaskInput & { idempotencyKey?: str
   }
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any -- S2 Residual Debt: Legacy internal payload requires architectural typing
-  return await globalPrisma.$transaction(async (baseTx: any) => {
+  return await globalPrisma.$transaction(async (baseTx) => {
     const tx = await withTenantTransaction(baseTx, tenantId);
     return await TaskCore.createTask(tx, tenantId, user.id, taskData);
   });
@@ -168,7 +168,7 @@ export async function updateTask(input: UpdateTaskInput) {
   const prisma = withTenant(tenantId);
   
   // eslint-disable-next-line @typescript-eslint/no-explicit-any -- S2 Residual Debt: Legacy internal payload requires architectural typing
-  return await globalPrisma.$transaction(async (baseTx: any) => {
+  return await globalPrisma.$transaction(async (baseTx) => {
     const tx = await withTenantTransaction(baseTx, tenantId);
     const task = await tx.task.findFirst({ where: { id: input.id, tenantId }});
     if (!task) throw new Error('Task not found');

@@ -7,12 +7,12 @@ import { ToolRegistry } from '@/modules/ai/tools/registry';
 
 const globalPrisma = new Proxy(actualPrisma, {
   get(target: any, prop: string) {
-    if (prop === '$queryRaw') return async (...args: any[]) => executeAsSystem(SystemOperation.SECURITY_AUDIT, (tx: any) => tx.$queryRaw(...args));
+    if (prop === '$queryRaw') return async (...args: any[]) => executeAsSystem(SystemOperation.SECURITY_AUDIT, (tx) => tx.$queryRaw(...args));
     if (typeof target[prop] === 'object' && target[prop] !== null) {
       return new Proxy(target[prop], {
         get(modelTarget: any, modelProp: string) {
           if (typeof modelTarget[modelProp] === 'function') {
-            return async (...args: any[]) => executeAsSystem(SystemOperation.SECURITY_AUDIT, (tx: any) => tx[prop][modelProp](...args));
+            return async (...args: any[]) => executeAsSystem(SystemOperation.SECURITY_AUDIT, (tx) => tx[prop][modelProp](...args));
           }
           return modelTarget[modelProp];
         }

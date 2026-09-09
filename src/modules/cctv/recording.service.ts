@@ -34,7 +34,7 @@ export async function generateRecordingDownloadUrl(recordingId: string) {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any -- S2 Residual Debt: Legacy internal payload requires architectural typing
   
   // eslint-disable-next-line @typescript-eslint/no-explicit-any -- S2 Residual Debt: Legacy internal payload requires architectural typing
-  return await globalPrisma.$transaction(async (baseTx: any) => {
+  return await globalPrisma.$transaction(async (baseTx) => {
     const tx = await withTenantTransaction(baseTx, tenantId);
     const recording = await tx.recording.findFirst({
       where: { id: recordingId, tenantId },

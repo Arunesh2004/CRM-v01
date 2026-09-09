@@ -59,7 +59,7 @@ export async function ingestAIEventWebhook(payload: {
   }
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any -- S2 Residual Debt: Legacy internal payload requires architectural typing
-  return await globalPrisma.$transaction(async (baseTx: any) => {
+  return await globalPrisma.$transaction(async (baseTx) => {
     const tx = await withTenantTransaction(baseTx, payload.tenantId);
     // 1. Store the AI Event
     const aiEvent = await tx.aIEvent.create({

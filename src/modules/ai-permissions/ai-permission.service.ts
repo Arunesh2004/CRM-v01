@@ -75,7 +75,7 @@ export class AIPermissionService {
     const initialStatus: AIExecutionStatus = tool.requiresApproval ? 'WAITING_APPROVAL' : 'APPROVED';
 
     // eslint-disable-next-line @typescript-eslint/no-explicit-any -- S2 Residual Debt: Legacy internal payload requires architectural typing
-    return await globalPrisma.$transaction(async (baseTx: any) => {
+    return await globalPrisma.$transaction(async (baseTx) => {
       const tx = await withTenantTransaction(baseTx, tenantId);
 
       // 1. Create AIExecution record
@@ -133,7 +133,7 @@ export class AIPermissionService {
     const newStatus: AIExecutionStatus = input.approved ? 'APPROVED' : 'REJECTED';
 
     // eslint-disable-next-line @typescript-eslint/no-explicit-any -- S2 Residual Debt: Legacy internal payload requires architectural typing
-    return await globalPrisma.$transaction(async (baseTx: any) => {
+    return await globalPrisma.$transaction(async (baseTx) => {
       const tx = await withTenantTransaction(baseTx, tenantId);
 
       const updated = await tx.aIExecution.update({

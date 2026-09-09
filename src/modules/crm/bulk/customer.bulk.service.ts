@@ -27,7 +27,7 @@ export class CustomerBulkService {
 
     // eslint-disable-next-line @typescript-eslint/no-explicit-any -- S2 Residual Debt: Legacy internal payload requires architectural typing
     // eslint-disable-next-line @typescript-eslint/no-explicit-any -- S2 Residual Debt: Legacy internal payload requires architectural typing
-    const result = await globalPrisma.$transaction(async (baseTx: any) => {
+    const result = await globalPrisma.$transaction(async (baseTx) => {
     const tx = await withTenantTransaction(baseTx, tenantId);
       // 1. Verify tenant ownership
       const existing = await tx.customer.findMany({

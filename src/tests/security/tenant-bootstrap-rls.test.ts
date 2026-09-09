@@ -11,7 +11,7 @@ describe('Phase 6R: TenantBootstrap RLS Security (Stage 7)', () => {
 
   beforeAll(async () => {
     // Bootstrap two separate tenants as system
-    await executeAsSystem(SystemOperation.SECURITY_AUDIT, async (tx: any) => {
+    await executeAsSystem(SystemOperation.SECURITY_AUDIT, async (tx) => {
       // Create tenants
       await tx.tenant.create({ data: { id: tenantA, name: 'Tenant A' } });
       await tx.tenant.create({ data: { id: tenantB, name: 'Tenant B' } });
@@ -37,7 +37,7 @@ describe('Phase 6R: TenantBootstrap RLS Security (Stage 7)', () => {
 
   afterAll(async () => {
     // Cleanup
-    await executeAsSystem(SystemOperation.SECURITY_AUDIT, async (tx: any) => {
+    await executeAsSystem(SystemOperation.SECURITY_AUDIT, async (tx) => {
       await tx.tenantBootstrap.deleteMany({ where: { tenantId: { in: [tenantA, tenantB] } } });
       await tx.user.deleteMany({ where: { id: unprivilegedUserA } });
       await tx.tenant.deleteMany({ where: { id: { in: [tenantA, tenantB] } } });
@@ -128,7 +128,7 @@ describe('Phase 6R: TenantBootstrap RLS Security (Stage 7)', () => {
   });
 
   it('TEST H: Trusted system operation accesses multiple tenants - EXPECT ALLOW through executeAsSystem', async () => {
-    await executeAsSystem(SystemOperation.SECURITY_AUDIT, async (tx: any) => {
+    await executeAsSystem(SystemOperation.SECURITY_AUDIT, async (tx) => {
       const allRows = await tx.tenantBootstrap.findMany({
         where: { tenantId: { in: [tenantA, tenantB] } }
       });

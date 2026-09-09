@@ -22,7 +22,7 @@ export class LeadBulkService {
 
     // eslint-disable-next-line @typescript-eslint/no-explicit-any -- S2 Residual Debt: Legacy internal payload requires architectural typing
     // eslint-disable-next-line @typescript-eslint/no-explicit-any -- S2 Residual Debt: Legacy internal payload requires architectural typing
-    const result = await globalPrisma.$transaction(async (baseTx: any) => {
+    const result = await globalPrisma.$transaction(async (baseTx) => {
     const tx = await withTenantTransaction(baseTx, tenantId);
       // eslint-disable-next-line @typescript-eslint/no-explicit-any -- S2 Residual Debt: Legacy internal payload requires architectural typing
       const existing = await tx.lead.findMany({ where: { id: { in: leadIds }, tenantId }, select: { id: true } });
@@ -87,7 +87,7 @@ export class LeadBulkService {
 // eslint-disable-next-line @typescript-eslint/no-explicit-any -- S2 Residual Debt: Legacy internal payload requires architectural typing
 
     // eslint-disable-next-line @typescript-eslint/no-explicit-any -- S2 Residual Debt: Legacy internal payload requires architectural typing
-    const result = await globalPrisma.$transaction(async (baseTx: any) => {
+    const result = await globalPrisma.$transaction(async (baseTx) => {
     const tx = await withTenantTransaction(baseTx, tenantId);
       const existing = await tx.lead.findMany({ where: { id: { in: leadIds }, tenantId }, select: { id: true } });
       // eslint-disable-next-line @typescript-eslint/no-explicit-any -- S2 Residual Debt: Legacy internal payload requires architectural typing

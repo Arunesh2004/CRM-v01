@@ -153,7 +153,7 @@ export async function updateCustomer(input: UpdateCustomerInput) {
 // eslint-disable-next-line @typescript-eslint/no-explicit-any -- S2 Residual Debt: Legacy internal payload requires architectural typing
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any -- S2 Residual Debt: Legacy internal payload requires architectural typing
-  return await globalPrisma.$transaction(async (baseTx: any) => {
+  return await globalPrisma.$transaction(async (baseTx) => {
     const tx = await withTenantTransaction(baseTx, tenantId);
     const customer = await tx.customer.findFirst({ where: { id: input.id, tenantId }});
     if (!customer) throw new Error('Customer not found');
@@ -239,7 +239,7 @@ export async function deleteCustomer(customerId: string) {
   const prisma = withTenant(tenantId);
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any -- S2 Residual Debt: Legacy internal payload requires architectural typing
-  return await globalPrisma.$transaction(async (baseTx: any) => {
+  return await globalPrisma.$transaction(async (baseTx) => {
     const tx = await withTenantTransaction(baseTx, tenantId);
     const customer = await tx.customer.findFirst({ where: { id: customerId, tenantId, deletedAt: null } });
     if (!customer) throw new Error('Customer not found');
@@ -298,7 +298,7 @@ export async function createContact(input: any) {
   // eslint-disable-next-line @typescript-eslint/no-unused-vars -- S2 Residual Debt: Legacy unused local
   const prisma = withTenant(tenantId);
   // eslint-disable-next-line @typescript-eslint/no-explicit-any -- S2 Residual Debt: Legacy internal payload requires architectural typing
-  return await globalPrisma.$transaction(async (baseTx: any) => {
+  return await globalPrisma.$transaction(async (baseTx) => {
     const tx = await withTenantTransaction(baseTx, tenantId);
     
     // VERIFY RELATION OWNERSHIP
@@ -353,7 +353,7 @@ export async function createLocation(input: any) {
   // eslint-disable-next-line @typescript-eslint/no-unused-vars -- S2 Residual Debt: Legacy unused local
   const prisma = withTenant(tenantId);
   // eslint-disable-next-line @typescript-eslint/no-explicit-any -- S2 Residual Debt: Legacy internal payload requires architectural typing
-  return await globalPrisma.$transaction(async (baseTx: any) => {
+  return await globalPrisma.$transaction(async (baseTx) => {
     const tx = await withTenantTransaction(baseTx, tenantId);
 
     // VERIFY RELATION OWNERSHIP

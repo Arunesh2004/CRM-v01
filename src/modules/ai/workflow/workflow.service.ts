@@ -197,7 +197,7 @@ export class WorkflowService {
 
     try {
       // eslint-disable-next-line @typescript-eslint/no-explicit-any -- S2 Residual Debt: Legacy internal payload requires architectural typing
-      const result = await globalPrisma.$transaction(async (baseTx: any) => {
+      const result = await globalPrisma.$transaction(async (baseTx) => {
         // Set tenant context on the raw transaction client.
         // withTenantTransaction returns baseTx after calling set_config — the tenant RLS
         // context is now active on baseTx for this transaction's lifetime.

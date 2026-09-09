@@ -28,7 +28,7 @@ describe('CCTV Concurrency & Rotation Tests (Phase C10.5)', () => {
     vi.resetAllMocks();
     
     // Seed tenant and user required by DB foreign keys
-    await executeAsSystem(SystemOperation.SECURITY_AUDIT, async (tx: any) => {
+    await executeAsSystem(SystemOperation.SECURITY_AUDIT, async (tx) => {
       await tx.$executeRawUnsafe(`INSERT INTO "Tenant" (id, name, "createdAt", "updatedAt") VALUES ('${tenantId}', 'Test Tenant', now(), now()) ON CONFLICT DO NOTHING`);
       await tx.$executeRawUnsafe(`INSERT INTO "User" (id, "tenantId", email, status, "createdAt", "updatedAt") VALUES ('${userId}', '${tenantId}', 'test@test.com', 'ACTIVE', now(), now()) ON CONFLICT DO NOTHING`);
       

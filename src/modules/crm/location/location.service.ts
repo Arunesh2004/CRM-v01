@@ -19,7 +19,7 @@ export async function createLocation(input: CreateLocationInput) {
 // eslint-disable-next-line @typescript-eslint/no-explicit-any -- S2 Residual Debt: Legacy internal payload requires architectural typing
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any -- S2 Residual Debt: Legacy internal payload requires architectural typing
-  return await globalPrisma.$transaction(async (baseTx: any) => {
+  return await globalPrisma.$transaction(async (baseTx) => {
     const tx = await withTenantTransaction(baseTx, tenantId);
     // Verify customer exists and belongs to tenant
     const customer = await tx.customer.findFirst({ where: { id: input.customerId, tenantId } });
@@ -100,7 +100,7 @@ export async function updateLocation(input: UpdateLocationInput) {
   const prisma = withTenant(tenantId);
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any -- S2 Residual Debt: Legacy internal payload requires architectural typing
-  return await globalPrisma.$transaction(async (baseTx: any) => {
+  return await globalPrisma.$transaction(async (baseTx) => {
     const tx = await withTenantTransaction(baseTx, tenantId);
     const location = await tx.location.findFirst({ where: { id: input.id, tenantId }});
     if (!location) throw new Error('Location not found');
@@ -159,7 +159,7 @@ export async function deleteLocation(id: string) {
   const prisma = withTenant(tenantId);
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any -- S2 Residual Debt: Legacy internal payload requires architectural typing
-  return await globalPrisma.$transaction(async (baseTx: any) => {
+  return await globalPrisma.$transaction(async (baseTx) => {
     const tx = await withTenantTransaction(baseTx, tenantId);
     const location = await tx.location.findFirst({ where: { id, tenantId }});
     if (!location) throw new Error('Location not found');

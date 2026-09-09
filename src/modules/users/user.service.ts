@@ -148,7 +148,7 @@ export async function inviteEmployee(emailStr: string, roleName: string = 'MEMBE
   expiresAt.setDate(expiresAt.getDate() + 7); // 7 days from now
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any -- S2 Residual Debt: Legacy internal payload requires architectural typing
-  const result = await globalPrisma.$transaction(async (baseTx: any) => {
+  const result = await globalPrisma.$transaction(async (baseTx) => {
     const tx = await withTenantTransaction(baseTx, tenantId);
 
     // This will fail safely if email is not unique
@@ -320,7 +320,7 @@ export async function updateEmployeeRole(userId: string, newRoleName: string) {
 
   // Transaction to update role
   // eslint-disable-next-line @typescript-eslint/no-explicit-any -- S2 Residual Debt: Legacy internal payload requires architectural typing
-  await globalPrisma.$transaction(async (baseTx: any) => {
+  await globalPrisma.$transaction(async (baseTx) => {
     const tx = await withTenantTransaction(baseTx, tenantId);
     // Delete existing roles
     await tx.userRole.deleteMany({

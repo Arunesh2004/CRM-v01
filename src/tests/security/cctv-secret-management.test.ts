@@ -22,7 +22,7 @@ describe('CCTV Secret Management Tests (Phase C9.1)', () => {
   const locationBId = crypto.randomUUID();
 
   beforeAll(async () => {
-    await executeAsSystem(SystemOperation.SECURITY_AUDIT, async (tx: any) => {
+    await executeAsSystem(SystemOperation.SECURITY_AUDIT, async (tx) => {
       await tx.$executeRawUnsafe(`INSERT INTO "Tenant" (id, name, "createdAt", "updatedAt") VALUES ('${tenantAId}', 'Tenant A', now(), now())`);
       await tx.$executeRawUnsafe(`INSERT INTO "Tenant" (id, name, "createdAt", "updatedAt") VALUES ('${tenantBId}', 'Tenant B', now(), now())`);
 

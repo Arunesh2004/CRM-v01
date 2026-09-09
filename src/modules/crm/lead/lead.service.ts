@@ -26,7 +26,7 @@ export async function createLead(input: CreateLeadInput) {
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any -- S2 Residual Debt: Legacy internal payload requires architectural typing
   // eslint-disable-next-line @typescript-eslint/no-explicit-any -- S2 Residual Debt: Legacy internal payload requires architectural typing
-  return await globalPrisma.$transaction(async (baseTx: any) => {
+  return await globalPrisma.$transaction(async (baseTx) => {
     const tx = await withTenantTransaction(baseTx, tenantId);
     const lead = await tx.lead.create({
       data: {
@@ -197,7 +197,7 @@ export async function updateLead(input: UpdateLeadInput) {
   }
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any -- S2 Residual Debt: Legacy internal payload requires architectural typing
-  const result = await globalPrisma.$transaction(async (baseTx: any) => {
+  const result = await globalPrisma.$transaction(async (baseTx) => {
     const tx = await withTenantTransaction(baseTx, tenantId);
     
     if (input.idempotencyKey) {
@@ -323,7 +323,7 @@ export async function convertLeadToCustomer(leadId: string) {
   const prisma = withTenant(tenantId);
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any -- S2 Residual Debt: Legacy internal payload requires architectural typing
-  return await globalPrisma.$transaction(async (baseTx: any) => {
+  return await globalPrisma.$transaction(async (baseTx) => {
     const tx = await withTenantTransaction(baseTx, tenantId);
     const lead = await tx.lead.findFirst({ where: { id: leadId, tenantId } });
     if (!lead) throw new Error('Lead not found');
@@ -410,7 +410,7 @@ export async function deleteLead(leadId: string) {
   const prisma = withTenant(tenantId);
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any -- S2 Residual Debt: Legacy internal payload requires architectural typing
-  return await globalPrisma.$transaction(async (baseTx: any) => {
+  return await globalPrisma.$transaction(async (baseTx) => {
     const tx = await withTenantTransaction(baseTx, tenantId);
     const lead = await tx.lead.findFirst({ where: { id: leadId, tenantId, deletedAt: null } });
     if (!lead) throw new Error('Lead not found');

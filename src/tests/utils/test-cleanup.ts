@@ -13,7 +13,7 @@ import { executeAsSystem, SystemOperation } from '../../../database/utils/prisma
 export async function wipeTestTenants(tenantIds: string[]) {
   if (tenantIds.length === 0) return;
 
-  await executeAsSystem(SystemOperation.DEMO_SEED, async (tx: any) => {
+  await executeAsSystem(SystemOperation.DEMO_SEED, async (tx) => {
     const where = { tenantId: { in: tenantIds } };
 
     // 1. Workflow & Tickets (Deepest dependencies)

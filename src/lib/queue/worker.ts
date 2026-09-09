@@ -8,13 +8,13 @@ import { withContext } from '../observability/context';
 import { Logger } from '../logger/logger';
 
 
-export async function withJobContext<T>(
+export async function withJobContext<T, Tx extends Prisma.TransactionClient = Prisma.TransactionClient>(
   // eslint-disable-next-line @typescript-eslint/no-explicit-any -- S2 Residual Debt: Legacy internal payload requires architectural typing
   // eslint-disable-next-line @typescript-eslint/no-explicit-any -- S2 Residual Debt: Legacy internal payload requires architectural typing
   envelope: SecureJobEnvelope<any>,
   // eslint-disable-next-line @typescript-eslint/no-explicit-any -- S2 Residual Debt: Legacy internal payload requires architectural typing
   // eslint-disable-next-line @typescript-eslint/no-explicit-any -- S2 Residual Debt: Legacy internal payload requires architectural typing
-  handler: (tx: any, payload: any) => Promise<T>
+  handler: (tx: Tx, payload: any) => Promise<T>
 ): Promise<T> {
   // Validate job context presence
   if (!envelope.tenantId) {
@@ -36,7 +36,7 @@ export async function withJobContext<T>(
     },
     async () => {
       // eslint-disable-next-line @typescript-eslint/no-explicit-any -- S2 Residual Debt: Legacy internal payload requires architectural typing
-      return await tenantPrisma.$transaction(async (tx: any) => {
+      return await tenantPrisma.$transaction(async (tx) => {
         // Elevate to a tenant-scoped transaction for RLS
         assertValidTenantId(envelope.tenantId);
         await tx.$queryRawUnsafe(`SELECT set_config('app.current_tenant_id', '${envelope.tenantId}', true)`);
@@ -63,7 +63,7 @@ export async function withJobContext<T>(
         }
 
         // Pass execution to business handler with bounded context
-        return await handler(tx, envelope.payload);
+        return await handler(tx as unknown as Tx, envelope.payload);
       });
     // eslint-disable-next-line @typescript-eslint/no-explicit-any -- S2 Residual Debt: Legacy internal payload requires architectural typing
     }
@@ -81,7 +81,7 @@ export async function sendToDeadLetterQueue(
   try {
     const tenantPrisma = withTenant(envelope.tenantId);
     // eslint-disable-next-line @typescript-eslint/no-explicit-any -- S2 Residual Debt: Legacy internal payload requires architectural typing
-    await tenantPrisma.$transaction(async (tx: any) => {
+    await tenantPrisma.$transaction(async (tx) => {
       // IdempotencyKey is intentionally excluded from withTenant middleware to prevent nested
       // transactions. Manually set tenant context here so the RLS policy is satisfied.
       await tx.$queryRawUnsafe(`SELECT set_config('app.current_tenant_id', '${envelope.tenantId}', true)`);

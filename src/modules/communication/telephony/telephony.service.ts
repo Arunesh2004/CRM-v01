@@ -24,7 +24,7 @@ export async function createCall(input: CreateCallInput) {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any -- S2 Residual Debt: Legacy internal payload requires architectural typing
   
   // eslint-disable-next-line @typescript-eslint/no-explicit-any -- S2 Residual Debt: Legacy internal payload requires architectural typing
-  return await globalPrisma.$transaction(async (baseTx: any) => {
+  return await globalPrisma.$transaction(async (baseTx) => {
     const tx = await withTenantTransaction(baseTx, tenantId);
     // We log the call directly without participant models
     // Defaulting to system employee if not known for this legacy mapping
@@ -89,7 +89,7 @@ export async function processCallRecording(callId: string, storageUrl: string, d
   if (!callLog) throw new Error("Related entity does not belong to this tenant: Call");
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any -- S2 Residual Debt: Legacy internal payload requires architectural typing
-  return await globalPrisma.$transaction(async (baseTx: any) => {
+  return await globalPrisma.$transaction(async (baseTx) => {
     const tx = await withTenantTransaction(baseTx, tenantId);
     // Map to CommunicationAttachment
     const attachment = await tx.communicationAttachment.create({

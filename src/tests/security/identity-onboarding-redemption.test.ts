@@ -18,7 +18,7 @@ describe('Identity & Onboarding API Redemption Security', () => {
   let roleId: string;
   
   beforeAll(async () => {
-    await executeAsSystem(SystemOperation.SECURITY_AUDIT, async (tx: any) => {
+    await executeAsSystem(SystemOperation.SECURITY_AUDIT, async (tx) => {
       const t = await tx.tenant.create({ data: { name: 'Redemption Tenant' } });
       tenantId = t.id;
 
@@ -31,7 +31,7 @@ describe('Identity & Onboarding API Redemption Security', () => {
   });
 
   afterAll(async () => {
-    await executeAsSystem(SystemOperation.SECURITY_AUDIT, async (tx: any) => {
+    await executeAsSystem(SystemOperation.SECURITY_AUDIT, async (tx) => {
       await tx.userRole.deleteMany({ where: { tenantId } });
       await tx.userInvitation.deleteMany({ where: { tenantId } });
       await tx.user.deleteMany({ where: { tenantId } });
@@ -75,7 +75,7 @@ describe('Identity & Onboarding API Redemption Security', () => {
     const token = crypto.randomBytes(32).toString('hex');
     const tokenHash = crypto.createHash('sha256').update(token).digest('hex');
     
-    await executeAsSystem(SystemOperation.SECURITY_AUDIT, async (tx: any) => {
+    await executeAsSystem(SystemOperation.SECURITY_AUDIT, async (tx) => {
       await tx.userInvitation.create({
         data: {
           tenantId,
@@ -100,7 +100,7 @@ describe('Identity & Onboarding API Redemption Security', () => {
     const token = crypto.randomBytes(32).toString('hex');
     const tokenHash = crypto.createHash('sha256').update(token).digest('hex');
     
-    await executeAsSystem(SystemOperation.SECURITY_AUDIT, async (tx: any) => {
+    await executeAsSystem(SystemOperation.SECURITY_AUDIT, async (tx) => {
       await tx.userInvitation.create({
         data: {
           tenantId,
