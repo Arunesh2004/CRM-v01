@@ -7,6 +7,7 @@ describe('S16.1A.2M.16.9 — Dashboard Security Semantics Validation', () => {
   let tenantAId: string;
   let tenantBId: string;
   let userAId: string;
+  let customerBId: string;
 
   beforeEach(async () => {
     // Setup isolated test data using System RLS bypass
@@ -36,9 +37,10 @@ describe('S16.1A.2M.16.9 — Dashboard Security Semantics Validation', () => {
       await tx.customer.create({
         data: { name: 'Customer A1', normalizedName: 'customer a1', tenantId: tenantAId }
       });
-      await tx.customer.create({
+      const customerB = await tx.customer.create({
         data: { name: 'Customer B1', normalizedName: 'customer b1', tenantId: tenantBId }
       });
+      customerBId = customerB.id;
     });
   });
 
@@ -137,11 +139,11 @@ describe('S16.1A.2M.16.9 — Dashboard Security Semantics Validation', () => {
   it('TEST D: cross-tenant isolation prevents accessing other tenant data', async () => {
     const tenantAPrisma = withTenant(tenantAId);
     
-    // Attempt to read Tenant B's customers
-    const countB = await tenantAPrisma.customer.count({
-      where: { tenantId: tenantBId }
+    // Attempt to read Tenant B's specific customer using Tenant A's client
+    const customerB = await tenantAPrisma.customer.findUnique({
+      where: { id: customerBId }
     });
-    expect(countB).toBe(0);
+    expect(customerB).toBeNull();
 
     // Attempt to read all customers should only return Tenant A's
     const all = await tenantAPrisma.customer.findMany();
