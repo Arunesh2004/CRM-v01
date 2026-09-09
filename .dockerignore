@@ -9,3 +9,4 @@ scripts
 brain
 scratch
 *.md
+.kms-storage.json

@@ -50,3 +50,7 @@ logs/
 .phase26-audit-users.json
 .env.load-test
 load-test/tokens.json
+.kms-storage.json
+*.secrets
+*.bak
+*.real
