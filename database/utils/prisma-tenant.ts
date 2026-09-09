@@ -30,7 +30,7 @@ export const withTenant = (tenantId: string) => {
             // === Security & Identity ===
             'Department', 'RolePermission', 'UserRole', 'UserPresence',
             'SecurityEvent', 'FieldSecurityPolicy', 'ABACPolicy',
-            'ApprovalRequest', 'ApprovalStep',
+            'ApprovalRequest', 'ApprovalStep', 'TenantBootstrap', 'UserInvitation',
             // === Finance & Revenue ===
             'Subscription', 'Invoice', 'Payment', 'PaymentCustomer', 'UsageEvent',
             'Product', 'ProductCategory', 'ProductFamily',
