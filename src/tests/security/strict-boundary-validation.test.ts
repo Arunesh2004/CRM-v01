@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
-import globalPrisma from '@db/utils/prisma';
+// import globalPrisma from '@db/utils/prisma';
 import { createDealAction } from '@/modules/crm/actions/deal.actions';
 import { createIncidentAction } from '@/modules/incident/actions/incident.actions';
 import * as auth from '@/lib/auth';
@@ -57,27 +57,39 @@ describe('S14 Strict Boundary Validation Tests', () => {
   });
 
   afterEach(async () => {
-    await executeAsSystem(SystemOperation.SECURITY_AUDIT, async (tx) => await tx.activityTimeline.deleteMany({})).catch(() => {});
-    await executeAsSystem(SystemOperation.SECURITY_AUDIT, async (tx) => await tx.document.deleteMany({})).catch(() => {});
-    await executeAsSystem(SystemOperation.SECURITY_AUDIT, async (tx) => await tx.mailMessage.deleteMany({})).catch(() => {});
-    await executeAsSystem(SystemOperation.SECURITY_AUDIT, async (tx) => await tx.mailThread.deleteMany({})).catch(() => {});
-    await executeAsSystem(SystemOperation.SECURITY_AUDIT, async (tx) => await tx.aIConversationMessage.deleteMany({})).catch(() => {});
-    await executeAsSystem(SystemOperation.SECURITY_AUDIT, async (tx) => await tx.aIConversation.deleteMany({})).catch(() => {});
-    await executeAsSystem(SystemOperation.SECURITY_AUDIT, async (tx) => await tx.userInvitation.deleteMany({})).catch(() => {});
-    await executeAsSystem(SystemOperation.SECURITY_AUDIT, async (tx) => await tx.aIConversation.deleteMany({})).catch(() => {});
-    await executeAsSystem(SystemOperation.SECURITY_AUDIT, async (tx) => await tx.aIEvent.deleteMany({})).catch(() => {});
-    await executeAsSystem(SystemOperation.SECURITY_AUDIT, async (tx) => await tx.camera.deleteMany({})).catch(() => {});
-    await executeAsSystem(SystemOperation.SECURITY_AUDIT, async (tx) => await tx.location.deleteMany({})).catch(() => {});
-    await executeAsSystem(SystemOperation.SECURITY_AUDIT, async (tx) => await tx.deal.deleteMany({})).catch(() => {});
-    await executeAsSystem(SystemOperation.SECURITY_AUDIT, async (tx) => await tx.pipelineStage.deleteMany({})).catch(() => {});
-    await executeAsSystem(SystemOperation.SECURITY_AUDIT, async (tx) => await tx.pipeline.deleteMany({})).catch(() => {});
-    await executeAsSystem(SystemOperation.SECURITY_AUDIT, async (tx) => await tx.customer.deleteMany({})).catch(() => {});
-    await executeAsSystem(SystemOperation.SECURITY_AUDIT, async (tx) => await tx.incident.deleteMany({})).catch(() => {});
-    await executeAsSystem(SystemOperation.SECURITY_AUDIT, async (tx) => await tx.ticket.deleteMany({})).catch(() => {});
-    await executeAsSystem(SystemOperation.SECURITY_AUDIT, async (tx) => await tx.user.deleteMany({})).catch(() => {});
-    await executeAsSystem(SystemOperation.SECURITY_AUDIT, async (tx) => await tx.role.deleteMany({})).catch(() => {});
-    await executeAsSystem(SystemOperation.SECURITY_AUDIT, async (tx) => await tx.lead.deleteMany({})).catch(() => {});
-    await globalPrisma.$executeRawUnsafe(`TRUNCATE TABLE "Tenant" CASCADE;`);
+    await executeAsSystem(SystemOperation.SECURITY_AUDIT, async (tx) => await tx.activityTimeline.deleteMany({}));
+    await executeAsSystem(SystemOperation.SECURITY_AUDIT, async (tx) => await tx.document.deleteMany({}));
+    await executeAsSystem(SystemOperation.SECURITY_AUDIT, async (tx) => await tx.mailMessage.deleteMany({}));
+    await executeAsSystem(SystemOperation.SECURITY_AUDIT, async (tx) => await tx.mailThread.deleteMany({}));
+    await executeAsSystem(SystemOperation.SECURITY_AUDIT, async (tx) => await tx.aIConversationMessage.deleteMany({}));
+    await executeAsSystem(SystemOperation.SECURITY_AUDIT, async (tx) => await tx.aIConversation.deleteMany({}));
+    await executeAsSystem(SystemOperation.SECURITY_AUDIT, async (tx) => await tx.userInvitation.deleteMany({}));
+    await executeAsSystem(SystemOperation.SECURITY_AUDIT, async (tx) => await tx.aIConversation.deleteMany({}));
+    await executeAsSystem(SystemOperation.SECURITY_AUDIT, async (tx) => await tx.aIEvent.deleteMany({}));
+    await executeAsSystem(SystemOperation.SECURITY_AUDIT, async (tx) => await tx.camera.deleteMany({}));
+    await executeAsSystem(SystemOperation.SECURITY_AUDIT, async (tx) => await tx.location.deleteMany({}));
+    await executeAsSystem(SystemOperation.SECURITY_AUDIT, async (tx) => await tx.deal.deleteMany({}));
+    await executeAsSystem(SystemOperation.SECURITY_AUDIT, async (tx) => await tx.pipelineStage.deleteMany({}));
+    await executeAsSystem(SystemOperation.SECURITY_AUDIT, async (tx) => await tx.pipeline.deleteMany({}));
+    await executeAsSystem(SystemOperation.SECURITY_AUDIT, async (tx) => await tx.customer.deleteMany({}));
+    await executeAsSystem(SystemOperation.SECURITY_AUDIT, async (tx) => await tx.incident.deleteMany({}));
+    await executeAsSystem(SystemOperation.SECURITY_AUDIT, async (tx) => await tx.ticket.deleteMany({}));
+    try {
+      await executeAsSystem(SystemOperation.SECURITY_AUDIT, async (tx) => await tx.auditLog.deleteMany({}));
+    } catch (e: any) {
+      console.warn('Tolerated cleanup failure (AuditLog is append-only):', e.message);
+    }
+    await executeAsSystem(SystemOperation.SECURITY_AUDIT, async (tx) => await tx.tenantBootstrap.deleteMany({}));
+    await executeAsSystem(SystemOperation.SECURITY_AUDIT, async (tx) => await tx.userRole.deleteMany({}));
+    await executeAsSystem(SystemOperation.SECURITY_AUDIT, async (tx) => await tx.rolePermission.deleteMany({}));
+    await executeAsSystem(SystemOperation.SECURITY_AUDIT, async (tx) => await tx.user.deleteMany({}));
+    await executeAsSystem(SystemOperation.SECURITY_AUDIT, async (tx) => await tx.role.deleteMany({}));
+    await executeAsSystem(SystemOperation.SECURITY_AUDIT, async (tx) => await tx.lead.deleteMany({}));
+    try {
+      await executeAsSystem(SystemOperation.SECURITY_AUDIT, async (tx) => await tx.tenant.deleteMany({}));
+    } catch (e: any) {
+      console.warn('Tolerated cleanup failure (Tenant FK retained by AuditLog):', e.message);
+    }
   });
 
   it('STRONG: Malicious tenantId and createdById cannot override Deal context (S13.2 Regression + Zod)', async () => {

@@ -147,12 +147,9 @@ export async function updateCustomer(input: UpdateCustomerInput) {
   const tenantId = await requireTenant();
   await requirePermission('CUSTOMER', 'UPDATE');
 
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars -- S2 Residual Debt: Legacy unused local
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars -- S2 Residual Debt: Legacy unused local
-  const prisma = withTenant(tenantId);
-// eslint-disable-next-line @typescript-eslint/no-explicit-any -- S2 Residual Debt: Legacy internal payload requires architectural typing
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any -- S2 Residual Debt: Legacy internal payload requires architectural typing
+  const prisma = withTenant(tenantId);
+
   return await globalPrisma.$transaction(async (baseTx) => {
     const tx = await withTenantTransaction(baseTx, tenantId);
     const customer = await tx.customer.findFirst({ where: { id: input.id, tenantId }});
@@ -231,14 +228,10 @@ export async function updateCustomer(input: UpdateCustomerInput) {
 export async function deleteCustomer(customerId: string) {
   const user = await requireAuth();
   const tenantId = await requireTenant();
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars -- S2 Residual Debt: Legacy unused local
   await requirePermission('CUSTOMER', 'DELETE');
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any -- S2 Residual Debt: Legacy internal payload requires architectural typing
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars -- S2 Residual Debt: Legacy unused local
   const prisma = withTenant(tenantId);
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any -- S2 Residual Debt: Legacy internal payload requires architectural typing
   return await globalPrisma.$transaction(async (baseTx) => {
     const tx = await withTenantTransaction(baseTx, tenantId);
     const customer = await tx.customer.findFirst({ where: { id: customerId, tenantId, deletedAt: null } });
@@ -289,15 +282,11 @@ export async function deleteCustomer(customerId: string) {
 export async function createContact(input: any) {
   const user = await requireAuth();
   const tenantId = await requireTenant();
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars -- S2 Residual Debt: Legacy unused local
   await requirePermission('CUSTOMER', 'UPDATE');
-// eslint-disable-next-line @typescript-eslint/no-explicit-any -- S2 Residual Debt: Legacy internal payload requires architectural typing
 
 
 
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars -- S2 Residual Debt: Legacy unused local
   const prisma = withTenant(tenantId);
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any -- S2 Residual Debt: Legacy internal payload requires architectural typing
   return await globalPrisma.$transaction(async (baseTx) => {
     const tx = await withTenantTransaction(baseTx, tenantId);
     
@@ -342,17 +331,13 @@ export async function createContact(input: any) {
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 export async function createLocation(input: any) {
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars -- S2 Residual Debt: Legacy unused local
   const user = await requireAuth();
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any -- S2 Residual Debt: Legacy internal payload requires architectural typing
   const tenantId = await requireTenant();
   await requirePermission('CUSTOMER', 'UPDATE');
 
 
 
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars -- S2 Residual Debt: Legacy unused local
   const prisma = withTenant(tenantId);
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any -- S2 Residual Debt: Legacy internal payload requires architectural typing
   return await globalPrisma.$transaction(async (baseTx) => {
     const tx = await withTenantTransaction(baseTx, tenantId);
 
@@ -388,3 +373,116 @@ export async function createLocation(input: any) {
   });
 }
 
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+export async function updateContact(input: any) {
+  const user = await requireAuth();
+  const tenantId = await requireTenant();
+  await requirePermission('CUSTOMER', 'UPDATE');
+
+  return await globalPrisma.$transaction(async (baseTx) => {
+    const tx = await withTenantTransaction(baseTx, tenantId);
+    
+    // VERIFY RELATION OWNERSHIP
+    await requireRelationOwnership(tx, tenantId, {
+      customer: input.customerId
+    });
+
+    // VERIFY CONTACT OWNERSHIP (and existence)
+    const existingContact = await tx.customerContact.findFirst({
+      where: { id: input.contactId, customerId: input.customerId, tenantId, deletedAt: null }
+    });
+    if (!existingContact) throw new Error('Contact not found');
+
+    if (input.isPrimary && !existingContact.isPrimary) {
+      await tx.customerContact.updateMany({
+        where: { customerId: input.customerId, tenantId },
+        data: { isPrimary: false }
+      });
+    }
+
+    const contact = await tx.customerContact.update({
+      where: { id: input.contactId },
+      data: {
+        firstName: input.firstName,
+        lastName: input.lastName,
+        email: input.email,
+        phone: input.phone,
+        isPrimary: input.isPrimary,
+      }
+    });
+
+    await tx.activityTimeline.create({
+      data: {
+        tenantId,
+        type: 'SYSTEM',
+        content: `Contact updated: ${input.firstName || existingContact.firstName} ${input.lastName || existingContact.lastName}`,
+        actorId: user.id,
+        entityType: 'CUSTOMER',
+        entityId: input.customerId
+      }
+    });
+
+    await tx.auditLog.create({
+      data: {
+        tenantId,
+        actorId: user.id,
+        actorType: 'USER',
+        action: 'CONTACT_UPDATED',
+        resource: 'CUSTOMER',
+        resourceId: input.customerId,
+      }
+    });
+
+    return contact;
+  });
+}
+
+export async function deleteContact(contactId: string, customerId: string) {
+  const user = await requireAuth();
+  const tenantId = await requireTenant();
+  await requirePermission('CUSTOMER', 'UPDATE');
+
+  return await globalPrisma.$transaction(async (baseTx) => {
+    const tx = await withTenantTransaction(baseTx, tenantId);
+    
+    // VERIFY RELATION OWNERSHIP
+    await requireRelationOwnership(tx, tenantId, {
+      customer: customerId
+    });
+
+    // VERIFY CONTACT OWNERSHIP (and existence)
+    const existingContact = await tx.customerContact.findFirst({
+      where: { id: contactId, customerId: customerId, tenantId, deletedAt: null }
+    });
+    if (!existingContact) throw new Error('Contact not found');
+
+    await tx.customerContact.update({
+      where: { id: contactId },
+      data: { deletedAt: new Date() }
+    });
+
+    await tx.activityTimeline.create({
+      data: {
+        tenantId,
+        type: 'SYSTEM',
+        content: `Contact archived: ${existingContact.firstName} ${existingContact.lastName}`,
+        actorId: user.id,
+        entityType: 'CUSTOMER',
+        entityId: customerId
+      }
+    });
+
+    await tx.auditLog.create({
+      data: {
+        tenantId,
+        actorId: user.id,
+        actorType: 'USER',
+        action: 'CONTACT_DELETED',
+        resource: 'CUSTOMER',
+        resourceId: customerId,
+      }
+    });
+
+    return { success: true };
+  });
+}

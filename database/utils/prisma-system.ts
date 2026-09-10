@@ -1,7 +1,12 @@
 import { PrismaClient, Prisma } from '@prisma/client';
 
-const globalSystemPrisma = new PrismaClient();
+if (!process.env.ADMIN_DATABASE_URL) {
+  throw new Error('SECURITY_ERROR: ADMIN_DATABASE_URL must be strictly defined for system execution.');
+}
 
+const globalSystemPrisma = new PrismaClient({
+  datasources: { db: { url: process.env.ADMIN_DATABASE_URL } }
+});
 export enum SystemOperation {
   AUTH_BOOTSTRAP = 'AUTH_BOOTSTRAP',
   CLERK_PROVISIONING = 'CLERK_PROVISIONING',
@@ -28,7 +33,6 @@ export async function executeAsSystem<T>(
   }));
 
   return await globalSystemPrisma.$transaction(async (tx) => {
-    await tx.$queryRawUnsafe(`SELECT set_config('app.bypass_rls', 'on', true)`);
     return await handler(tx);
   }, {
     maxWait: 25000,

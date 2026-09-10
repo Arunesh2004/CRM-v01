@@ -79,6 +79,17 @@ const CreateContactSchema = z.object({
   phone: z.string().optional()
 }).strip();
 
+const UpdateContactSchema = CreateContactSchema.partial().extend({
+  contactId: z.string().uuid(),
+  customerId: z.string().uuid(),
+  isPrimary: z.boolean().optional(),
+}).strip();
+
+const DeleteContactSchema = z.object({
+  contactId: z.string().uuid(),
+  customerId: z.string().uuid(),
+}).strip();
+
 const CreateLocationSchema = z.object({
   customerId: z.string().uuid(),
   name: z.string().min(1),
@@ -89,7 +100,6 @@ const CreateLocationSchema = z.object({
   country: z.string().optional()
 }).strip();
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any -- S2 Residual Debt: Legacy internal payload requires architectural typing
 // eslint-disable-next-line @typescript-eslint/no-explicit-any -- S2 Residual Debt: Legacy internal payload requires architectural typing
 async function _createContactAction(payload: any) {
   try {
@@ -105,7 +115,38 @@ async function _createContactAction(payload: any) {
     return { success: false, error: sanitizeClientError(error) };
   }
 }
-// eslint-disable-next-line @typescript-eslint/no-explicit-any -- S2 Residual Debt: Legacy internal payload requires architectural typing
+
+// eslint-disable-next-line @typescript-eslint/no-explicit-any -- S2 Residual Debt: Legacy internal payload requires architectural typing
+async function _updateContactAction(payload: any) {
+  try {
+    const validated = UpdateContactSchema.parse(payload);
+    await requireAuth();
+    await requireTenant();
+    await requirePermission('CUSTOMER', 'UPDATE');
+    const result = await customerService.updateContact(validated);
+    revalidatePath(`/customers/${validated.customerId}`);
+    return { success: true, data: result };
+  } catch (errorRaw: unknown) {
+    const error = errorRaw instanceof Error ? errorRaw : new Error(String(errorRaw));
+    return { success: false, error: sanitizeClientError(error) };
+  }
+}
+
+// eslint-disable-next-line @typescript-eslint/no-explicit-any -- S2 Residual Debt: Legacy internal payload requires architectural typing
+async function _deleteContactAction(payload: any) {
+  try {
+    const validated = DeleteContactSchema.parse(payload);
+    await requireAuth();
+    await requireTenant();
+    await requirePermission('CUSTOMER', 'UPDATE');
+    const result = await customerService.deleteContact(validated.contactId, validated.customerId);
+    revalidatePath(`/customers/${validated.customerId}`);
+    return { success: true, data: result };
+  } catch (errorRaw: unknown) {
+    const error = errorRaw instanceof Error ? errorRaw : new Error(String(errorRaw));
+    return { success: false, error: sanitizeClientError(error) };
+  }
+}
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any -- S2 Residual Debt: Legacy internal payload requires architectural typing
 async function _createLocationAction(payload: any) {
@@ -138,6 +179,7 @@ async function _getCustomerTimelineAction(params: {
     return { success: false, error: sanitizeClientError(error) };
   }
 }
+
 export const createCustomerAction = withServerActionContext(_createCustomerAction);
 
 export const updateCustomerAction = withServerActionContext(_updateCustomerAction);
@@ -149,6 +191,10 @@ export const getCustomerByIdAction = withServerActionContext(_getCustomerByIdAct
 export const deleteCustomerAction = withServerActionContext(_deleteCustomerAction);
 
 export const createContactAction = withServerActionContext(_createContactAction);
+
+export const updateContactAction = withServerActionContext(_updateContactAction);
+
+export const deleteContactAction = withServerActionContext(_deleteContactAction);
 
 export const createLocationAction = withServerActionContext(_createLocationAction);
 

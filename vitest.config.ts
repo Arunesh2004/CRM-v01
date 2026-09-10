@@ -2,7 +2,11 @@ import { defineConfig } from 'vitest/config';
 import path from 'path';
 import dotenv from 'dotenv';
 
-dotenv.config();
+if (process.env.NODE_ENV === 'test') {
+  dotenv.config({ path: '.env.test' });
+} else {
+  dotenv.config();
+}
 
 // Default global mock values for CCTV configuration to ensure legacy tests evaluating
 // the 'CCTV ENABLED' mode continue to pass. The startup-decoupling test intentionally

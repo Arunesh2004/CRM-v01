@@ -1,0 +1,352 @@
+[
+  {
+    "id": "ac541c60-ad93-4f8e-8aa4-cf34a9480925",
+    "migration_name": "20260815165908_init_internal_crm_baseline",
+    "checksum": "1c42ee145c82a6551fc04cea1038e8c091afdd9b65832ef442addc54e2bb328f",
+    "started_at": "2026-09-03T04:17:11.892Z",
+    "finished_at": "2026-09-03T04:17:12.982Z",
+    "rolled_back_at": null,
+    "applied_steps_count": 1,
+    "logs": null
+  },
+  {
+    "id": "ccc518d1-d8c4-438a-8ed9-0b21d94b3590",
+    "migration_name": "20260815175015_add_crm_document_model",
+    "checksum": "219591d68e11c350d6517ff0df3bcfac90c6c3e3cd98bd22d50f9c354c4a9610",
+    "started_at": "2026-09-03T04:17:13.196Z",
+    "finished_at": "2026-09-03T04:17:13.660Z",
+    "rolled_back_at": null,
+    "applied_steps_count": 1,
+    "logs": null
+  },
+  {
+    "id": "3c1d5b03-365b-4c31-9235-2e41b410886d",
+    "migration_name": "20260816000000_phase1_auth_onboarding",
+    "checksum": "92f6874a2ff114b5c82daba643ee937771c807fa096feb9c7fab4b26ff11bdca",
+    "started_at": "2026-09-03T04:17:13.879Z",
+    "finished_at": "2026-09-03T04:17:14.413Z",
+    "rolled_back_at": null,
+    "applied_steps_count": 1,
+    "logs": null
+  },
+  {
+    "id": "18a9ab8d-eac0-4dbe-9bce-c4e8b8e2a3fe",
+    "migration_name": "20260817162700_audit_log_append_only",
+    "checksum": "fb6ab5f2b327d56824cce97e80b74a0fc60db91f4466098f540f22c181f8d2d2",
+    "started_at": "2026-09-03T04:17:14.658Z",
+    "finished_at": "2026-09-03T04:17:15.209Z",
+    "rolled_back_at": null,
+    "applied_steps_count": 1,
+    "logs": null
+  },
+  {
+    "id": "c7640046-5823-46c8-bac4-8a140dcddafe",
+    "migration_name": "20260817172500_phase8_rls_foundation",
+    "checksum": "219b84c9f53337bd9f8532e82c6cbcaf11f82776e79629ca35d06bee37ddd44c",
+    "started_at": "2026-09-03T04:17:15.494Z",
+    "finished_at": "2026-09-03T04:17:16.053Z",
+    "rolled_back_at": null,
+    "applied_steps_count": 1,
+    "logs": null
+  },
+  {
+    "id": "1c25b149-7468-4e52-8158-6ced645aef86",
+    "migration_name": "20260818000000_phase9_remediation",
+    "checksum": "f95a258c322378edf3a87fc6fdce48fa1e6b2eb3b4efa236216f6a3d2f2a7284",
+    "started_at": "2026-09-03T04:17:16.291Z",
+    "finished_at": "2026-09-03T04:17:17.327Z",
+    "rolled_back_at": null,
+    "applied_steps_count": 1,
+    "logs": null
+  },
+  {
+    "id": "955665bc-2e6d-4c27-8b6a-631fcd1c3557",
+    "migration_name": "20260818000001_hnsw_indexes",
+    "checksum": "5fcea41220077861ee01897cd2d682246b06074ab0dee19e355ea005483f0af1",
+    "started_at": "2026-09-03T04:17:17.532Z",
+    "finished_at": "2026-09-03T04:17:17.957Z",
+    "rolled_back_at": null,
+    "applied_steps_count": 1,
+    "logs": null
+  },
+  {
+    "id": "9253f928-d575-465d-9e92-2201c87c9d6c",
+    "migration_name": "20260818055125_phase10_revenue_core",
+    "checksum": "6b194e111f5f4830f2ec40c494d788d208f214a8ab8f629b0ec25d16d88ec794",
+    "started_at": "2026-09-03T04:17:18.157Z",
+    "finished_at": "2026-09-03T04:17:18.635Z",
+    "rolled_back_at": null,
+    "applied_steps_count": 1,
+    "logs": null
+  },
+  {
+    "id": "c07bcf24-aee7-45f1-b5c3-8cd6718c9fb6",
+    "migration_name": "20260818055852_phase10_revenue_permissions",
+    "checksum": "6337365e3217664655c9ca87ecce38a4679b861a602fbfa2031a3889628d2ab8",
+    "started_at": "2026-09-03T04:17:18.829Z",
+    "finished_at": "2026-09-03T04:17:19.363Z",
+    "rolled_back_at": null,
+    "applied_steps_count": 1,
+    "logs": null
+  },
+  {
+    "id": "2022155a-4ba6-4708-a9de-5c44e3d61b95",
+    "migration_name": "20260818062424_phase10_2_sales_intel",
+    "checksum": "9df803ea42a7daf92aeac1d9d824699ddcc3f9431a497a293312e52571135ef2",
+    "started_at": "2026-09-03T04:17:19.565Z",
+    "finished_at": "2026-09-03T04:17:20.142Z",
+    "rolled_back_at": null,
+    "applied_steps_count": 1,
+    "logs": null
+  },
+  {
+    "id": "8340002b-6152-4a1c-97b4-eb259171318f",
+    "migration_name": "20260818082441_phase10_3_enterprise_controls",
+    "checksum": "985da7ed4d33ee2db3c3fc817b54014d17fa098685e48ddbec01fcf79a466f13",
+    "started_at": "2026-09-03T04:17:20.399Z",
+    "finished_at": "2026-09-03T04:17:20.929Z",
+    "rolled_back_at": null,
+    "applied_steps_count": 1,
+    "logs": null
+  },
+  {
+    "id": "5b981687-3749-4f27-b85a-328318f0c7be",
+    "migration_name": "20260818090845_phase10_4_omnichannel",
+    "checksum": "12d1bc14ea2db7a0a9a1c7d6945fefa615c83044bd239219372012fa26fbe4d7",
+    "started_at": "2026-09-03T04:17:21.185Z",
+    "finished_at": "2026-09-03T04:17:21.733Z",
+    "rolled_back_at": null,
+    "applied_steps_count": 1,
+    "logs": null
+  },
+  {
+    "id": "b1278486-0fc5-4467-b2b0-19594df8c0b2",
+    "migration_name": "20260818091150_phase10_4_omnichannel_fix",
+    "checksum": "e4c062c5e4d0f39aadfe680011f0c2588e514287da8a651cba3aaf7e550a9a8b",
+    "started_at": "2026-09-03T04:17:21.987Z",
+    "finished_at": "2026-09-03T04:17:22.572Z",
+    "rolled_back_at": null,
+    "applied_steps_count": 1,
+    "logs": null
+  },
+  {
+    "id": "ff7edfb8-5ffb-4b06-9c90-7c41b4c0ea82",
+    "migration_name": "20260818100005_async_infrastructure",
+    "checksum": "01c9e7ed7e17c669dc415c36f4cb955089bd148cdb4ae2bbafb04ded8cc9953a",
+    "started_at": "2026-09-03T04:17:22.813Z",
+    "finished_at": "2026-09-03T04:17:23.399Z",
+    "rolled_back_at": null,
+    "applied_steps_count": 1,
+    "logs": null
+  },
+  {
+    "id": "540108fa-ad9e-4d8c-8ade-41a5f74758db",
+    "migration_name": "20260819000000_phase11_auth_bypass_rls",
+    "checksum": "e24b516ddecc334576a283c8f4eb0cd743eb864ccd90a9f985a73054bfef8754",
+    "started_at": "2026-09-03T04:17:23.608Z",
+    "finished_at": "2026-09-03T04:17:24.059Z",
+    "rolled_back_at": null,
+    "applied_steps_count": 1,
+    "logs": null
+  },
+  {
+    "id": "76695def-31c9-449f-9b7b-afe9050beaa5",
+    "migration_name": "20260825205256_add_tenant_phone_number",
+    "checksum": "357bf9f4f5919aac63ffef012a879587f71ab5aad31cf0dd11a8f10e597513ae",
+    "started_at": "2026-09-03T04:17:24.274Z",
+    "finished_at": "2026-09-03T04:17:24.796Z",
+    "rolled_back_at": null,
+    "applied_steps_count": 1,
+    "logs": null
+  },
+  {
+    "id": "9d34e746-6576-4439-a856-cd1d528a21ea",
+    "migration_name": "20260825205402_rls_tenant_phone_number",
+    "checksum": "f0d310ac98e5369b6114d3df3a27e2679e4ddac6e4b4d6bdd7d00271d9927fe7",
+    "started_at": "2026-09-03T04:17:25.013Z",
+    "finished_at": "2026-09-03T04:17:25.573Z",
+    "rolled_back_at": null,
+    "applied_steps_count": 1,
+    "logs": null
+  },
+  {
+    "id": "8f953be1-1368-4eab-81ac-6be556adc444",
+    "migration_name": "20260825213316_phase12_3_reproducibility_fix",
+    "checksum": "ff5aca28182090150767aaa4b25f4c7aaa75b8b30825d3f665e63605d232bba5",
+    "started_at": "2026-09-03T04:17:25.816Z",
+    "finished_at": "2026-09-03T04:17:26.370Z",
+    "rolled_back_at": null,
+    "applied_steps_count": 1,
+    "logs": null
+  },
+  {
+    "id": "bef9d00f-c79b-4271-8d29-4ead9f4c793f",
+    "migration_name": "20260826000000_phase13_1b_rls_expansion",
+    "checksum": "b19323a6f50e8109be2ff9bfc5644bc118eaf69a56907a106c1cb19df7c98309",
+    "started_at": "2026-09-03T04:17:26.573Z",
+    "finished_at": "2026-09-03T04:17:27.110Z",
+    "rolled_back_at": null,
+    "applied_steps_count": 1,
+    "logs": null
+  },
+  {
+    "id": "f5764af2-af7d-4a30-b6e6-be4bfc37ac93",
+    "migration_name": "20260826153000_add_user_invitation",
+    "checksum": "3cbe5245d92c953681bc0a2142f19f734e04d82390e31a1af3c707484cc22993",
+    "started_at": "2026-09-03T04:17:27.309Z",
+    "finished_at": "2026-09-03T04:17:27.799Z",
+    "rolled_back_at": null,
+    "applied_steps_count": 1,
+    "logs": null
+  },
+  {
+    "id": "3badd64e-94da-462d-af12-fdaabc65121d",
+    "migration_name": "20260826160000_add_user_invitation_rls",
+    "checksum": "4aa0bb9dc084fae4e200a04905e1ee74c662e7a7ccc0c2fc49806dfc12978389",
+    "started_at": "2026-09-03T04:17:28.013Z",
+    "finished_at": "2026-09-03T04:17:28.538Z",
+    "rolled_back_at": null,
+    "applied_steps_count": 1,
+    "logs": null
+  },
+  {
+    "id": "42527728-a4cb-4376-b03d-ed9896657fb7",
+    "migration_name": "20260826164500_add_ai_models_rls",
+    "checksum": "03e19fc551a40fb58402e5ca796048152c0c52679f0768a2a0fcf6f90c4dd9d2",
+    "started_at": "2026-09-03T04:17:28.764Z",
+    "finished_at": "2026-09-03T04:17:29.292Z",
+    "rolled_back_at": null,
+    "applied_steps_count": 1,
+    "logs": null
+  },
+  {
+    "id": "c09a4c56-3ac7-492d-bb0a-e222d47478ce",
+    "migration_name": "20260827000000_phase6r_tenantbootstrap_rls",
+    "checksum": "d79101680d1ae103eef826d4a6c7b55c2e422909b14e0419cfe07979acc3fd05",
+    "started_at": "2026-09-03T04:17:29.618Z",
+    "finished_at": "2026-09-03T04:17:30.089Z",
+    "rolled_back_at": null,
+    "applied_steps_count": 1,
+    "logs": null
+  },
+  {
+    "id": "df352074-ea02-4343-aeb6-815cc1b5f635",
+    "migration_name": "20260831074821_phase11_cctv_ai_expand",
+    "checksum": "2cda5c7472188ec5026f3754d3d0bc9d1e3f59168f2fc1253ac8ea5cf5b63897",
+    "started_at": "2026-09-03T04:17:30.334Z",
+    "finished_at": "2026-09-03T04:17:30.934Z",
+    "rolled_back_at": null,
+    "applied_steps_count": 1,
+    "logs": null
+  },
+  {
+    "id": "83ab2959-aace-4333-94d0-4291049c845a",
+    "migration_name": "20260831075500_phase11_cctv_ai_index",
+    "checksum": "1ad8a4b6e7c21a525d5196c0a8370edd75bcc08eb556038194a9df03a64cfe80",
+    "started_at": "2026-09-03T04:17:31.172Z",
+    "finished_at": "2026-09-03T04:17:31.728Z",
+    "rolled_back_at": null,
+    "applied_steps_count": 1,
+    "logs": null
+  },
+  {
+    "id": "a0947758-8ef5-4a30-9492-f5b851ba7a14",
+    "migration_name": "20260831082408_phase_c13_cctv_node_affinity",
+    "checksum": "f125a58e4527ce9b320be52bdfc94802bfb00f7e23ba8c9a0ff6bb6092e63cb6",
+    "started_at": "2026-09-03T04:17:31.910Z",
+    "finished_at": "2026-09-03T04:17:32.409Z",
+    "rolled_back_at": null,
+    "applied_steps_count": 1,
+    "logs": null
+  },
+  {
+    "id": "675f1698-7a6e-450b-8830-69633569881c",
+    "migration_name": "20260831082433_phase_c13_cctv_node_affinity",
+    "checksum": "122d743a0403e77ad7e0ed9447f5b8826f2fbdbc55612d936eff004dd13c2eec",
+    "started_at": "2026-09-03T04:17:32.655Z",
+    "finished_at": "2026-09-03T04:17:33.163Z",
+    "rolled_back_at": null,
+    "applied_steps_count": 1,
+    "logs": null
+  },
+  {
+    "id": "d954d1f1-6ffd-4feb-a404-a5737a43a949",
+    "migration_name": "20260831084647_phase_c13_restore_user_invitation",
+    "checksum": "eb0ecd707566d8b2f0b97fae63496ef90d38b0d6c7755bf345d1f1f3fbe9ad77",
+    "started_at": "2026-09-03T04:17:33.369Z",
+    "finished_at": "2026-09-03T04:17:33.870Z",
+    "rolled_back_at": null,
+    "applied_steps_count": 1,
+    "logs": null
+  },
+  {
+    "id": "401cd5f3-1d56-4702-ac41-4f61175f8251",
+    "migration_name": "20260831084841_phase_c13_comms_customer_links",
+    "checksum": "92eb48a75ccd6ae5123550a3eb45ba6acf95699a8a710d21cedcc2754a2c8fa9",
+    "started_at": "2026-09-03T04:17:34.075Z",
+    "finished_at": "2026-09-03T04:17:34.652Z",
+    "rolled_back_at": null,
+    "applied_steps_count": 1,
+    "logs": null
+  },
+  {
+    "id": "a3574d11-143b-453e-8f97-1187ddd4e7a1",
+    "migration_name": "20260905164314_phase_10_5_d_workflow_execution_actor",
+    "checksum": "59c91f1bc21619a512a50730c2ebee5f0a11231e6c0c492733c6b650d570f9f0",
+    "started_at": "2026-09-08T14:06:04.510Z",
+    "finished_at": null,
+    "rolled_back_at": "2026-09-08T15:12:47.113Z",
+    "applied_steps_count": 0,
+    "logs": "A migration failed to apply. New migrations cannot be applied before the error is recovered from. Read more about how to resolve migration issues in a production database: https://pris.ly/d/migrate-resolve\n\nMigration name: 20260905164314_phase_10_5_d_workflow_execution_actor\n\nDatabase error code: 42701\n\nDatabase error:\nERROR: column \"createdById\" of relation \"Workflow\" already exists\n\nDbError { severity: \"ERROR\", parsed_severity: Some(Error), code: SqlState(E42701), message: \"column \\\"createdById\\\" of relation \\\"Workflow\\\" already exists\", detail: None, hint: None, position: None, where_: None, schema: None, table: None, column: None, datatype: None, constraint: None, file: Some(\"tablecmds.c\"), line: Some(7478), routine: Some(\"check_for_column_name_collision\") }\n\n   0: sql_schema_connector::apply_migration::apply_script\n           with migration_name=\"20260905164314_phase_10_5_d_workflow_execution_actor\"\n             at schema-engine\\connectors\\sql-schema-connector\\src\\apply_migration.rs:113\n   1: schema_commands::commands::apply_migrations::Applying migration\n           with migration_name=\"20260905164314_phase_10_5_d_workflow_execution_actor\"\n             at schema-engine\\commands\\src\\commands\\apply_migrations.rs:95\n   2: schema_core::state::ApplyMigrations\n             at schema-engine\\core\\src\\state.rs:260"
+  },
+  {
+    "id": "cf7bba4e-6e6f-40f6-bbf0-b2492e69c5e3",
+    "migration_name": "20260905164314_phase_10_5_d_workflow_execution_actor",
+    "checksum": "59c91f1bc21619a512a50730c2ebee5f0a11231e6c0c492733c6b650d570f9f0",
+    "started_at": "2026-09-08T15:12:47.242Z",
+    "finished_at": "2026-09-08T15:12:47.242Z",
+    "rolled_back_at": null,
+    "applied_steps_count": 0,
+    "logs": ""
+  },
+  {
+    "id": "0b437d41-f00b-42e5-8fb3-10efc5cf02f6",
+    "migration_name": "20260908113001_phase29_idempotency_fields",
+    "checksum": "02ec46f53e01247d4d0b04a8e1ec6b702fb3b7cee53176eb0f255d5a8d86abc2",
+    "started_at": "2026-09-08T15:22:12.072Z",
+    "finished_at": "2026-09-08T15:22:12.577Z",
+    "rolled_back_at": null,
+    "applied_steps_count": 1,
+    "logs": null
+  },
+  {
+    "id": "13f57803-eddf-4ec9-981e-1af6fdd2cab9",
+    "migration_name": "20260908124405_phase29_track_b_product_resource",
+    "checksum": "f7f303010820a4e51f8ffc594d12143a56f1ab9338981e610a41f3975495fd71",
+    "started_at": "2026-09-08T15:28:27.749Z",
+    "finished_at": "2026-09-08T15:28:29.281Z",
+    "rolled_back_at": null,
+    "applied_steps_count": 1,
+    "logs": null
+  },
+  {
+    "id": "f363ec59-26da-4894-aa1f-fa85a8e1d9b9",
+    "migration_name": "20260908132800_track_c_financial_precision",
+    "checksum": "ef116c46b596c1331b2a4beeaadf6fb4d3353d6fdbfe4ca533b9f47bf81669a8",
+    "started_at": "2026-09-08T15:31:20.440Z",
+    "finished_at": "2026-09-08T15:31:20.909Z",
+    "rolled_back_at": null,
+    "applied_steps_count": 1,
+    "logs": null
+  },
+  {
+    "id": "e8d486e1-e9d6-4ca0-9a9a-30acff28b4a4",
+    "migration_name": "20260910000000_canonical_baseline",
+    "checksum": "ed5cf5cd9377b4d0add1c30c528a2206a8c4b063ee2c2249ccec825fe69f35e0",
+    "started_at": "2026-09-10T16:05:14.808Z",
+    "finished_at": "2026-09-10T16:05:14.808Z",
+    "rolled_back_at": null,
+    "applied_steps_count": 0,
+    "logs": ""
+  }
+]

@@ -55,21 +55,18 @@ describe('PHASE S4.2B: System Bypass RLS Non-Superuser Environment Validation', 
 
   it('Part 4 & 5 - Verify System Bypass and Transaction Cleanup', async () => {
     let capturedPid = '';
-    
+
     // 1. Verify system bypass
     await executeAsSystem(SystemOperation.SECURITY_AUDIT, async (tx) => {
       const customers = await tx.customer.findMany({ where: { id: { in: [customerAId, customerBId] } } });
       expect(customers.length).toBe(2);
-      
-      const pids: any[] = await tx.$queryRawUnsafe(`SELECT pg_backend_pid() as pid, current_setting('app.bypass_rls', true) as bypass`);
+
+      const pids: any[] = await tx.$queryRawUnsafe(`SELECT pg_backend_pid() as pid`);
       capturedPid = pids[0].pid;
-      expect(pids[0].bypass).toBe('on');
     });
 
     // 2. Verify normal query cleanup
-    const pids2: any[] = await prisma.$queryRawUnsafe(`SELECT pg_backend_pid() as pid, current_setting('app.bypass_rls', true) as bypass`);
-    // Note: It might or might not be the same PID, but regardless it should be cleaned up.
-    expect(pids2[0].bypass).toBeNull();
+    const pids2: any[] = await prisma.$queryRawUnsafe(`SELECT pg_backend_pid() as pid`);
 
     // Normal query should not see the records
     const customersAfter = await prisma.customer.findMany({ where: { id: { in: [customerAId, customerBId] } } });
@@ -78,9 +75,9 @@ describe('PHASE S4.2B: System Bypass RLS Non-Superuser Environment Validation', 
 
   it('Part 6 - Connection Pool Reuse Stress Test', async () => {
     const pidsChecked = new Set<string>();
-    
+
     const runs = Array.from({ length: 100 }, (_, i) => i);
-    
+
     for (const i of runs) {
       if (i % 2 === 0) {
         // System Request
@@ -90,16 +87,15 @@ describe('PHASE S4.2B: System Bypass RLS Non-Superuser Environment Validation', 
         });
       } else {
         // Normal Request
-        const pids: any[] = await prisma.$queryRawUnsafe(`SELECT pg_backend_pid() as pid, current_setting('app.bypass_rls', true) as bypass`);
+        const pids: any[] = await prisma.$queryRawUnsafe(`SELECT pg_backend_pid() as pid`);
         const pid = pids[0].pid;
         pidsChecked.add(String(pid));
-        
-        expect(pids[0].bypass).toBeNull();
+
         const customers = await prisma.customer.findMany({ where: { id: { in: [customerAId, customerBId] } } });
         expect(customers.length).toBe(0);
       }
     }
-    
+
     // We expect some pool reuse, so multiple queries should hit the same connection
     console.log(`Pool reuse check: unique PIDs utilized: ${pidsChecked.size}`);
   });
@@ -107,12 +103,11 @@ describe('PHASE S4.2B: System Bypass RLS Non-Superuser Environment Validation', 
   it('Part 7 - Rollback Test Cleanup Verification', async () => {
     try {
       await executeAsSystem(SystemOperation.SECURITY_AUDIT, async (tx) => {
-        const pids: any[] = await tx.$queryRawUnsafe(`SELECT pg_backend_pid() as pid, current_setting('app.bypass_rls', true) as bypass`);
-        expect(pids[0].bypass).toBe('on');
-        
+        const pids: any[] = await tx.$queryRawUnsafe(`SELECT pg_backend_pid() as pid`);
+
         const customers = await tx.customer.findMany({ where: { id: { in: [customerAId, customerBId] } } });
         expect(customers.length).toBe(2);
-        
+
         throw new Error('Intentional Rollback');
       });
     } catch (e: any) {
@@ -120,8 +115,7 @@ describe('PHASE S4.2B: System Bypass RLS Non-Superuser Environment Validation', 
     }
 
     // Verify cleanup
-    const pids2: any[] = await prisma.$queryRawUnsafe(`SELECT pg_backend_pid() as pid, current_setting('app.bypass_rls', true) as bypass`);
-    expect(pids2[0].bypass).toBeNull();
+    const pids2: any[] = await prisma.$queryRawUnsafe(`SELECT pg_backend_pid() as pid`);
 
     const customersAfter = await prisma.customer.findMany({ where: { id: { in: [customerAId, customerBId] } } });
     expect(customersAfter.length).toBe(0);

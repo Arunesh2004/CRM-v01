@@ -1,0 +1,4787 @@
+[
+  {
+    "table_name": "ABACPolicy",
+    "column_name": "id",
+    "data_type": "text"
+  },
+  {
+    "table_name": "ABACPolicy",
+    "column_name": "tenantId",
+    "data_type": "text"
+  },
+  {
+    "table_name": "ABACPolicy",
+    "column_name": "name",
+    "data_type": "text"
+  },
+  {
+    "table_name": "ABACPolicy",
+    "column_name": "resource",
+    "data_type": "text"
+  },
+  {
+    "table_name": "ABACPolicy",
+    "column_name": "action",
+    "data_type": "text"
+  },
+  {
+    "table_name": "ABACPolicy",
+    "column_name": "conditions",
+    "data_type": "jsonb"
+  },
+  {
+    "table_name": "ABACPolicy",
+    "column_name": "effect",
+    "data_type": "text"
+  },
+  {
+    "table_name": "ABACPolicy",
+    "column_name": "isActive",
+    "data_type": "boolean"
+  },
+  {
+    "table_name": "ABACPolicy",
+    "column_name": "createdAt",
+    "data_type": "timestamp without time zone"
+  },
+  {
+    "table_name": "AIAgentExecution",
+    "column_name": "id",
+    "data_type": "text"
+  },
+  {
+    "table_name": "AIAgentExecution",
+    "column_name": "tenantId",
+    "data_type": "text"
+  },
+  {
+    "table_name": "AIAgentExecution",
+    "column_name": "userId",
+    "data_type": "text"
+  },
+  {
+    "table_name": "AIAgentExecution",
+    "column_name": "agentName",
+    "data_type": "text"
+  },
+  {
+    "table_name": "AIAgentExecution",
+    "column_name": "correlationId",
+    "data_type": "text"
+  },
+  {
+    "table_name": "AIAgentExecution",
+    "column_name": "status",
+    "data_type": "USER-DEFINED"
+  },
+  {
+    "table_name": "AIAgentExecution",
+    "column_name": "input",
+    "data_type": "jsonb"
+  },
+  {
+    "table_name": "AIAgentExecution",
+    "column_name": "output",
+    "data_type": "jsonb"
+  },
+  {
+    "table_name": "AIAgentExecution",
+    "column_name": "createdAt",
+    "data_type": "timestamp without time zone"
+  },
+  {
+    "table_name": "AIAgentExecution",
+    "column_name": "updatedAt",
+    "data_type": "timestamp without time zone"
+  },
+  {
+    "table_name": "AIAnalysisJob",
+    "column_name": "id",
+    "data_type": "text"
+  },
+  {
+    "table_name": "AIAnalysisJob",
+    "column_name": "recordingId",
+    "data_type": "text"
+  },
+  {
+    "table_name": "AIAnalysisJob",
+    "column_name": "analysisType",
+    "data_type": "text"
+  },
+  {
+    "table_name": "AIAnalysisJob",
+    "column_name": "dedupeKey",
+    "data_type": "text"
+  },
+  {
+    "table_name": "AIAnalysisJob",
+    "column_name": "status",
+    "data_type": "USER-DEFINED"
+  },
+  {
+    "table_name": "AIAnalysisJob",
+    "column_name": "terminalReason",
+    "data_type": "text"
+  },
+  {
+    "table_name": "AIAnalysisJob",
+    "column_name": "workerId",
+    "data_type": "text"
+  },
+  {
+    "table_name": "AIAnalysisJob",
+    "column_name": "leaseExpiresAt",
+    "data_type": "timestamp without time zone"
+  },
+  {
+    "table_name": "AIAnalysisJob",
+    "column_name": "attempts",
+    "data_type": "integer"
+  },
+  {
+    "table_name": "AIAnalysisJob",
+    "column_name": "nextAttemptAt",
+    "data_type": "timestamp without time zone"
+  },
+  {
+    "table_name": "AIAnalysisJob",
+    "column_name": "createdAt",
+    "data_type": "timestamp without time zone"
+  },
+  {
+    "table_name": "AIAnalysisJob",
+    "column_name": "updatedAt",
+    "data_type": "timestamp without time zone"
+  },
+  {
+    "table_name": "AIConversation",
+    "column_name": "id",
+    "data_type": "text"
+  },
+  {
+    "table_name": "AIConversation",
+    "column_name": "tenantId",
+    "data_type": "text"
+  },
+  {
+    "table_name": "AIConversation",
+    "column_name": "userId",
+    "data_type": "text"
+  },
+  {
+    "table_name": "AIConversation",
+    "column_name": "title",
+    "data_type": "text"
+  },
+  {
+    "table_name": "AIConversation",
+    "column_name": "status",
+    "data_type": "USER-DEFINED"
+  },
+  {
+    "table_name": "AIConversation",
+    "column_name": "createdAt",
+    "data_type": "timestamp without time zone"
+  },
+  {
+    "table_name": "AIConversation",
+    "column_name": "updatedAt",
+    "data_type": "timestamp without time zone"
+  },
+  {
+    "table_name": "AIConversation",
+    "column_name": "deletedAt",
+    "data_type": "timestamp without time zone"
+  },
+  {
+    "table_name": "AIConversation",
+    "column_name": "archivedAt",
+    "data_type": "timestamp without time zone"
+  },
+  {
+    "table_name": "AIConversationMessage",
+    "column_name": "id",
+    "data_type": "text"
+  },
+  {
+    "table_name": "AIConversationMessage",
+    "column_name": "conversationId",
+    "data_type": "text"
+  },
+  {
+    "table_name": "AIConversationMessage",
+    "column_name": "tenantId",
+    "data_type": "text"
+  },
+  {
+    "table_name": "AIConversationMessage",
+    "column_name": "role",
+    "data_type": "USER-DEFINED"
+  },
+  {
+    "table_name": "AIConversationMessage",
+    "column_name": "content",
+    "data_type": "text"
+  },
+  {
+    "table_name": "AIConversationMessage",
+    "column_name": "createdAt",
+    "data_type": "timestamp without time zone"
+  },
+  {
+    "table_name": "AIEvent",
+    "column_name": "id",
+    "data_type": "text"
+  },
+  {
+    "table_name": "AIEvent",
+    "column_name": "tenantId",
+    "data_type": "text"
+  },
+  {
+    "table_name": "AIEvent",
+    "column_name": "cameraId",
+    "data_type": "text"
+  },
+  {
+    "table_name": "AIEvent",
+    "column_name": "model",
+    "data_type": "text"
+  },
+  {
+    "table_name": "AIEvent",
+    "column_name": "confidence",
+    "data_type": "double precision"
+  },
+  {
+    "table_name": "AIEvent",
+    "column_name": "detectedObject",
+    "data_type": "text"
+  },
+  {
+    "table_name": "AIEvent",
+    "column_name": "metadata",
+    "data_type": "jsonb"
+  },
+  {
+    "table_name": "AIEvent",
+    "column_name": "timestamp",
+    "data_type": "timestamp without time zone"
+  },
+  {
+    "table_name": "AIEvent",
+    "column_name": "deletedAt",
+    "data_type": "timestamp without time zone"
+  },
+  {
+    "table_name": "AIEvent",
+    "column_name": "recordingId",
+    "data_type": "text"
+  },
+  {
+    "table_name": "AIExecution",
+    "column_name": "id",
+    "data_type": "text"
+  },
+  {
+    "table_name": "AIExecution",
+    "column_name": "tenantId",
+    "data_type": "text"
+  },
+  {
+    "table_name": "AIExecution",
+    "column_name": "userId",
+    "data_type": "text"
+  },
+  {
+    "table_name": "AIExecution",
+    "column_name": "toolId",
+    "data_type": "text"
+  },
+  {
+    "table_name": "AIExecution",
+    "column_name": "status",
+    "data_type": "USER-DEFINED"
+  },
+  {
+    "table_name": "AIExecution",
+    "column_name": "approvedBy",
+    "data_type": "text"
+  },
+  {
+    "table_name": "AIExecution",
+    "column_name": "input",
+    "data_type": "jsonb"
+  },
+  {
+    "table_name": "AIExecution",
+    "column_name": "output",
+    "data_type": "jsonb"
+  },
+  {
+    "table_name": "AIExecution",
+    "column_name": "createdAt",
+    "data_type": "timestamp without time zone"
+  },
+  {
+    "table_name": "AIMemory",
+    "column_name": "id",
+    "data_type": "text"
+  },
+  {
+    "table_name": "AIMemory",
+    "column_name": "tenantId",
+    "data_type": "text"
+  },
+  {
+    "table_name": "AIMemory",
+    "column_name": "userId",
+    "data_type": "text"
+  },
+  {
+    "table_name": "AIMemory",
+    "column_name": "type",
+    "data_type": "USER-DEFINED"
+  },
+  {
+    "table_name": "AIMemory",
+    "column_name": "visibility",
+    "data_type": "USER-DEFINED"
+  },
+  {
+    "table_name": "AIMemory",
+    "column_name": "content",
+    "data_type": "text"
+  },
+  {
+    "table_name": "AIMemory",
+    "column_name": "embedding",
+    "data_type": "USER-DEFINED"
+  },
+  {
+    "table_name": "AIMemory",
+    "column_name": "importanceScore",
+    "data_type": "double precision"
+  },
+  {
+    "table_name": "AIMemory",
+    "column_name": "source",
+    "data_type": "text"
+  },
+  {
+    "table_name": "AIMemory",
+    "column_name": "verified",
+    "data_type": "boolean"
+  },
+  {
+    "table_name": "AIMemory",
+    "column_name": "approvedBy",
+    "data_type": "text"
+  },
+  {
+    "table_name": "AIMemory",
+    "column_name": "expiresAt",
+    "data_type": "timestamp without time zone"
+  },
+  {
+    "table_name": "AIMemory",
+    "column_name": "createdAt",
+    "data_type": "timestamp without time zone"
+  },
+  {
+    "table_name": "AIProviderConfig",
+    "column_name": "id",
+    "data_type": "text"
+  },
+  {
+    "table_name": "AIProviderConfig",
+    "column_name": "tenantId",
+    "data_type": "text"
+  },
+  {
+    "table_name": "AIProviderConfig",
+    "column_name": "provider",
+    "data_type": "text"
+  },
+  {
+    "table_name": "AIProviderConfig",
+    "column_name": "model",
+    "data_type": "text"
+  },
+  {
+    "table_name": "AIProviderConfig",
+    "column_name": "encryptedApiKey",
+    "data_type": "text"
+  },
+  {
+    "table_name": "AIProviderConfig",
+    "column_name": "isActive",
+    "data_type": "boolean"
+  },
+  {
+    "table_name": "AIProviderConfig",
+    "column_name": "createdAt",
+    "data_type": "timestamp without time zone"
+  },
+  {
+    "table_name": "AIReference",
+    "column_name": "id",
+    "data_type": "text"
+  },
+  {
+    "table_name": "AIReference",
+    "column_name": "tenantId",
+    "data_type": "text"
+  },
+  {
+    "table_name": "AIReference",
+    "column_name": "aiExecutionId",
+    "data_type": "text"
+  },
+  {
+    "table_name": "AIReference",
+    "column_name": "documentId",
+    "data_type": "text"
+  },
+  {
+    "table_name": "AIReference",
+    "column_name": "embeddingId",
+    "data_type": "text"
+  },
+  {
+    "table_name": "AIReference",
+    "column_name": "citationText",
+    "data_type": "text"
+  },
+  {
+    "table_name": "AIReference",
+    "column_name": "createdAt",
+    "data_type": "timestamp without time zone"
+  },
+  {
+    "table_name": "AITokenUsage",
+    "column_name": "id",
+    "data_type": "text"
+  },
+  {
+    "table_name": "AITokenUsage",
+    "column_name": "tenantId",
+    "data_type": "text"
+  },
+  {
+    "table_name": "AITokenUsage",
+    "column_name": "userId",
+    "data_type": "text"
+  },
+  {
+    "table_name": "AITokenUsage",
+    "column_name": "workflowId",
+    "data_type": "text"
+  },
+  {
+    "table_name": "AITokenUsage",
+    "column_name": "aiExecutionId",
+    "data_type": "text"
+  },
+  {
+    "table_name": "AITokenUsage",
+    "column_name": "model",
+    "data_type": "text"
+  },
+  {
+    "table_name": "AITokenUsage",
+    "column_name": "inputTokens",
+    "data_type": "integer"
+  },
+  {
+    "table_name": "AITokenUsage",
+    "column_name": "outputTokens",
+    "data_type": "integer"
+  },
+  {
+    "table_name": "AITokenUsage",
+    "column_name": "latencyMs",
+    "data_type": "integer"
+  },
+  {
+    "table_name": "AITokenUsage",
+    "column_name": "cost",
+    "data_type": "numeric"
+  },
+  {
+    "table_name": "AITokenUsage",
+    "column_name": "timestamp",
+    "data_type": "timestamp without time zone"
+  },
+  {
+    "table_name": "AITool",
+    "column_name": "id",
+    "data_type": "text"
+  },
+  {
+    "table_name": "AITool",
+    "column_name": "name",
+    "data_type": "text"
+  },
+  {
+    "table_name": "AITool",
+    "column_name": "description",
+    "data_type": "text"
+  },
+  {
+    "table_name": "AITool",
+    "column_name": "requiredPermission",
+    "data_type": "text"
+  },
+  {
+    "table_name": "AITool",
+    "column_name": "riskLevel",
+    "data_type": "USER-DEFINED"
+  },
+  {
+    "table_name": "AITool",
+    "column_name": "requiresApproval",
+    "data_type": "boolean"
+  },
+  {
+    "table_name": "AITool",
+    "column_name": "createdAt",
+    "data_type": "timestamp without time zone"
+  },
+  {
+    "table_name": "ActivityTimeline",
+    "column_name": "id",
+    "data_type": "text"
+  },
+  {
+    "table_name": "ActivityTimeline",
+    "column_name": "tenantId",
+    "data_type": "text"
+  },
+  {
+    "table_name": "ActivityTimeline",
+    "column_name": "type",
+    "data_type": "USER-DEFINED"
+  },
+  {
+    "table_name": "ActivityTimeline",
+    "column_name": "content",
+    "data_type": "text"
+  },
+  {
+    "table_name": "ActivityTimeline",
+    "column_name": "actorId",
+    "data_type": "text"
+  },
+  {
+    "table_name": "ActivityTimeline",
+    "column_name": "entityType",
+    "data_type": "USER-DEFINED"
+  },
+  {
+    "table_name": "ActivityTimeline",
+    "column_name": "entityId",
+    "data_type": "text"
+  },
+  {
+    "table_name": "ActivityTimeline",
+    "column_name": "createdAt",
+    "data_type": "timestamp without time zone"
+  },
+  {
+    "table_name": "ApprovalRequest",
+    "column_name": "id",
+    "data_type": "text"
+  },
+  {
+    "table_name": "ApprovalRequest",
+    "column_name": "tenantId",
+    "data_type": "text"
+  },
+  {
+    "table_name": "ApprovalRequest",
+    "column_name": "requesterId",
+    "data_type": "text"
+  },
+  {
+    "table_name": "ApprovalRequest",
+    "column_name": "resource",
+    "data_type": "text"
+  },
+  {
+    "table_name": "ApprovalRequest",
+    "column_name": "resourceId",
+    "data_type": "text"
+  },
+  {
+    "table_name": "ApprovalRequest",
+    "column_name": "status",
+    "data_type": "text"
+  },
+  {
+    "table_name": "ApprovalRequest",
+    "column_name": "workflowStepId",
+    "data_type": "text"
+  },
+  {
+    "table_name": "ApprovalRequest",
+    "column_name": "createdAt",
+    "data_type": "timestamp without time zone"
+  },
+  {
+    "table_name": "ApprovalRequest",
+    "column_name": "updatedAt",
+    "data_type": "timestamp without time zone"
+  },
+  {
+    "table_name": "ApprovalStep",
+    "column_name": "id",
+    "data_type": "text"
+  },
+  {
+    "table_name": "ApprovalStep",
+    "column_name": "tenantId",
+    "data_type": "text"
+  },
+  {
+    "table_name": "ApprovalStep",
+    "column_name": "approvalRequestId",
+    "data_type": "text"
+  },
+  {
+    "table_name": "ApprovalStep",
+    "column_name": "approverId",
+    "data_type": "text"
+  },
+  {
+    "table_name": "ApprovalStep",
+    "column_name": "approverRoleId",
+    "data_type": "text"
+  },
+  {
+    "table_name": "ApprovalStep",
+    "column_name": "status",
+    "data_type": "text"
+  },
+  {
+    "table_name": "ApprovalStep",
+    "column_name": "comments",
+    "data_type": "text"
+  },
+  {
+    "table_name": "ApprovalStep",
+    "column_name": "actedAt",
+    "data_type": "timestamp without time zone"
+  },
+  {
+    "table_name": "ApprovalStep",
+    "column_name": "createdAt",
+    "data_type": "timestamp without time zone"
+  },
+  {
+    "table_name": "AuditLog",
+    "column_name": "id",
+    "data_type": "text"
+  },
+  {
+    "table_name": "AuditLog",
+    "column_name": "tenantId",
+    "data_type": "text"
+  },
+  {
+    "table_name": "AuditLog",
+    "column_name": "actorId",
+    "data_type": "text"
+  },
+  {
+    "table_name": "AuditLog",
+    "column_name": "actorType",
+    "data_type": "USER-DEFINED"
+  },
+  {
+    "table_name": "AuditLog",
+    "column_name": "action",
+    "data_type": "text"
+  },
+  {
+    "table_name": "AuditLog",
+    "column_name": "resource",
+    "data_type": "text"
+  },
+  {
+    "table_name": "AuditLog",
+    "column_name": "resourceId",
+    "data_type": "text"
+  },
+  {
+    "table_name": "AuditLog",
+    "column_name": "metadata",
+    "data_type": "jsonb"
+  },
+  {
+    "table_name": "AuditLog",
+    "column_name": "ipAddress",
+    "data_type": "text"
+  },
+  {
+    "table_name": "AuditLog",
+    "column_name": "timestamp",
+    "data_type": "timestamp without time zone"
+  },
+  {
+    "table_name": "CCTVNode",
+    "column_name": "id",
+    "data_type": "text"
+  },
+  {
+    "table_name": "CCTVNode",
+    "column_name": "name",
+    "data_type": "text"
+  },
+  {
+    "table_name": "CCTVNode",
+    "column_name": "status",
+    "data_type": "USER-DEFINED"
+  },
+  {
+    "table_name": "CCTVNode",
+    "column_name": "webhookKeyId",
+    "data_type": "text"
+  },
+  {
+    "table_name": "CCTVNode",
+    "column_name": "webhookSecretRef",
+    "data_type": "text"
+  },
+  {
+    "table_name": "CCTVNode",
+    "column_name": "lastHeartbeat",
+    "data_type": "timestamp without time zone"
+  },
+  {
+    "table_name": "CCTVNode",
+    "column_name": "diskUsagePct",
+    "data_type": "double precision"
+  },
+  {
+    "table_name": "CCTVNode",
+    "column_name": "diskFreeGb",
+    "data_type": "double precision"
+  },
+  {
+    "table_name": "CCTVNode",
+    "column_name": "createdAt",
+    "data_type": "timestamp without time zone"
+  },
+  {
+    "table_name": "CCTVNode",
+    "column_name": "updatedAt",
+    "data_type": "timestamp without time zone"
+  },
+  {
+    "table_name": "CRMComment",
+    "column_name": "id",
+    "data_type": "text"
+  },
+  {
+    "table_name": "CRMComment",
+    "column_name": "tenantId",
+    "data_type": "text"
+  },
+  {
+    "table_name": "CRMComment",
+    "column_name": "userId",
+    "data_type": "text"
+  },
+  {
+    "table_name": "CRMComment",
+    "column_name": "content",
+    "data_type": "text"
+  },
+  {
+    "table_name": "CRMComment",
+    "column_name": "parentId",
+    "data_type": "text"
+  },
+  {
+    "table_name": "CRMComment",
+    "column_name": "entityType",
+    "data_type": "USER-DEFINED"
+  },
+  {
+    "table_name": "CRMComment",
+    "column_name": "entityId",
+    "data_type": "text"
+  },
+  {
+    "table_name": "CRMComment",
+    "column_name": "createdAt",
+    "data_type": "timestamp without time zone"
+  },
+  {
+    "table_name": "CRMComment",
+    "column_name": "updatedAt",
+    "data_type": "timestamp without time zone"
+  },
+  {
+    "table_name": "CRMComment",
+    "column_name": "deletedAt",
+    "data_type": "timestamp without time zone"
+  },
+  {
+    "table_name": "CallLog",
+    "column_name": "id",
+    "data_type": "text"
+  },
+  {
+    "table_name": "CallLog",
+    "column_name": "tenantId",
+    "data_type": "text"
+  },
+  {
+    "table_name": "CallLog",
+    "column_name": "callerEmployeeId",
+    "data_type": "text"
+  },
+  {
+    "table_name": "CallLog",
+    "column_name": "receiverEmployeeId",
+    "data_type": "text"
+  },
+  {
+    "table_name": "CallLog",
+    "column_name": "provider",
+    "data_type": "USER-DEFINED"
+  },
+  {
+    "table_name": "CallLog",
+    "column_name": "providerCallId",
+    "data_type": "text"
+  },
+  {
+    "table_name": "CallLog",
+    "column_name": "duration",
+    "data_type": "integer"
+  },
+  {
+    "table_name": "CallLog",
+    "column_name": "status",
+    "data_type": "USER-DEFINED"
+  },
+  {
+    "table_name": "CallLog",
+    "column_name": "recordingMetadata",
+    "data_type": "jsonb"
+  },
+  {
+    "table_name": "CallLog",
+    "column_name": "metadata",
+    "data_type": "jsonb"
+  },
+  {
+    "table_name": "CallLog",
+    "column_name": "createdAt",
+    "data_type": "timestamp without time zone"
+  },
+  {
+    "table_name": "CallLog",
+    "column_name": "updatedAt",
+    "data_type": "timestamp without time zone"
+  },
+  {
+    "table_name": "Camera",
+    "column_name": "id",
+    "data_type": "text"
+  },
+  {
+    "table_name": "Camera",
+    "column_name": "tenantId",
+    "data_type": "text"
+  },
+  {
+    "table_name": "Camera",
+    "column_name": "locationId",
+    "data_type": "text"
+  },
+  {
+    "table_name": "Camera",
+    "column_name": "name",
+    "data_type": "text"
+  },
+  {
+    "table_name": "Camera",
+    "column_name": "model",
+    "data_type": "text"
+  },
+  {
+    "table_name": "Camera",
+    "column_name": "manufacturer",
+    "data_type": "text"
+  },
+  {
+    "table_name": "Camera",
+    "column_name": "ipAddress",
+    "data_type": "text"
+  },
+  {
+    "table_name": "Camera",
+    "column_name": "protocol",
+    "data_type": "USER-DEFINED"
+  },
+  {
+    "table_name": "Camera",
+    "column_name": "status",
+    "data_type": "USER-DEFINED"
+  },
+  {
+    "table_name": "Camera",
+    "column_name": "lastHeartbeat",
+    "data_type": "timestamp without time zone"
+  },
+  {
+    "table_name": "Camera",
+    "column_name": "createdAt",
+    "data_type": "timestamp without time zone"
+  },
+  {
+    "table_name": "Camera",
+    "column_name": "updatedAt",
+    "data_type": "timestamp without time zone"
+  },
+  {
+    "table_name": "Camera",
+    "column_name": "deletedAt",
+    "data_type": "timestamp without time zone"
+  },
+  {
+    "table_name": "Camera",
+    "column_name": "authMode",
+    "data_type": "USER-DEFINED"
+  },
+  {
+    "table_name": "Camera",
+    "column_name": "streamVersion",
+    "data_type": "integer"
+  },
+  {
+    "table_name": "CameraCredential",
+    "column_name": "id",
+    "data_type": "text"
+  },
+  {
+    "table_name": "CameraCredential",
+    "column_name": "tenantId",
+    "data_type": "text"
+  },
+  {
+    "table_name": "CameraCredential",
+    "column_name": "cameraId",
+    "data_type": "text"
+  },
+  {
+    "table_name": "CameraCredential",
+    "column_name": "encryptedUsername",
+    "data_type": "text"
+  },
+  {
+    "table_name": "CameraCredential",
+    "column_name": "encryptedPassword",
+    "data_type": "text"
+  },
+  {
+    "table_name": "CameraCredential",
+    "column_name": "createdAt",
+    "data_type": "timestamp without time zone"
+  },
+  {
+    "table_name": "CameraCredential",
+    "column_name": "updatedAt",
+    "data_type": "timestamp without time zone"
+  },
+  {
+    "table_name": "CameraEvent",
+    "column_name": "id",
+    "data_type": "text"
+  },
+  {
+    "table_name": "CameraEvent",
+    "column_name": "tenantId",
+    "data_type": "text"
+  },
+  {
+    "table_name": "CameraEvent",
+    "column_name": "cameraId",
+    "data_type": "text"
+  },
+  {
+    "table_name": "CameraEvent",
+    "column_name": "eventType",
+    "data_type": "USER-DEFINED"
+  },
+  {
+    "table_name": "CameraEvent",
+    "column_name": "severity",
+    "data_type": "USER-DEFINED"
+  },
+  {
+    "table_name": "CameraEvent",
+    "column_name": "metadata",
+    "data_type": "jsonb"
+  },
+  {
+    "table_name": "CameraEvent",
+    "column_name": "timestamp",
+    "data_type": "timestamp without time zone"
+  },
+  {
+    "table_name": "CameraStream",
+    "column_name": "id",
+    "data_type": "text"
+  },
+  {
+    "table_name": "CameraStream",
+    "column_name": "tenantId",
+    "data_type": "text"
+  },
+  {
+    "table_name": "CameraStream",
+    "column_name": "cameraId",
+    "data_type": "text"
+  },
+  {
+    "table_name": "CameraStream",
+    "column_name": "streamUrl",
+    "data_type": "text"
+  },
+  {
+    "table_name": "CameraStream",
+    "column_name": "protocol",
+    "data_type": "text"
+  },
+  {
+    "table_name": "CameraStream",
+    "column_name": "status",
+    "data_type": "USER-DEFINED"
+  },
+  {
+    "table_name": "CameraStream",
+    "column_name": "createdAt",
+    "data_type": "timestamp without time zone"
+  },
+  {
+    "table_name": "CameraStream",
+    "column_name": "updatedAt",
+    "data_type": "timestamp without time zone"
+  },
+  {
+    "table_name": "CameraStreamInvalidation",
+    "column_name": "id",
+    "data_type": "text"
+  },
+  {
+    "table_name": "CameraStreamInvalidation",
+    "column_name": "cameraId",
+    "data_type": "text"
+  },
+  {
+    "table_name": "CameraStreamInvalidation",
+    "column_name": "tenantId",
+    "data_type": "text"
+  },
+  {
+    "table_name": "CameraStreamInvalidation",
+    "column_name": "streamVersion",
+    "data_type": "integer"
+  },
+  {
+    "table_name": "CameraStreamInvalidation",
+    "column_name": "opaquePath",
+    "data_type": "text"
+  },
+  {
+    "table_name": "CameraStreamInvalidation",
+    "column_name": "status",
+    "data_type": "USER-DEFINED"
+  },
+  {
+    "table_name": "CameraStreamInvalidation",
+    "column_name": "attempts",
+    "data_type": "integer"
+  },
+  {
+    "table_name": "CameraStreamInvalidation",
+    "column_name": "nextAttemptAt",
+    "data_type": "timestamp without time zone"
+  },
+  {
+    "table_name": "CameraStreamInvalidation",
+    "column_name": "lastError",
+    "data_type": "text"
+  },
+  {
+    "table_name": "CameraStreamInvalidation",
+    "column_name": "createdAt",
+    "data_type": "timestamp without time zone"
+  },
+  {
+    "table_name": "CameraStreamInvalidation",
+    "column_name": "updatedAt",
+    "data_type": "timestamp without time zone"
+  },
+  {
+    "table_name": "CameraStreamInvalidation",
+    "column_name": "completedAt",
+    "data_type": "timestamp without time zone"
+  },
+  {
+    "table_name": "ChatConversation",
+    "column_name": "id",
+    "data_type": "text"
+  },
+  {
+    "table_name": "ChatConversation",
+    "column_name": "tenantId",
+    "data_type": "text"
+  },
+  {
+    "table_name": "ChatConversation",
+    "column_name": "type",
+    "data_type": "USER-DEFINED"
+  },
+  {
+    "table_name": "ChatConversation",
+    "column_name": "name",
+    "data_type": "text"
+  },
+  {
+    "table_name": "ChatConversation",
+    "column_name": "createdAt",
+    "data_type": "timestamp without time zone"
+  },
+  {
+    "table_name": "ChatConversation",
+    "column_name": "updatedAt",
+    "data_type": "timestamp without time zone"
+  },
+  {
+    "table_name": "ChatConversation",
+    "column_name": "deletedAt",
+    "data_type": "timestamp without time zone"
+  },
+  {
+    "table_name": "ChatConversation",
+    "column_name": "customerId",
+    "data_type": "text"
+  },
+  {
+    "table_name": "ChatMessage",
+    "column_name": "id",
+    "data_type": "text"
+  },
+  {
+    "table_name": "ChatMessage",
+    "column_name": "tenantId",
+    "data_type": "text"
+  },
+  {
+    "table_name": "ChatMessage",
+    "column_name": "conversationId",
+    "data_type": "text"
+  },
+  {
+    "table_name": "ChatMessage",
+    "column_name": "senderId",
+    "data_type": "text"
+  },
+  {
+    "table_name": "ChatMessage",
+    "column_name": "content",
+    "data_type": "text"
+  },
+  {
+    "table_name": "ChatMessage",
+    "column_name": "isDeleted",
+    "data_type": "boolean"
+  },
+  {
+    "table_name": "ChatMessage",
+    "column_name": "deletedAt",
+    "data_type": "timestamp without time zone"
+  },
+  {
+    "table_name": "ChatMessage",
+    "column_name": "editedAt",
+    "data_type": "timestamp without time zone"
+  },
+  {
+    "table_name": "ChatMessage",
+    "column_name": "metadata",
+    "data_type": "jsonb"
+  },
+  {
+    "table_name": "ChatMessage",
+    "column_name": "createdAt",
+    "data_type": "timestamp without time zone"
+  },
+  {
+    "table_name": "ChatMessage",
+    "column_name": "updatedAt",
+    "data_type": "timestamp without time zone"
+  },
+  {
+    "table_name": "ChatParticipant",
+    "column_name": "id",
+    "data_type": "text"
+  },
+  {
+    "table_name": "ChatParticipant",
+    "column_name": "tenantId",
+    "data_type": "text"
+  },
+  {
+    "table_name": "ChatParticipant",
+    "column_name": "conversationId",
+    "data_type": "text"
+  },
+  {
+    "table_name": "ChatParticipant",
+    "column_name": "userId",
+    "data_type": "text"
+  },
+  {
+    "table_name": "ChatParticipant",
+    "column_name": "role",
+    "data_type": "USER-DEFINED"
+  },
+  {
+    "table_name": "ChatParticipant",
+    "column_name": "isMuted",
+    "data_type": "boolean"
+  },
+  {
+    "table_name": "ChatParticipant",
+    "column_name": "archivedAt",
+    "data_type": "timestamp without time zone"
+  },
+  {
+    "table_name": "ChatParticipant",
+    "column_name": "joinedAt",
+    "data_type": "timestamp without time zone"
+  },
+  {
+    "table_name": "ChatReadReceipt",
+    "column_name": "id",
+    "data_type": "text"
+  },
+  {
+    "table_name": "ChatReadReceipt",
+    "column_name": "tenantId",
+    "data_type": "text"
+  },
+  {
+    "table_name": "ChatReadReceipt",
+    "column_name": "messageId",
+    "data_type": "text"
+  },
+  {
+    "table_name": "ChatReadReceipt",
+    "column_name": "userId",
+    "data_type": "text"
+  },
+  {
+    "table_name": "ChatReadReceipt",
+    "column_name": "readAt",
+    "data_type": "timestamp without time zone"
+  },
+  {
+    "table_name": "CommunicationAttachment",
+    "column_name": "id",
+    "data_type": "text"
+  },
+  {
+    "table_name": "CommunicationAttachment",
+    "column_name": "tenantId",
+    "data_type": "text"
+  },
+  {
+    "table_name": "CommunicationAttachment",
+    "column_name": "uploaderId",
+    "data_type": "text"
+  },
+  {
+    "table_name": "CommunicationAttachment",
+    "column_name": "attachedToType",
+    "data_type": "USER-DEFINED"
+  },
+  {
+    "table_name": "CommunicationAttachment",
+    "column_name": "attachedToId",
+    "data_type": "text"
+  },
+  {
+    "table_name": "CommunicationAttachment",
+    "column_name": "fileName",
+    "data_type": "text"
+  },
+  {
+    "table_name": "CommunicationAttachment",
+    "column_name": "fileType",
+    "data_type": "text"
+  },
+  {
+    "table_name": "CommunicationAttachment",
+    "column_name": "storageUrl",
+    "data_type": "text"
+  },
+  {
+    "table_name": "CommunicationAttachment",
+    "column_name": "size",
+    "data_type": "integer"
+  },
+  {
+    "table_name": "CommunicationAttachment",
+    "column_name": "createdAt",
+    "data_type": "timestamp without time zone"
+  },
+  {
+    "table_name": "Customer",
+    "column_name": "id",
+    "data_type": "text"
+  },
+  {
+    "table_name": "Customer",
+    "column_name": "tenantId",
+    "data_type": "text"
+  },
+  {
+    "table_name": "Customer",
+    "column_name": "name",
+    "data_type": "text"
+  },
+  {
+    "table_name": "Customer",
+    "column_name": "normalizedName",
+    "data_type": "text"
+  },
+  {
+    "table_name": "Customer",
+    "column_name": "industry",
+    "data_type": "text"
+  },
+  {
+    "table_name": "Customer",
+    "column_name": "status",
+    "data_type": "USER-DEFINED"
+  },
+  {
+    "table_name": "Customer",
+    "column_name": "assignedUserId",
+    "data_type": "text"
+  },
+  {
+    "table_name": "Customer",
+    "column_name": "createdAt",
+    "data_type": "timestamp without time zone"
+  },
+  {
+    "table_name": "Customer",
+    "column_name": "updatedAt",
+    "data_type": "timestamp without time zone"
+  },
+  {
+    "table_name": "Customer",
+    "column_name": "deletedAt",
+    "data_type": "timestamp without time zone"
+  },
+  {
+    "table_name": "CustomerContact",
+    "column_name": "id",
+    "data_type": "text"
+  },
+  {
+    "table_name": "CustomerContact",
+    "column_name": "tenantId",
+    "data_type": "text"
+  },
+  {
+    "table_name": "CustomerContact",
+    "column_name": "customerId",
+    "data_type": "text"
+  },
+  {
+    "table_name": "CustomerContact",
+    "column_name": "firstName",
+    "data_type": "text"
+  },
+  {
+    "table_name": "CustomerContact",
+    "column_name": "lastName",
+    "data_type": "text"
+  },
+  {
+    "table_name": "CustomerContact",
+    "column_name": "email",
+    "data_type": "text"
+  },
+  {
+    "table_name": "CustomerContact",
+    "column_name": "phone",
+    "data_type": "text"
+  },
+  {
+    "table_name": "CustomerContact",
+    "column_name": "isPrimary",
+    "data_type": "boolean"
+  },
+  {
+    "table_name": "CustomerContact",
+    "column_name": "createdAt",
+    "data_type": "timestamp without time zone"
+  },
+  {
+    "table_name": "CustomerContact",
+    "column_name": "updatedAt",
+    "data_type": "timestamp without time zone"
+  },
+  {
+    "table_name": "CustomerContact",
+    "column_name": "deletedAt",
+    "data_type": "timestamp without time zone"
+  },
+  {
+    "table_name": "DeadLetterQueue",
+    "column_name": "id",
+    "data_type": "text"
+  },
+  {
+    "table_name": "DeadLetterQueue",
+    "column_name": "tenantId",
+    "data_type": "text"
+  },
+  {
+    "table_name": "DeadLetterQueue",
+    "column_name": "jobId",
+    "data_type": "text"
+  },
+  {
+    "table_name": "DeadLetterQueue",
+    "column_name": "jobType",
+    "data_type": "text"
+  },
+  {
+    "table_name": "DeadLetterQueue",
+    "column_name": "correlationId",
+    "data_type": "text"
+  },
+  {
+    "table_name": "DeadLetterQueue",
+    "column_name": "payload",
+    "data_type": "jsonb"
+  },
+  {
+    "table_name": "DeadLetterQueue",
+    "column_name": "lastError",
+    "data_type": "text"
+  },
+  {
+    "table_name": "DeadLetterQueue",
+    "column_name": "attemptCount",
+    "data_type": "integer"
+  },
+  {
+    "table_name": "DeadLetterQueue",
+    "column_name": "createdAt",
+    "data_type": "timestamp without time zone"
+  },
+  {
+    "table_name": "DeadLetterQueue",
+    "column_name": "updatedAt",
+    "data_type": "timestamp without time zone"
+  },
+  {
+    "table_name": "DeadLetterQueue",
+    "column_name": "status",
+    "data_type": "text"
+  },
+  {
+    "table_name": "Deal",
+    "column_name": "id",
+    "data_type": "text"
+  },
+  {
+    "table_name": "Deal",
+    "column_name": "tenantId",
+    "data_type": "text"
+  },
+  {
+    "table_name": "Deal",
+    "column_name": "title",
+    "data_type": "text"
+  },
+  {
+    "table_name": "Deal",
+    "column_name": "description",
+    "data_type": "text"
+  },
+  {
+    "table_name": "Deal",
+    "column_name": "source",
+    "data_type": "text"
+  },
+  {
+    "table_name": "Deal",
+    "column_name": "value",
+    "data_type": "double precision"
+  },
+  {
+    "table_name": "Deal",
+    "column_name": "currency",
+    "data_type": "text"
+  },
+  {
+    "table_name": "Deal",
+    "column_name": "probability",
+    "data_type": "integer"
+  },
+  {
+    "table_name": "Deal",
+    "column_name": "expectedCloseDate",
+    "data_type": "timestamp without time zone"
+  },
+  {
+    "table_name": "Deal",
+    "column_name": "actualCloseDate",
+    "data_type": "timestamp without time zone"
+  },
+  {
+    "table_name": "Deal",
+    "column_name": "status",
+    "data_type": "USER-DEFINED"
+  },
+  {
+    "table_name": "Deal",
+    "column_name": "lostReason",
+    "data_type": "text"
+  },
+  {
+    "table_name": "Deal",
+    "column_name": "lostCompetitor",
+    "data_type": "text"
+  },
+  {
+    "table_name": "Deal",
+    "column_name": "lostNotes",
+    "data_type": "text"
+  },
+  {
+    "table_name": "Deal",
+    "column_name": "lostAt",
+    "data_type": "timestamp without time zone"
+  },
+  {
+    "table_name": "Deal",
+    "column_name": "version",
+    "data_type": "integer"
+  },
+  {
+    "table_name": "Deal",
+    "column_name": "pipelineId",
+    "data_type": "text"
+  },
+  {
+    "table_name": "Deal",
+    "column_name": "stageId",
+    "data_type": "text"
+  },
+  {
+    "table_name": "Deal",
+    "column_name": "customerId",
+    "data_type": "text"
+  },
+  {
+    "table_name": "Deal",
+    "column_name": "leadId",
+    "data_type": "text"
+  },
+  {
+    "table_name": "Deal",
+    "column_name": "assignedUserId",
+    "data_type": "text"
+  },
+  {
+    "table_name": "Deal",
+    "column_name": "createdById",
+    "data_type": "text"
+  },
+  {
+    "table_name": "Deal",
+    "column_name": "createdAt",
+    "data_type": "timestamp without time zone"
+  },
+  {
+    "table_name": "Deal",
+    "column_name": "updatedAt",
+    "data_type": "timestamp without time zone"
+  },
+  {
+    "table_name": "Deal",
+    "column_name": "deletedAt",
+    "data_type": "timestamp without time zone"
+  },
+  {
+    "table_name": "Deal",
+    "column_name": "probabilityFactors",
+    "data_type": "jsonb"
+  },
+  {
+    "table_name": "DealSnapshot",
+    "column_name": "id",
+    "data_type": "text"
+  },
+  {
+    "table_name": "DealSnapshot",
+    "column_name": "tenantId",
+    "data_type": "text"
+  },
+  {
+    "table_name": "DealSnapshot",
+    "column_name": "dealId",
+    "data_type": "text"
+  },
+  {
+    "table_name": "DealSnapshot",
+    "column_name": "date",
+    "data_type": "timestamp without time zone"
+  },
+  {
+    "table_name": "DealSnapshot",
+    "column_name": "value",
+    "data_type": "numeric"
+  },
+  {
+    "table_name": "DealSnapshot",
+    "column_name": "probability",
+    "data_type": "integer"
+  },
+  {
+    "table_name": "DealSnapshot",
+    "column_name": "stageId",
+    "data_type": "text"
+  },
+  {
+    "table_name": "DealSnapshot",
+    "column_name": "createdAt",
+    "data_type": "timestamp without time zone"
+  },
+  {
+    "table_name": "DealStageHistory",
+    "column_name": "id",
+    "data_type": "text"
+  },
+  {
+    "table_name": "DealStageHistory",
+    "column_name": "tenantId",
+    "data_type": "text"
+  },
+  {
+    "table_name": "DealStageHistory",
+    "column_name": "dealId",
+    "data_type": "text"
+  },
+  {
+    "table_name": "DealStageHistory",
+    "column_name": "fromStageId",
+    "data_type": "text"
+  },
+  {
+    "table_name": "DealStageHistory",
+    "column_name": "toStageId",
+    "data_type": "text"
+  },
+  {
+    "table_name": "DealStageHistory",
+    "column_name": "changedById",
+    "data_type": "text"
+  },
+  {
+    "table_name": "DealStageHistory",
+    "column_name": "createdAt",
+    "data_type": "timestamp without time zone"
+  },
+  {
+    "table_name": "DemoStorage",
+    "column_name": "id",
+    "data_type": "text"
+  },
+  {
+    "table_name": "DemoStorage",
+    "column_name": "tenantId",
+    "data_type": "text"
+  },
+  {
+    "table_name": "DemoStorage",
+    "column_name": "fileName",
+    "data_type": "text"
+  },
+  {
+    "table_name": "DemoStorage",
+    "column_name": "mimeType",
+    "data_type": "text"
+  },
+  {
+    "table_name": "DemoStorage",
+    "column_name": "base64Data",
+    "data_type": "text"
+  },
+  {
+    "table_name": "DemoStorage",
+    "column_name": "createdAt",
+    "data_type": "timestamp without time zone"
+  },
+  {
+    "table_name": "Department",
+    "column_name": "id",
+    "data_type": "text"
+  },
+  {
+    "table_name": "Department",
+    "column_name": "tenantId",
+    "data_type": "text"
+  },
+  {
+    "table_name": "Department",
+    "column_name": "name",
+    "data_type": "text"
+  },
+  {
+    "table_name": "Department",
+    "column_name": "description",
+    "data_type": "text"
+  },
+  {
+    "table_name": "Department",
+    "column_name": "createdAt",
+    "data_type": "timestamp without time zone"
+  },
+  {
+    "table_name": "Department",
+    "column_name": "updatedAt",
+    "data_type": "timestamp without time zone"
+  },
+  {
+    "table_name": "DeviceSession",
+    "column_name": "id",
+    "data_type": "text"
+  },
+  {
+    "table_name": "DeviceSession",
+    "column_name": "userId",
+    "data_type": "text"
+  },
+  {
+    "table_name": "DeviceSession",
+    "column_name": "tenantId",
+    "data_type": "text"
+  },
+  {
+    "table_name": "DeviceSession",
+    "column_name": "deviceInfo",
+    "data_type": "text"
+  },
+  {
+    "table_name": "DeviceSession",
+    "column_name": "ipAddress",
+    "data_type": "text"
+  },
+  {
+    "table_name": "DeviceSession",
+    "column_name": "isActive",
+    "data_type": "boolean"
+  },
+  {
+    "table_name": "DeviceSession",
+    "column_name": "lastActive",
+    "data_type": "timestamp without time zone"
+  },
+  {
+    "table_name": "DeviceSession",
+    "column_name": "createdAt",
+    "data_type": "timestamp without time zone"
+  },
+  {
+    "table_name": "DeviceSession",
+    "column_name": "updatedAt",
+    "data_type": "timestamp without time zone"
+  },
+  {
+    "table_name": "DiscountRule",
+    "column_name": "id",
+    "data_type": "text"
+  },
+  {
+    "table_name": "DiscountRule",
+    "column_name": "tenantId",
+    "data_type": "text"
+  },
+  {
+    "table_name": "DiscountRule",
+    "column_name": "name",
+    "data_type": "text"
+  },
+  {
+    "table_name": "DiscountRule",
+    "column_name": "description",
+    "data_type": "text"
+  },
+  {
+    "table_name": "DiscountRule",
+    "column_name": "priceBookId",
+    "data_type": "text"
+  },
+  {
+    "table_name": "DiscountRule",
+    "column_name": "maxDiscount",
+    "data_type": "double precision"
+  },
+  {
+    "table_name": "DiscountRule",
+    "column_name": "minMargin",
+    "data_type": "double precision"
+  },
+  {
+    "table_name": "DiscountRule",
+    "column_name": "approvalThreshold",
+    "data_type": "double precision"
+  },
+  {
+    "table_name": "DiscountRule",
+    "column_name": "isActive",
+    "data_type": "boolean"
+  },
+  {
+    "table_name": "DiscountRule",
+    "column_name": "effectiveFrom",
+    "data_type": "timestamp without time zone"
+  },
+  {
+    "table_name": "DiscountRule",
+    "column_name": "effectiveTo",
+    "data_type": "timestamp without time zone"
+  },
+  {
+    "table_name": "DiscountRule",
+    "column_name": "priority",
+    "data_type": "integer"
+  },
+  {
+    "table_name": "DiscountRule",
+    "column_name": "createdAt",
+    "data_type": "timestamp without time zone"
+  },
+  {
+    "table_name": "DiscountRule",
+    "column_name": "updatedAt",
+    "data_type": "timestamp without time zone"
+  },
+  {
+    "table_name": "Document",
+    "column_name": "id",
+    "data_type": "text"
+  },
+  {
+    "table_name": "Document",
+    "column_name": "tenantId",
+    "data_type": "text"
+  },
+  {
+    "table_name": "Document",
+    "column_name": "fileName",
+    "data_type": "text"
+  },
+  {
+    "table_name": "Document",
+    "column_name": "mimeType",
+    "data_type": "text"
+  },
+  {
+    "table_name": "Document",
+    "column_name": "sizeBytes",
+    "data_type": "integer"
+  },
+  {
+    "table_name": "Document",
+    "column_name": "storageKey",
+    "data_type": "text"
+  },
+  {
+    "table_name": "Document",
+    "column_name": "uploadedById",
+    "data_type": "text"
+  },
+  {
+    "table_name": "Document",
+    "column_name": "customerId",
+    "data_type": "text"
+  },
+  {
+    "table_name": "Document",
+    "column_name": "taskId",
+    "data_type": "text"
+  },
+  {
+    "table_name": "Document",
+    "column_name": "createdAt",
+    "data_type": "timestamp without time zone"
+  },
+  {
+    "table_name": "Document",
+    "column_name": "updatedAt",
+    "data_type": "timestamp without time zone"
+  },
+  {
+    "table_name": "DocumentEmbedding",
+    "column_name": "id",
+    "data_type": "text"
+  },
+  {
+    "table_name": "DocumentEmbedding",
+    "column_name": "tenantId",
+    "data_type": "text"
+  },
+  {
+    "table_name": "DocumentEmbedding",
+    "column_name": "documentId",
+    "data_type": "text"
+  },
+  {
+    "table_name": "DocumentEmbedding",
+    "column_name": "accessLevel",
+    "data_type": "text"
+  },
+  {
+    "table_name": "DocumentEmbedding",
+    "column_name": "departmentId",
+    "data_type": "text"
+  },
+  {
+    "table_name": "DocumentEmbedding",
+    "column_name": "createdById",
+    "data_type": "text"
+  },
+  {
+    "table_name": "DocumentEmbedding",
+    "column_name": "chunkText",
+    "data_type": "text"
+  },
+  {
+    "table_name": "DocumentEmbedding",
+    "column_name": "metadata",
+    "data_type": "jsonb"
+  },
+  {
+    "table_name": "DocumentEmbedding",
+    "column_name": "embedding",
+    "data_type": "USER-DEFINED"
+  },
+  {
+    "table_name": "DocumentEmbedding",
+    "column_name": "createdAt",
+    "data_type": "timestamp without time zone"
+  },
+  {
+    "table_name": "DocumentPermission",
+    "column_name": "id",
+    "data_type": "text"
+  },
+  {
+    "table_name": "DocumentPermission",
+    "column_name": "documentId",
+    "data_type": "text"
+  },
+  {
+    "table_name": "DocumentPermission",
+    "column_name": "userId",
+    "data_type": "text"
+  },
+  {
+    "table_name": "DocumentPermission",
+    "column_name": "roleId",
+    "data_type": "text"
+  },
+  {
+    "table_name": "DocumentPermission",
+    "column_name": "permission",
+    "data_type": "text"
+  },
+  {
+    "table_name": "DocumentPermission",
+    "column_name": "createdAt",
+    "data_type": "timestamp without time zone"
+  },
+  {
+    "table_name": "DocumentPermission",
+    "column_name": "tenantId",
+    "data_type": "text"
+  },
+  {
+    "table_name": "EventOutbox",
+    "column_name": "id",
+    "data_type": "text"
+  },
+  {
+    "table_name": "EventOutbox",
+    "column_name": "eventId",
+    "data_type": "text"
+  },
+  {
+    "table_name": "EventOutbox",
+    "column_name": "tenantId",
+    "data_type": "text"
+  },
+  {
+    "table_name": "EventOutbox",
+    "column_name": "eventType",
+    "data_type": "text"
+  },
+  {
+    "table_name": "EventOutbox",
+    "column_name": "payload",
+    "data_type": "jsonb"
+  },
+  {
+    "table_name": "EventOutbox",
+    "column_name": "status",
+    "data_type": "USER-DEFINED"
+  },
+  {
+    "table_name": "EventOutbox",
+    "column_name": "retryCount",
+    "data_type": "integer"
+  },
+  {
+    "table_name": "EventOutbox",
+    "column_name": "lastError",
+    "data_type": "text"
+  },
+  {
+    "table_name": "EventOutbox",
+    "column_name": "nextRetryAt",
+    "data_type": "timestamp without time zone"
+  },
+  {
+    "table_name": "EventOutbox",
+    "column_name": "createdAt",
+    "data_type": "timestamp without time zone"
+  },
+  {
+    "table_name": "EventOutbox",
+    "column_name": "processedAt",
+    "data_type": "timestamp without time zone"
+  },
+  {
+    "table_name": "FieldSecurityPolicy",
+    "column_name": "id",
+    "data_type": "text"
+  },
+  {
+    "table_name": "FieldSecurityPolicy",
+    "column_name": "tenantId",
+    "data_type": "text"
+  },
+  {
+    "table_name": "FieldSecurityPolicy",
+    "column_name": "modelName",
+    "data_type": "text"
+  },
+  {
+    "table_name": "FieldSecurityPolicy",
+    "column_name": "fieldName",
+    "data_type": "text"
+  },
+  {
+    "table_name": "FieldSecurityPolicy",
+    "column_name": "securityLevel",
+    "data_type": "text"
+  },
+  {
+    "table_name": "FieldSecurityPolicy",
+    "column_name": "createdAt",
+    "data_type": "timestamp without time zone"
+  },
+  {
+    "table_name": "FieldSecurityPolicy",
+    "column_name": "updatedAt",
+    "data_type": "timestamp without time zone"
+  },
+  {
+    "table_name": "IdempotencyKey",
+    "column_name": "id",
+    "data_type": "text"
+  },
+  {
+    "table_name": "IdempotencyKey",
+    "column_name": "tenantId",
+    "data_type": "text"
+  },
+  {
+    "table_name": "IdempotencyKey",
+    "column_name": "key",
+    "data_type": "text"
+  },
+  {
+    "table_name": "IdempotencyKey",
+    "column_name": "expiresAt",
+    "data_type": "timestamp without time zone"
+  },
+  {
+    "table_name": "IdempotencyKey",
+    "column_name": "createdAt",
+    "data_type": "timestamp without time zone"
+  },
+  {
+    "table_name": "IdempotencyKey",
+    "column_name": "operation",
+    "data_type": "text"
+  },
+  {
+    "table_name": "IdempotencyKey",
+    "column_name": "requestHash",
+    "data_type": "text"
+  },
+  {
+    "table_name": "IdempotencyKey",
+    "column_name": "resourceId",
+    "data_type": "text"
+  },
+  {
+    "table_name": "Incident",
+    "column_name": "id",
+    "data_type": "text"
+  },
+  {
+    "table_name": "Incident",
+    "column_name": "tenantId",
+    "data_type": "text"
+  },
+  {
+    "table_name": "Incident",
+    "column_name": "locationId",
+    "data_type": "text"
+  },
+  {
+    "table_name": "Incident",
+    "column_name": "cameraId",
+    "data_type": "text"
+  },
+  {
+    "table_name": "Incident",
+    "column_name": "aiEventId",
+    "data_type": "text"
+  },
+  {
+    "table_name": "Incident",
+    "column_name": "title",
+    "data_type": "text"
+  },
+  {
+    "table_name": "Incident",
+    "column_name": "description",
+    "data_type": "text"
+  },
+  {
+    "table_name": "Incident",
+    "column_name": "severity",
+    "data_type": "USER-DEFINED"
+  },
+  {
+    "table_name": "Incident",
+    "column_name": "status",
+    "data_type": "USER-DEFINED"
+  },
+  {
+    "table_name": "Incident",
+    "column_name": "assignedUserId",
+    "data_type": "text"
+  },
+  {
+    "table_name": "Incident",
+    "column_name": "createdAt",
+    "data_type": "timestamp without time zone"
+  },
+  {
+    "table_name": "Incident",
+    "column_name": "resolvedAt",
+    "data_type": "timestamp without time zone"
+  },
+  {
+    "table_name": "Incident",
+    "column_name": "deletedAt",
+    "data_type": "timestamp without time zone"
+  },
+  {
+    "table_name": "Invoice",
+    "column_name": "id",
+    "data_type": "text"
+  },
+  {
+    "table_name": "Invoice",
+    "column_name": "tenantId",
+    "data_type": "text"
+  },
+  {
+    "table_name": "Invoice",
+    "column_name": "stripeInvoiceId",
+    "data_type": "text"
+  },
+  {
+    "table_name": "Invoice",
+    "column_name": "amountDue",
+    "data_type": "numeric"
+  },
+  {
+    "table_name": "Invoice",
+    "column_name": "amountPaid",
+    "data_type": "numeric"
+  },
+  {
+    "table_name": "Invoice",
+    "column_name": "status",
+    "data_type": "text"
+  },
+  {
+    "table_name": "Invoice",
+    "column_name": "createdAt",
+    "data_type": "timestamp without time zone"
+  },
+  {
+    "table_name": "Invoice",
+    "column_name": "updatedAt",
+    "data_type": "timestamp without time zone"
+  },
+  {
+    "table_name": "Lead",
+    "column_name": "id",
+    "data_type": "text"
+  },
+  {
+    "table_name": "Lead",
+    "column_name": "tenantId",
+    "data_type": "text"
+  },
+  {
+    "table_name": "Lead",
+    "column_name": "name",
+    "data_type": "text"
+  },
+  {
+    "table_name": "Lead",
+    "column_name": "company",
+    "data_type": "text"
+  },
+  {
+    "table_name": "Lead",
+    "column_name": "email",
+    "data_type": "text"
+  },
+  {
+    "table_name": "Lead",
+    "column_name": "phone",
+    "data_type": "text"
+  },
+  {
+    "table_name": "Lead",
+    "column_name": "status",
+    "data_type": "USER-DEFINED"
+  },
+  {
+    "table_name": "Lead",
+    "column_name": "assignedUserId",
+    "data_type": "text"
+  },
+  {
+    "table_name": "Lead",
+    "column_name": "createdAt",
+    "data_type": "timestamp without time zone"
+  },
+  {
+    "table_name": "Lead",
+    "column_name": "updatedAt",
+    "data_type": "timestamp without time zone"
+  },
+  {
+    "table_name": "Lead",
+    "column_name": "deletedAt",
+    "data_type": "timestamp without time zone"
+  },
+  {
+    "table_name": "Lead",
+    "column_name": "score",
+    "data_type": "double precision"
+  },
+  {
+    "table_name": "Lead",
+    "column_name": "scoreFactors",
+    "data_type": "jsonb"
+  },
+  {
+    "table_name": "Location",
+    "column_name": "id",
+    "data_type": "text"
+  },
+  {
+    "table_name": "Location",
+    "column_name": "tenantId",
+    "data_type": "text"
+  },
+  {
+    "table_name": "Location",
+    "column_name": "customerId",
+    "data_type": "text"
+  },
+  {
+    "table_name": "Location",
+    "column_name": "name",
+    "data_type": "text"
+  },
+  {
+    "table_name": "Location",
+    "column_name": "address",
+    "data_type": "text"
+  },
+  {
+    "table_name": "Location",
+    "column_name": "city",
+    "data_type": "text"
+  },
+  {
+    "table_name": "Location",
+    "column_name": "state",
+    "data_type": "text"
+  },
+  {
+    "table_name": "Location",
+    "column_name": "zip",
+    "data_type": "text"
+  },
+  {
+    "table_name": "Location",
+    "column_name": "coordinates",
+    "data_type": "text"
+  },
+  {
+    "table_name": "Location",
+    "column_name": "createdAt",
+    "data_type": "timestamp without time zone"
+  },
+  {
+    "table_name": "Location",
+    "column_name": "updatedAt",
+    "data_type": "timestamp without time zone"
+  },
+  {
+    "table_name": "Location",
+    "column_name": "deletedAt",
+    "data_type": "timestamp without time zone"
+  },
+  {
+    "table_name": "MailDraft",
+    "column_name": "id",
+    "data_type": "text"
+  },
+  {
+    "table_name": "MailDraft",
+    "column_name": "tenantId",
+    "data_type": "text"
+  },
+  {
+    "table_name": "MailDraft",
+    "column_name": "threadId",
+    "data_type": "text"
+  },
+  {
+    "table_name": "MailDraft",
+    "column_name": "senderId",
+    "data_type": "text"
+  },
+  {
+    "table_name": "MailDraft",
+    "column_name": "subject",
+    "data_type": "text"
+  },
+  {
+    "table_name": "MailDraft",
+    "column_name": "bodyHtml",
+    "data_type": "text"
+  },
+  {
+    "table_name": "MailDraft",
+    "column_name": "bodyText",
+    "data_type": "text"
+  },
+  {
+    "table_name": "MailDraft",
+    "column_name": "toIds",
+    "data_type": "jsonb"
+  },
+  {
+    "table_name": "MailDraft",
+    "column_name": "ccIds",
+    "data_type": "jsonb"
+  },
+  {
+    "table_name": "MailDraft",
+    "column_name": "bccIds",
+    "data_type": "jsonb"
+  },
+  {
+    "table_name": "MailDraft",
+    "column_name": "createdAt",
+    "data_type": "timestamp without time zone"
+  },
+  {
+    "table_name": "MailDraft",
+    "column_name": "updatedAt",
+    "data_type": "timestamp without time zone"
+  },
+  {
+    "table_name": "MailMessage",
+    "column_name": "id",
+    "data_type": "text"
+  },
+  {
+    "table_name": "MailMessage",
+    "column_name": "tenantId",
+    "data_type": "text"
+  },
+  {
+    "table_name": "MailMessage",
+    "column_name": "threadId",
+    "data_type": "text"
+  },
+  {
+    "table_name": "MailMessage",
+    "column_name": "senderId",
+    "data_type": "text"
+  },
+  {
+    "table_name": "MailMessage",
+    "column_name": "bodyHtml",
+    "data_type": "text"
+  },
+  {
+    "table_name": "MailMessage",
+    "column_name": "bodyText",
+    "data_type": "text"
+  },
+  {
+    "table_name": "MailMessage",
+    "column_name": "metadata",
+    "data_type": "jsonb"
+  },
+  {
+    "table_name": "MailMessage",
+    "column_name": "createdAt",
+    "data_type": "timestamp without time zone"
+  },
+  {
+    "table_name": "MailMessage",
+    "column_name": "updatedAt",
+    "data_type": "timestamp without time zone"
+  },
+  {
+    "table_name": "MailRecipient",
+    "column_name": "id",
+    "data_type": "text"
+  },
+  {
+    "table_name": "MailRecipient",
+    "column_name": "tenantId",
+    "data_type": "text"
+  },
+  {
+    "table_name": "MailRecipient",
+    "column_name": "messageId",
+    "data_type": "text"
+  },
+  {
+    "table_name": "MailRecipient",
+    "column_name": "userId",
+    "data_type": "text"
+  },
+  {
+    "table_name": "MailRecipient",
+    "column_name": "type",
+    "data_type": "text"
+  },
+  {
+    "table_name": "MailRecipient",
+    "column_name": "isRead",
+    "data_type": "boolean"
+  },
+  {
+    "table_name": "MailRecipient",
+    "column_name": "archivedAt",
+    "data_type": "timestamp without time zone"
+  },
+  {
+    "table_name": "MailRecipient",
+    "column_name": "createdAt",
+    "data_type": "timestamp without time zone"
+  },
+  {
+    "table_name": "MailThread",
+    "column_name": "id",
+    "data_type": "text"
+  },
+  {
+    "table_name": "MailThread",
+    "column_name": "tenantId",
+    "data_type": "text"
+  },
+  {
+    "table_name": "MailThread",
+    "column_name": "subject",
+    "data_type": "text"
+  },
+  {
+    "table_name": "MailThread",
+    "column_name": "createdAt",
+    "data_type": "timestamp without time zone"
+  },
+  {
+    "table_name": "MailThread",
+    "column_name": "updatedAt",
+    "data_type": "timestamp without time zone"
+  },
+  {
+    "table_name": "MailThread",
+    "column_name": "customerId",
+    "data_type": "text"
+  },
+  {
+    "table_name": "Meeting",
+    "column_name": "id",
+    "data_type": "text"
+  },
+  {
+    "table_name": "Meeting",
+    "column_name": "tenantId",
+    "data_type": "text"
+  },
+  {
+    "table_name": "Meeting",
+    "column_name": "providerId",
+    "data_type": "text"
+  },
+  {
+    "table_name": "Meeting",
+    "column_name": "status",
+    "data_type": "text"
+  },
+  {
+    "table_name": "Meeting",
+    "column_name": "startedAt",
+    "data_type": "timestamp without time zone"
+  },
+  {
+    "table_name": "Meeting",
+    "column_name": "endedAt",
+    "data_type": "timestamp without time zone"
+  },
+  {
+    "table_name": "Meeting",
+    "column_name": "recordingUrl",
+    "data_type": "text"
+  },
+  {
+    "table_name": "Meeting",
+    "column_name": "createdAt",
+    "data_type": "timestamp without time zone"
+  },
+  {
+    "table_name": "Meeting",
+    "column_name": "updatedAt",
+    "data_type": "timestamp without time zone"
+  },
+  {
+    "table_name": "Meeting",
+    "column_name": "deletedAt",
+    "data_type": "timestamp without time zone"
+  },
+  {
+    "table_name": "MeetingParticipant",
+    "column_name": "id",
+    "data_type": "text"
+  },
+  {
+    "table_name": "MeetingParticipant",
+    "column_name": "tenantId",
+    "data_type": "text"
+  },
+  {
+    "table_name": "MeetingParticipant",
+    "column_name": "meetingId",
+    "data_type": "text"
+  },
+  {
+    "table_name": "MeetingParticipant",
+    "column_name": "userId",
+    "data_type": "text"
+  },
+  {
+    "table_name": "MeetingParticipant",
+    "column_name": "contactId",
+    "data_type": "text"
+  },
+  {
+    "table_name": "MeetingParticipant",
+    "column_name": "role",
+    "data_type": "text"
+  },
+  {
+    "table_name": "MeetingParticipant",
+    "column_name": "joinedAt",
+    "data_type": "timestamp without time zone"
+  },
+  {
+    "table_name": "MeetingParticipant",
+    "column_name": "leftAt",
+    "data_type": "timestamp without time zone"
+  },
+  {
+    "table_name": "MeetingParticipant",
+    "column_name": "createdAt",
+    "data_type": "timestamp without time zone"
+  },
+  {
+    "table_name": "Notification",
+    "column_name": "id",
+    "data_type": "text"
+  },
+  {
+    "table_name": "Notification",
+    "column_name": "tenantId",
+    "data_type": "text"
+  },
+  {
+    "table_name": "Notification",
+    "column_name": "userId",
+    "data_type": "text"
+  },
+  {
+    "table_name": "Notification",
+    "column_name": "type",
+    "data_type": "USER-DEFINED"
+  },
+  {
+    "table_name": "Notification",
+    "column_name": "title",
+    "data_type": "text"
+  },
+  {
+    "table_name": "Notification",
+    "column_name": "body",
+    "data_type": "text"
+  },
+  {
+    "table_name": "Notification",
+    "column_name": "actionUrl",
+    "data_type": "text"
+  },
+  {
+    "table_name": "Notification",
+    "column_name": "isRead",
+    "data_type": "boolean"
+  },
+  {
+    "table_name": "Notification",
+    "column_name": "createdAt",
+    "data_type": "timestamp without time zone"
+  },
+  {
+    "table_name": "NotificationPreference",
+    "column_name": "id",
+    "data_type": "text"
+  },
+  {
+    "table_name": "NotificationPreference",
+    "column_name": "tenantId",
+    "data_type": "text"
+  },
+  {
+    "table_name": "NotificationPreference",
+    "column_name": "userId",
+    "data_type": "text"
+  },
+  {
+    "table_name": "NotificationPreference",
+    "column_name": "emailEnabled",
+    "data_type": "boolean"
+  },
+  {
+    "table_name": "NotificationPreference",
+    "column_name": "pushEnabled",
+    "data_type": "boolean"
+  },
+  {
+    "table_name": "NotificationPreference",
+    "column_name": "inAppEnabled",
+    "data_type": "boolean"
+  },
+  {
+    "table_name": "NotificationPreference",
+    "column_name": "createdAt",
+    "data_type": "timestamp without time zone"
+  },
+  {
+    "table_name": "NotificationPreference",
+    "column_name": "updatedAt",
+    "data_type": "timestamp without time zone"
+  },
+  {
+    "table_name": "Permission",
+    "column_name": "id",
+    "data_type": "text"
+  },
+  {
+    "table_name": "Permission",
+    "column_name": "resource",
+    "data_type": "USER-DEFINED"
+  },
+  {
+    "table_name": "Permission",
+    "column_name": "action",
+    "data_type": "USER-DEFINED"
+  },
+  {
+    "table_name": "Permission",
+    "column_name": "createdAt",
+    "data_type": "timestamp without time zone"
+  },
+  {
+    "table_name": "Pipeline",
+    "column_name": "id",
+    "data_type": "text"
+  },
+  {
+    "table_name": "Pipeline",
+    "column_name": "tenantId",
+    "data_type": "text"
+  },
+  {
+    "table_name": "Pipeline",
+    "column_name": "name",
+    "data_type": "text"
+  },
+  {
+    "table_name": "Pipeline",
+    "column_name": "description",
+    "data_type": "text"
+  },
+  {
+    "table_name": "Pipeline",
+    "column_name": "isDefault",
+    "data_type": "boolean"
+  },
+  {
+    "table_name": "Pipeline",
+    "column_name": "createdAt",
+    "data_type": "timestamp without time zone"
+  },
+  {
+    "table_name": "Pipeline",
+    "column_name": "updatedAt",
+    "data_type": "timestamp without time zone"
+  },
+  {
+    "table_name": "PipelineStage",
+    "column_name": "id",
+    "data_type": "text"
+  },
+  {
+    "table_name": "PipelineStage",
+    "column_name": "tenantId",
+    "data_type": "text"
+  },
+  {
+    "table_name": "PipelineStage",
+    "column_name": "pipelineId",
+    "data_type": "text"
+  },
+  {
+    "table_name": "PipelineStage",
+    "column_name": "name",
+    "data_type": "text"
+  },
+  {
+    "table_name": "PipelineStage",
+    "column_name": "order",
+    "data_type": "integer"
+  },
+  {
+    "table_name": "PipelineStage",
+    "column_name": "probability",
+    "data_type": "integer"
+  },
+  {
+    "table_name": "PipelineStage",
+    "column_name": "color",
+    "data_type": "text"
+  },
+  {
+    "table_name": "PipelineStage",
+    "column_name": "isClosedWon",
+    "data_type": "boolean"
+  },
+  {
+    "table_name": "PipelineStage",
+    "column_name": "isClosedLost",
+    "data_type": "boolean"
+  },
+  {
+    "table_name": "PipelineStage",
+    "column_name": "createdAt",
+    "data_type": "timestamp without time zone"
+  },
+  {
+    "table_name": "PipelineStage",
+    "column_name": "updatedAt",
+    "data_type": "timestamp without time zone"
+  },
+  {
+    "table_name": "PriceBook",
+    "column_name": "id",
+    "data_type": "text"
+  },
+  {
+    "table_name": "PriceBook",
+    "column_name": "tenantId",
+    "data_type": "text"
+  },
+  {
+    "table_name": "PriceBook",
+    "column_name": "name",
+    "data_type": "text"
+  },
+  {
+    "table_name": "PriceBook",
+    "column_name": "description",
+    "data_type": "text"
+  },
+  {
+    "table_name": "PriceBook",
+    "column_name": "currencyCode",
+    "data_type": "text"
+  },
+  {
+    "table_name": "PriceBook",
+    "column_name": "isActive",
+    "data_type": "boolean"
+  },
+  {
+    "table_name": "PriceBook",
+    "column_name": "effectiveFrom",
+    "data_type": "timestamp without time zone"
+  },
+  {
+    "table_name": "PriceBook",
+    "column_name": "effectiveTo",
+    "data_type": "timestamp without time zone"
+  },
+  {
+    "table_name": "PriceBook",
+    "column_name": "createdAt",
+    "data_type": "timestamp without time zone"
+  },
+  {
+    "table_name": "PriceBook",
+    "column_name": "updatedAt",
+    "data_type": "timestamp without time zone"
+  },
+  {
+    "table_name": "PriceBookEntry",
+    "column_name": "id",
+    "data_type": "text"
+  },
+  {
+    "table_name": "PriceBookEntry",
+    "column_name": "tenantId",
+    "data_type": "text"
+  },
+  {
+    "table_name": "PriceBookEntry",
+    "column_name": "productId",
+    "data_type": "text"
+  },
+  {
+    "table_name": "PriceBookEntry",
+    "column_name": "priceBookId",
+    "data_type": "text"
+  },
+  {
+    "table_name": "PriceBookEntry",
+    "column_name": "unitPrice",
+    "data_type": "numeric"
+  },
+  {
+    "table_name": "PriceBookEntry",
+    "column_name": "currencyCode",
+    "data_type": "text"
+  },
+  {
+    "table_name": "PriceBookEntry",
+    "column_name": "isActive",
+    "data_type": "boolean"
+  },
+  {
+    "table_name": "PriceBookEntry",
+    "column_name": "effectiveFrom",
+    "data_type": "timestamp without time zone"
+  },
+  {
+    "table_name": "PriceBookEntry",
+    "column_name": "effectiveTo",
+    "data_type": "timestamp without time zone"
+  },
+  {
+    "table_name": "PriceBookEntry",
+    "column_name": "createdAt",
+    "data_type": "timestamp without time zone"
+  },
+  {
+    "table_name": "PriceBookEntry",
+    "column_name": "updatedAt",
+    "data_type": "timestamp without time zone"
+  },
+  {
+    "table_name": "Product",
+    "column_name": "id",
+    "data_type": "text"
+  },
+  {
+    "table_name": "Product",
+    "column_name": "tenantId",
+    "data_type": "text"
+  },
+  {
+    "table_name": "Product",
+    "column_name": "categoryId",
+    "data_type": "text"
+  },
+  {
+    "table_name": "Product",
+    "column_name": "familyId",
+    "data_type": "text"
+  },
+  {
+    "table_name": "Product",
+    "column_name": "name",
+    "data_type": "text"
+  },
+  {
+    "table_name": "Product",
+    "column_name": "sku",
+    "data_type": "text"
+  },
+  {
+    "table_name": "Product",
+    "column_name": "description",
+    "data_type": "text"
+  },
+  {
+    "table_name": "Product",
+    "column_name": "metadata",
+    "data_type": "jsonb"
+  },
+  {
+    "table_name": "Product",
+    "column_name": "isActive",
+    "data_type": "boolean"
+  },
+  {
+    "table_name": "Product",
+    "column_name": "createdAt",
+    "data_type": "timestamp without time zone"
+  },
+  {
+    "table_name": "Product",
+    "column_name": "updatedAt",
+    "data_type": "timestamp without time zone"
+  },
+  {
+    "table_name": "ProductCategory",
+    "column_name": "id",
+    "data_type": "text"
+  },
+  {
+    "table_name": "ProductCategory",
+    "column_name": "tenantId",
+    "data_type": "text"
+  },
+  {
+    "table_name": "ProductCategory",
+    "column_name": "name",
+    "data_type": "text"
+  },
+  {
+    "table_name": "ProductCategory",
+    "column_name": "description",
+    "data_type": "text"
+  },
+  {
+    "table_name": "ProductCategory",
+    "column_name": "isActive",
+    "data_type": "boolean"
+  },
+  {
+    "table_name": "ProductCategory",
+    "column_name": "parentId",
+    "data_type": "text"
+  },
+  {
+    "table_name": "ProductCategory",
+    "column_name": "createdAt",
+    "data_type": "timestamp without time zone"
+  },
+  {
+    "table_name": "ProductCategory",
+    "column_name": "updatedAt",
+    "data_type": "timestamp without time zone"
+  },
+  {
+    "table_name": "ProductFamily",
+    "column_name": "id",
+    "data_type": "text"
+  },
+  {
+    "table_name": "ProductFamily",
+    "column_name": "tenantId",
+    "data_type": "text"
+  },
+  {
+    "table_name": "ProductFamily",
+    "column_name": "name",
+    "data_type": "text"
+  },
+  {
+    "table_name": "ProductFamily",
+    "column_name": "description",
+    "data_type": "text"
+  },
+  {
+    "table_name": "ProductFamily",
+    "column_name": "isActive",
+    "data_type": "boolean"
+  },
+  {
+    "table_name": "ProductFamily",
+    "column_name": "createdAt",
+    "data_type": "timestamp without time zone"
+  },
+  {
+    "table_name": "ProductFamily",
+    "column_name": "updatedAt",
+    "data_type": "timestamp without time zone"
+  },
+  {
+    "table_name": "Quote",
+    "column_name": "id",
+    "data_type": "text"
+  },
+  {
+    "table_name": "Quote",
+    "column_name": "tenantId",
+    "data_type": "text"
+  },
+  {
+    "table_name": "Quote",
+    "column_name": "customerId",
+    "data_type": "text"
+  },
+  {
+    "table_name": "Quote",
+    "column_name": "dealId",
+    "data_type": "text"
+  },
+  {
+    "table_name": "Quote",
+    "column_name": "ownerId",
+    "data_type": "text"
+  },
+  {
+    "table_name": "Quote",
+    "column_name": "priceBookId",
+    "data_type": "text"
+  },
+  {
+    "table_name": "Quote",
+    "column_name": "status",
+    "data_type": "USER-DEFINED"
+  },
+  {
+    "table_name": "Quote",
+    "column_name": "expirationDate",
+    "data_type": "timestamp without time zone"
+  },
+  {
+    "table_name": "Quote",
+    "column_name": "subtotal",
+    "data_type": "numeric"
+  },
+  {
+    "table_name": "Quote",
+    "column_name": "discountTotal",
+    "data_type": "numeric"
+  },
+  {
+    "table_name": "Quote",
+    "column_name": "taxTotal",
+    "data_type": "numeric"
+  },
+  {
+    "table_name": "Quote",
+    "column_name": "grandTotal",
+    "data_type": "numeric"
+  },
+  {
+    "table_name": "Quote",
+    "column_name": "previousVersionId",
+    "data_type": "text"
+  },
+  {
+    "table_name": "Quote",
+    "column_name": "createdAt",
+    "data_type": "timestamp without time zone"
+  },
+  {
+    "table_name": "Quote",
+    "column_name": "updatedAt",
+    "data_type": "timestamp without time zone"
+  },
+  {
+    "table_name": "QuoteLineItem",
+    "column_name": "id",
+    "data_type": "text"
+  },
+  {
+    "table_name": "QuoteLineItem",
+    "column_name": "tenantId",
+    "data_type": "text"
+  },
+  {
+    "table_name": "QuoteLineItem",
+    "column_name": "quoteId",
+    "data_type": "text"
+  },
+  {
+    "table_name": "QuoteLineItem",
+    "column_name": "priceBookEntryId",
+    "data_type": "text"
+  },
+  {
+    "table_name": "QuoteLineItem",
+    "column_name": "productId",
+    "data_type": "text"
+  },
+  {
+    "table_name": "QuoteLineItem",
+    "column_name": "quantity",
+    "data_type": "integer"
+  },
+  {
+    "table_name": "QuoteLineItem",
+    "column_name": "unitPrice",
+    "data_type": "numeric"
+  },
+  {
+    "table_name": "QuoteLineItem",
+    "column_name": "discount",
+    "data_type": "double precision"
+  },
+  {
+    "table_name": "QuoteLineItem",
+    "column_name": "subtotal",
+    "data_type": "numeric"
+  },
+  {
+    "table_name": "QuoteLineItem",
+    "column_name": "metadata",
+    "data_type": "jsonb"
+  },
+  {
+    "table_name": "QuoteLineItem",
+    "column_name": "createdAt",
+    "data_type": "timestamp without time zone"
+  },
+  {
+    "table_name": "QuoteLineItem",
+    "column_name": "updatedAt",
+    "data_type": "timestamp without time zone"
+  },
+  {
+    "table_name": "Recording",
+    "column_name": "id",
+    "data_type": "text"
+  },
+  {
+    "table_name": "Recording",
+    "column_name": "tenantId",
+    "data_type": "text"
+  },
+  {
+    "table_name": "Recording",
+    "column_name": "cameraId",
+    "data_type": "text"
+  },
+  {
+    "table_name": "Recording",
+    "column_name": "storageKey",
+    "data_type": "text"
+  },
+  {
+    "table_name": "Recording",
+    "column_name": "status",
+    "data_type": "USER-DEFINED"
+  },
+  {
+    "table_name": "Recording",
+    "column_name": "startTime",
+    "data_type": "timestamp without time zone"
+  },
+  {
+    "table_name": "Recording",
+    "column_name": "endTime",
+    "data_type": "timestamp without time zone"
+  },
+  {
+    "table_name": "Recording",
+    "column_name": "sizeBytes",
+    "data_type": "integer"
+  },
+  {
+    "table_name": "Recording",
+    "column_name": "createdAt",
+    "data_type": "timestamp without time zone"
+  },
+  {
+    "table_name": "Recording",
+    "column_name": "segmentId",
+    "data_type": "text"
+  },
+  {
+    "table_name": "Recording",
+    "column_name": "streamVersion",
+    "data_type": "integer"
+  },
+  {
+    "table_name": "Recording",
+    "column_name": "sourceNodeId",
+    "data_type": "text"
+  },
+  {
+    "table_name": "RecordingIngestionJob",
+    "column_name": "id",
+    "data_type": "text"
+  },
+  {
+    "table_name": "RecordingIngestionJob",
+    "column_name": "localFilePath",
+    "data_type": "text"
+  },
+  {
+    "table_name": "RecordingIngestionJob",
+    "column_name": "segmentId",
+    "data_type": "text"
+  },
+  {
+    "table_name": "RecordingIngestionJob",
+    "column_name": "status",
+    "data_type": "USER-DEFINED"
+  },
+  {
+    "table_name": "RecordingIngestionJob",
+    "column_name": "terminalReason",
+    "data_type": "text"
+  },
+  {
+    "table_name": "RecordingIngestionJob",
+    "column_name": "workerId",
+    "data_type": "text"
+  },
+  {
+    "table_name": "RecordingIngestionJob",
+    "column_name": "leaseExpiresAt",
+    "data_type": "timestamp without time zone"
+  },
+  {
+    "table_name": "RecordingIngestionJob",
+    "column_name": "attempts",
+    "data_type": "integer"
+  },
+  {
+    "table_name": "RecordingIngestionJob",
+    "column_name": "nextAttemptAt",
+    "data_type": "timestamp without time zone"
+  },
+  {
+    "table_name": "RecordingIngestionJob",
+    "column_name": "createdAt",
+    "data_type": "timestamp without time zone"
+  },
+  {
+    "table_name": "RecordingIngestionJob",
+    "column_name": "updatedAt",
+    "data_type": "timestamp without time zone"
+  },
+  {
+    "table_name": "RecordingIngestionJob",
+    "column_name": "recordingNodeId",
+    "data_type": "text"
+  },
+  {
+    "table_name": "RecoveryAuditLog",
+    "column_name": "id",
+    "data_type": "text"
+  },
+  {
+    "table_name": "RecoveryAuditLog",
+    "column_name": "tenantId",
+    "data_type": "text"
+  },
+  {
+    "table_name": "RecoveryAuditLog",
+    "column_name": "jobId",
+    "data_type": "text"
+  },
+  {
+    "table_name": "RecoveryAuditLog",
+    "column_name": "action",
+    "data_type": "text"
+  },
+  {
+    "table_name": "RecoveryAuditLog",
+    "column_name": "actorId",
+    "data_type": "text"
+  },
+  {
+    "table_name": "RecoveryAuditLog",
+    "column_name": "metadata",
+    "data_type": "jsonb"
+  },
+  {
+    "table_name": "RecoveryAuditLog",
+    "column_name": "timestamp",
+    "data_type": "timestamp without time zone"
+  },
+  {
+    "table_name": "RecoveryJob",
+    "column_name": "id",
+    "data_type": "text"
+  },
+  {
+    "table_name": "RecoveryJob",
+    "column_name": "tenantId",
+    "data_type": "text"
+  },
+  {
+    "table_name": "RecoveryJob",
+    "column_name": "requestedBy",
+    "data_type": "text"
+  },
+  {
+    "table_name": "RecoveryJob",
+    "column_name": "status",
+    "data_type": "USER-DEFINED"
+  },
+  {
+    "table_name": "RecoveryJob",
+    "column_name": "mode",
+    "data_type": "USER-DEFINED"
+  },
+  {
+    "table_name": "RecoveryJob",
+    "column_name": "startedAt",
+    "data_type": "timestamp without time zone"
+  },
+  {
+    "table_name": "RecoveryJob",
+    "column_name": "completedAt",
+    "data_type": "timestamp without time zone"
+  },
+  {
+    "table_name": "RecoveryJob",
+    "column_name": "checksum",
+    "data_type": "text"
+  },
+  {
+    "table_name": "RecoveryJob",
+    "column_name": "archiveLocation",
+    "data_type": "text"
+  },
+  {
+    "table_name": "RecoveryJob",
+    "column_name": "snapshotId",
+    "data_type": "text"
+  },
+  {
+    "table_name": "RecoveryJob",
+    "column_name": "approvedBy",
+    "data_type": "text"
+  },
+  {
+    "table_name": "RecoveryJob",
+    "column_name": "errorMessage",
+    "data_type": "text"
+  },
+  {
+    "table_name": "RecoveryJob",
+    "column_name": "createdAt",
+    "data_type": "timestamp without time zone"
+  },
+  {
+    "table_name": "RecoveryJob",
+    "column_name": "updatedAt",
+    "data_type": "timestamp without time zone"
+  },
+  {
+    "table_name": "RecoverySnapshot",
+    "column_name": "id",
+    "data_type": "text"
+  },
+  {
+    "table_name": "RecoverySnapshot",
+    "column_name": "tenantId",
+    "data_type": "text"
+  },
+  {
+    "table_name": "RecoverySnapshot",
+    "column_name": "version",
+    "data_type": "integer"
+  },
+  {
+    "table_name": "RecoverySnapshot",
+    "column_name": "schemaVersion",
+    "data_type": "text"
+  },
+  {
+    "table_name": "RecoverySnapshot",
+    "column_name": "applicationVersion",
+    "data_type": "text"
+  },
+  {
+    "table_name": "RecoverySnapshot",
+    "column_name": "prismaVersion",
+    "data_type": "text"
+  },
+  {
+    "table_name": "RecoverySnapshot",
+    "column_name": "backupFormatVersion",
+    "data_type": "text"
+  },
+  {
+    "table_name": "RecoverySnapshot",
+    "column_name": "encryptionAlgorithm",
+    "data_type": "text"
+  },
+  {
+    "table_name": "RecoverySnapshot",
+    "column_name": "encryptionKeyVersion",
+    "data_type": "text"
+  },
+  {
+    "table_name": "RecoverySnapshot",
+    "column_name": "kmsKeyId",
+    "data_type": "text"
+  },
+  {
+    "table_name": "RecoverySnapshot",
+    "column_name": "kmsKeyVersion",
+    "data_type": "text"
+  },
+  {
+    "table_name": "RecoverySnapshot",
+    "column_name": "encryptedDEK",
+    "data_type": "text"
+  },
+  {
+    "table_name": "RecoverySnapshot",
+    "column_name": "status",
+    "data_type": "USER-DEFINED"
+  },
+  {
+    "table_name": "RecoverySnapshot",
+    "column_name": "checksum",
+    "data_type": "text"
+  },
+  {
+    "table_name": "RecoverySnapshot",
+    "column_name": "sizeBytes",
+    "data_type": "integer"
+  },
+  {
+    "table_name": "RecoverySnapshot",
+    "column_name": "createdAt",
+    "data_type": "timestamp without time zone"
+  },
+  {
+    "table_name": "RestoreCheckpoint",
+    "column_name": "id",
+    "data_type": "text"
+  },
+  {
+    "table_name": "RestoreCheckpoint",
+    "column_name": "tenantId",
+    "data_type": "text"
+  },
+  {
+    "table_name": "RestoreCheckpoint",
+    "column_name": "recoveryJobId",
+    "data_type": "text"
+  },
+  {
+    "table_name": "RestoreCheckpoint",
+    "column_name": "phase",
+    "data_type": "text"
+  },
+  {
+    "table_name": "RestoreCheckpoint",
+    "column_name": "model",
+    "data_type": "text"
+  },
+  {
+    "table_name": "RestoreCheckpoint",
+    "column_name": "chunkIndex",
+    "data_type": "integer"
+  },
+  {
+    "table_name": "RestoreCheckpoint",
+    "column_name": "chunkId",
+    "data_type": "text"
+  },
+  {
+    "table_name": "RestoreCheckpoint",
+    "column_name": "status",
+    "data_type": "text"
+  },
+  {
+    "table_name": "RestoreCheckpoint",
+    "column_name": "attempt",
+    "data_type": "integer"
+  },
+  {
+    "table_name": "RestoreCheckpoint",
+    "column_name": "startedAt",
+    "data_type": "timestamp without time zone"
+  },
+  {
+    "table_name": "RestoreCheckpoint",
+    "column_name": "completedAt",
+    "data_type": "timestamp without time zone"
+  },
+  {
+    "table_name": "RestoreCheckpoint",
+    "column_name": "errorMessage",
+    "data_type": "text"
+  },
+  {
+    "table_name": "RestoreCheckpoint",
+    "column_name": "checksum",
+    "data_type": "text"
+  },
+  {
+    "table_name": "RetentionDeletionJob",
+    "column_name": "id",
+    "data_type": "text"
+  },
+  {
+    "table_name": "RetentionDeletionJob",
+    "column_name": "recordingId",
+    "data_type": "text"
+  },
+  {
+    "table_name": "RetentionDeletionJob",
+    "column_name": "storageKey",
+    "data_type": "text"
+  },
+  {
+    "table_name": "RetentionDeletionJob",
+    "column_name": "status",
+    "data_type": "USER-DEFINED"
+  },
+  {
+    "table_name": "RetentionDeletionJob",
+    "column_name": "terminalReason",
+    "data_type": "text"
+  },
+  {
+    "table_name": "RetentionDeletionJob",
+    "column_name": "workerId",
+    "data_type": "text"
+  },
+  {
+    "table_name": "RetentionDeletionJob",
+    "column_name": "leaseExpiresAt",
+    "data_type": "timestamp without time zone"
+  },
+  {
+    "table_name": "RetentionDeletionJob",
+    "column_name": "attempts",
+    "data_type": "integer"
+  },
+  {
+    "table_name": "RetentionDeletionJob",
+    "column_name": "nextAttemptAt",
+    "data_type": "timestamp without time zone"
+  },
+  {
+    "table_name": "RetentionDeletionJob",
+    "column_name": "createdAt",
+    "data_type": "timestamp without time zone"
+  },
+  {
+    "table_name": "RetentionDeletionJob",
+    "column_name": "updatedAt",
+    "data_type": "timestamp without time zone"
+  },
+  {
+    "table_name": "Role",
+    "column_name": "id",
+    "data_type": "text"
+  },
+  {
+    "table_name": "Role",
+    "column_name": "tenantId",
+    "data_type": "text"
+  },
+  {
+    "table_name": "Role",
+    "column_name": "name",
+    "data_type": "text"
+  },
+  {
+    "table_name": "Role",
+    "column_name": "createdAt",
+    "data_type": "timestamp without time zone"
+  },
+  {
+    "table_name": "Role",
+    "column_name": "updatedAt",
+    "data_type": "timestamp without time zone"
+  },
+  {
+    "table_name": "Role",
+    "column_name": "deletedAt",
+    "data_type": "timestamp without time zone"
+  },
+  {
+    "table_name": "RolePermission",
+    "column_name": "id",
+    "data_type": "text"
+  },
+  {
+    "table_name": "RolePermission",
+    "column_name": "roleId",
+    "data_type": "text"
+  },
+  {
+    "table_name": "RolePermission",
+    "column_name": "permissionId",
+    "data_type": "text"
+  },
+  {
+    "table_name": "RolePermission",
+    "column_name": "createdAt",
+    "data_type": "timestamp without time zone"
+  },
+  {
+    "table_name": "RolePermission",
+    "column_name": "tenantId",
+    "data_type": "text"
+  },
+  {
+    "table_name": "SLAConfiguration",
+    "column_name": "id",
+    "data_type": "text"
+  },
+  {
+    "table_name": "SLAConfiguration",
+    "column_name": "tenantId",
+    "data_type": "text"
+  },
+  {
+    "table_name": "SLAConfiguration",
+    "column_name": "priority",
+    "data_type": "USER-DEFINED"
+  },
+  {
+    "table_name": "SLAConfiguration",
+    "column_name": "responseMinutes",
+    "data_type": "integer"
+  },
+  {
+    "table_name": "SLAConfiguration",
+    "column_name": "resolutionTimeMinutes",
+    "data_type": "integer"
+  },
+  {
+    "table_name": "SLAConfiguration",
+    "column_name": "createdAt",
+    "data_type": "timestamp without time zone"
+  },
+  {
+    "table_name": "SLAConfiguration",
+    "column_name": "updatedAt",
+    "data_type": "timestamp without time zone"
+  },
+  {
+    "table_name": "SLAEvent",
+    "column_name": "id",
+    "data_type": "text"
+  },
+  {
+    "table_name": "SLAEvent",
+    "column_name": "tenantId",
+    "data_type": "text"
+  },
+  {
+    "table_name": "SLAEvent",
+    "column_name": "ticketId",
+    "data_type": "text"
+  },
+  {
+    "table_name": "SLAEvent",
+    "column_name": "type",
+    "data_type": "text"
+  },
+  {
+    "table_name": "SLAEvent",
+    "column_name": "recordedAt",
+    "data_type": "timestamp without time zone"
+  },
+  {
+    "table_name": "SalesQuota",
+    "column_name": "id",
+    "data_type": "text"
+  },
+  {
+    "table_name": "SalesQuota",
+    "column_name": "tenantId",
+    "data_type": "text"
+  },
+  {
+    "table_name": "SalesQuota",
+    "column_name": "userId",
+    "data_type": "text"
+  },
+  {
+    "table_name": "SalesQuota",
+    "column_name": "period",
+    "data_type": "text"
+  },
+  {
+    "table_name": "SalesQuota",
+    "column_name": "targetAmount",
+    "data_type": "numeric"
+  },
+  {
+    "table_name": "SalesQuota",
+    "column_name": "createdAt",
+    "data_type": "timestamp without time zone"
+  },
+  {
+    "table_name": "SalesQuota",
+    "column_name": "updatedAt",
+    "data_type": "timestamp without time zone"
+  },
+  {
+    "table_name": "SecurityEvent",
+    "column_name": "id",
+    "data_type": "text"
+  },
+  {
+    "table_name": "SecurityEvent",
+    "column_name": "tenantId",
+    "data_type": "text"
+  },
+  {
+    "table_name": "SecurityEvent",
+    "column_name": "userId",
+    "data_type": "text"
+  },
+  {
+    "table_name": "SecurityEvent",
+    "column_name": "eventType",
+    "data_type": "USER-DEFINED"
+  },
+  {
+    "table_name": "SecurityEvent",
+    "column_name": "severity",
+    "data_type": "USER-DEFINED"
+  },
+  {
+    "table_name": "SecurityEvent",
+    "column_name": "source",
+    "data_type": "text"
+  },
+  {
+    "table_name": "SecurityEvent",
+    "column_name": "ipAddress",
+    "data_type": "text"
+  },
+  {
+    "table_name": "SecurityEvent",
+    "column_name": "userAgent",
+    "data_type": "text"
+  },
+  {
+    "table_name": "SecurityEvent",
+    "column_name": "metadata",
+    "data_type": "jsonb"
+  },
+  {
+    "table_name": "SecurityEvent",
+    "column_name": "createdAt",
+    "data_type": "timestamp without time zone"
+  },
+  {
+    "table_name": "Subscription",
+    "column_name": "id",
+    "data_type": "text"
+  },
+  {
+    "table_name": "Subscription",
+    "column_name": "tenantId",
+    "data_type": "text"
+  },
+  {
+    "table_name": "Subscription",
+    "column_name": "stripeCustomerId",
+    "data_type": "text"
+  },
+  {
+    "table_name": "Subscription",
+    "column_name": "stripeSubId",
+    "data_type": "text"
+  },
+  {
+    "table_name": "Subscription",
+    "column_name": "status",
+    "data_type": "text"
+  },
+  {
+    "table_name": "Subscription",
+    "column_name": "planId",
+    "data_type": "text"
+  },
+  {
+    "table_name": "Subscription",
+    "column_name": "currentPeriodEnd",
+    "data_type": "timestamp without time zone"
+  },
+  {
+    "table_name": "Subscription",
+    "column_name": "createdAt",
+    "data_type": "timestamp without time zone"
+  },
+  {
+    "table_name": "Subscription",
+    "column_name": "updatedAt",
+    "data_type": "timestamp without time zone"
+  },
+  {
+    "table_name": "Task",
+    "column_name": "id",
+    "data_type": "text"
+  },
+  {
+    "table_name": "Task",
+    "column_name": "tenantId",
+    "data_type": "text"
+  },
+  {
+    "table_name": "Task",
+    "column_name": "title",
+    "data_type": "text"
+  },
+  {
+    "table_name": "Task",
+    "column_name": "description",
+    "data_type": "text"
+  },
+  {
+    "table_name": "Task",
+    "column_name": "dueDate",
+    "data_type": "timestamp without time zone"
+  },
+  {
+    "table_name": "Task",
+    "column_name": "status",
+    "data_type": "USER-DEFINED"
+  },
+  {
+    "table_name": "Task",
+    "column_name": "priority",
+    "data_type": "USER-DEFINED"
+  },
+  {
+    "table_name": "Task",
+    "column_name": "assignedUserId",
+    "data_type": "text"
+  },
+  {
+    "table_name": "Task",
+    "column_name": "leadId",
+    "data_type": "text"
+  },
+  {
+    "table_name": "Task",
+    "column_name": "customerId",
+    "data_type": "text"
+  },
+  {
+    "table_name": "Task",
+    "column_name": "dealId",
+    "data_type": "text"
+  },
+  {
+    "table_name": "Task",
+    "column_name": "createdAt",
+    "data_type": "timestamp without time zone"
+  },
+  {
+    "table_name": "Task",
+    "column_name": "updatedAt",
+    "data_type": "timestamp without time zone"
+  },
+  {
+    "table_name": "Task",
+    "column_name": "deletedAt",
+    "data_type": "timestamp without time zone"
+  },
+  {
+    "table_name": "Tenant",
+    "column_name": "id",
+    "data_type": "text"
+  },
+  {
+    "table_name": "Tenant",
+    "column_name": "name",
+    "data_type": "text"
+  },
+  {
+    "table_name": "Tenant",
+    "column_name": "ownerId",
+    "data_type": "text"
+  },
+  {
+    "table_name": "Tenant",
+    "column_name": "status",
+    "data_type": "USER-DEFINED"
+  },
+  {
+    "table_name": "Tenant",
+    "column_name": "createdAt",
+    "data_type": "timestamp without time zone"
+  },
+  {
+    "table_name": "Tenant",
+    "column_name": "updatedAt",
+    "data_type": "timestamp without time zone"
+  },
+  {
+    "table_name": "Tenant",
+    "column_name": "deletedAt",
+    "data_type": "timestamp without time zone"
+  },
+  {
+    "table_name": "Tenant",
+    "column_name": "deletedById",
+    "data_type": "text"
+  },
+  {
+    "table_name": "Tenant",
+    "column_name": "deletionReason",
+    "data_type": "text"
+  },
+  {
+    "table_name": "Tenant",
+    "column_name": "rpoPolicy",
+    "data_type": "USER-DEFINED"
+  },
+  {
+    "table_name": "Tenant",
+    "column_name": "isRestoreLocked",
+    "data_type": "boolean"
+  },
+  {
+    "table_name": "Tenant",
+    "column_name": "cctvRetentionDays",
+    "data_type": "integer"
+  },
+  {
+    "table_name": "TenantBootstrap",
+    "column_name": "tenantId",
+    "data_type": "text"
+  },
+  {
+    "table_name": "TenantBootstrap",
+    "column_name": "bootstrappedAt",
+    "data_type": "timestamp without time zone"
+  },
+  {
+    "table_name": "TenantIntegration",
+    "column_name": "id",
+    "data_type": "text"
+  },
+  {
+    "table_name": "TenantIntegration",
+    "column_name": "tenantId",
+    "data_type": "text"
+  },
+  {
+    "table_name": "TenantIntegration",
+    "column_name": "provider",
+    "data_type": "USER-DEFINED"
+  },
+  {
+    "table_name": "TenantIntegration",
+    "column_name": "encryptedToken",
+    "data_type": "text"
+  },
+  {
+    "table_name": "TenantIntegration",
+    "column_name": "capabilities",
+    "data_type": "jsonb"
+  },
+  {
+    "table_name": "TenantIntegration",
+    "column_name": "status",
+    "data_type": "text"
+  },
+  {
+    "table_name": "TenantIntegration",
+    "column_name": "lastCheckedAt",
+    "data_type": "timestamp without time zone"
+  },
+  {
+    "table_name": "TenantIntegration",
+    "column_name": "lastError",
+    "data_type": "text"
+  },
+  {
+    "table_name": "TenantIntegration",
+    "column_name": "expiresAt",
+    "data_type": "timestamp without time zone"
+  },
+  {
+    "table_name": "TenantIntegration",
+    "column_name": "createdAt",
+    "data_type": "timestamp without time zone"
+  },
+  {
+    "table_name": "TenantIntegration",
+    "column_name": "updatedAt",
+    "data_type": "timestamp without time zone"
+  },
+  {
+    "table_name": "TenantPhoneNumber",
+    "column_name": "id",
+    "data_type": "text"
+  },
+  {
+    "table_name": "TenantPhoneNumber",
+    "column_name": "tenantId",
+    "data_type": "text"
+  },
+  {
+    "table_name": "TenantPhoneNumber",
+    "column_name": "phoneNumber",
+    "data_type": "text"
+  },
+  {
+    "table_name": "TenantPhoneNumber",
+    "column_name": "provider",
+    "data_type": "USER-DEFINED"
+  },
+  {
+    "table_name": "TenantPhoneNumber",
+    "column_name": "status",
+    "data_type": "text"
+  },
+  {
+    "table_name": "TenantPhoneNumber",
+    "column_name": "capabilities",
+    "data_type": "jsonb"
+  },
+  {
+    "table_name": "TenantPhoneNumber",
+    "column_name": "createdAt",
+    "data_type": "timestamp without time zone"
+  },
+  {
+    "table_name": "TenantPhoneNumber",
+    "column_name": "updatedAt",
+    "data_type": "timestamp without time zone"
+  },
+  {
+    "table_name": "Territory",
+    "column_name": "id",
+    "data_type": "text"
+  },
+  {
+    "table_name": "Territory",
+    "column_name": "tenantId",
+    "data_type": "text"
+  },
+  {
+    "table_name": "Territory",
+    "column_name": "name",
+    "data_type": "text"
+  },
+  {
+    "table_name": "Territory",
+    "column_name": "description",
+    "data_type": "text"
+  },
+  {
+    "table_name": "Territory",
+    "column_name": "parentId",
+    "data_type": "text"
+  },
+  {
+    "table_name": "Territory",
+    "column_name": "createdAt",
+    "data_type": "timestamp without time zone"
+  },
+  {
+    "table_name": "Territory",
+    "column_name": "updatedAt",
+    "data_type": "timestamp without time zone"
+  },
+  {
+    "table_name": "Ticket",
+    "column_name": "id",
+    "data_type": "text"
+  },
+  {
+    "table_name": "Ticket",
+    "column_name": "tenantId",
+    "data_type": "text"
+  },
+  {
+    "table_name": "Ticket",
+    "column_name": "customerId",
+    "data_type": "text"
+  },
+  {
+    "table_name": "Ticket",
+    "column_name": "assignedUserId",
+    "data_type": "text"
+  },
+  {
+    "table_name": "Ticket",
+    "column_name": "status",
+    "data_type": "USER-DEFINED"
+  },
+  {
+    "table_name": "Ticket",
+    "column_name": "priority",
+    "data_type": "USER-DEFINED"
+  },
+  {
+    "table_name": "Ticket",
+    "column_name": "subject",
+    "data_type": "text"
+  },
+  {
+    "table_name": "Ticket",
+    "column_name": "description",
+    "data_type": "text"
+  },
+  {
+    "table_name": "Ticket",
+    "column_name": "createdAt",
+    "data_type": "timestamp without time zone"
+  },
+  {
+    "table_name": "Ticket",
+    "column_name": "updatedAt",
+    "data_type": "timestamp without time zone"
+  },
+  {
+    "table_name": "Ticket",
+    "column_name": "deletedAt",
+    "data_type": "timestamp without time zone"
+  },
+  {
+    "table_name": "Ticket",
+    "column_name": "resolvedAt",
+    "data_type": "timestamp without time zone"
+  },
+  {
+    "table_name": "Ticket",
+    "column_name": "closedAt",
+    "data_type": "timestamp without time zone"
+  },
+  {
+    "table_name": "Ticket",
+    "column_name": "slaDeadline",
+    "data_type": "timestamp without time zone"
+  },
+  {
+    "table_name": "TicketMessage",
+    "column_name": "id",
+    "data_type": "text"
+  },
+  {
+    "table_name": "TicketMessage",
+    "column_name": "tenantId",
+    "data_type": "text"
+  },
+  {
+    "table_name": "TicketMessage",
+    "column_name": "ticketId",
+    "data_type": "text"
+  },
+  {
+    "table_name": "TicketMessage",
+    "column_name": "senderId",
+    "data_type": "text"
+  },
+  {
+    "table_name": "TicketMessage",
+    "column_name": "senderType",
+    "data_type": "USER-DEFINED"
+  },
+  {
+    "table_name": "TicketMessage",
+    "column_name": "content",
+    "data_type": "text"
+  },
+  {
+    "table_name": "TicketMessage",
+    "column_name": "isInternal",
+    "data_type": "boolean"
+  },
+  {
+    "table_name": "TicketMessage",
+    "column_name": "createdAt",
+    "data_type": "timestamp without time zone"
+  },
+  {
+    "table_name": "TicketMessage",
+    "column_name": "updatedAt",
+    "data_type": "timestamp without time zone"
+  },
+  {
+    "table_name": "User",
+    "column_name": "id",
+    "data_type": "text"
+  },
+  {
+    "table_name": "User",
+    "column_name": "clerkId",
+    "data_type": "text"
+  },
+  {
+    "table_name": "User",
+    "column_name": "email",
+    "data_type": "text"
+  },
+  {
+    "table_name": "User",
+    "column_name": "tenantId",
+    "data_type": "text"
+  },
+  {
+    "table_name": "User",
+    "column_name": "status",
+    "data_type": "USER-DEFINED"
+  },
+  {
+    "table_name": "User",
+    "column_name": "createdAt",
+    "data_type": "timestamp without time zone"
+  },
+  {
+    "table_name": "User",
+    "column_name": "updatedAt",
+    "data_type": "timestamp without time zone"
+  },
+  {
+    "table_name": "User",
+    "column_name": "deletedAt",
+    "data_type": "timestamp without time zone"
+  },
+  {
+    "table_name": "User",
+    "column_name": "departmentId",
+    "data_type": "text"
+  },
+  {
+    "table_name": "User",
+    "column_name": "designation",
+    "data_type": "text"
+  },
+  {
+    "table_name": "User",
+    "column_name": "employeeId",
+    "data_type": "text"
+  },
+  {
+    "table_name": "User",
+    "column_name": "firstName",
+    "data_type": "text"
+  },
+  {
+    "table_name": "User",
+    "column_name": "lastName",
+    "data_type": "text"
+  },
+  {
+    "table_name": "User",
+    "column_name": "onboardingStatus",
+    "data_type": "USER-DEFINED"
+  },
+  {
+    "table_name": "User",
+    "column_name": "phone",
+    "data_type": "text"
+  },
+  {
+    "table_name": "User",
+    "column_name": "profilePhotoUrl",
+    "data_type": "text"
+  },
+  {
+    "table_name": "UserInvitation",
+    "column_name": "id",
+    "data_type": "text"
+  },
+  {
+    "table_name": "UserInvitation",
+    "column_name": "tenantId",
+    "data_type": "text"
+  },
+  {
+    "table_name": "UserInvitation",
+    "column_name": "email",
+    "data_type": "text"
+  },
+  {
+    "table_name": "UserInvitation",
+    "column_name": "roleId",
+    "data_type": "text"
+  },
+  {
+    "table_name": "UserInvitation",
+    "column_name": "departmentId",
+    "data_type": "text"
+  },
+  {
+    "table_name": "UserInvitation",
+    "column_name": "tokenHash",
+    "data_type": "text"
+  },
+  {
+    "table_name": "UserInvitation",
+    "column_name": "expiresAt",
+    "data_type": "timestamp without time zone"
+  },
+  {
+    "table_name": "UserInvitation",
+    "column_name": "status",
+    "data_type": "text"
+  },
+  {
+    "table_name": "UserInvitation",
+    "column_name": "invitedById",
+    "data_type": "text"
+  },
+  {
+    "table_name": "UserInvitation",
+    "column_name": "acceptedAt",
+    "data_type": "timestamp without time zone"
+  },
+  {
+    "table_name": "UserInvitation",
+    "column_name": "revokedAt",
+    "data_type": "timestamp without time zone"
+  },
+  {
+    "table_name": "UserInvitation",
+    "column_name": "createdAt",
+    "data_type": "timestamp without time zone"
+  },
+  {
+    "table_name": "UserInvitation",
+    "column_name": "updatedAt",
+    "data_type": "timestamp without time zone"
+  },
+  {
+    "table_name": "UserPresence",
+    "column_name": "id",
+    "data_type": "text"
+  },
+  {
+    "table_name": "UserPresence",
+    "column_name": "tenantId",
+    "data_type": "text"
+  },
+  {
+    "table_name": "UserPresence",
+    "column_name": "userId",
+    "data_type": "text"
+  },
+  {
+    "table_name": "UserPresence",
+    "column_name": "status",
+    "data_type": "USER-DEFINED"
+  },
+  {
+    "table_name": "UserPresence",
+    "column_name": "lastSeenAt",
+    "data_type": "timestamp without time zone"
+  },
+  {
+    "table_name": "UserPresence",
+    "column_name": "createdAt",
+    "data_type": "timestamp without time zone"
+  },
+  {
+    "table_name": "UserPresence",
+    "column_name": "updatedAt",
+    "data_type": "timestamp without time zone"
+  },
+  {
+    "table_name": "UserRole",
+    "column_name": "id",
+    "data_type": "text"
+  },
+  {
+    "table_name": "UserRole",
+    "column_name": "userId",
+    "data_type": "text"
+  },
+  {
+    "table_name": "UserRole",
+    "column_name": "roleId",
+    "data_type": "text"
+  },
+  {
+    "table_name": "UserRole",
+    "column_name": "createdAt",
+    "data_type": "timestamp without time zone"
+  },
+  {
+    "table_name": "UserRole",
+    "column_name": "tenantId",
+    "data_type": "text"
+  },
+  {
+    "table_name": "UserTerritory",
+    "column_name": "id",
+    "data_type": "text"
+  },
+  {
+    "table_name": "UserTerritory",
+    "column_name": "tenantId",
+    "data_type": "text"
+  },
+  {
+    "table_name": "UserTerritory",
+    "column_name": "userId",
+    "data_type": "text"
+  },
+  {
+    "table_name": "UserTerritory",
+    "column_name": "territoryId",
+    "data_type": "text"
+  },
+  {
+    "table_name": "UserTerritory",
+    "column_name": "role",
+    "data_type": "text"
+  },
+  {
+    "table_name": "UserTerritory",
+    "column_name": "createdAt",
+    "data_type": "timestamp without time zone"
+  },
+  {
+    "table_name": "WebhookEvent",
+    "column_name": "id",
+    "data_type": "text"
+  },
+  {
+    "table_name": "WebhookEvent",
+    "column_name": "tenantId",
+    "data_type": "text"
+  },
+  {
+    "table_name": "WebhookEvent",
+    "column_name": "provider",
+    "data_type": "text"
+  },
+  {
+    "table_name": "WebhookEvent",
+    "column_name": "eventId",
+    "data_type": "text"
+  },
+  {
+    "table_name": "WebhookEvent",
+    "column_name": "eventType",
+    "data_type": "text"
+  },
+  {
+    "table_name": "WebhookEvent",
+    "column_name": "payloadHash",
+    "data_type": "text"
+  },
+  {
+    "table_name": "WebhookEvent",
+    "column_name": "signatureVerified",
+    "data_type": "boolean"
+  },
+  {
+    "table_name": "WebhookEvent",
+    "column_name": "status",
+    "data_type": "USER-DEFINED"
+  },
+  {
+    "table_name": "WebhookEvent",
+    "column_name": "processedAt",
+    "data_type": "timestamp without time zone"
+  },
+  {
+    "table_name": "WebhookEvent",
+    "column_name": "createdAt",
+    "data_type": "timestamp without time zone"
+  },
+  {
+    "table_name": "Workflow",
+    "column_name": "id",
+    "data_type": "text"
+  },
+  {
+    "table_name": "Workflow",
+    "column_name": "tenantId",
+    "data_type": "text"
+  },
+  {
+    "table_name": "Workflow",
+    "column_name": "name",
+    "data_type": "text"
+  },
+  {
+    "table_name": "Workflow",
+    "column_name": "description",
+    "data_type": "text"
+  },
+  {
+    "table_name": "Workflow",
+    "column_name": "status",
+    "data_type": "USER-DEFINED"
+  },
+  {
+    "table_name": "Workflow",
+    "column_name": "createdAt",
+    "data_type": "timestamp without time zone"
+  },
+  {
+    "table_name": "Workflow",
+    "column_name": "updatedAt",
+    "data_type": "timestamp without time zone"
+  },
+  {
+    "table_name": "Workflow",
+    "column_name": "createdById",
+    "data_type": "text"
+  },
+  {
+    "table_name": "WorkflowAction",
+    "column_name": "id",
+    "data_type": "text"
+  },
+  {
+    "table_name": "WorkflowAction",
+    "column_name": "workflowId",
+    "data_type": "text"
+  },
+  {
+    "table_name": "WorkflowAction",
+    "column_name": "actionType",
+    "data_type": "text"
+  },
+  {
+    "table_name": "WorkflowAction",
+    "column_name": "orderIndex",
+    "data_type": "integer"
+  },
+  {
+    "table_name": "WorkflowAction",
+    "column_name": "config",
+    "data_type": "jsonb"
+  },
+  {
+    "table_name": "WorkflowAction",
+    "column_name": "createdAt",
+    "data_type": "timestamp without time zone"
+  },
+  {
+    "table_name": "WorkflowAction",
+    "column_name": "tenantId",
+    "data_type": "text"
+  },
+  {
+    "table_name": "WorkflowExecution",
+    "column_name": "id",
+    "data_type": "text"
+  },
+  {
+    "table_name": "WorkflowExecution",
+    "column_name": "workflowId",
+    "data_type": "text"
+  },
+  {
+    "table_name": "WorkflowExecution",
+    "column_name": "status",
+    "data_type": "USER-DEFINED"
+  },
+  {
+    "table_name": "WorkflowExecution",
+    "column_name": "context",
+    "data_type": "jsonb"
+  },
+  {
+    "table_name": "WorkflowExecution",
+    "column_name": "createdAt",
+    "data_type": "timestamp without time zone"
+  },
+  {
+    "table_name": "WorkflowExecution",
+    "column_name": "updatedAt",
+    "data_type": "timestamp without time zone"
+  },
+  {
+    "table_name": "WorkflowExecution",
+    "column_name": "tenantId",
+    "data_type": "text"
+  },
+  {
+    "table_name": "WorkflowExecution",
+    "column_name": "initiatedById",
+    "data_type": "text"
+  },
+  {
+    "table_name": "WorkflowExecutionStep",
+    "column_name": "id",
+    "data_type": "text"
+  },
+  {
+    "table_name": "WorkflowExecutionStep",
+    "column_name": "executionId",
+    "data_type": "text"
+  },
+  {
+    "table_name": "WorkflowExecutionStep",
+    "column_name": "actionId",
+    "data_type": "text"
+  },
+  {
+    "table_name": "WorkflowExecutionStep",
+    "column_name": "status",
+    "data_type": "USER-DEFINED"
+  },
+  {
+    "table_name": "WorkflowExecutionStep",
+    "column_name": "result",
+    "data_type": "jsonb"
+  },
+  {
+    "table_name": "WorkflowExecutionStep",
+    "column_name": "error",
+    "data_type": "text"
+  },
+  {
+    "table_name": "WorkflowExecutionStep",
+    "column_name": "timestamp",
+    "data_type": "timestamp without time zone"
+  },
+  {
+    "table_name": "WorkflowExecutionStep",
+    "column_name": "tenantId",
+    "data_type": "text"
+  },
+  {
+    "table_name": "WorkflowTrigger",
+    "column_name": "id",
+    "data_type": "text"
+  },
+  {
+    "table_name": "WorkflowTrigger",
+    "column_name": "workflowId",
+    "data_type": "text"
+  },
+  {
+    "table_name": "WorkflowTrigger",
+    "column_name": "eventType",
+    "data_type": "text"
+  },
+  {
+    "table_name": "WorkflowTrigger",
+    "column_name": "conditions",
+    "data_type": "jsonb"
+  },
+  {
+    "table_name": "WorkflowTrigger",
+    "column_name": "createdAt",
+    "data_type": "timestamp without time zone"
+  },
+  {
+    "table_name": "WorkflowTrigger",
+    "column_name": "tenantId",
+    "data_type": "text"
+  },
+  {
+    "table_name": "_prisma_migrations",
+    "column_name": "id",
+    "data_type": "character varying"
+  },
+  {
+    "table_name": "_prisma_migrations",
+    "column_name": "checksum",
+    "data_type": "character varying"
+  },
+  {
+    "table_name": "_prisma_migrations",
+    "column_name": "finished_at",
+    "data_type": "timestamp with time zone"
+  },
+  {
+    "table_name": "_prisma_migrations",
+    "column_name": "migration_name",
+    "data_type": "character varying"
+  },
+  {
+    "table_name": "_prisma_migrations",
+    "column_name": "logs",
+    "data_type": "text"
+  },
+  {
+    "table_name": "_prisma_migrations",
+    "column_name": "rolled_back_at",
+    "data_type": "timestamp with time zone"
+  },
+  {
+    "table_name": "_prisma_migrations",
+    "column_name": "started_at",
+    "data_type": "timestamp with time zone"
+  },
+  {
+    "table_name": "_prisma_migrations",
+    "column_name": "applied_steps_count",
+    "data_type": "integer"
+  }
+]

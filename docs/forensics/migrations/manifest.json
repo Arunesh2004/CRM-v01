@@ -1,0 +1,182 @@
+[
+  {
+    "name": "20260815165908_init_internal_crm_baseline",
+    "path": "database/migrations/20260815165908_init_internal_crm_baseline",
+    "checksum": "known via archive",
+    "git_history": "available",
+    "sql": "available in git",
+    "database_evidence": "present in e2e and prod",
+    "notes": "legacy migration removed during canonical baseline transition"
+  },
+  {
+    "name": "20260815175015_add_crm_document_model",
+    "path": "database/migrations/20260815175015_add_crm_document_model",
+    "checksum": "known via archive",
+    "git_history": "available",
+    "sql": "available in git",
+    "database_evidence": "present in e2e and prod",
+    "notes": "legacy migration removed during canonical baseline transition"
+  },
+  {
+    "name": "20260816000000_phase1_auth_onboarding",
+    "path": "database/migrations/20260816000000_phase1_auth_onboarding",
+    "checksum": "known via archive",
+    "git_history": "available",
+    "sql": "available in git",
+    "database_evidence": "present in e2e and prod",
+    "notes": "legacy migration removed during canonical baseline transition"
+  },
+  {
+    "name": "20260817162700_audit_log_append_only",
+    "path": "database/migrations/20260817162700_audit_log_append_only",
+    "checksum": "known via archive",
+    "git_history": "available",
+    "sql": "available in git",
+    "database_evidence": "present in e2e and prod",
+    "notes": "legacy migration removed during canonical baseline transition"
+  },
+  {
+    "name": "20260817172500_phase8_rls_foundation",
+    "path": "database/migrations/20260817172500_phase8_rls_foundation",
+    "checksum": "known via archive",
+    "git_history": "available",
+    "sql": "available in git",
+    "database_evidence": "present in e2e and prod",
+    "notes": "legacy migration removed during canonical baseline transition"
+  },
+  {
+    "name": "20260818000000_phase9_remediation",
+    "path": "database/migrations/20260818000000_phase9_remediation",
+    "checksum": "known via archive",
+    "git_history": "available",
+    "sql": "available in git",
+    "database_evidence": "present in e2e and prod",
+    "notes": "legacy migration removed during canonical baseline transition"
+  },
+  {
+    "name": "20260818000001_hnsw_indexes",
+    "path": "database/migrations/20260818000001_hnsw_indexes",
+    "checksum": "known via archive",
+    "git_history": "available",
+    "sql": "available in git",
+    "database_evidence": "present in e2e and prod",
+    "notes": "legacy migration removed during canonical baseline transition"
+  },
+  {
+    "name": "20260818055125_phase10_revenue_core",
+    "path": "database/migrations/20260818055125_phase10_revenue_core",
+    "checksum": "known via archive",
+    "git_history": "available",
+    "sql": "available in git",
+    "database_evidence": "present in e2e and prod",
+    "notes": "legacy migration removed during canonical baseline transition"
+  },
+  {
+    "name": "20260818055852_phase10_revenue_permissions",
+    "path": "database/migrations/20260818055852_phase10_revenue_permissions",
+    "checksum": "known via archive",
+    "git_history": "available",
+    "sql": "available in git",
+    "database_evidence": "present in e2e and prod",
+    "notes": "legacy migration removed during canonical baseline transition"
+  },
+  {
+    "name": "20260818062424_phase10_2_sales_intel",
+    "path": "database/migrations/20260818062424_phase10_2_sales_intel",
+    "checksum": "known via archive",
+    "git_history": "available",
+    "sql": "available in git",
+    "database_evidence": "present in e2e and prod",
+    "notes": "legacy migration removed during canonical baseline transition"
+  },
+  {
+    "name": "20260818082441_phase10_3_enterprise_controls",
+    "path": "database/migrations/20260818082441_phase10_3_enterprise_controls",
+    "checksum": "known via archive",
+    "git_history": "available",
+    "sql": "available in git",
+    "database_evidence": "present in e2e and prod",
+    "notes": "legacy migration removed during canonical baseline transition"
+  },
+  {
+    "name": "20260818090845_phase10_4_omnichannel",
+    "path": "database/migrations/20260818090845_phase10_4_omnichannel",
+    "checksum": "known via archive",
+    "git_history": "available",
+    "sql": "available in git",
+    "database_evidence": "present in e2e and prod",
+    "notes": "legacy migration removed during canonical baseline transition"
+  },
+  {
+    "name": "20260818091150_phase10_4_omnichannel_fix",
+    "path": "database/migrations/20260818091150_phase10_4_omnichannel_fix",
+    "checksum": "known via archive",
+    "git_history": "available",
+    "sql": "available in git",
+    "database_evidence": "present in e2e and prod",
+    "notes": "legacy migration removed during canonical baseline transition"
+  },
+  {
+    "name": "20260818100005_async_infrastructure",
+    "path": "database/migrations/20260818100005_async_infrastructure",
+    "checksum": "known via archive",
+    "git_history": "available",
+    "sql": "available in git",
+    "database_evidence": "present in e2e and prod",
+    "notes": "legacy migration removed during canonical baseline transition"
+  },
+  {
+    "name": "20260819000000_phase11_auth_bypass_rls",
+    "path": "database/migrations/20260819000000_phase11_auth_bypass_rls",
+    "checksum": "known via archive",
+    "git_history": "available",
+    "sql": "available in git",
+    "database_evidence": "present in e2e and prod",
+    "notes": "legacy migration removed during canonical baseline transition"
+  },
+  {
+    "name": "20260825205256_add_tenant_phone_number",
+    "path": "database/migrations/20260825205256_add_tenant_phone_number",
+    "checksum": "known via archive",
+    "git_history": "available",
+    "sql": "available in git",
+    "database_evidence": "present in e2e and prod",
+    "notes": "legacy migration removed during canonical baseline transition"
+  },
+  {
+    "name": "20260825205402_rls_tenant_phone_number",
+    "path": "database/migrations/20260825205402_rls_tenant_phone_number",
+    "checksum": "known via archive",
+    "git_history": "available",
+    "sql": "available in git",
+    "database_evidence": "present in e2e and prod",
+    "notes": "legacy migration removed during canonical baseline transition"
+  },
+  {
+    "name": "20260825213316_phase12_3_reproducibility_fix",
+    "path": "database/migrations/20260825213316_phase12_3_reproducibility_fix",
+    "checksum": "known via archive",
+    "git_history": "available",
+    "sql": "available in git",
+    "database_evidence": "present in e2e and prod",
+    "notes": "legacy migration removed during canonical baseline transition"
+  },
+  {
+    "name": "20260826000000_phase13_1b_rls_expansion",
+    "path": "database/migrations/20260826000000_phase13_1b_rls_expansion",
+    "checksum": "known via archive",
+    "git_history": "available",
+    "sql": "available in git",
+    "database_evidence": "present in e2e and prod",
+    "notes": "legacy migration removed during canonical baseline transition"
+  },
+  {
+    "name": "20260905164314_phase_10_5_d_workflow_execution_actor",
+    "path": "database/migrations/20260905164314_phase_10_5_d_workflow_execution_actor",
+    "checksum": "known via archive",
+    "git_history": "available",
+    "sql": "available in git",
+    "database_evidence": "present in e2e and prod",
+    "notes": "legacy migration removed during canonical baseline transition"
+  }
+]

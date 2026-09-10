@@ -3,11 +3,13 @@ import { notFound } from 'next/navigation';
 import { getCustomerByIdAction } from '@/modules/crm/actions/customer.actions';
 import { Badge } from '@/components/ui/Badge';
 import { Building2, MapPin, Phone, Mail, Users2, ArrowLeft } from 'lucide-react';
+import type { CustomerContact, Location } from '@prisma/client';
 import Link from 'next/link';
 import CommunicationActions from './CommunicationActions';
 import { CustomerRelatedItems } from '@/components/crm/CustomerRelatedItems';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/Tabs';
 import { ContactForm } from '@/components/crm/ContactForm';
+import { ContactCardActions } from '@/components/crm/ContactCardActions';
 import { LocationForm } from '@/components/crm/LocationForm';
 import { TimelineTabWrapper } from './TimelineTabWrapper';
 import { DocumentsTabWrapper } from './DocumentsTabWrapper';
@@ -79,9 +81,7 @@ export default async function CustomerDetailsPage({ params }: { params: Promise<
                     <div className="text-xs text-[#8891B0] mb-1 uppercase tracking-wider font-semibold">Primary Contact</div>
                     <div className="flex items-center font-medium text-white">
                       <Phone className="w-4 h-4 mr-2 text-violet-400" />
-                      // eslint-disable-next-line @typescript-eslint/no-explicit-any -- S2 Residual Debt: Legacy internal payload requires architectural typing
-                      // eslint-disable-next-line @typescript-eslint/no-explicit-any -- S2 Residual Debt: Legacy internal payload requires architectural typing
-                      {contacts.find((c: any) => c.isPrimary)?.phone || 'No primary phone'}
+                      {(contacts as CustomerContact[]).find((c) => c.isPrimary)?.phone || 'No primary phone'}
                     </div>
                   </div>
                 </div>
@@ -108,10 +108,8 @@ export default async function CustomerDetailsPage({ params }: { params: Promise<
                 No contacts have been added yet.
               </div>
             ) : (
-              // eslint-disable-next-line @typescript-eslint/no-explicit-any -- S2 Residual Debt: Legacy internal payload requires architectural typing
               <div className="space-y-3 mt-2">
-                // eslint-disable-next-line @typescript-eslint/no-explicit-any -- S2 Residual Debt: Legacy internal payload requires architectural typing
-                {contacts.map((contact: any) => (
+                {(contacts as CustomerContact[]).map((contact) => (
                   <div key={contact.id} className="flex flex-col sm:flex-row sm:items-center justify-between p-4 border border-white/[.08] rounded-xl hover:border-violet-500/30 transition-colors bg-[#0D1326]/40 gap-4">
                     <div className="flex items-center gap-4">
                       <div className="w-10 h-10 rounded-full bg-violet-500/20 text-violet-400 flex items-center justify-center font-bold text-sm shrink-0 border border-violet-500/30">
@@ -122,7 +120,6 @@ export default async function CustomerDetailsPage({ params }: { params: Promise<
                           {contact.firstName} {contact.lastName}
                           {contact.isPrimary && <Badge variant="emerald" className="text-[10px] uppercase py-0.5 px-1.5 h-auto">Primary</Badge>}
                         </div>
-                        <div className="text-xs text-[#8891B0] font-medium mt-0.5">{contact.jobTitle || 'No Title'}</div>
                       </div>
                     </div>
                     <div className="flex flex-col gap-1.5 sm:items-end text-sm text-[#8891B0] shrink-0">
@@ -138,6 +135,9 @@ export default async function CustomerDetailsPage({ params }: { params: Promise<
                           <a href={`tel:${contact.phone}`} className="hover:text-violet-400 transition-colors truncate max-w-[200px]">{contact.phone}</a>
                         </div>
                       )}
+                    </div>
+                    <div className="shrink-0">
+                      <ContactCardActions customerId={customer.id} contact={contact} />
                     </div>
                   </div>
                 ))}
@@ -159,11 +159,9 @@ export default async function CustomerDetailsPage({ params }: { params: Promise<
               <div className="text-center py-8 text-sm text-[#8891B0] bg-white/[.02] border border-white/[.04] rounded-xl">
                 No locations have been added yet.
               </div>
-            // eslint-disable-next-line @typescript-eslint/no-explicit-any -- S2 Residual Debt: Legacy internal payload requires architectural typing
             ) : (
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mt-2">
-                // eslint-disable-next-line @typescript-eslint/no-explicit-any -- S2 Residual Debt: Legacy internal payload requires architectural typing
-                {locations.map((loc: any) => (
+                {(locations as Location[]).map((loc) => (
                   <div key={loc.id} className="border border-white/[.08] rounded-xl p-5 bg-[#0D1326]/40 hover:border-violet-500/30 transition-colors">
                     <div className="font-semibold text-white mb-2 flex items-center justify-between">
                       {loc.name}

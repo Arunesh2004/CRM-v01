@@ -1,0 +1,1348 @@
+--- E2E SCHEMA FINGERPRINT ---
+
+=== TABLES ===
+
+TABLE: ABACPolicy
+  - id: text (null: NO, default: null)
+  - tenantId: text (null: NO, default: null)
+  - name: text (null: NO, default: null)
+  - resource: text (null: NO, default: null)
+  - action: text (null: NO, default: null)
+  - conditions: jsonb (null: NO, default: null)
+  - effect: text (null: NO, default: null)
+  - isActive: boolean (null: NO, default: true)
+  - createdAt: timestamp without time zone (null: NO, default: CURRENT_TIMESTAMP)
+
+TABLE: AIAgentExecution
+  - id: text (null: NO, default: null)
+  - tenantId: text (null: NO, default: null)
+  - userId: text (null: NO, default: null)
+  - agentName: text (null: NO, default: null)
+  - correlationId: text (null: NO, default: null)
+  - status: USER-DEFINED (null: NO, default: 'PENDING'::"AIAgentExecutionStatus")
+  - input: jsonb (null: NO, default: null)
+  - output: jsonb (null: YES, default: null)
+  - createdAt: timestamp without time zone (null: NO, default: CURRENT_TIMESTAMP)
+  - updatedAt: timestamp without time zone (null: NO, default: null)
+
+TABLE: AIAnalysisJob
+  - id: text (null: NO, default: null)
+  - recordingId: text (null: NO, default: null)
+  - analysisType: text (null: NO, default: null)
+  - dedupeKey: text (null: NO, default: null)
+  - status: USER-DEFINED (null: NO, default: 'PENDING'::"JobStatus")
+  - terminalReason: text (null: YES, default: null)
+  - workerId: text (null: YES, default: null)
+  - leaseExpiresAt: timestamp without time zone (null: YES, default: null)
+  - attempts: integer (null: NO, default: 0)
+  - nextAttemptAt: timestamp without time zone (null: NO, default: CURRENT_TIMESTAMP)
+  - createdAt: timestamp without time zone (null: NO, default: CURRENT_TIMESTAMP)
+  - updatedAt: timestamp without time zone (null: NO, default: null)
+
+TABLE: AIConversation
+  - id: text (null: NO, default: null)
+  - tenantId: text (null: NO, default: null)
+  - userId: text (null: NO, default: null)
+  - title: text (null: YES, default: null)
+  - status: USER-DEFINED (null: NO, default: 'ACTIVE'::"AIConversationStatus")
+  - createdAt: timestamp without time zone (null: NO, default: CURRENT_TIMESTAMP)
+  - updatedAt: timestamp without time zone (null: NO, default: null)
+  - deletedAt: timestamp without time zone (null: YES, default: null)
+  - archivedAt: timestamp without time zone (null: YES, default: null)
+
+TABLE: AIConversationMessage
+  - id: text (null: NO, default: null)
+  - conversationId: text (null: NO, default: null)
+  - tenantId: text (null: NO, default: null)
+  - role: USER-DEFINED (null: NO, default: null)
+  - content: text (null: NO, default: null)
+  - createdAt: timestamp without time zone (null: NO, default: CURRENT_TIMESTAMP)
+
+TABLE: AIEvent
+  - id: text (null: NO, default: null)
+  - tenantId: text (null: NO, default: null)
+  - cameraId: text (null: NO, default: null)
+  - model: text (null: NO, default: null)
+  - confidence: double precision (null: NO, default: null)
+  - detectedObject: text (null: NO, default: null)
+  - metadata: jsonb (null: YES, default: null)
+  - timestamp: timestamp without time zone (null: NO, default: CURRENT_TIMESTAMP)
+  - deletedAt: timestamp without time zone (null: YES, default: null)
+  - recordingId: text (null: YES, default: null)
+
+TABLE: AIExecution
+  - id: text (null: NO, default: null)
+  - tenantId: text (null: NO, default: null)
+  - userId: text (null: NO, default: null)
+  - toolId: text (null: NO, default: null)
+  - status: USER-DEFINED (null: NO, default: 'PENDING'::"AIExecutionStatus")
+  - approvedBy: text (null: YES, default: null)
+  - input: jsonb (null: NO, default: null)
+  - output: jsonb (null: YES, default: null)
+  - createdAt: timestamp without time zone (null: NO, default: CURRENT_TIMESTAMP)
+
+TABLE: AIMemory
+  - id: text (null: NO, default: null)
+  - tenantId: text (null: NO, default: null)
+  - userId: text (null: NO, default: null)
+  - type: USER-DEFINED (null: NO, default: null)
+  - visibility: USER-DEFINED (null: NO, default: null)
+  - content: text (null: NO, default: null)
+  - embedding: USER-DEFINED (null: YES, default: null)
+  - importanceScore: double precision (null: NO, default: 0.0)
+  - source: text (null: NO, default: null)
+  - verified: boolean (null: NO, default: false)
+  - approvedBy: text (null: YES, default: null)
+  - expiresAt: timestamp without time zone (null: YES, default: null)
+  - createdAt: timestamp without time zone (null: NO, default: CURRENT_TIMESTAMP)
+
+TABLE: AIProviderConfig
+  - id: text (null: NO, default: null)
+  - tenantId: text (null: NO, default: null)
+  - provider: text (null: NO, default: null)
+  - model: text (null: NO, default: null)
+  - encryptedApiKey: text (null: NO, default: null)
+  - isActive: boolean (null: NO, default: true)
+  - createdAt: timestamp without time zone (null: NO, default: CURRENT_TIMESTAMP)
+
+TABLE: AIReference
+  - id: text (null: NO, default: null)
+  - tenantId: text (null: NO, default: null)
+  - aiExecutionId: text (null: NO, default: null)
+  - documentId: text (null: NO, default: null)
+  - embeddingId: text (null: YES, default: null)
+  - citationText: text (null: NO, default: null)
+  - createdAt: timestamp without time zone (null: NO, default: CURRENT_TIMESTAMP)
+
+TABLE: AITokenUsage
+  - id: text (null: NO, default: null)
+  - tenantId: text (null: NO, default: null)
+  - userId: text (null: NO, default: null)
+  - workflowId: text (null: YES, default: null)
+  - aiExecutionId: text (null: YES, default: null)
+  - model: text (null: NO, default: null)
+  - inputTokens: integer (null: NO, default: null)
+  - outputTokens: integer (null: NO, default: null)
+  - latencyMs: integer (null: NO, default: null)
+  - cost: numeric (null: NO, default: null)
+  - timestamp: timestamp without time zone (null: NO, default: CURRENT_TIMESTAMP)
+
+TABLE: AITool
+  - id: text (null: NO, default: null)
+  - name: text (null: NO, default: null)
+  - description: text (null: YES, default: null)
+  - requiredPermission: text (null: YES, default: null)
+  - riskLevel: USER-DEFINED (null: NO, default: 'LOW'::"AIRiskLevel")
+  - requiresApproval: boolean (null: NO, default: false)
+  - createdAt: timestamp without time zone (null: NO, default: CURRENT_TIMESTAMP)
+
+TABLE: ActivityTimeline
+  - id: text (null: NO, default: null)
+  - tenantId: text (null: NO, default: null)
+  - type: USER-DEFINED (null: NO, default: null)
+  - content: text (null: NO, default: null)
+  - actorId: text (null: NO, default: null)
+  - entityType: USER-DEFINED (null: NO, default: null)
+  - entityId: text (null: NO, default: null)
+  - createdAt: timestamp without time zone (null: NO, default: CURRENT_TIMESTAMP)
+
+TABLE: ApprovalRequest
+  - id: text (null: NO, default: null)
+  - tenantId: text (null: NO, default: null)
+  - requesterId: text (null: NO, default: null)
+  - resource: text (null: NO, default: null)
+  - resourceId: text (null: NO, default: null)
+  - status: text (null: NO, default: null)
+  - workflowStepId: text (null: YES, default: null)
+  - createdAt: timestamp without time zone (null: NO, default: CURRENT_TIMESTAMP)
+  - updatedAt: timestamp without time zone (null: NO, default: null)
+
+TABLE: ApprovalStep
+  - id: text (null: NO, default: null)
+  - tenantId: text (null: NO, default: null)
+  - approvalRequestId: text (null: NO, default: null)
+  - approverId: text (null: YES, default: null)
+  - approverRoleId: text (null: YES, default: null)
+  - status: text (null: NO, default: null)
+  - comments: text (null: YES, default: null)
+  - actedAt: timestamp without time zone (null: YES, default: null)
+  - createdAt: timestamp without time zone (null: NO, default: CURRENT_TIMESTAMP)
+
+TABLE: AuditLog
+  - id: text (null: NO, default: null)
+  - tenantId: text (null: NO, default: null)
+  - actorId: text (null: NO, default: null)
+  - actorType: USER-DEFINED (null: NO, default: null)
+  - action: text (null: NO, default: null)
+  - resource: text (null: NO, default: null)
+  - resourceId: text (null: NO, default: null)
+  - metadata: jsonb (null: YES, default: null)
+  - ipAddress: text (null: YES, default: null)
+  - timestamp: timestamp without time zone (null: NO, default: CURRENT_TIMESTAMP)
+
+TABLE: CCTVNode
+  - id: text (null: NO, default: null)
+  - name: text (null: NO, default: null)
+  - status: USER-DEFINED (null: NO, default: 'HEALTHY'::"CCTVNodeStatus")
+  - webhookKeyId: text (null: NO, default: null)
+  - webhookSecretRef: text (null: NO, default: null)
+  - lastHeartbeat: timestamp without time zone (null: YES, default: null)
+  - diskUsagePct: double precision (null: YES, default: null)
+  - diskFreeGb: double precision (null: YES, default: null)
+  - createdAt: timestamp without time zone (null: NO, default: CURRENT_TIMESTAMP)
+  - updatedAt: timestamp without time zone (null: NO, default: null)
+
+TABLE: CRMComment
+  - id: text (null: NO, default: null)
+  - tenantId: text (null: NO, default: null)
+  - userId: text (null: NO, default: null)
+  - content: text (null: NO, default: null)
+  - parentId: text (null: YES, default: null)
+  - entityType: USER-DEFINED (null: NO, default: null)
+  - entityId: text (null: NO, default: null)
+  - createdAt: timestamp without time zone (null: NO, default: CURRENT_TIMESTAMP)
+  - updatedAt: timestamp without time zone (null: NO, default: null)
+  - deletedAt: timestamp without time zone (null: YES, default: null)
+
+TABLE: CallLog
+  - id: text (null: NO, default: null)
+  - tenantId: text (null: NO, default: null)
+  - callerEmployeeId: text (null: YES, default: null)
+  - receiverEmployeeId: text (null: YES, default: null)
+  - provider: USER-DEFINED (null: NO, default: 'INTERNAL'::"CallProvider")
+  - providerCallId: text (null: YES, default: null)
+  - duration: integer (null: YES, default: null)
+  - status: USER-DEFINED (null: NO, default: null)
+  - recordingMetadata: jsonb (null: YES, default: null)
+  - metadata: jsonb (null: YES, default: null)
+  - createdAt: timestamp without time zone (null: NO, default: CURRENT_TIMESTAMP)
+  - updatedAt: timestamp without time zone (null: NO, default: null)
+
+TABLE: Camera
+  - id: text (null: NO, default: null)
+  - tenantId: text (null: NO, default: null)
+  - locationId: text (null: YES, default: null)
+  - name: text (null: NO, default: null)
+  - model: text (null: YES, default: null)
+  - manufacturer: text (null: YES, default: null)
+  - ipAddress: text (null: NO, default: null)
+  - protocol: USER-DEFINED (null: NO, default: null)
+  - status: USER-DEFINED (null: NO, default: 'OFFLINE'::"CameraStatus")
+  - lastHeartbeat: timestamp without time zone (null: YES, default: null)
+  - createdAt: timestamp without time zone (null: NO, default: CURRENT_TIMESTAMP)
+  - updatedAt: timestamp without time zone (null: NO, default: null)
+  - deletedAt: timestamp without time zone (null: YES, default: null)
+  - authMode: USER-DEFINED (null: NO, default: 'NONE'::"CameraAuthMode")
+  - streamVersion: integer (null: NO, default: 0)
+
+TABLE: CameraCredential
+  - id: text (null: NO, default: null)
+  - tenantId: text (null: NO, default: null)
+  - cameraId: text (null: NO, default: null)
+  - encryptedUsername: text (null: NO, default: null)
+  - encryptedPassword: text (null: NO, default: null)
+  - createdAt: timestamp without time zone (null: NO, default: CURRENT_TIMESTAMP)
+  - updatedAt: timestamp without time zone (null: NO, default: null)
+
+TABLE: CameraEvent
+  - id: text (null: NO, default: null)
+  - tenantId: text (null: NO, default: null)
+  - cameraId: text (null: NO, default: null)
+  - eventType: USER-DEFINED (null: NO, default: null)
+  - severity: USER-DEFINED (null: NO, default: 'INFO'::"EventSeverity")
+  - metadata: jsonb (null: YES, default: null)
+  - timestamp: timestamp without time zone (null: NO, default: CURRENT_TIMESTAMP)
+
+TABLE: CameraStream
+  - id: text (null: NO, default: null)
+  - tenantId: text (null: NO, default: null)
+  - cameraId: text (null: NO, default: null)
+  - streamUrl: text (null: NO, default: null)
+  - protocol: text (null: NO, default: null)
+  - status: USER-DEFINED (null: NO, default: 'INACTIVE'::"StreamStatus")
+  - createdAt: timestamp without time zone (null: NO, default: CURRENT_TIMESTAMP)
+  - updatedAt: timestamp without time zone (null: NO, default: null)
+
+TABLE: CameraStreamInvalidation
+  - id: text (null: NO, default: null)
+  - cameraId: text (null: NO, default: null)
+  - tenantId: text (null: NO, default: null)
+  - streamVersion: integer (null: NO, default: null)
+  - opaquePath: text (null: NO, default: null)
+  - status: USER-DEFINED (null: NO, default: 'PENDING'::"CameraStreamInvalidationStatus")
+  - attempts: integer (null: NO, default: 0)
+  - nextAttemptAt: timestamp without time zone (null: NO, default: CURRENT_TIMESTAMP)
+  - lastError: text (null: YES, default: null)
+  - createdAt: timestamp without time zone (null: NO, default: CURRENT_TIMESTAMP)
+  - updatedAt: timestamp without time zone (null: NO, default: null)
+  - completedAt: timestamp without time zone (null: YES, default: null)
+
+TABLE: ChatConversation
+  - id: text (null: NO, default: null)
+  - tenantId: text (null: NO, default: null)
+  - type: USER-DEFINED (null: NO, default: null)
+  - name: text (null: YES, default: null)
+  - createdAt: timestamp without time zone (null: NO, default: CURRENT_TIMESTAMP)
+  - updatedAt: timestamp without time zone (null: NO, default: null)
+  - deletedAt: timestamp without time zone (null: YES, default: null)
+  - customerId: text (null: YES, default: null)
+
+TABLE: ChatMessage
+  - id: text (null: NO, default: null)
+  - tenantId: text (null: NO, default: null)
+  - conversationId: text (null: NO, default: null)
+  - senderId: text (null: YES, default: null)
+  - content: text (null: NO, default: null)
+  - isDeleted: boolean (null: NO, default: false)
+  - deletedAt: timestamp without time zone (null: YES, default: null)
+  - editedAt: timestamp without time zone (null: YES, default: null)
+  - metadata: jsonb (null: YES, default: null)
+  - createdAt: timestamp without time zone (null: NO, default: CURRENT_TIMESTAMP)
+  - updatedAt: timestamp without time zone (null: NO, default: null)
+
+TABLE: ChatParticipant
+  - id: text (null: NO, default: null)
+  - tenantId: text (null: NO, default: null)
+  - conversationId: text (null: NO, default: null)
+  - userId: text (null: NO, default: null)
+  - role: USER-DEFINED (null: NO, default: 'MEMBER'::"ChatParticipantRole")
+  - isMuted: boolean (null: NO, default: false)
+  - archivedAt: timestamp without time zone (null: YES, default: null)
+  - joinedAt: timestamp without time zone (null: NO, default: CURRENT_TIMESTAMP)
+
+TABLE: ChatReadReceipt
+  - id: text (null: NO, default: null)
+  - tenantId: text (null: NO, default: null)
+  - messageId: text (null: NO, default: null)
+  - userId: text (null: NO, default: null)
+  - readAt: timestamp without time zone (null: NO, default: CURRENT_TIMESTAMP)
+
+TABLE: CommunicationAttachment
+  - id: text (null: NO, default: null)
+  - tenantId: text (null: NO, default: null)
+  - uploaderId: text (null: NO, default: null)
+  - attachedToType: USER-DEFINED (null: NO, default: null)
+  - attachedToId: text (null: NO, default: null)
+  - fileName: text (null: NO, default: null)
+  - fileType: text (null: NO, default: null)
+  - storageUrl: text (null: NO, default: null)
+  - size: integer (null: NO, default: null)
+  - createdAt: timestamp without time zone (null: NO, default: CURRENT_TIMESTAMP)
+
+TABLE: Customer
+  - id: text (null: NO, default: null)
+  - tenantId: text (null: NO, default: null)
+  - name: text (null: NO, default: null)
+  - normalizedName: text (null: NO, default: null)
+  - industry: text (null: YES, default: null)
+  - status: USER-DEFINED (null: NO, default: 'ACTIVE'::"CustomerStatus")
+  - assignedUserId: text (null: YES, default: null)
+  - createdAt: timestamp without time zone (null: NO, default: CURRENT_TIMESTAMP)
+  - updatedAt: timestamp without time zone (null: NO, default: null)
+  - deletedAt: timestamp without time zone (null: YES, default: null)
+
+TABLE: CustomerContact
+  - id: text (null: NO, default: null)
+  - tenantId: text (null: NO, default: null)
+  - customerId: text (null: NO, default: null)
+  - firstName: text (null: NO, default: null)
+  - lastName: text (null: NO, default: null)
+  - email: text (null: YES, default: null)
+  - phone: text (null: YES, default: null)
+  - isPrimary: boolean (null: NO, default: false)
+  - createdAt: timestamp without time zone (null: NO, default: CURRENT_TIMESTAMP)
+  - updatedAt: timestamp without time zone (null: NO, default: null)
+  - deletedAt: timestamp without time zone (null: YES, default: null)
+
+TABLE: DeadLetterQueue
+  - id: text (null: NO, default: null)
+  - tenantId: text (null: NO, default: null)
+  - jobId: text (null: NO, default: null)
+  - jobType: text (null: NO, default: null)
+  - correlationId: text (null: YES, default: null)
+  - payload: jsonb (null: NO, default: null)
+  - lastError: text (null: YES, default: null)
+  - attemptCount: integer (null: NO, default: 0)
+  - createdAt: timestamp without time zone (null: NO, default: CURRENT_TIMESTAMP)
+  - updatedAt: timestamp without time zone (null: NO, default: null)
+  - status: text (null: NO, default: 'PENDING'::text)
+
+TABLE: Deal
+  - id: text (null: NO, default: null)
+  - tenantId: text (null: NO, default: null)
+  - title: text (null: NO, default: null)
+  - description: text (null: YES, default: null)
+  - source: text (null: YES, default: null)
+  - value: double precision (null: NO, default: 0)
+  - currency: text (null: NO, default: 'USD'::text)
+  - probability: integer (null: YES, default: null)
+  - expectedCloseDate: timestamp without time zone (null: YES, default: null)
+  - actualCloseDate: timestamp without time zone (null: YES, default: null)
+  - status: USER-DEFINED (null: NO, default: 'OPEN'::"DealStatus")
+  - lostReason: text (null: YES, default: null)
+  - lostCompetitor: text (null: YES, default: null)
+  - lostNotes: text (null: YES, default: null)
+  - lostAt: timestamp without time zone (null: YES, default: null)
+  - version: integer (null: NO, default: 1)
+  - pipelineId: text (null: NO, default: null)
+  - stageId: text (null: NO, default: null)
+  - customerId: text (null: YES, default: null)
+  - leadId: text (null: YES, default: null)
+  - assignedUserId: text (null: NO, default: null)
+  - createdById: text (null: NO, default: null)
+  - createdAt: timestamp without time zone (null: NO, default: CURRENT_TIMESTAMP)
+  - updatedAt: timestamp without time zone (null: NO, default: null)
+  - deletedAt: timestamp without time zone (null: YES, default: null)
+  - probabilityFactors: jsonb (null: YES, default: null)
+
+TABLE: DealSnapshot
+  - id: text (null: NO, default: null)
+  - tenantId: text (null: NO, default: null)
+  - dealId: text (null: NO, default: null)
+  - date: timestamp without time zone (null: NO, default: CURRENT_TIMESTAMP)
+  - value: numeric (null: NO, default: null)
+  - probability: integer (null: YES, default: null)
+  - stageId: text (null: NO, default: null)
+  - createdAt: timestamp without time zone (null: NO, default: CURRENT_TIMESTAMP)
+
+TABLE: DealStageHistory
+  - id: text (null: NO, default: null)
+  - tenantId: text (null: NO, default: null)
+  - dealId: text (null: NO, default: null)
+  - fromStageId: text (null: YES, default: null)
+  - toStageId: text (null: NO, default: null)
+  - changedById: text (null: NO, default: null)
+  - createdAt: timestamp without time zone (null: NO, default: CURRENT_TIMESTAMP)
+
+TABLE: DemoStorage
+  - id: text (null: NO, default: null)
+  - tenantId: text (null: NO, default: null)
+  - fileName: text (null: NO, default: null)
+  - mimeType: text (null: NO, default: null)
+  - base64Data: text (null: NO, default: null)
+  - createdAt: timestamp without time zone (null: NO, default: CURRENT_TIMESTAMP)
+
+TABLE: Department
+  - id: text (null: NO, default: null)
+  - tenantId: text (null: NO, default: null)
+  - name: text (null: NO, default: null)
+  - description: text (null: YES, default: null)
+  - createdAt: timestamp without time zone (null: NO, default: CURRENT_TIMESTAMP)
+  - updatedAt: timestamp without time zone (null: NO, default: null)
+
+TABLE: DeviceSession
+  - id: text (null: NO, default: null)
+  - userId: text (null: NO, default: null)
+  - tenantId: text (null: NO, default: null)
+  - deviceInfo: text (null: NO, default: null)
+  - ipAddress: text (null: NO, default: null)
+  - isActive: boolean (null: NO, default: true)
+  - lastActive: timestamp without time zone (null: NO, default: CURRENT_TIMESTAMP)
+  - createdAt: timestamp without time zone (null: NO, default: CURRENT_TIMESTAMP)
+  - updatedAt: timestamp without time zone (null: NO, default: null)
+
+TABLE: DiscountRule
+  - id: text (null: NO, default: null)
+  - tenantId: text (null: NO, default: null)
+  - name: text (null: NO, default: null)
+  - description: text (null: YES, default: null)
+  - priceBookId: text (null: YES, default: null)
+  - maxDiscount: double precision (null: NO, default: null)
+  - minMargin: double precision (null: YES, default: null)
+  - approvalThreshold: double precision (null: NO, default: null)
+  - isActive: boolean (null: NO, default: true)
+  - effectiveFrom: timestamp without time zone (null: YES, default: null)
+  - effectiveTo: timestamp without time zone (null: YES, default: null)
+  - priority: integer (null: NO, default: 0)
+  - createdAt: timestamp without time zone (null: NO, default: CURRENT_TIMESTAMP)
+  - updatedAt: timestamp without time zone (null: NO, default: null)
+
+TABLE: Document
+  - id: text (null: NO, default: null)
+  - tenantId: text (null: NO, default: null)
+  - fileName: text (null: NO, default: null)
+  - mimeType: text (null: NO, default: null)
+  - sizeBytes: integer (null: NO, default: null)
+  - storageKey: text (null: NO, default: null)
+  - uploadedById: text (null: NO, default: null)
+  - customerId: text (null: YES, default: null)
+  - taskId: text (null: YES, default: null)
+  - createdAt: timestamp without time zone (null: NO, default: CURRENT_TIMESTAMP)
+  - updatedAt: timestamp without time zone (null: NO, default: null)
+
+TABLE: DocumentEmbedding
+  - id: text (null: NO, default: null)
+  - tenantId: text (null: NO, default: null)
+  - documentId: text (null: NO, default: null)
+  - accessLevel: text (null: NO, default: null)
+  - departmentId: text (null: YES, default: null)
+  - createdById: text (null: NO, default: null)
+  - chunkText: text (null: NO, default: null)
+  - metadata: jsonb (null: YES, default: null)
+  - embedding: USER-DEFINED (null: YES, default: null)
+  - createdAt: timestamp without time zone (null: NO, default: CURRENT_TIMESTAMP)
+
+TABLE: DocumentPermission
+  - id: text (null: NO, default: null)
+  - documentId: text (null: NO, default: null)
+  - userId: text (null: YES, default: null)
+  - roleId: text (null: YES, default: null)
+  - permission: text (null: NO, default: null)
+  - createdAt: timestamp without time zone (null: NO, default: CURRENT_TIMESTAMP)
+  - tenantId: text (null: NO, default: null)
+
+TABLE: EventOutbox
+  - id: text (null: NO, default: null)
+  - eventId: text (null: NO, default: null)
+  - tenantId: text (null: NO, default: null)
+  - eventType: text (null: NO, default: null)
+  - payload: jsonb (null: NO, default: null)
+  - status: USER-DEFINED (null: NO, default: 'PENDING'::"OutboxStatus")
+  - retryCount: integer (null: NO, default: 0)
+  - lastError: text (null: YES, default: null)
+  - nextRetryAt: timestamp without time zone (null: NO, default: CURRENT_TIMESTAMP)
+  - createdAt: timestamp without time zone (null: NO, default: CURRENT_TIMESTAMP)
+  - processedAt: timestamp without time zone (null: YES, default: null)
+
+TABLE: FieldSecurityPolicy
+  - id: text (null: NO, default: null)
+  - tenantId: text (null: NO, default: null)
+  - modelName: text (null: NO, default: null)
+  - fieldName: text (null: NO, default: null)
+  - securityLevel: text (null: NO, default: null)
+  - createdAt: timestamp without time zone (null: NO, default: CURRENT_TIMESTAMP)
+  - updatedAt: timestamp without time zone (null: NO, default: null)
+
+TABLE: IdempotencyKey
+  - id: text (null: NO, default: null)
+  - tenantId: text (null: NO, default: null)
+  - key: text (null: NO, default: null)
+  - expiresAt: timestamp without time zone (null: NO, default: null)
+  - createdAt: timestamp without time zone (null: NO, default: CURRENT_TIMESTAMP)
+  - operation: text (null: NO, default: 'UNKNOWN'::text)
+  - requestHash: text (null: NO, default: ''::text)
+  - resourceId: text (null: YES, default: null)
+
+TABLE: Incident
+  - id: text (null: NO, default: null)
+  - tenantId: text (null: NO, default: null)
+  - locationId: text (null: NO, default: null)
+  - cameraId: text (null: NO, default: null)
+  - aiEventId: text (null: NO, default: null)
+  - title: text (null: NO, default: null)
+  - description: text (null: YES, default: null)
+  - severity: USER-DEFINED (null: NO, default: null)
+  - status: USER-DEFINED (null: NO, default: 'OPEN'::"IncidentStatus")
+  - assignedUserId: text (null: YES, default: null)
+  - createdAt: timestamp without time zone (null: NO, default: CURRENT_TIMESTAMP)
+  - resolvedAt: timestamp without time zone (null: YES, default: null)
+  - deletedAt: timestamp without time zone (null: YES, default: null)
+
+TABLE: Lead
+  - id: text (null: NO, default: null)
+  - tenantId: text (null: NO, default: null)
+  - name: text (null: NO, default: null)
+  - company: text (null: NO, default: null)
+  - email: text (null: YES, default: null)
+  - phone: text (null: YES, default: null)
+  - status: USER-DEFINED (null: NO, default: 'NEW'::"LeadStatus")
+  - assignedUserId: text (null: YES, default: null)
+  - createdAt: timestamp without time zone (null: NO, default: CURRENT_TIMESTAMP)
+  - updatedAt: timestamp without time zone (null: NO, default: null)
+  - deletedAt: timestamp without time zone (null: YES, default: null)
+  - score: double precision (null: YES, default: 0)
+  - scoreFactors: jsonb (null: YES, default: null)
+
+TABLE: Location
+  - id: text (null: NO, default: null)
+  - tenantId: text (null: NO, default: null)
+  - customerId: text (null: NO, default: null)
+  - name: text (null: NO, default: null)
+  - address: text (null: YES, default: null)
+  - city: text (null: YES, default: null)
+  - state: text (null: YES, default: null)
+  - zip: text (null: YES, default: null)
+  - coordinates: text (null: YES, default: null)
+  - createdAt: timestamp without time zone (null: NO, default: CURRENT_TIMESTAMP)
+  - updatedAt: timestamp without time zone (null: NO, default: null)
+  - deletedAt: timestamp without time zone (null: YES, default: null)
+
+TABLE: MailDraft
+  - id: text (null: NO, default: null)
+  - tenantId: text (null: NO, default: null)
+  - threadId: text (null: YES, default: null)
+  - senderId: text (null: NO, default: null)
+  - subject: text (null: YES, default: null)
+  - bodyHtml: text (null: YES, default: null)
+  - bodyText: text (null: YES, default: null)
+  - toIds: jsonb (null: YES, default: null)
+  - ccIds: jsonb (null: YES, default: null)
+  - bccIds: jsonb (null: YES, default: null)
+  - createdAt: timestamp without time zone (null: NO, default: CURRENT_TIMESTAMP)
+  - updatedAt: timestamp without time zone (null: NO, default: null)
+
+TABLE: MailMessage
+  - id: text (null: NO, default: null)
+  - tenantId: text (null: NO, default: null)
+  - threadId: text (null: NO, default: null)
+  - senderId: text (null: NO, default: null)
+  - bodyHtml: text (null: YES, default: null)
+  - bodyText: text (null: YES, default: null)
+  - metadata: jsonb (null: YES, default: null)
+  - createdAt: timestamp without time zone (null: NO, default: CURRENT_TIMESTAMP)
+  - updatedAt: timestamp without time zone (null: NO, default: null)
+
+TABLE: MailRecipient
+  - id: text (null: NO, default: null)
+  - tenantId: text (null: NO, default: null)
+  - messageId: text (null: NO, default: null)
+  - userId: text (null: NO, default: null)
+  - type: text (null: NO, default: 'TO'::text)
+  - isRead: boolean (null: NO, default: false)
+  - archivedAt: timestamp without time zone (null: YES, default: null)
+  - createdAt: timestamp without time zone (null: NO, default: CURRENT_TIMESTAMP)
+
+TABLE: MailThread
+  - id: text (null: NO, default: null)
+  - tenantId: text (null: NO, default: null)
+  - subject: text (null: NO, default: null)
+  - createdAt: timestamp without time zone (null: NO, default: CURRENT_TIMESTAMP)
+  - updatedAt: timestamp without time zone (null: NO, default: null)
+  - customerId: text (null: YES, default: null)
+
+TABLE: Meeting
+  - id: text (null: NO, default: null)
+  - tenantId: text (null: NO, default: null)
+  - providerId: text (null: YES, default: null)
+  - status: text (null: NO, default: 'SCHEDULED'::text)
+  - startedAt: timestamp without time zone (null: YES, default: null)
+  - endedAt: timestamp without time zone (null: YES, default: null)
+  - recordingUrl: text (null: YES, default: null)
+  - createdAt: timestamp without time zone (null: NO, default: CURRENT_TIMESTAMP)
+  - updatedAt: timestamp without time zone (null: NO, default: null)
+  - deletedAt: timestamp without time zone (null: YES, default: null)
+
+TABLE: MeetingParticipant
+  - id: text (null: NO, default: null)
+  - tenantId: text (null: NO, default: null)
+  - meetingId: text (null: NO, default: null)
+  - userId: text (null: YES, default: null)
+  - contactId: text (null: YES, default: null)
+  - role: text (null: NO, default: 'ATTENDEE'::text)
+  - joinedAt: timestamp without time zone (null: YES, default: null)
+  - leftAt: timestamp without time zone (null: YES, default: null)
+  - createdAt: timestamp without time zone (null: NO, default: CURRENT_TIMESTAMP)
+
+TABLE: Notification
+  - id: text (null: NO, default: null)
+  - tenantId: text (null: NO, default: null)
+  - userId: text (null: NO, default: null)
+  - type: USER-DEFINED (null: NO, default: null)
+  - title: text (null: NO, default: null)
+  - body: text (null: NO, default: null)
+  - actionUrl: text (null: YES, default: null)
+  - isRead: boolean (null: NO, default: false)
+  - createdAt: timestamp without time zone (null: NO, default: CURRENT_TIMESTAMP)
+
+TABLE: NotificationPreference
+  - id: text (null: NO, default: null)
+  - tenantId: text (null: NO, default: null)
+  - userId: text (null: NO, default: null)
+  - emailEnabled: boolean (null: NO, default: true)
+  - pushEnabled: boolean (null: NO, default: true)
+  - inAppEnabled: boolean (null: NO, default: true)
+  - createdAt: timestamp without time zone (null: NO, default: CURRENT_TIMESTAMP)
+  - updatedAt: timestamp without time zone (null: NO, default: null)
+
+TABLE: Permission
+  - id: text (null: NO, default: null)
+  - resource: USER-DEFINED (null: NO, default: null)
+  - action: USER-DEFINED (null: NO, default: null)
+  - createdAt: timestamp without time zone (null: NO, default: CURRENT_TIMESTAMP)
+
+TABLE: Pipeline
+  - id: text (null: NO, default: null)
+  - tenantId: text (null: NO, default: null)
+  - name: text (null: NO, default: null)
+  - description: text (null: YES, default: null)
+  - isDefault: boolean (null: NO, default: false)
+  - createdAt: timestamp without time zone (null: NO, default: CURRENT_TIMESTAMP)
+  - updatedAt: timestamp without time zone (null: NO, default: null)
+
+TABLE: PipelineStage
+  - id: text (null: NO, default: null)
+  - tenantId: text (null: NO, default: null)
+  - pipelineId: text (null: NO, default: null)
+  - name: text (null: NO, default: null)
+  - order: integer (null: NO, default: null)
+  - probability: integer (null: NO, default: 0)
+  - color: text (null: YES, default: null)
+  - isClosedWon: boolean (null: NO, default: false)
+  - isClosedLost: boolean (null: NO, default: false)
+  - createdAt: timestamp without time zone (null: NO, default: CURRENT_TIMESTAMP)
+  - updatedAt: timestamp without time zone (null: NO, default: null)
+
+TABLE: PriceBook
+  - id: text (null: NO, default: null)
+  - tenantId: text (null: NO, default: null)
+  - name: text (null: NO, default: null)
+  - description: text (null: YES, default: null)
+  - currencyCode: text (null: NO, default: 'USD'::text)
+  - isActive: boolean (null: NO, default: true)
+  - effectiveFrom: timestamp without time zone (null: YES, default: null)
+  - effectiveTo: timestamp without time zone (null: YES, default: null)
+  - createdAt: timestamp without time zone (null: NO, default: CURRENT_TIMESTAMP)
+  - updatedAt: timestamp without time zone (null: NO, default: null)
+
+TABLE: PriceBookEntry
+  - id: text (null: NO, default: null)
+  - tenantId: text (null: NO, default: null)
+  - productId: text (null: NO, default: null)
+  - priceBookId: text (null: NO, default: null)
+  - unitPrice: numeric (null: NO, default: null)
+  - currencyCode: text (null: NO, default: 'USD'::text)
+  - isActive: boolean (null: NO, default: true)
+  - effectiveFrom: timestamp without time zone (null: YES, default: null)
+  - effectiveTo: timestamp without time zone (null: YES, default: null)
+  - createdAt: timestamp without time zone (null: NO, default: CURRENT_TIMESTAMP)
+  - updatedAt: timestamp without time zone (null: NO, default: null)
+
+TABLE: Product
+  - id: text (null: NO, default: null)
+  - tenantId: text (null: NO, default: null)
+  - categoryId: text (null: YES, default: null)
+  - familyId: text (null: YES, default: null)
+  - name: text (null: NO, default: null)
+  - sku: text (null: NO, default: null)
+  - description: text (null: YES, default: null)
+  - metadata: jsonb (null: YES, default: null)
+  - isActive: boolean (null: NO, default: true)
+  - createdAt: timestamp without time zone (null: NO, default: CURRENT_TIMESTAMP)
+  - updatedAt: timestamp without time zone (null: NO, default: null)
+
+TABLE: ProductCategory
+  - id: text (null: NO, default: null)
+  - tenantId: text (null: NO, default: null)
+  - name: text (null: NO, default: null)
+  - description: text (null: YES, default: null)
+  - isActive: boolean (null: NO, default: true)
+  - parentId: text (null: YES, default: null)
+  - createdAt: timestamp without time zone (null: NO, default: CURRENT_TIMESTAMP)
+  - updatedAt: timestamp without time zone (null: NO, default: null)
+
+TABLE: ProductFamily
+  - id: text (null: NO, default: null)
+  - tenantId: text (null: NO, default: null)
+  - name: text (null: NO, default: null)
+  - description: text (null: YES, default: null)
+  - isActive: boolean (null: NO, default: true)
+  - createdAt: timestamp without time zone (null: NO, default: CURRENT_TIMESTAMP)
+  - updatedAt: timestamp without time zone (null: NO, default: null)
+
+TABLE: Quote
+  - id: text (null: NO, default: null)
+  - tenantId: text (null: NO, default: null)
+  - customerId: text (null: NO, default: null)
+  - dealId: text (null: NO, default: null)
+  - ownerId: text (null: NO, default: null)
+  - priceBookId: text (null: NO, default: null)
+  - status: USER-DEFINED (null: NO, default: 'DRAFT'::"QuoteStatus")
+  - expirationDate: timestamp without time zone (null: YES, default: null)
+  - subtotal: numeric (null: NO, default: 0)
+  - discountTotal: numeric (null: NO, default: 0)
+  - taxTotal: numeric (null: NO, default: 0)
+  - grandTotal: numeric (null: NO, default: 0)
+  - previousVersionId: text (null: YES, default: null)
+  - createdAt: timestamp without time zone (null: NO, default: CURRENT_TIMESTAMP)
+  - updatedAt: timestamp without time zone (null: NO, default: null)
+
+TABLE: QuoteLineItem
+  - id: text (null: NO, default: null)
+  - tenantId: text (null: NO, default: null)
+  - quoteId: text (null: NO, default: null)
+  - priceBookEntryId: text (null: NO, default: null)
+  - productId: text (null: NO, default: null)
+  - quantity: integer (null: NO, default: 1)
+  - unitPrice: numeric (null: NO, default: null)
+  - discount: double precision (null: NO, default: 0)
+  - subtotal: numeric (null: NO, default: null)
+  - metadata: jsonb (null: YES, default: null)
+  - createdAt: timestamp without time zone (null: NO, default: CURRENT_TIMESTAMP)
+  - updatedAt: timestamp without time zone (null: NO, default: null)
+
+TABLE: Recording
+  - id: text (null: NO, default: null)
+  - tenantId: text (null: NO, default: null)
+  - cameraId: text (null: NO, default: null)
+  - storageKey: text (null: NO, default: null)
+  - status: USER-DEFINED (null: NO, default: 'PROCESSING'::"RecordingStatus")
+  - startTime: timestamp without time zone (null: NO, default: null)
+  - endTime: timestamp without time zone (null: YES, default: null)
+  - sizeBytes: integer (null: YES, default: null)
+  - createdAt: timestamp without time zone (null: NO, default: CURRENT_TIMESTAMP)
+  - segmentId: text (null: YES, default: null)
+  - streamVersion: integer (null: NO, default: 0)
+  - sourceNodeId: text (null: YES, default: null)
+
+TABLE: RecordingIngestionJob
+  - id: text (null: NO, default: null)
+  - localFilePath: text (null: NO, default: null)
+  - segmentId: text (null: NO, default: null)
+  - status: USER-DEFINED (null: NO, default: 'PENDING'::"JobStatus")
+  - terminalReason: text (null: YES, default: null)
+  - workerId: text (null: YES, default: null)
+  - leaseExpiresAt: timestamp without time zone (null: YES, default: null)
+  - attempts: integer (null: NO, default: 0)
+  - nextAttemptAt: timestamp without time zone (null: NO, default: CURRENT_TIMESTAMP)
+  - createdAt: timestamp without time zone (null: NO, default: CURRENT_TIMESTAMP)
+  - updatedAt: timestamp without time zone (null: NO, default: null)
+  - recordingNodeId: text (null: NO, default: null)
+
+TABLE: RecoveryAuditLog
+  - id: text (null: NO, default: null)
+  - tenantId: text (null: NO, default: null)
+  - jobId: text (null: NO, default: null)
+  - action: text (null: NO, default: null)
+  - actorId: text (null: NO, default: null)
+  - metadata: jsonb (null: YES, default: null)
+  - timestamp: timestamp without time zone (null: NO, default: CURRENT_TIMESTAMP)
+
+TABLE: RecoveryJob
+  - id: text (null: NO, default: null)
+  - tenantId: text (null: NO, default: null)
+  - requestedBy: text (null: NO, default: null)
+  - status: USER-DEFINED (null: NO, default: 'REQUESTED'::"RecoveryStatus")
+  - mode: USER-DEFINED (null: NO, default: 'RECOVERY'::"RecoveryMode")
+  - startedAt: timestamp without time zone (null: YES, default: null)
+  - completedAt: timestamp without time zone (null: YES, default: null)
+  - checksum: text (null: YES, default: null)
+  - archiveLocation: text (null: YES, default: null)
+  - snapshotId: text (null: YES, default: null)
+  - approvedBy: text (null: YES, default: null)
+  - errorMessage: text (null: YES, default: null)
+  - createdAt: timestamp without time zone (null: NO, default: CURRENT_TIMESTAMP)
+  - updatedAt: timestamp without time zone (null: NO, default: null)
+
+TABLE: RecoverySnapshot
+  - id: text (null: NO, default: null)
+  - tenantId: text (null: NO, default: null)
+  - version: integer (null: NO, default: 1)
+  - schemaVersion: text (null: NO, default: null)
+  - applicationVersion: text (null: YES, default: null)
+  - prismaVersion: text (null: YES, default: null)
+  - backupFormatVersion: text (null: YES, default: null)
+  - encryptionAlgorithm: text (null: YES, default: null)
+  - encryptionKeyVersion: text (null: YES, default: null)
+  - kmsKeyId: text (null: YES, default: null)
+  - kmsKeyVersion: text (null: YES, default: null)
+  - encryptedDEK: text (null: YES, default: null)
+  - status: USER-DEFINED (null: NO, default: 'ACTIVE'::"RecoverySnapshotStatus")
+  - checksum: text (null: NO, default: null)
+  - sizeBytes: integer (null: YES, default: null)
+  - createdAt: timestamp without time zone (null: NO, default: CURRENT_TIMESTAMP)
+
+TABLE: RestoreCheckpoint
+  - id: text (null: NO, default: null)
+  - tenantId: text (null: NO, default: null)
+  - recoveryJobId: text (null: NO, default: null)
+  - phase: text (null: NO, default: null)
+  - model: text (null: NO, default: null)
+  - chunkIndex: integer (null: NO, default: null)
+  - chunkId: text (null: NO, default: null)
+  - status: text (null: NO, default: null)
+  - attempt: integer (null: NO, default: 0)
+  - startedAt: timestamp without time zone (null: NO, default: CURRENT_TIMESTAMP)
+  - completedAt: timestamp without time zone (null: YES, default: null)
+  - errorMessage: text (null: YES, default: null)
+  - checksum: text (null: YES, default: null)
+
+TABLE: RetentionDeletionJob
+  - id: text (null: NO, default: null)
+  - recordingId: text (null: NO, default: null)
+  - storageKey: text (null: NO, default: null)
+  - status: USER-DEFINED (null: NO, default: 'PENDING'::"JobStatus")
+  - terminalReason: text (null: YES, default: null)
+  - workerId: text (null: YES, default: null)
+  - leaseExpiresAt: timestamp without time zone (null: YES, default: null)
+  - attempts: integer (null: NO, default: 0)
+  - nextAttemptAt: timestamp without time zone (null: NO, default: CURRENT_TIMESTAMP)
+  - createdAt: timestamp without time zone (null: NO, default: CURRENT_TIMESTAMP)
+  - updatedAt: timestamp without time zone (null: NO, default: null)
+
+TABLE: Role
+  - id: text (null: NO, default: null)
+  - tenantId: text (null: NO, default: null)
+  - name: text (null: NO, default: null)
+  - createdAt: timestamp without time zone (null: NO, default: CURRENT_TIMESTAMP)
+  - updatedAt: timestamp without time zone (null: NO, default: null)
+  - deletedAt: timestamp without time zone (null: YES, default: null)
+
+TABLE: RolePermission
+  - id: text (null: NO, default: null)
+  - roleId: text (null: NO, default: null)
+  - permissionId: text (null: NO, default: null)
+  - createdAt: timestamp without time zone (null: NO, default: CURRENT_TIMESTAMP)
+  - tenantId: text (null: NO, default: null)
+
+TABLE: SLAConfiguration
+  - id: text (null: NO, default: null)
+  - tenantId: text (null: NO, default: null)
+  - priority: USER-DEFINED (null: NO, default: null)
+  - responseMinutes: integer (null: NO, default: 60)
+  - resolutionTimeMinutes: integer (null: NO, default: 1440)
+  - createdAt: timestamp without time zone (null: NO, default: CURRENT_TIMESTAMP)
+  - updatedAt: timestamp without time zone (null: NO, default: null)
+
+TABLE: SLAEvent
+  - id: text (null: NO, default: null)
+  - tenantId: text (null: NO, default: null)
+  - ticketId: text (null: NO, default: null)
+  - type: text (null: NO, default: null)
+  - recordedAt: timestamp without time zone (null: NO, default: CURRENT_TIMESTAMP)
+
+TABLE: SalesQuota
+  - id: text (null: NO, default: null)
+  - tenantId: text (null: NO, default: null)
+  - userId: text (null: NO, default: null)
+  - period: text (null: NO, default: null)
+  - targetAmount: numeric (null: NO, default: null)
+  - createdAt: timestamp without time zone (null: NO, default: CURRENT_TIMESTAMP)
+  - updatedAt: timestamp without time zone (null: NO, default: null)
+
+TABLE: SecurityEvent
+  - id: text (null: NO, default: null)
+  - tenantId: text (null: NO, default: null)
+  - userId: text (null: YES, default: null)
+  - eventType: USER-DEFINED (null: NO, default: null)
+  - severity: USER-DEFINED (null: NO, default: null)
+  - source: text (null: NO, default: null)
+  - ipAddress: text (null: YES, default: null)
+  - userAgent: text (null: YES, default: null)
+  - metadata: jsonb (null: YES, default: null)
+  - createdAt: timestamp without time zone (null: NO, default: CURRENT_TIMESTAMP)
+
+TABLE: Task
+  - id: text (null: NO, default: null)
+  - tenantId: text (null: NO, default: null)
+  - title: text (null: NO, default: null)
+  - description: text (null: YES, default: null)
+  - dueDate: timestamp without time zone (null: YES, default: null)
+  - status: USER-DEFINED (null: NO, default: 'PENDING'::"TaskStatus")
+  - priority: USER-DEFINED (null: NO, default: 'MEDIUM'::"TaskPriority")
+  - assignedUserId: text (null: YES, default: null)
+  - leadId: text (null: YES, default: null)
+  - customerId: text (null: YES, default: null)
+  - dealId: text (null: YES, default: null)
+  - createdAt: timestamp without time zone (null: NO, default: CURRENT_TIMESTAMP)
+  - updatedAt: timestamp without time zone (null: NO, default: null)
+  - deletedAt: timestamp without time zone (null: YES, default: null)
+
+TABLE: Tenant
+  - id: text (null: NO, default: null)
+  - name: text (null: NO, default: null)
+  - ownerId: text (null: YES, default: null)
+  - status: USER-DEFINED (null: NO, default: 'PENDING'::"TenantStatus")
+  - createdAt: timestamp without time zone (null: NO, default: CURRENT_TIMESTAMP)
+  - updatedAt: timestamp without time zone (null: NO, default: null)
+  - deletedAt: timestamp without time zone (null: YES, default: null)
+  - deletedById: text (null: YES, default: null)
+  - deletionReason: text (null: YES, default: null)
+  - rpoPolicy: USER-DEFINED (null: NO, default: 'BASIC'::"RpoPolicy")
+  - isRestoreLocked: boolean (null: NO, default: false)
+  - cctvRetentionDays: integer (null: NO, default: 30)
+
+TABLE: TenantBootstrap
+  - tenantId: text (null: NO, default: null)
+  - bootstrappedAt: timestamp without time zone (null: NO, default: CURRENT_TIMESTAMP)
+
+TABLE: TenantIntegration
+  - id: text (null: NO, default: null)
+  - tenantId: text (null: NO, default: null)
+  - provider: USER-DEFINED (null: NO, default: null)
+  - encryptedToken: text (null: NO, default: null)
+  - capabilities: jsonb (null: YES, default: null)
+  - status: text (null: NO, default: 'ACTIVE'::text)
+  - lastCheckedAt: timestamp without time zone (null: YES, default: null)
+  - lastError: text (null: YES, default: null)
+  - expiresAt: timestamp without time zone (null: YES, default: null)
+  - createdAt: timestamp without time zone (null: NO, default: CURRENT_TIMESTAMP)
+  - updatedAt: timestamp without time zone (null: NO, default: null)
+
+TABLE: TenantPhoneNumber
+  - id: text (null: NO, default: null)
+  - tenantId: text (null: NO, default: null)
+  - phoneNumber: text (null: NO, default: null)
+  - provider: USER-DEFINED (null: NO, default: 'TELEPHONY'::"IntegrationProvider")
+  - status: text (null: NO, default: 'ACTIVE'::text)
+  - capabilities: jsonb (null: YES, default: null)
+  - createdAt: timestamp without time zone (null: NO, default: CURRENT_TIMESTAMP)
+  - updatedAt: timestamp without time zone (null: NO, default: null)
+
+TABLE: Territory
+  - id: text (null: NO, default: null)
+  - tenantId: text (null: NO, default: null)
+  - name: text (null: NO, default: null)
+  - description: text (null: YES, default: null)
+  - parentId: text (null: YES, default: null)
+  - createdAt: timestamp without time zone (null: NO, default: CURRENT_TIMESTAMP)
+  - updatedAt: timestamp without time zone (null: NO, default: null)
+
+TABLE: Ticket
+  - id: text (null: NO, default: null)
+  - tenantId: text (null: NO, default: null)
+  - customerId: text (null: NO, default: null)
+  - assignedUserId: text (null: YES, default: null)
+  - status: USER-DEFINED (null: NO, default: 'OPEN'::"TicketStatus")
+  - priority: USER-DEFINED (null: NO, default: 'MEDIUM'::"TaskPriority")
+  - subject: text (null: NO, default: null)
+  - description: text (null: NO, default: null)
+  - createdAt: timestamp without time zone (null: NO, default: CURRENT_TIMESTAMP)
+  - updatedAt: timestamp without time zone (null: NO, default: null)
+  - deletedAt: timestamp without time zone (null: YES, default: null)
+  - resolvedAt: timestamp without time zone (null: YES, default: null)
+  - closedAt: timestamp without time zone (null: YES, default: null)
+  - slaDeadline: timestamp without time zone (null: YES, default: null)
+
+TABLE: TicketMessage
+  - id: text (null: NO, default: null)
+  - tenantId: text (null: NO, default: null)
+  - ticketId: text (null: NO, default: null)
+  - senderId: text (null: YES, default: null)
+  - senderType: USER-DEFINED (null: NO, default: null)
+  - content: text (null: NO, default: null)
+  - isInternal: boolean (null: NO, default: false)
+  - createdAt: timestamp without time zone (null: NO, default: CURRENT_TIMESTAMP)
+  - updatedAt: timestamp without time zone (null: NO, default: null)
+
+TABLE: User
+  - id: text (null: NO, default: null)
+  - clerkId: text (null: YES, default: null)
+  - email: text (null: NO, default: null)
+  - tenantId: text (null: NO, default: null)
+  - status: USER-DEFINED (null: NO, default: 'INVITED'::"UserStatus")
+  - createdAt: timestamp without time zone (null: NO, default: CURRENT_TIMESTAMP)
+  - updatedAt: timestamp without time zone (null: NO, default: null)
+  - deletedAt: timestamp without time zone (null: YES, default: null)
+  - departmentId: text (null: YES, default: null)
+  - designation: text (null: YES, default: null)
+  - employeeId: text (null: YES, default: null)
+  - firstName: text (null: YES, default: null)
+  - lastName: text (null: YES, default: null)
+  - onboardingStatus: USER-DEFINED (null: NO, default: 'PENDING'::"OnboardingStatus")
+  - phone: text (null: YES, default: null)
+  - profilePhotoUrl: text (null: YES, default: null)
+
+TABLE: UserInvitation
+  - id: text (null: NO, default: null)
+  - tenantId: text (null: NO, default: null)
+  - email: text (null: NO, default: null)
+  - roleId: text (null: NO, default: null)
+  - departmentId: text (null: YES, default: null)
+  - tokenHash: text (null: NO, default: null)
+  - expiresAt: timestamp without time zone (null: NO, default: null)
+  - status: text (null: NO, default: 'PENDING'::text)
+  - invitedById: text (null: YES, default: null)
+  - acceptedAt: timestamp without time zone (null: YES, default: null)
+  - revokedAt: timestamp without time zone (null: YES, default: null)
+  - createdAt: timestamp without time zone (null: NO, default: CURRENT_TIMESTAMP)
+  - updatedAt: timestamp without time zone (null: NO, default: null)
+
+TABLE: UserPresence
+  - id: text (null: NO, default: null)
+  - tenantId: text (null: NO, default: null)
+  - userId: text (null: NO, default: null)
+  - status: USER-DEFINED (null: NO, default: 'OFFLINE'::"UserPresenceStatus")
+  - lastSeenAt: timestamp without time zone (null: NO, default: CURRENT_TIMESTAMP)
+  - createdAt: timestamp without time zone (null: NO, default: CURRENT_TIMESTAMP)
+  - updatedAt: timestamp without time zone (null: NO, default: null)
+
+TABLE: UserRole
+  - id: text (null: NO, default: null)
+  - userId: text (null: NO, default: null)
+  - roleId: text (null: NO, default: null)
+  - createdAt: timestamp without time zone (null: NO, default: CURRENT_TIMESTAMP)
+  - tenantId: text (null: NO, default: null)
+
+TABLE: UserTerritory
+  - id: text (null: NO, default: null)
+  - tenantId: text (null: NO, default: null)
+  - userId: text (null: NO, default: null)
+  - territoryId: text (null: NO, default: null)
+  - role: text (null: NO, default: 'REP'::text)
+  - createdAt: timestamp without time zone (null: NO, default: CURRENT_TIMESTAMP)
+
+TABLE: WebhookEvent
+  - id: text (null: NO, default: null)
+  - tenantId: text (null: YES, default: null)
+  - provider: text (null: NO, default: null)
+  - eventId: text (null: NO, default: null)
+  - eventType: text (null: NO, default: null)
+  - payloadHash: text (null: NO, default: null)
+  - signatureVerified: boolean (null: NO, default: false)
+  - status: USER-DEFINED (null: NO, default: 'PENDING'::"WebhookStatus")
+  - processedAt: timestamp without time zone (null: YES, default: null)
+  - createdAt: timestamp without time zone (null: NO, default: CURRENT_TIMESTAMP)
+
+TABLE: Workflow
+  - id: text (null: NO, default: null)
+  - tenantId: text (null: NO, default: null)
+  - name: text (null: NO, default: null)
+  - description: text (null: YES, default: null)
+  - status: USER-DEFINED (null: NO, default: 'DRAFT'::"WorkflowStatus")
+  - createdAt: timestamp without time zone (null: NO, default: CURRENT_TIMESTAMP)
+  - updatedAt: timestamp without time zone (null: NO, default: null)
+  - createdById: text (null: NO, default: null)
+
+TABLE: WorkflowAction
+  - id: text (null: NO, default: null)
+  - workflowId: text (null: NO, default: null)
+  - actionType: text (null: NO, default: null)
+  - orderIndex: integer (null: NO, default: 0)
+  - config: jsonb (null: NO, default: null)
+  - createdAt: timestamp without time zone (null: NO, default: CURRENT_TIMESTAMP)
+  - tenantId: text (null: NO, default: null)
+
+TABLE: WorkflowExecution
+  - id: text (null: NO, default: null)
+  - workflowId: text (null: NO, default: null)
+  - status: USER-DEFINED (null: NO, default: 'PENDING'::"WorkflowExecutionStatus")
+  - context: jsonb (null: YES, default: null)
+  - createdAt: timestamp without time zone (null: NO, default: CURRENT_TIMESTAMP)
+  - updatedAt: timestamp without time zone (null: NO, default: null)
+  - tenantId: text (null: NO, default: null)
+  - initiatedById: text (null: YES, default: null)
+
+TABLE: WorkflowExecutionStep
+  - id: text (null: NO, default: null)
+  - executionId: text (null: NO, default: null)
+  - actionId: text (null: NO, default: null)
+  - status: USER-DEFINED (null: NO, default: 'PENDING'::"WorkflowExecutionStepStatus")
+  - result: jsonb (null: YES, default: null)
+  - error: text (null: YES, default: null)
+  - timestamp: timestamp without time zone (null: NO, default: CURRENT_TIMESTAMP)
+  - tenantId: text (null: NO, default: null)
+
+TABLE: WorkflowTrigger
+  - id: text (null: NO, default: null)
+  - workflowId: text (null: NO, default: null)
+  - eventType: text (null: NO, default: null)
+  - conditions: jsonb (null: YES, default: null)
+  - createdAt: timestamp without time zone (null: NO, default: CURRENT_TIMESTAMP)
+  - tenantId: text (null: NO, default: null)
+
+TABLE: _prisma_migrations
+  - id: character varying (null: NO, default: null)
+  - checksum: character varying (null: NO, default: null)
+  - finished_at: timestamp with time zone (null: YES, default: null)
+  - migration_name: character varying (null: NO, default: null)
+  - logs: text (null: YES, default: null)
+  - rolled_back_at: timestamp with time zone (null: YES, default: null)
+  - started_at: timestamp with time zone (null: NO, default: now())
+  - applied_steps_count: integer (null: NO, default: 0)
+
+=== RLS POLICIES ===
+POLICY: ABACPolicy.tenant_isolation_ABACPolicy (ALL)
+POLICY: AIAgentExecution.tenant_isolation_AIAgentExecution (ALL)
+POLICY: AIConversation.tenant_isolation_ai_conversation (ALL)
+POLICY: AIConversationMessage.tenant_isolation_ai_conversation_msg (ALL)
+POLICY: AIEvent.tenant_isolation_ai_event (ALL)
+POLICY: AIExecution.tenant_isolation_ai_execution (ALL)
+POLICY: AIMemory.tenant_isolation_AIMemory (ALL)
+POLICY: AIProviderConfig.tenant_isolation_AIProviderConfig (ALL)
+POLICY: AIReference.tenant_isolation_AIReference (ALL)
+POLICY: AITokenUsage.tenant_isolation_AITokenUsage (ALL)
+POLICY: ActivityTimeline.tenant_isolation_activity_timeline (ALL)
+POLICY: ApprovalRequest.tenant_isolation_ApprovalRequest (ALL)
+POLICY: ApprovalStep.tenant_isolation_ApprovalStep (ALL)
+POLICY: AuditLog.tenant_isolation_policy_auditlog (ALL)
+POLICY: CRMComment.tenant_isolation_crm_comment (ALL)
+POLICY: CallLog.tenant_isolation_call_log (ALL)
+POLICY: Camera.tenant_isolation_camera (ALL)
+POLICY: CameraCredential.tenant_isolation_camera_credential (ALL)
+POLICY: CameraEvent.tenant_isolation_camera_event (ALL)
+POLICY: CameraStream.tenant_isolation_camera_stream (ALL)
+POLICY: ChatConversation.tenant_isolation_chat_conversation (ALL)
+POLICY: ChatMessage.tenant_isolation_chat_message (ALL)
+POLICY: ChatParticipant.tenant_isolation_chat_participant (ALL)
+POLICY: ChatReadReceipt.tenant_isolation_chat_read_receipt (ALL)
+POLICY: CommunicationAttachment.tenant_isolation_comm_attachment (ALL)
+POLICY: Customer.tenant_isolation_policy_customer (ALL)
+POLICY: CustomerContact.tenant_isolation_policy_customercontact (ALL)
+POLICY: DeadLetterQueue.tenant_isolation_dlq (ALL)
+POLICY: Deal.tenant_isolation_policy_deal (ALL)
+POLICY: DealSnapshot.tenant_isolation_deal_snapshot (ALL)
+POLICY: DealStageHistory.tenant_isolation_deal_stage_history (ALL)
+POLICY: DemoStorage.tenant_isolation_demo_storage (ALL)
+POLICY: Department.tenant_isolation_department (ALL)
+POLICY: DeviceSession.tenant_isolation_device_session (ALL)
+POLICY: DiscountRule.Tenant isolation for DiscountRule (ALL)
+POLICY: Document.tenant_isolation_policy_document (ALL)
+POLICY: DocumentEmbedding.tenant_isolation_DocumentEmbedding (ALL)
+POLICY: DocumentPermission.tenant_isolation_document_permission (ALL)
+POLICY: EventOutbox.tenant_isolation_event_outbox (ALL)
+POLICY: FieldSecurityPolicy.tenant_isolation_FieldSecurityPolicy (ALL)
+POLICY: IdempotencyKey.tenant_isolation_idempotency_key (ALL)
+POLICY: Incident.tenant_isolation_incident (ALL)
+POLICY: Lead.tenant_isolation_policy_lead (ALL)
+POLICY: Location.tenant_isolation_location (ALL)
+POLICY: MailDraft.tenant_isolation_mail_draft (ALL)
+POLICY: MailMessage.tenant_isolation_mail_message (ALL)
+POLICY: MailRecipient.tenant_isolation_mail_recipient (ALL)
+POLICY: MailThread.tenant_isolation_mail_thread (ALL)
+POLICY: Meeting.tenant_isolation_meeting (ALL)
+POLICY: MeetingParticipant.tenant_isolation_meeting_participant (ALL)
+POLICY: Notification.tenant_isolation_notification (ALL)
+POLICY: NotificationPreference.tenant_isolation_notification_pref (ALL)
+POLICY: Pipeline.tenant_isolation_pipeline (ALL)
+POLICY: PipelineStage.tenant_isolation_pipeline_stage (ALL)
+POLICY: PriceBook.Tenant isolation for PriceBook (ALL)
+POLICY: PriceBookEntry.Tenant isolation for PriceBookEntry (ALL)
+POLICY: Product.Tenant isolation for Product (ALL)
+POLICY: ProductCategory.Tenant isolation for ProductCategory (ALL)
+POLICY: ProductFamily.Tenant isolation for ProductFamily (ALL)
+POLICY: Quote.Tenant isolation for Quote (ALL)
+POLICY: QuoteLineItem.Tenant isolation for QuoteLineItem (ALL)
+POLICY: Recording.tenant_isolation_recording (ALL)
+POLICY: RecoveryAuditLog.tenant_isolation_recovery_audit_log (ALL)
+POLICY: RecoveryJob.tenant_isolation_recovery_job (ALL)
+POLICY: RecoverySnapshot.tenant_isolation_recovery_snapshot (ALL)
+POLICY: RestoreCheckpoint.tenant_isolation_restore_checkpoint (ALL)
+POLICY: Role.tenant_isolation_role (ALL)
+POLICY: RolePermission.tenant_isolation_role_permission (ALL)
+POLICY: SLAConfiguration.tenant_isolation_SLAConfiguration (ALL)
+POLICY: SLAEvent.tenant_isolation_SLAEvent (ALL)
+POLICY: SalesQuota.tenant_isolation_sales_quota (ALL)
+POLICY: SecurityEvent.tenant_isolation_security_event (ALL)
+POLICY: Task.tenant_isolation_policy_task (ALL)
+POLICY: TenantBootstrap.tenant_isolation_tenantbootstrap (ALL)
+POLICY: TenantIntegration.tenant_isolation_tenant_integration (ALL)
+POLICY: TenantPhoneNumber.tenant_phone_number_delete_policy (DELETE)
+POLICY: TenantPhoneNumber.tenant_phone_number_insert_policy (INSERT)
+POLICY: TenantPhoneNumber.tenant_phone_number_select_policy (SELECT)
+POLICY: TenantPhoneNumber.tenant_phone_number_update_policy (UPDATE)
+POLICY: Territory.tenant_isolation_territory (ALL)
+POLICY: Ticket.tenant_isolation_Ticket (ALL)
+POLICY: TicketMessage.tenant_isolation_TicketMessage (ALL)
+POLICY: User.tenant_isolation_policy_user (ALL)
+POLICY: UserInvitation.tenant_isolation_user_invitation (ALL)
+POLICY: UserPresence.tenant_isolation_user_presence (ALL)
+POLICY: UserRole.tenant_isolation_user_role (ALL)
+POLICY: UserTerritory.tenant_isolation_user_territory (ALL)
+POLICY: WebhookEvent.tenant_isolation_webhook_event (ALL)
+POLICY: Workflow.tenant_isolation_Workflow (ALL)
+POLICY: WorkflowAction.tenant_isolation_WorkflowAction (ALL)
+POLICY: WorkflowExecution.tenant_isolation_WorkflowExecution (ALL)
+POLICY: WorkflowExecutionStep.tenant_isolation_WorkflowExecutionStep (ALL)
+POLICY: WorkflowTrigger.tenant_isolation_WorkflowTrigger (ALL)
+
+=== RLS STATE ===
+TABLE: ABACPolicy - RLS: true, FORCE: true
+TABLE: AIAgentExecution - RLS: true, FORCE: true
+TABLE: AIAnalysisJob - RLS: false, FORCE: false
+TABLE: AIConversation - RLS: true, FORCE: true
+TABLE: AIConversationMessage - RLS: true, FORCE: true
+TABLE: AIEvent - RLS: true, FORCE: true
+TABLE: AIExecution - RLS: true, FORCE: true
+TABLE: AIMemory - RLS: true, FORCE: true
+TABLE: AIProviderConfig - RLS: true, FORCE: true
+TABLE: AIReference - RLS: true, FORCE: true
+TABLE: AITokenUsage - RLS: true, FORCE: true
+TABLE: AITool - RLS: false, FORCE: false
+TABLE: ActivityTimeline - RLS: true, FORCE: true
+TABLE: ApprovalRequest - RLS: true, FORCE: true
+TABLE: ApprovalStep - RLS: true, FORCE: true
+TABLE: AuditLog - RLS: true, FORCE: true
+TABLE: CCTVNode - RLS: false, FORCE: false
+TABLE: CRMComment - RLS: true, FORCE: true
+TABLE: CallLog - RLS: true, FORCE: true
+TABLE: Camera - RLS: true, FORCE: true
+TABLE: CameraCredential - RLS: true, FORCE: true
+TABLE: CameraEvent - RLS: true, FORCE: true
+TABLE: CameraStream - RLS: true, FORCE: true
+TABLE: CameraStreamInvalidation - RLS: false, FORCE: false
+TABLE: ChatConversation - RLS: true, FORCE: true
+TABLE: ChatMessage - RLS: true, FORCE: true
+TABLE: ChatParticipant - RLS: true, FORCE: true
+TABLE: ChatReadReceipt - RLS: true, FORCE: true
+TABLE: CommunicationAttachment - RLS: true, FORCE: true
+TABLE: Customer - RLS: true, FORCE: true
+TABLE: CustomerContact - RLS: true, FORCE: true
+TABLE: DeadLetterQueue - RLS: true, FORCE: true
+TABLE: Deal - RLS: true, FORCE: true
+TABLE: DealSnapshot - RLS: true, FORCE: true
+TABLE: DealStageHistory - RLS: true, FORCE: true
+TABLE: DemoStorage - RLS: true, FORCE: true
+TABLE: Department - RLS: true, FORCE: true
+TABLE: DeviceSession - RLS: true, FORCE: true
+TABLE: DiscountRule - RLS: true, FORCE: true
+TABLE: Document - RLS: true, FORCE: true
+TABLE: DocumentEmbedding - RLS: true, FORCE: true
+TABLE: DocumentPermission - RLS: true, FORCE: true
+TABLE: EventOutbox - RLS: true, FORCE: true
+TABLE: FieldSecurityPolicy - RLS: true, FORCE: true
+TABLE: IdempotencyKey - RLS: true, FORCE: true
+TABLE: Incident - RLS: true, FORCE: true
+TABLE: Lead - RLS: true, FORCE: true
+TABLE: Location - RLS: true, FORCE: true
+TABLE: MailDraft - RLS: true, FORCE: true
+TABLE: MailMessage - RLS: true, FORCE: true
+TABLE: MailRecipient - RLS: true, FORCE: true
+TABLE: MailThread - RLS: true, FORCE: true
+TABLE: Meeting - RLS: true, FORCE: true
+TABLE: MeetingParticipant - RLS: true, FORCE: true
+TABLE: Notification - RLS: true, FORCE: true
+TABLE: NotificationPreference - RLS: true, FORCE: true
+TABLE: Permission - RLS: false, FORCE: false
+TABLE: Pipeline - RLS: true, FORCE: true
+TABLE: PipelineStage - RLS: true, FORCE: true
+TABLE: PriceBook - RLS: true, FORCE: true
+TABLE: PriceBookEntry - RLS: true, FORCE: true
+TABLE: Product - RLS: true, FORCE: true
+TABLE: ProductCategory - RLS: true, FORCE: true
+TABLE: ProductFamily - RLS: true, FORCE: true
+TABLE: Quote - RLS: true, FORCE: true
+TABLE: QuoteLineItem - RLS: true, FORCE: true
+TABLE: Recording - RLS: true, FORCE: true
+TABLE: RecordingIngestionJob - RLS: false, FORCE: false
+TABLE: RecoveryAuditLog - RLS: true, FORCE: true
+TABLE: RecoveryJob - RLS: true, FORCE: true
+TABLE: RecoverySnapshot - RLS: true, FORCE: true
+TABLE: RestoreCheckpoint - RLS: true, FORCE: true
+TABLE: RetentionDeletionJob - RLS: false, FORCE: false
+TABLE: Role - RLS: true, FORCE: true
+TABLE: RolePermission - RLS: true, FORCE: true
+TABLE: SLAConfiguration - RLS: true, FORCE: true
+TABLE: SLAEvent - RLS: true, FORCE: true
+TABLE: SalesQuota - RLS: true, FORCE: true
+TABLE: SecurityEvent - RLS: true, FORCE: true
+TABLE: Task - RLS: true, FORCE: true
+TABLE: Tenant - RLS: false, FORCE: false
+TABLE: TenantBootstrap - RLS: true, FORCE: true
+TABLE: TenantIntegration - RLS: true, FORCE: true
+TABLE: TenantPhoneNumber - RLS: true, FORCE: true
+TABLE: Territory - RLS: true, FORCE: true
+TABLE: Ticket - RLS: true, FORCE: true
+TABLE: TicketMessage - RLS: true, FORCE: true
+TABLE: User - RLS: true, FORCE: true
+TABLE: UserInvitation - RLS: true, FORCE: true
+TABLE: UserPresence - RLS: true, FORCE: true
+TABLE: UserRole - RLS: true, FORCE: true
+TABLE: UserTerritory - RLS: true, FORCE: true
+TABLE: WebhookEvent - RLS: true, FORCE: true
+TABLE: Workflow - RLS: true, FORCE: true
+TABLE: WorkflowAction - RLS: true, FORCE: true
+TABLE: WorkflowExecution - RLS: true, FORCE: true
+TABLE: WorkflowExecutionStep - RLS: true, FORCE: true
+TABLE: WorkflowTrigger - RLS: true, FORCE: true
+TABLE: _prisma_migrations - RLS: false, FORCE: false
+
+=== FUNCTIONS ===
+FUNC: array_to_vector
+FUNC: array_to_vector
+FUNC: array_to_vector
+FUNC: array_to_vector
+FUNC: audit_log_append_only
+FUNC: cosine_distance
+FUNC: inner_product
+FUNC: l1_distance
+FUNC: l2_distance

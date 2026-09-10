@@ -78,10 +78,8 @@ describe('Track B - Territories Security Tests', () => {
 
   afterAll(async () => {
     await executeAsSystem(SystemOperation.SECURITY_AUDIT, async (tx) => {
-      // Temporarily bypass trigger to clean up audit logs for test
-      await tx.$executeRawUnsafe(`ALTER TABLE "AuditLog" DISABLE TRIGGER USER`);
-      await tx.$executeRawUnsafe(`DELETE FROM "AuditLog" WHERE "tenantId" IN ('${tenantAId}', '${tenantBId}')`);
-      await tx.$executeRawUnsafe(`ALTER TABLE "AuditLog" ENABLE TRIGGER USER`);
+      // We do not delete from AuditLog because it is append-only and doing so
+      // would abort the Postgres transaction, failing the rest of the teardown.
       
       await tx.userTerritory.deleteMany({ where: { tenantId: { in: [tenantAId, tenantBId] } } });
       await tx.territory.deleteMany({ where: { tenantId: { in: [tenantAId, tenantBId] } } });
@@ -90,8 +88,15 @@ describe('Track B - Territories Security Tests', () => {
       await tx.permission.deleteMany({ where: { resource: 'SALES_INTEL' } });
       await tx.role.deleteMany({ where: { tenantId: { in: [tenantAId, tenantBId] } } });
       await tx.user.deleteMany({ where: { tenantId: { in: [tenantAId, tenantBId] } } });
-      await tx.tenant.deleteMany({ where: { id: { in: [tenantAId, tenantBId] } } });
     });
+
+    try {
+      await executeAsSystem(SystemOperation.SECURITY_AUDIT, async (tx) => {
+        await tx.tenant.deleteMany({ where: { id: { in: [tenantAId, tenantBId] } } });
+      });
+    } catch (e: any) {
+      console.warn('Tolerated cleanup failure (Tenant FK retained by AuditLog):', e.message);
+    }
     vi.restoreAllMocks();
   });
 

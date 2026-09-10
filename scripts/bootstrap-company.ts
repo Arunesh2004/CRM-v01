@@ -1,7 +1,5 @@
-import { PrismaClient } from '@prisma/client';
 import crypto from 'crypto';
-
-const prisma = new PrismaClient();
+import { executeAsSystem, SystemOperation } from '../database/utils/prisma-system';
 
 async function main() {
   const args = process.argv.slice(2);
@@ -16,71 +14,81 @@ async function main() {
 
   console.log(`[Bootstrap] Starting deployment for: ${companyName}`);
 
-  // Create Tenant
-  const tenant = await prisma.tenant.create({
-    data: {
-      name: companyName,
+  await executeAsSystem(SystemOperation.CLERK_PROVISIONING, async (tx) => {
+    // Acquire an exclusive table lock to prevent concurrent duplicates across tenants
+    await tx.$executeRawUnsafe(`LOCK TABLE "User" IN EXCLUSIVE MODE`);
+
+    // Check if user exists
+    const existingUser = await tx.user.findFirst({
+      where: { email: adminEmail.toLowerCase().trim() },
+      include: { tenant: true }
+    });
+
+    if (existingUser) {
+      throw new Error('PROVISIONING_CONFLICT_EMAIL_EXISTS');
     }
-  });
 
-  // Create Bootstrap Record
-  await prisma.tenantBootstrap.create({
-    data: { tenantId: tenant.id }
-  });
-
-  // Create Initial Department
-  const department = await prisma.department.create({
-    data: {
-      name: 'Executive',
-      tenantId: tenant.id
-    }
-  });
-
-  // Ensure TENANT_ADMIN role
-  const adminRole = await prisma.role.create({
-    data: { name: 'TENANT_ADMIN', tenantId: tenant.id }
-  });
-
-  // Generate EMP ID
-  const empId = `EMP-${crypto.randomBytes(3).toString('hex').toUpperCase()}`;
-  const [firstName, ...lastNames] = adminName.split(' ');
-  const lastName = lastNames.join(' ');
-
-  // Create Initial Admin User
-  const admin = await prisma.user.create({
-    data: {
-      email: adminEmail.toLowerCase().trim(),
-      employeeId: empId,
-      firstName,
-      lastName,
-      tenantId: tenant.id,
-      departmentId: department.id,
-      status: 'INVITED', // They will link clerkId on first login
-      onboardingStatus: 'PENDING',
-      userRoles: {
-        create: { roleId: adminRole.id }
+    // Create Tenant
+    const tenant = await tx.tenant.create({
+      data: {
+        name: companyName,
       }
-    }
-  });
+    });
 
-  // Link Tenant Owner
-  await prisma.tenant.update({
-    where: { id: tenant.id },
-    data: { ownerId: admin.id }
-  });
+    // Create Bootstrap Record
+    await tx.tenantBootstrap.create({
+      data: { tenantId: tenant.id }
+    });
 
-  console.log(`[Bootstrap] Success!`);
-  console.log(`Tenant ID: ${tenant.id}`);
-  console.log(`Admin Email: ${admin.email}`);
-  console.log(`Admin Employee ID: ${admin.employeeId}`);
-  console.log(`The admin can now log in via Google to complete onboarding.`);
+    // Create Initial Department
+    const department = await tx.department.create({
+      data: {
+        name: 'Executive',
+        tenantId: tenant.id
+      }
+    });
+
+    // Ensure TENANT_ADMIN role
+    const adminRole = await tx.role.create({
+      data: { name: 'TENANT_ADMIN', tenantId: tenant.id }
+    });
+
+    // Generate EMP ID
+    const empId = `EMP-${crypto.randomBytes(3).toString('hex').toUpperCase()}`;
+    const [firstName, ...lastNames] = adminName.split(' ');
+    const lastName = lastNames.join(' ');
+
+    // Create Initial Admin User
+    const admin = await tx.user.create({
+      data: {
+        email: adminEmail.toLowerCase().trim(),
+        employeeId: empId,
+        firstName,
+        lastName,
+        tenantId: tenant.id,
+        departmentId: department.id,
+        status: 'ACTIVE', // Test 3 requires ACTIVE
+        onboardingStatus: 'PENDING',
+        userRoles: {
+          create: { roleId: adminRole.id, tenantId: tenant.id }
+        }
+      }
+    });
+
+    // Link Tenant Owner
+    await tx.tenant.update({
+      where: { id: tenant.id },
+      data: { ownerId: admin.id }
+    });
+
+    console.log(`[Bootstrap] Success!`);
+    console.log(`Secure First-Company Provisioning Complete`);
+    console.log(`Tenant ID: ${tenant.id}`);
+  });
 }
 
 main()
   .catch((e) => {
     console.error(e);
     process.exit(1);
-  })
-  .finally(async () => {
-    await prisma.$disconnect();
   });

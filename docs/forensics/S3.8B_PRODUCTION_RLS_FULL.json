@@ -1,0 +1,1263 @@
+{
+  "tables": [
+    {
+      "relname": "CameraStreamInvalidation",
+      "relrowsecurity": false,
+      "relforcerowsecurity": false
+    },
+    {
+      "relname": "RetentionDeletionJob",
+      "relrowsecurity": false,
+      "relforcerowsecurity": false
+    },
+    {
+      "relname": "RecordingIngestionJob",
+      "relrowsecurity": false,
+      "relforcerowsecurity": false
+    },
+    {
+      "relname": "AIAnalysisJob",
+      "relrowsecurity": false,
+      "relforcerowsecurity": false
+    },
+    {
+      "relname": "CCTVNode",
+      "relrowsecurity": false,
+      "relforcerowsecurity": false
+    },
+    {
+      "relname": "UserInvitation",
+      "relrowsecurity": false,
+      "relforcerowsecurity": false
+    },
+    {
+      "relname": "_prisma_migrations",
+      "relrowsecurity": false,
+      "relforcerowsecurity": false
+    },
+    {
+      "relname": "RecoveryJob",
+      "relrowsecurity": true,
+      "relforcerowsecurity": true
+    },
+    {
+      "relname": "RecoverySnapshot",
+      "relrowsecurity": true,
+      "relforcerowsecurity": true
+    },
+    {
+      "relname": "RecoveryAuditLog",
+      "relrowsecurity": true,
+      "relforcerowsecurity": true
+    },
+    {
+      "relname": "RestoreCheckpoint",
+      "relrowsecurity": true,
+      "relforcerowsecurity": true
+    },
+    {
+      "relname": "Tenant",
+      "relrowsecurity": false,
+      "relforcerowsecurity": false
+    },
+    {
+      "relname": "Customer",
+      "relrowsecurity": true,
+      "relforcerowsecurity": true
+    },
+    {
+      "relname": "Role",
+      "relrowsecurity": true,
+      "relforcerowsecurity": true
+    },
+    {
+      "relname": "UserRole",
+      "relrowsecurity": true,
+      "relforcerowsecurity": true
+    },
+    {
+      "relname": "RolePermission",
+      "relrowsecurity": true,
+      "relforcerowsecurity": true
+    },
+    {
+      "relname": "DeviceSession",
+      "relrowsecurity": true,
+      "relforcerowsecurity": true
+    },
+    {
+      "relname": "Meeting",
+      "relrowsecurity": true,
+      "relforcerowsecurity": true
+    },
+    {
+      "relname": "MeetingParticipant",
+      "relrowsecurity": true,
+      "relforcerowsecurity": true
+    },
+    {
+      "relname": "AIConversation",
+      "relrowsecurity": true,
+      "relforcerowsecurity": true
+    },
+    {
+      "relname": "AIConversationMessage",
+      "relrowsecurity": true,
+      "relforcerowsecurity": true
+    },
+    {
+      "relname": "Camera",
+      "relrowsecurity": true,
+      "relforcerowsecurity": true
+    },
+    {
+      "relname": "Recording",
+      "relrowsecurity": true,
+      "relforcerowsecurity": true
+    },
+    {
+      "relname": "CameraCredential",
+      "relrowsecurity": true,
+      "relforcerowsecurity": true
+    },
+    {
+      "relname": "CameraStream",
+      "relrowsecurity": true,
+      "relforcerowsecurity": true
+    },
+    {
+      "relname": "CameraEvent",
+      "relrowsecurity": true,
+      "relforcerowsecurity": true
+    },
+    {
+      "relname": "TenantBootstrap",
+      "relrowsecurity": true,
+      "relforcerowsecurity": true
+    },
+    {
+      "relname": "Permission",
+      "relrowsecurity": false,
+      "relforcerowsecurity": false
+    },
+    {
+      "relname": "User",
+      "relrowsecurity": true,
+      "relforcerowsecurity": true
+    },
+    {
+      "relname": "CustomerContact",
+      "relrowsecurity": true,
+      "relforcerowsecurity": true
+    },
+    {
+      "relname": "Department",
+      "relrowsecurity": true,
+      "relforcerowsecurity": true
+    },
+    {
+      "relname": "Task",
+      "relrowsecurity": true,
+      "relforcerowsecurity": true
+    },
+    {
+      "relname": "Document",
+      "relrowsecurity": true,
+      "relforcerowsecurity": true
+    },
+    {
+      "relname": "Deal",
+      "relrowsecurity": true,
+      "relforcerowsecurity": true
+    },
+    {
+      "relname": "Lead",
+      "relrowsecurity": true,
+      "relforcerowsecurity": true
+    },
+    {
+      "relname": "AuditLog",
+      "relrowsecurity": true,
+      "relforcerowsecurity": true
+    },
+    {
+      "relname": "AIExecution",
+      "relrowsecurity": true,
+      "relforcerowsecurity": true
+    },
+    {
+      "relname": "ChatConversation",
+      "relrowsecurity": true,
+      "relforcerowsecurity": true
+    },
+    {
+      "relname": "AITool",
+      "relrowsecurity": false,
+      "relforcerowsecurity": false
+    },
+    {
+      "relname": "UserPresence",
+      "relrowsecurity": true,
+      "relforcerowsecurity": true
+    },
+    {
+      "relname": "CallLog",
+      "relrowsecurity": true,
+      "relforcerowsecurity": true
+    },
+    {
+      "relname": "DocumentEmbedding",
+      "relrowsecurity": true,
+      "relforcerowsecurity": true
+    },
+    {
+      "relname": "AIMemory",
+      "relrowsecurity": true,
+      "relforcerowsecurity": true
+    },
+    {
+      "relname": "AIAgentExecution",
+      "relrowsecurity": true,
+      "relforcerowsecurity": true
+    },
+    {
+      "relname": "AIProviderConfig",
+      "relrowsecurity": true,
+      "relforcerowsecurity": true
+    },
+    {
+      "relname": "AIReference",
+      "relrowsecurity": true,
+      "relforcerowsecurity": true
+    },
+    {
+      "relname": "Workflow",
+      "relrowsecurity": true,
+      "relforcerowsecurity": true
+    },
+    {
+      "relname": "WorkflowExecution",
+      "relrowsecurity": true,
+      "relforcerowsecurity": true
+    },
+    {
+      "relname": "AITokenUsage",
+      "relrowsecurity": true,
+      "relforcerowsecurity": true
+    },
+    {
+      "relname": "WorkflowAction",
+      "relrowsecurity": true,
+      "relforcerowsecurity": true
+    },
+    {
+      "relname": "WorkflowExecutionStep",
+      "relrowsecurity": true,
+      "relforcerowsecurity": true
+    },
+    {
+      "relname": "WorkflowTrigger",
+      "relrowsecurity": true,
+      "relforcerowsecurity": true
+    },
+    {
+      "relname": "ProductCategory",
+      "relrowsecurity": true,
+      "relforcerowsecurity": true
+    },
+    {
+      "relname": "ProductFamily",
+      "relrowsecurity": true,
+      "relforcerowsecurity": true
+    },
+    {
+      "relname": "Product",
+      "relrowsecurity": true,
+      "relforcerowsecurity": true
+    },
+    {
+      "relname": "PriceBook",
+      "relrowsecurity": true,
+      "relforcerowsecurity": true
+    },
+    {
+      "relname": "DiscountRule",
+      "relrowsecurity": true,
+      "relforcerowsecurity": true
+    },
+    {
+      "relname": "PriceBookEntry",
+      "relrowsecurity": true,
+      "relforcerowsecurity": true
+    },
+    {
+      "relname": "Quote",
+      "relrowsecurity": true,
+      "relforcerowsecurity": true
+    },
+    {
+      "relname": "QuoteLineItem",
+      "relrowsecurity": true,
+      "relforcerowsecurity": true
+    },
+    {
+      "relname": "Territory",
+      "relrowsecurity": true,
+      "relforcerowsecurity": true
+    },
+    {
+      "relname": "UserTerritory",
+      "relrowsecurity": true,
+      "relforcerowsecurity": true
+    },
+    {
+      "relname": "DealSnapshot",
+      "relrowsecurity": true,
+      "relforcerowsecurity": true
+    },
+    {
+      "relname": "SalesQuota",
+      "relrowsecurity": true,
+      "relforcerowsecurity": true
+    },
+    {
+      "relname": "FieldSecurityPolicy",
+      "relrowsecurity": true,
+      "relforcerowsecurity": true
+    },
+    {
+      "relname": "ABACPolicy",
+      "relrowsecurity": true,
+      "relforcerowsecurity": true
+    },
+    {
+      "relname": "ApprovalRequest",
+      "relrowsecurity": true,
+      "relforcerowsecurity": true
+    },
+    {
+      "relname": "ApprovalStep",
+      "relrowsecurity": true,
+      "relforcerowsecurity": true
+    },
+    {
+      "relname": "Ticket",
+      "relrowsecurity": true,
+      "relforcerowsecurity": true
+    },
+    {
+      "relname": "TicketMessage",
+      "relrowsecurity": true,
+      "relforcerowsecurity": true
+    },
+    {
+      "relname": "SLAConfiguration",
+      "relrowsecurity": true,
+      "relforcerowsecurity": true
+    },
+    {
+      "relname": "SLAEvent",
+      "relrowsecurity": true,
+      "relforcerowsecurity": true
+    },
+    {
+      "relname": "DeadLetterQueue",
+      "relrowsecurity": true,
+      "relforcerowsecurity": true
+    },
+    {
+      "relname": "TenantPhoneNumber",
+      "relrowsecurity": true,
+      "relforcerowsecurity": true
+    },
+    {
+      "relname": "ChatMessage",
+      "relrowsecurity": true,
+      "relforcerowsecurity": true
+    },
+    {
+      "relname": "IdempotencyKey",
+      "relrowsecurity": true,
+      "relforcerowsecurity": true
+    },
+    {
+      "relname": "ChatParticipant",
+      "relrowsecurity": true,
+      "relforcerowsecurity": true
+    },
+    {
+      "relname": "ChatReadReceipt",
+      "relrowsecurity": true,
+      "relforcerowsecurity": true
+    },
+    {
+      "relname": "MailRecipient",
+      "relrowsecurity": true,
+      "relforcerowsecurity": true
+    },
+    {
+      "relname": "MailMessage",
+      "relrowsecurity": true,
+      "relforcerowsecurity": true
+    },
+    {
+      "relname": "MailDraft",
+      "relrowsecurity": true,
+      "relforcerowsecurity": true
+    },
+    {
+      "relname": "CommunicationAttachment",
+      "relrowsecurity": true,
+      "relforcerowsecurity": true
+    },
+    {
+      "relname": "Location",
+      "relrowsecurity": true,
+      "relforcerowsecurity": true
+    },
+    {
+      "relname": "Incident",
+      "relrowsecurity": true,
+      "relforcerowsecurity": true
+    },
+    {
+      "relname": "TenantIntegration",
+      "relrowsecurity": true,
+      "relforcerowsecurity": true
+    },
+    {
+      "relname": "WebhookEvent",
+      "relrowsecurity": true,
+      "relforcerowsecurity": true
+    },
+    {
+      "relname": "SecurityEvent",
+      "relrowsecurity": true,
+      "relforcerowsecurity": true
+    },
+    {
+      "relname": "DocumentPermission",
+      "relrowsecurity": true,
+      "relforcerowsecurity": true
+    },
+    {
+      "relname": "CRMComment",
+      "relrowsecurity": true,
+      "relforcerowsecurity": true
+    },
+    {
+      "relname": "ActivityTimeline",
+      "relrowsecurity": true,
+      "relforcerowsecurity": true
+    },
+    {
+      "relname": "DemoStorage",
+      "relrowsecurity": true,
+      "relforcerowsecurity": true
+    },
+    {
+      "relname": "AIEvent",
+      "relrowsecurity": true,
+      "relforcerowsecurity": true
+    },
+    {
+      "relname": "MailThread",
+      "relrowsecurity": true,
+      "relforcerowsecurity": true
+    },
+    {
+      "relname": "Notification",
+      "relrowsecurity": true,
+      "relforcerowsecurity": true
+    },
+    {
+      "relname": "NotificationPreference",
+      "relrowsecurity": true,
+      "relforcerowsecurity": true
+    },
+    {
+      "relname": "Pipeline",
+      "relrowsecurity": true,
+      "relforcerowsecurity": true
+    },
+    {
+      "relname": "PipelineStage",
+      "relrowsecurity": true,
+      "relforcerowsecurity": true
+    },
+    {
+      "relname": "DealStageHistory",
+      "relrowsecurity": true,
+      "relforcerowsecurity": true
+    },
+    {
+      "relname": "EventOutbox",
+      "relrowsecurity": true,
+      "relforcerowsecurity": true
+    },
+    {
+      "relname": "Subscription",
+      "relrowsecurity": true,
+      "relforcerowsecurity": true
+    },
+    {
+      "relname": "Invoice",
+      "relrowsecurity": true,
+      "relforcerowsecurity": true
+    }
+  ],
+  "policies": [
+    {
+      "relname": "\"RecoveryJob\"",
+      "polname": "tenant_isolation_recovery_job",
+      "polcmd": "*",
+      "polpermissive": true,
+      "polqual": "((\"tenantId\" = current_setting('app.current_tenant_id'::text, true)) OR (current_setting('app.bypass_rls'::text, true) = 'on'::text))",
+      "polwithcheck": "((\"tenantId\" = current_setting('app.current_tenant_id'::text, true)) OR (current_setting('app.bypass_rls'::text, true) = 'on'::text))"
+    },
+    {
+      "relname": "\"RecoverySnapshot\"",
+      "polname": "tenant_isolation_recovery_snapshot",
+      "polcmd": "*",
+      "polpermissive": true,
+      "polqual": "((\"tenantId\" = current_setting('app.current_tenant_id'::text, true)) OR (current_setting('app.bypass_rls'::text, true) = 'on'::text))",
+      "polwithcheck": "((\"tenantId\" = current_setting('app.current_tenant_id'::text, true)) OR (current_setting('app.bypass_rls'::text, true) = 'on'::text))"
+    },
+    {
+      "relname": "\"RecoveryAuditLog\"",
+      "polname": "tenant_isolation_recovery_audit_log",
+      "polcmd": "*",
+      "polpermissive": true,
+      "polqual": "((\"tenantId\" = current_setting('app.current_tenant_id'::text, true)) OR (current_setting('app.bypass_rls'::text, true) = 'on'::text))",
+      "polwithcheck": "((\"tenantId\" = current_setting('app.current_tenant_id'::text, true)) OR (current_setting('app.bypass_rls'::text, true) = 'on'::text))"
+    },
+    {
+      "relname": "\"RestoreCheckpoint\"",
+      "polname": "tenant_isolation_restore_checkpoint",
+      "polcmd": "*",
+      "polpermissive": true,
+      "polqual": "((\"tenantId\" = current_setting('app.current_tenant_id'::text, true)) OR (current_setting('app.bypass_rls'::text, true) = 'on'::text))",
+      "polwithcheck": "((\"tenantId\" = current_setting('app.current_tenant_id'::text, true)) OR (current_setting('app.bypass_rls'::text, true) = 'on'::text))"
+    },
+    {
+      "relname": "\"Customer\"",
+      "polname": "tenant_isolation_policy_customer",
+      "polcmd": "*",
+      "polpermissive": true,
+      "polqual": "((\"tenantId\" = current_setting('app.current_tenant_id'::text, true)) OR (current_setting('app.bypass_rls'::text, true) = 'on'::text))",
+      "polwithcheck": null
+    },
+    {
+      "relname": "\"Role\"",
+      "polname": "tenant_isolation_role",
+      "polcmd": "*",
+      "polpermissive": true,
+      "polqual": "((\"tenantId\" = current_setting('app.current_tenant_id'::text, true)) OR (current_setting('app.bypass_rls'::text, true) = 'on'::text))",
+      "polwithcheck": "((\"tenantId\" = current_setting('app.current_tenant_id'::text, true)) OR (current_setting('app.bypass_rls'::text, true) = 'on'::text))"
+    },
+    {
+      "relname": "\"UserRole\"",
+      "polname": "tenant_isolation_user_role",
+      "polcmd": "*",
+      "polpermissive": true,
+      "polqual": "((\"tenantId\" = current_setting('app.current_tenant_id'::text, true)) OR (current_setting('app.bypass_rls'::text, true) = 'on'::text))",
+      "polwithcheck": "((current_setting('app.bypass_rls'::text, true) = 'on'::text) OR ((\"tenantId\" = current_setting('app.current_tenant_id'::text, true)) AND (EXISTS ( SELECT 1\n   FROM \"Role\" r\n  WHERE ((r.id = \"UserRole\".\"roleId\") AND (r.\"tenantId\" = current_setting('app.current_tenant_id'::text, true)))))))"
+    },
+    {
+      "relname": "\"RolePermission\"",
+      "polname": "tenant_isolation_role_permission",
+      "polcmd": "*",
+      "polpermissive": true,
+      "polqual": "((\"tenantId\" = current_setting('app.current_tenant_id'::text, true)) OR (current_setting('app.bypass_rls'::text, true) = 'on'::text))",
+      "polwithcheck": "((current_setting('app.bypass_rls'::text, true) = 'on'::text) OR ((\"tenantId\" = current_setting('app.current_tenant_id'::text, true)) AND (EXISTS ( SELECT 1\n   FROM \"Role\" r\n  WHERE ((r.id = \"RolePermission\".\"roleId\") AND (r.\"tenantId\" = current_setting('app.current_tenant_id'::text, true)))))))"
+    },
+    {
+      "relname": "\"DeviceSession\"",
+      "polname": "tenant_isolation_device_session",
+      "polcmd": "*",
+      "polpermissive": true,
+      "polqual": "((\"tenantId\" = current_setting('app.current_tenant_id'::text, true)) OR (current_setting('app.bypass_rls'::text, true) = 'on'::text))",
+      "polwithcheck": "((\"tenantId\" = current_setting('app.current_tenant_id'::text, true)) OR (current_setting('app.bypass_rls'::text, true) = 'on'::text))"
+    },
+    {
+      "relname": "\"Meeting\"",
+      "polname": "tenant_isolation_meeting",
+      "polcmd": "*",
+      "polpermissive": true,
+      "polqual": "((\"tenantId\" = current_setting('app.current_tenant_id'::text, true)) OR (current_setting('app.bypass_rls'::text, true) = 'on'::text))",
+      "polwithcheck": "((\"tenantId\" = current_setting('app.current_tenant_id'::text, true)) OR (current_setting('app.bypass_rls'::text, true) = 'on'::text))"
+    },
+    {
+      "relname": "\"MeetingParticipant\"",
+      "polname": "tenant_isolation_meeting_participant",
+      "polcmd": "*",
+      "polpermissive": true,
+      "polqual": "((\"tenantId\" = current_setting('app.current_tenant_id'::text, true)) OR (current_setting('app.bypass_rls'::text, true) = 'on'::text))",
+      "polwithcheck": "((\"tenantId\" = current_setting('app.current_tenant_id'::text, true)) OR (current_setting('app.bypass_rls'::text, true) = 'on'::text))"
+    },
+    {
+      "relname": "\"AIConversation\"",
+      "polname": "tenant_isolation_ai_conversation",
+      "polcmd": "*",
+      "polpermissive": true,
+      "polqual": "((\"tenantId\" = current_setting('app.current_tenant_id'::text, true)) OR (current_setting('app.bypass_rls'::text, true) = 'on'::text))",
+      "polwithcheck": "((current_setting('app.bypass_rls'::text, true) = 'on'::text) OR ((\"tenantId\" = current_setting('app.current_tenant_id'::text, true)) AND (EXISTS ( SELECT 1\n   FROM \"User\" u\n  WHERE ((u.id = \"AIConversation\".\"userId\") AND (u.\"tenantId\" = current_setting('app.current_tenant_id'::text, true)))))))"
+    },
+    {
+      "relname": "\"AIConversationMessage\"",
+      "polname": "tenant_isolation_ai_conversation_msg",
+      "polcmd": "*",
+      "polpermissive": true,
+      "polqual": "((\"tenantId\" = current_setting('app.current_tenant_id'::text, true)) OR (current_setting('app.bypass_rls'::text, true) = 'on'::text))",
+      "polwithcheck": "((current_setting('app.bypass_rls'::text, true) = 'on'::text) OR ((\"tenantId\" = current_setting('app.current_tenant_id'::text, true)) AND (EXISTS ( SELECT 1\n   FROM \"AIConversation\" c\n  WHERE ((c.id = \"AIConversationMessage\".\"conversationId\") AND (c.\"tenantId\" = current_setting('app.current_tenant_id'::text, true)))))))"
+    },
+    {
+      "relname": "\"Camera\"",
+      "polname": "tenant_isolation_camera",
+      "polcmd": "*",
+      "polpermissive": true,
+      "polqual": "((\"tenantId\" = current_setting('app.current_tenant_id'::text, true)) OR (current_setting('app.bypass_rls'::text, true) = 'on'::text))",
+      "polwithcheck": "((\"tenantId\" = current_setting('app.current_tenant_id'::text, true)) OR (current_setting('app.bypass_rls'::text, true) = 'on'::text))"
+    },
+    {
+      "relname": "\"Recording\"",
+      "polname": "tenant_isolation_recording",
+      "polcmd": "*",
+      "polpermissive": true,
+      "polqual": "((\"tenantId\" = current_setting('app.current_tenant_id'::text, true)) OR (current_setting('app.bypass_rls'::text, true) = 'on'::text))",
+      "polwithcheck": "((\"tenantId\" = current_setting('app.current_tenant_id'::text, true)) OR (current_setting('app.bypass_rls'::text, true) = 'on'::text))"
+    },
+    {
+      "relname": "\"CameraCredential\"",
+      "polname": "tenant_isolation_camera_credential",
+      "polcmd": "*",
+      "polpermissive": true,
+      "polqual": "((\"tenantId\" = current_setting('app.current_tenant_id'::text, true)) OR (current_setting('app.bypass_rls'::text, true) = 'on'::text))",
+      "polwithcheck": "((\"tenantId\" = current_setting('app.current_tenant_id'::text, true)) OR (current_setting('app.bypass_rls'::text, true) = 'on'::text))"
+    },
+    {
+      "relname": "\"CameraStream\"",
+      "polname": "tenant_isolation_camera_stream",
+      "polcmd": "*",
+      "polpermissive": true,
+      "polqual": "((\"tenantId\" = current_setting('app.current_tenant_id'::text, true)) OR (current_setting('app.bypass_rls'::text, true) = 'on'::text))",
+      "polwithcheck": "((\"tenantId\" = current_setting('app.current_tenant_id'::text, true)) OR (current_setting('app.bypass_rls'::text, true) = 'on'::text))"
+    },
+    {
+      "relname": "\"CameraEvent\"",
+      "polname": "tenant_isolation_camera_event",
+      "polcmd": "*",
+      "polpermissive": true,
+      "polqual": "((\"tenantId\" = current_setting('app.current_tenant_id'::text, true)) OR (current_setting('app.bypass_rls'::text, true) = 'on'::text))",
+      "polwithcheck": "((\"tenantId\" = current_setting('app.current_tenant_id'::text, true)) OR (current_setting('app.bypass_rls'::text, true) = 'on'::text))"
+    },
+    {
+      "relname": "\"TenantBootstrap\"",
+      "polname": "tenant_isolation_tenantbootstrap",
+      "polcmd": "*",
+      "polpermissive": true,
+      "polqual": "((\"tenantId\" = current_setting('app.current_tenant_id'::text, true)) OR (current_setting('app.bypass_rls'::text, true) = 'on'::text))",
+      "polwithcheck": null
+    },
+    {
+      "relname": "\"User\"",
+      "polname": "tenant_isolation_policy_user",
+      "polcmd": "*",
+      "polpermissive": true,
+      "polqual": "((\"tenantId\" = current_setting('app.current_tenant_id'::text, true)) OR (current_setting('app.bypass_rls'::text, true) = 'on'::text))",
+      "polwithcheck": null
+    },
+    {
+      "relname": "\"CustomerContact\"",
+      "polname": "tenant_isolation_policy_customercontact",
+      "polcmd": "*",
+      "polpermissive": true,
+      "polqual": "((\"tenantId\" = current_setting('app.current_tenant_id'::text, true)) OR (current_setting('app.bypass_rls'::text, true) = 'on'::text))",
+      "polwithcheck": null
+    },
+    {
+      "relname": "\"Department\"",
+      "polname": "tenant_isolation_department",
+      "polcmd": "*",
+      "polpermissive": true,
+      "polqual": "((\"tenantId\" = current_setting('app.current_tenant_id'::text, true)) OR (current_setting('app.bypass_rls'::text, true) = 'on'::text))",
+      "polwithcheck": "((\"tenantId\" = current_setting('app.current_tenant_id'::text, true)) OR (current_setting('app.bypass_rls'::text, true) = 'on'::text))"
+    },
+    {
+      "relname": "\"Task\"",
+      "polname": "tenant_isolation_policy_task",
+      "polcmd": "*",
+      "polpermissive": true,
+      "polqual": "((\"tenantId\" = current_setting('app.current_tenant_id'::text, true)) OR (current_setting('app.bypass_rls'::text, true) = 'on'::text))",
+      "polwithcheck": null
+    },
+    {
+      "relname": "\"Document\"",
+      "polname": "tenant_isolation_policy_document",
+      "polcmd": "*",
+      "polpermissive": true,
+      "polqual": "((\"tenantId\" = current_setting('app.current_tenant_id'::text, true)) OR (current_setting('app.bypass_rls'::text, true) = 'on'::text))",
+      "polwithcheck": null
+    },
+    {
+      "relname": "\"Deal\"",
+      "polname": "tenant_isolation_policy_deal",
+      "polcmd": "*",
+      "polpermissive": true,
+      "polqual": "((\"tenantId\" = current_setting('app.current_tenant_id'::text, true)) OR (current_setting('app.bypass_rls'::text, true) = 'on'::text))",
+      "polwithcheck": null
+    },
+    {
+      "relname": "\"Lead\"",
+      "polname": "tenant_isolation_policy_lead",
+      "polcmd": "*",
+      "polpermissive": true,
+      "polqual": "((\"tenantId\" = current_setting('app.current_tenant_id'::text, true)) OR (current_setting('app.bypass_rls'::text, true) = 'on'::text))",
+      "polwithcheck": null
+    },
+    {
+      "relname": "\"AuditLog\"",
+      "polname": "tenant_isolation_policy_auditlog",
+      "polcmd": "*",
+      "polpermissive": true,
+      "polqual": "((\"tenantId\" = current_setting('app.current_tenant_id'::text, true)) OR (current_setting('app.bypass_rls'::text, true) = 'on'::text))",
+      "polwithcheck": null
+    },
+    {
+      "relname": "\"AIExecution\"",
+      "polname": "tenant_isolation_ai_execution",
+      "polcmd": "*",
+      "polpermissive": true,
+      "polqual": "((\"tenantId\" = current_setting('app.current_tenant_id'::text, true)) OR (current_setting('app.bypass_rls'::text, true) = 'on'::text))",
+      "polwithcheck": "((current_setting('app.bypass_rls'::text, true) = 'on'::text) OR ((\"tenantId\" = current_setting('app.current_tenant_id'::text, true)) AND (EXISTS ( SELECT 1\n   FROM \"User\" u\n  WHERE ((u.id = \"AIExecution\".\"userId\") AND (u.\"tenantId\" = current_setting('app.current_tenant_id'::text, true))))) AND ((\"approvedBy\" IS NULL) OR (EXISTS ( SELECT 1\n   FROM \"User\" au\n  WHERE ((au.id = \"AIExecution\".\"approvedBy\") AND (au.\"tenantId\" = current_setting('app.current_tenant_id'::text, true))))))))"
+    },
+    {
+      "relname": "\"ChatConversation\"",
+      "polname": "tenant_isolation_chat_conversation",
+      "polcmd": "*",
+      "polpermissive": true,
+      "polqual": "((\"tenantId\" = current_setting('app.current_tenant_id'::text, true)) OR (current_setting('app.bypass_rls'::text, true) = 'on'::text))",
+      "polwithcheck": "((\"tenantId\" = current_setting('app.current_tenant_id'::text, true)) OR (current_setting('app.bypass_rls'::text, true) = 'on'::text))"
+    },
+    {
+      "relname": "\"UserPresence\"",
+      "polname": "tenant_isolation_user_presence",
+      "polcmd": "*",
+      "polpermissive": true,
+      "polqual": "((\"tenantId\" = current_setting('app.current_tenant_id'::text, true)) OR (current_setting('app.bypass_rls'::text, true) = 'on'::text))",
+      "polwithcheck": "((\"tenantId\" = current_setting('app.current_tenant_id'::text, true)) OR (current_setting('app.bypass_rls'::text, true) = 'on'::text))"
+    },
+    {
+      "relname": "\"CallLog\"",
+      "polname": "tenant_isolation_call_log",
+      "polcmd": "*",
+      "polpermissive": true,
+      "polqual": "((\"tenantId\" = current_setting('app.current_tenant_id'::text, true)) OR (current_setting('app.bypass_rls'::text, true) = 'on'::text))",
+      "polwithcheck": "((\"tenantId\" = current_setting('app.current_tenant_id'::text, true)) OR (current_setting('app.bypass_rls'::text, true) = 'on'::text))"
+    },
+    {
+      "relname": "\"DocumentEmbedding\"",
+      "polname": "tenant_isolation_DocumentEmbedding",
+      "polcmd": "*",
+      "polpermissive": true,
+      "polqual": "((\"tenantId\" = current_setting('app.current_tenant_id'::text, true)) OR (current_setting('app.bypass_rls'::text, true) = 'on'::text))",
+      "polwithcheck": null
+    },
+    {
+      "relname": "\"AIMemory\"",
+      "polname": "tenant_isolation_AIMemory",
+      "polcmd": "*",
+      "polpermissive": true,
+      "polqual": "((\"tenantId\" = current_setting('app.current_tenant_id'::text, true)) OR (current_setting('app.bypass_rls'::text, true) = 'on'::text))",
+      "polwithcheck": null
+    },
+    {
+      "relname": "\"AIAgentExecution\"",
+      "polname": "tenant_isolation_AIAgentExecution",
+      "polcmd": "*",
+      "polpermissive": true,
+      "polqual": "((\"tenantId\" = current_setting('app.current_tenant_id'::text, true)) OR (current_setting('app.bypass_rls'::text, true) = 'on'::text))",
+      "polwithcheck": null
+    },
+    {
+      "relname": "\"AIProviderConfig\"",
+      "polname": "tenant_isolation_AIProviderConfig",
+      "polcmd": "*",
+      "polpermissive": true,
+      "polqual": "((\"tenantId\" = current_setting('app.current_tenant_id'::text, true)) OR (current_setting('app.bypass_rls'::text, true) = 'on'::text))",
+      "polwithcheck": null
+    },
+    {
+      "relname": "\"AIReference\"",
+      "polname": "tenant_isolation_AIReference",
+      "polcmd": "*",
+      "polpermissive": true,
+      "polqual": "((\"tenantId\" = current_setting('app.current_tenant_id'::text, true)) OR (current_setting('app.bypass_rls'::text, true) = 'on'::text))",
+      "polwithcheck": null
+    },
+    {
+      "relname": "\"Workflow\"",
+      "polname": "tenant_isolation_Workflow",
+      "polcmd": "*",
+      "polpermissive": true,
+      "polqual": "((\"tenantId\" = current_setting('app.current_tenant_id'::text, true)) OR (current_setting('app.bypass_rls'::text, true) = 'on'::text))",
+      "polwithcheck": null
+    },
+    {
+      "relname": "\"WorkflowExecution\"",
+      "polname": "tenant_isolation_WorkflowExecution",
+      "polcmd": "*",
+      "polpermissive": true,
+      "polqual": "((EXISTS ( SELECT 1\n   FROM \"Workflow\" w\n  WHERE ((w.id = \"WorkflowExecution\".\"workflowId\") AND (w.\"tenantId\" = current_setting('app.current_tenant_id'::text, true))))) OR (current_setting('app.bypass_rls'::text, true) = 'on'::text))",
+      "polwithcheck": null
+    },
+    {
+      "relname": "\"AITokenUsage\"",
+      "polname": "tenant_isolation_AITokenUsage",
+      "polcmd": "*",
+      "polpermissive": true,
+      "polqual": "((\"tenantId\" = current_setting('app.current_tenant_id'::text, true)) OR (current_setting('app.bypass_rls'::text, true) = 'on'::text))",
+      "polwithcheck": null
+    },
+    {
+      "relname": "\"WorkflowAction\"",
+      "polname": "tenant_isolation_WorkflowAction",
+      "polcmd": "*",
+      "polpermissive": true,
+      "polqual": "((EXISTS ( SELECT 1\n   FROM \"Workflow\" w\n  WHERE ((w.id = \"WorkflowAction\".\"workflowId\") AND (w.\"tenantId\" = current_setting('app.current_tenant_id'::text, true))))) OR (current_setting('app.bypass_rls'::text, true) = 'on'::text))",
+      "polwithcheck": null
+    },
+    {
+      "relname": "\"WorkflowExecutionStep\"",
+      "polname": "tenant_isolation_WorkflowExecutionStep",
+      "polcmd": "*",
+      "polpermissive": true,
+      "polqual": "((EXISTS ( SELECT 1\n   FROM (\"WorkflowExecution\" we\n     JOIN \"Workflow\" w ON ((w.id = we.\"workflowId\")))\n  WHERE ((we.id = \"WorkflowExecutionStep\".\"executionId\") AND (w.\"tenantId\" = current_setting('app.current_tenant_id'::text, true))))) OR (current_setting('app.bypass_rls'::text, true) = 'on'::text))",
+      "polwithcheck": null
+    },
+    {
+      "relname": "\"WorkflowTrigger\"",
+      "polname": "tenant_isolation_WorkflowTrigger",
+      "polcmd": "*",
+      "polpermissive": true,
+      "polqual": "((EXISTS ( SELECT 1\n   FROM \"Workflow\" w\n  WHERE ((w.id = \"WorkflowTrigger\".\"workflowId\") AND (w.\"tenantId\" = current_setting('app.current_tenant_id'::text, true))))) OR (current_setting('app.bypass_rls'::text, true) = 'on'::text))",
+      "polwithcheck": null
+    },
+    {
+      "relname": "\"ProductCategory\"",
+      "polname": "Tenant isolation for ProductCategory",
+      "polcmd": "*",
+      "polpermissive": true,
+      "polqual": "((\"tenantId\" = current_setting('app.current_tenant_id'::text, true)) OR (current_setting('app.bypass_rls'::text, true) = 'on'::text))",
+      "polwithcheck": null
+    },
+    {
+      "relname": "\"ProductFamily\"",
+      "polname": "Tenant isolation for ProductFamily",
+      "polcmd": "*",
+      "polpermissive": true,
+      "polqual": "((\"tenantId\" = current_setting('app.current_tenant_id'::text, true)) OR (current_setting('app.bypass_rls'::text, true) = 'on'::text))",
+      "polwithcheck": null
+    },
+    {
+      "relname": "\"Product\"",
+      "polname": "Tenant isolation for Product",
+      "polcmd": "*",
+      "polpermissive": true,
+      "polqual": "((\"tenantId\" = current_setting('app.current_tenant_id'::text, true)) OR (current_setting('app.bypass_rls'::text, true) = 'on'::text))",
+      "polwithcheck": null
+    },
+    {
+      "relname": "\"PriceBook\"",
+      "polname": "Tenant isolation for PriceBook",
+      "polcmd": "*",
+      "polpermissive": true,
+      "polqual": "((\"tenantId\" = current_setting('app.current_tenant_id'::text, true)) OR (current_setting('app.bypass_rls'::text, true) = 'on'::text))",
+      "polwithcheck": null
+    },
+    {
+      "relname": "\"DiscountRule\"",
+      "polname": "Tenant isolation for DiscountRule",
+      "polcmd": "*",
+      "polpermissive": true,
+      "polqual": "((\"tenantId\" = current_setting('app.current_tenant_id'::text, true)) OR (current_setting('app.bypass_rls'::text, true) = 'on'::text))",
+      "polwithcheck": null
+    },
+    {
+      "relname": "\"PriceBookEntry\"",
+      "polname": "Tenant isolation for PriceBookEntry",
+      "polcmd": "*",
+      "polpermissive": true,
+      "polqual": "((\"tenantId\" = current_setting('app.current_tenant_id'::text, true)) OR (current_setting('app.bypass_rls'::text, true) = 'on'::text))",
+      "polwithcheck": null
+    },
+    {
+      "relname": "\"Quote\"",
+      "polname": "Tenant isolation for Quote",
+      "polcmd": "*",
+      "polpermissive": true,
+      "polqual": "((\"tenantId\" = current_setting('app.current_tenant_id'::text, true)) OR (current_setting('app.bypass_rls'::text, true) = 'on'::text))",
+      "polwithcheck": null
+    },
+    {
+      "relname": "\"QuoteLineItem\"",
+      "polname": "Tenant isolation for QuoteLineItem",
+      "polcmd": "*",
+      "polpermissive": true,
+      "polqual": "((\"tenantId\" = current_setting('app.current_tenant_id'::text, true)) OR (current_setting('app.bypass_rls'::text, true) = 'on'::text))",
+      "polwithcheck": null
+    },
+    {
+      "relname": "\"Territory\"",
+      "polname": "tenant_isolation_territory",
+      "polcmd": "*",
+      "polpermissive": true,
+      "polqual": "((\"tenantId\" = current_setting('app.current_tenant_id'::text, true)) OR (current_setting('app.bypass_rls'::text, true) = 'on'::text))",
+      "polwithcheck": null
+    },
+    {
+      "relname": "\"UserTerritory\"",
+      "polname": "tenant_isolation_user_territory",
+      "polcmd": "*",
+      "polpermissive": true,
+      "polqual": "((\"tenantId\" = current_setting('app.current_tenant_id'::text, true)) OR (current_setting('app.bypass_rls'::text, true) = 'on'::text))",
+      "polwithcheck": null
+    },
+    {
+      "relname": "\"DealSnapshot\"",
+      "polname": "tenant_isolation_deal_snapshot",
+      "polcmd": "*",
+      "polpermissive": true,
+      "polqual": "((\"tenantId\" = current_setting('app.current_tenant_id'::text, true)) OR (current_setting('app.bypass_rls'::text, true) = 'on'::text))",
+      "polwithcheck": null
+    },
+    {
+      "relname": "\"SalesQuota\"",
+      "polname": "tenant_isolation_sales_quota",
+      "polcmd": "*",
+      "polpermissive": true,
+      "polqual": "((\"tenantId\" = current_setting('app.current_tenant_id'::text, true)) OR (current_setting('app.bypass_rls'::text, true) = 'on'::text))",
+      "polwithcheck": null
+    },
+    {
+      "relname": "\"FieldSecurityPolicy\"",
+      "polname": "tenant_isolation_FieldSecurityPolicy",
+      "polcmd": "*",
+      "polpermissive": true,
+      "polqual": "((\"tenantId\" = current_setting('app.current_tenant_id'::text, true)) OR (current_setting('app.bypass_rls'::text, true) = 'on'::text))",
+      "polwithcheck": null
+    },
+    {
+      "relname": "\"ABACPolicy\"",
+      "polname": "tenant_isolation_ABACPolicy",
+      "polcmd": "*",
+      "polpermissive": true,
+      "polqual": "((\"tenantId\" = current_setting('app.current_tenant_id'::text, true)) OR (current_setting('app.bypass_rls'::text, true) = 'on'::text))",
+      "polwithcheck": null
+    },
+    {
+      "relname": "\"ApprovalRequest\"",
+      "polname": "tenant_isolation_ApprovalRequest",
+      "polcmd": "*",
+      "polpermissive": true,
+      "polqual": "((\"tenantId\" = current_setting('app.current_tenant_id'::text, true)) OR (current_setting('app.bypass_rls'::text, true) = 'on'::text))",
+      "polwithcheck": null
+    },
+    {
+      "relname": "\"ApprovalStep\"",
+      "polname": "tenant_isolation_ApprovalStep",
+      "polcmd": "*",
+      "polpermissive": true,
+      "polqual": "((\"tenantId\" = current_setting('app.current_tenant_id'::text, true)) OR (current_setting('app.bypass_rls'::text, true) = 'on'::text))",
+      "polwithcheck": null
+    },
+    {
+      "relname": "\"Ticket\"",
+      "polname": "tenant_isolation_Ticket",
+      "polcmd": "*",
+      "polpermissive": true,
+      "polqual": "((\"tenantId\" = current_setting('app.current_tenant_id'::text, true)) OR (current_setting('app.bypass_rls'::text, true) = 'on'::text))",
+      "polwithcheck": null
+    },
+    {
+      "relname": "\"TicketMessage\"",
+      "polname": "tenant_isolation_TicketMessage",
+      "polcmd": "*",
+      "polpermissive": true,
+      "polqual": "((\"tenantId\" = current_setting('app.current_tenant_id'::text, true)) OR (current_setting('app.bypass_rls'::text, true) = 'on'::text))",
+      "polwithcheck": null
+    },
+    {
+      "relname": "\"SLAConfiguration\"",
+      "polname": "tenant_isolation_SLAConfiguration",
+      "polcmd": "*",
+      "polpermissive": true,
+      "polqual": "((\"tenantId\" = current_setting('app.current_tenant_id'::text, true)) OR (current_setting('app.bypass_rls'::text, true) = 'on'::text))",
+      "polwithcheck": null
+    },
+    {
+      "relname": "\"SLAEvent\"",
+      "polname": "tenant_isolation_SLAEvent",
+      "polcmd": "*",
+      "polpermissive": true,
+      "polqual": "((\"tenantId\" = current_setting('app.current_tenant_id'::text, true)) OR (current_setting('app.bypass_rls'::text, true) = 'on'::text))",
+      "polwithcheck": null
+    },
+    {
+      "relname": "\"DeadLetterQueue\"",
+      "polname": "tenant_isolation_dlq",
+      "polcmd": "*",
+      "polpermissive": true,
+      "polqual": "((\"tenantId\" = current_setting('app.current_tenant_id'::text, true)) OR (current_setting('app.bypass_rls'::text, true) = 'on'::text))",
+      "polwithcheck": null
+    },
+    {
+      "relname": "\"TenantPhoneNumber\"",
+      "polname": "tenant_phone_number_delete_policy",
+      "polcmd": "d",
+      "polpermissive": true,
+      "polqual": "((\"tenantId\" = current_setting('app.current_tenant_id'::text, true)) OR (current_setting('app.bypass_rls'::text, true) = 'on'::text))",
+      "polwithcheck": null
+    },
+    {
+      "relname": "\"TenantPhoneNumber\"",
+      "polname": "tenant_phone_number_update_policy",
+      "polcmd": "w",
+      "polpermissive": true,
+      "polqual": "((\"tenantId\" = current_setting('app.current_tenant_id'::text, true)) OR (current_setting('app.bypass_rls'::text, true) = 'on'::text))",
+      "polwithcheck": "((\"tenantId\" = current_setting('app.current_tenant_id'::text, true)) OR (current_setting('app.bypass_rls'::text, true) = 'on'::text))"
+    },
+    {
+      "relname": "\"TenantPhoneNumber\"",
+      "polname": "tenant_phone_number_insert_policy",
+      "polcmd": "a",
+      "polpermissive": true,
+      "polqual": null,
+      "polwithcheck": "((\"tenantId\" = current_setting('app.current_tenant_id'::text, true)) OR (current_setting('app.bypass_rls'::text, true) = 'on'::text))"
+    },
+    {
+      "relname": "\"TenantPhoneNumber\"",
+      "polname": "tenant_phone_number_select_policy",
+      "polcmd": "r",
+      "polpermissive": true,
+      "polqual": "((\"tenantId\" = current_setting('app.current_tenant_id'::text, true)) OR (current_setting('app.bypass_rls'::text, true) = 'on'::text))",
+      "polwithcheck": null
+    },
+    {
+      "relname": "\"ChatMessage\"",
+      "polname": "tenant_isolation_chat_message",
+      "polcmd": "*",
+      "polpermissive": true,
+      "polqual": "((\"tenantId\" = current_setting('app.current_tenant_id'::text, true)) OR (current_setting('app.bypass_rls'::text, true) = 'on'::text))",
+      "polwithcheck": "((\"tenantId\" = current_setting('app.current_tenant_id'::text, true)) OR (current_setting('app.bypass_rls'::text, true) = 'on'::text))"
+    },
+    {
+      "relname": "\"IdempotencyKey\"",
+      "polname": "tenant_isolation_idempotency_key",
+      "polcmd": "*",
+      "polpermissive": true,
+      "polqual": "((\"tenantId\" = current_setting('app.current_tenant_id'::text, true)) OR (current_setting('app.bypass_rls'::text, true) = 'on'::text))",
+      "polwithcheck": null
+    },
+    {
+      "relname": "\"ChatParticipant\"",
+      "polname": "tenant_isolation_chat_participant",
+      "polcmd": "*",
+      "polpermissive": true,
+      "polqual": "((\"tenantId\" = current_setting('app.current_tenant_id'::text, true)) OR (current_setting('app.bypass_rls'::text, true) = 'on'::text))",
+      "polwithcheck": "((current_setting('app.bypass_rls'::text, true) = 'on'::text) OR ((\"tenantId\" = current_setting('app.current_tenant_id'::text, true)) AND (EXISTS ( SELECT 1\n   FROM \"ChatConversation\" c\n  WHERE ((c.id = \"ChatParticipant\".\"conversationId\") AND (c.\"tenantId\" = current_setting('app.current_tenant_id'::text, true)))))))"
+    },
+    {
+      "relname": "\"ChatReadReceipt\"",
+      "polname": "tenant_isolation_chat_read_receipt",
+      "polcmd": "*",
+      "polpermissive": true,
+      "polqual": "((\"tenantId\" = current_setting('app.current_tenant_id'::text, true)) OR (current_setting('app.bypass_rls'::text, true) = 'on'::text))",
+      "polwithcheck": "((\"tenantId\" = current_setting('app.current_tenant_id'::text, true)) OR (current_setting('app.bypass_rls'::text, true) = 'on'::text))"
+    },
+    {
+      "relname": "\"MailRecipient\"",
+      "polname": "tenant_isolation_mail_recipient",
+      "polcmd": "*",
+      "polpermissive": true,
+      "polqual": "((\"tenantId\" = current_setting('app.current_tenant_id'::text, true)) OR (current_setting('app.bypass_rls'::text, true) = 'on'::text))",
+      "polwithcheck": "((\"tenantId\" = current_setting('app.current_tenant_id'::text, true)) OR (current_setting('app.bypass_rls'::text, true) = 'on'::text))"
+    },
+    {
+      "relname": "\"MailMessage\"",
+      "polname": "tenant_isolation_mail_message",
+      "polcmd": "*",
+      "polpermissive": true,
+      "polqual": "((\"tenantId\" = current_setting('app.current_tenant_id'::text, true)) OR (current_setting('app.bypass_rls'::text, true) = 'on'::text))",
+      "polwithcheck": "((\"tenantId\" = current_setting('app.current_tenant_id'::text, true)) OR (current_setting('app.bypass_rls'::text, true) = 'on'::text))"
+    },
+    {
+      "relname": "\"MailDraft\"",
+      "polname": "tenant_isolation_mail_draft",
+      "polcmd": "*",
+      "polpermissive": true,
+      "polqual": "((\"tenantId\" = current_setting('app.current_tenant_id'::text, true)) OR (current_setting('app.bypass_rls'::text, true) = 'on'::text))",
+      "polwithcheck": "((\"tenantId\" = current_setting('app.current_tenant_id'::text, true)) OR (current_setting('app.bypass_rls'::text, true) = 'on'::text))"
+    },
+    {
+      "relname": "\"CommunicationAttachment\"",
+      "polname": "tenant_isolation_comm_attachment",
+      "polcmd": "*",
+      "polpermissive": true,
+      "polqual": "((\"tenantId\" = current_setting('app.current_tenant_id'::text, true)) OR (current_setting('app.bypass_rls'::text, true) = 'on'::text))",
+      "polwithcheck": "((\"tenantId\" = current_setting('app.current_tenant_id'::text, true)) OR (current_setting('app.bypass_rls'::text, true) = 'on'::text))"
+    },
+    {
+      "relname": "\"Location\"",
+      "polname": "tenant_isolation_location",
+      "polcmd": "*",
+      "polpermissive": true,
+      "polqual": "((\"tenantId\" = current_setting('app.current_tenant_id'::text, true)) OR (current_setting('app.bypass_rls'::text, true) = 'on'::text))",
+      "polwithcheck": "((\"tenantId\" = current_setting('app.current_tenant_id'::text, true)) OR (current_setting('app.bypass_rls'::text, true) = 'on'::text))"
+    },
+    {
+      "relname": "\"Incident\"",
+      "polname": "tenant_isolation_incident",
+      "polcmd": "*",
+      "polpermissive": true,
+      "polqual": "((\"tenantId\" = current_setting('app.current_tenant_id'::text, true)) OR (current_setting('app.bypass_rls'::text, true) = 'on'::text))",
+      "polwithcheck": "((\"tenantId\" = current_setting('app.current_tenant_id'::text, true)) OR (current_setting('app.bypass_rls'::text, true) = 'on'::text))"
+    },
+    {
+      "relname": "\"TenantIntegration\"",
+      "polname": "tenant_isolation_tenant_integration",
+      "polcmd": "*",
+      "polpermissive": true,
+      "polqual": "((\"tenantId\" = current_setting('app.current_tenant_id'::text, true)) OR (current_setting('app.bypass_rls'::text, true) = 'on'::text))",
+      "polwithcheck": "((\"tenantId\" = current_setting('app.current_tenant_id'::text, true)) OR (current_setting('app.bypass_rls'::text, true) = 'on'::text))"
+    },
+    {
+      "relname": "\"WebhookEvent\"",
+      "polname": "tenant_isolation_webhook_event",
+      "polcmd": "*",
+      "polpermissive": true,
+      "polqual": "((current_setting('app.bypass_rls'::text, true) = 'on'::text) OR ((\"tenantId\" IS NOT NULL) AND (\"tenantId\" = current_setting('app.current_tenant_id'::text, true))))",
+      "polwithcheck": "((current_setting('app.bypass_rls'::text, true) = 'on'::text) OR ((\"tenantId\" IS NOT NULL) AND (\"tenantId\" = current_setting('app.current_tenant_id'::text, true))))"
+    },
+    {
+      "relname": "\"SecurityEvent\"",
+      "polname": "tenant_isolation_security_event",
+      "polcmd": "*",
+      "polpermissive": true,
+      "polqual": "((\"tenantId\" = current_setting('app.current_tenant_id'::text, true)) OR (current_setting('app.bypass_rls'::text, true) = 'on'::text))",
+      "polwithcheck": "((\"tenantId\" = current_setting('app.current_tenant_id'::text, true)) OR (current_setting('app.bypass_rls'::text, true) = 'on'::text))"
+    },
+    {
+      "relname": "\"DocumentPermission\"",
+      "polname": "tenant_isolation_document_permission",
+      "polcmd": "*",
+      "polpermissive": true,
+      "polqual": "((\"tenantId\" = current_setting('app.current_tenant_id'::text, true)) OR (current_setting('app.bypass_rls'::text, true) = 'on'::text))",
+      "polwithcheck": "((\"tenantId\" = current_setting('app.current_tenant_id'::text, true)) OR (current_setting('app.bypass_rls'::text, true) = 'on'::text))"
+    },
+    {
+      "relname": "\"CRMComment\"",
+      "polname": "tenant_isolation_crm_comment",
+      "polcmd": "*",
+      "polpermissive": true,
+      "polqual": "((\"tenantId\" = current_setting('app.current_tenant_id'::text, true)) OR (current_setting('app.bypass_rls'::text, true) = 'on'::text))",
+      "polwithcheck": "((\"tenantId\" = current_setting('app.current_tenant_id'::text, true)) OR (current_setting('app.bypass_rls'::text, true) = 'on'::text))"
+    },
+    {
+      "relname": "\"ActivityTimeline\"",
+      "polname": "tenant_isolation_activity_timeline",
+      "polcmd": "*",
+      "polpermissive": true,
+      "polqual": "((\"tenantId\" = current_setting('app.current_tenant_id'::text, true)) OR (current_setting('app.bypass_rls'::text, true) = 'on'::text))",
+      "polwithcheck": "((\"tenantId\" = current_setting('app.current_tenant_id'::text, true)) OR (current_setting('app.bypass_rls'::text, true) = 'on'::text))"
+    },
+    {
+      "relname": "\"DemoStorage\"",
+      "polname": "tenant_isolation_demo_storage",
+      "polcmd": "*",
+      "polpermissive": true,
+      "polqual": "((\"tenantId\" = current_setting('app.current_tenant_id'::text, true)) OR (current_setting('app.bypass_rls'::text, true) = 'on'::text))",
+      "polwithcheck": "((\"tenantId\" = current_setting('app.current_tenant_id'::text, true)) OR (current_setting('app.bypass_rls'::text, true) = 'on'::text))"
+    },
+    {
+      "relname": "\"AIEvent\"",
+      "polname": "tenant_isolation_ai_event",
+      "polcmd": "*",
+      "polpermissive": true,
+      "polqual": "((\"tenantId\" = current_setting('app.current_tenant_id'::text, true)) OR (current_setting('app.bypass_rls'::text, true) = 'on'::text))",
+      "polwithcheck": "((\"tenantId\" = current_setting('app.current_tenant_id'::text, true)) OR (current_setting('app.bypass_rls'::text, true) = 'on'::text))"
+    },
+    {
+      "relname": "\"MailThread\"",
+      "polname": "tenant_isolation_mail_thread",
+      "polcmd": "*",
+      "polpermissive": true,
+      "polqual": "((\"tenantId\" = current_setting('app.current_tenant_id'::text, true)) OR (current_setting('app.bypass_rls'::text, true) = 'on'::text))",
+      "polwithcheck": "((\"tenantId\" = current_setting('app.current_tenant_id'::text, true)) OR (current_setting('app.bypass_rls'::text, true) = 'on'::text))"
+    },
+    {
+      "relname": "\"Notification\"",
+      "polname": "tenant_isolation_notification",
+      "polcmd": "*",
+      "polpermissive": true,
+      "polqual": "((\"tenantId\" = current_setting('app.current_tenant_id'::text, true)) OR (current_setting('app.bypass_rls'::text, true) = 'on'::text))",
+      "polwithcheck": "((\"tenantId\" = current_setting('app.current_tenant_id'::text, true)) OR (current_setting('app.bypass_rls'::text, true) = 'on'::text))"
+    },
+    {
+      "relname": "\"NotificationPreference\"",
+      "polname": "tenant_isolation_notification_pref",
+      "polcmd": "*",
+      "polpermissive": true,
+      "polqual": "((\"tenantId\" = current_setting('app.current_tenant_id'::text, true)) OR (current_setting('app.bypass_rls'::text, true) = 'on'::text))",
+      "polwithcheck": "((\"tenantId\" = current_setting('app.current_tenant_id'::text, true)) OR (current_setting('app.bypass_rls'::text, true) = 'on'::text))"
+    },
+    {
+      "relname": "\"Pipeline\"",
+      "polname": "tenant_isolation_pipeline",
+      "polcmd": "*",
+      "polpermissive": true,
+      "polqual": "((\"tenantId\" = current_setting('app.current_tenant_id'::text, true)) OR (current_setting('app.bypass_rls'::text, true) = 'on'::text))",
+      "polwithcheck": "((\"tenantId\" = current_setting('app.current_tenant_id'::text, true)) OR (current_setting('app.bypass_rls'::text, true) = 'on'::text))"
+    },
+    {
+      "relname": "\"PipelineStage\"",
+      "polname": "tenant_isolation_pipeline_stage",
+      "polcmd": "*",
+      "polpermissive": true,
+      "polqual": "((\"tenantId\" = current_setting('app.current_tenant_id'::text, true)) OR (current_setting('app.bypass_rls'::text, true) = 'on'::text))",
+      "polwithcheck": "((\"tenantId\" = current_setting('app.current_tenant_id'::text, true)) OR (current_setting('app.bypass_rls'::text, true) = 'on'::text))"
+    },
+    {
+      "relname": "\"DealStageHistory\"",
+      "polname": "tenant_isolation_deal_stage_history",
+      "polcmd": "*",
+      "polpermissive": true,
+      "polqual": "((\"tenantId\" = current_setting('app.current_tenant_id'::text, true)) OR (current_setting('app.bypass_rls'::text, true) = 'on'::text))",
+      "polwithcheck": "((\"tenantId\" = current_setting('app.current_tenant_id'::text, true)) OR (current_setting('app.bypass_rls'::text, true) = 'on'::text))"
+    },
+    {
+      "relname": "\"EventOutbox\"",
+      "polname": "tenant_isolation_event_outbox",
+      "polcmd": "*",
+      "polpermissive": true,
+      "polqual": "((\"tenantId\" = current_setting('app.current_tenant_id'::text, true)) OR (current_setting('app.bypass_rls'::text, true) = 'on'::text))",
+      "polwithcheck": "((\"tenantId\" = current_setting('app.current_tenant_id'::text, true)) OR (current_setting('app.bypass_rls'::text, true) = 'on'::text))"
+    },
+    {
+      "relname": "\"Subscription\"",
+      "polname": "tenant_isolation_subscription",
+      "polcmd": "*",
+      "polpermissive": true,
+      "polqual": "((\"tenantId\" = current_setting('app.current_tenant_id'::text, true)) OR (current_setting('app.bypass_rls'::text, true) = 'on'::text))",
+      "polwithcheck": "((\"tenantId\" = current_setting('app.current_tenant_id'::text, true)) OR (current_setting('app.bypass_rls'::text, true) = 'on'::text))"
+    },
+    {
+      "relname": "\"Invoice\"",
+      "polname": "tenant_isolation_invoice",
+      "polcmd": "*",
+      "polpermissive": true,
+      "polqual": "((\"tenantId\" = current_setting('app.current_tenant_id'::text, true)) OR (current_setting('app.bypass_rls'::text, true) = 'on'::text))",
+      "polwithcheck": "((\"tenantId\" = current_setting('app.current_tenant_id'::text, true)) OR (current_setting('app.bypass_rls'::text, true) = 'on'::text))"
+    }
+  ]
+}

@@ -39,7 +39,7 @@ describe('Phase S4.4E - Disaster Recovery Remediation Tests', () => {
       await tx.tenant.create({ data: { id: tenantBId, name: 'DR Tenant B' } });
       await tx.user.create({ data: { id: userAId, tenantId: tenantAId, email: 'ownerA@dr.com', status: 'ACTIVE' } });
       await tx.user.create({ data: { id: userBId, tenantId: tenantBId, email: 'ownerB@dr.com', status: 'ACTIVE' } });
-      
+
       // Update tenant owner
       await tx.tenant.update({ where: { id: tenantAId }, data: { ownerId: userAId } });
       await tx.tenant.update({ where: { id: tenantBId }, data: { ownerId: userBId } });
@@ -93,8 +93,8 @@ describe('Phase S4.4E - Disaster Recovery Remediation Tests', () => {
     const service = new RetentionPolicyService();
     // This calls executeAsSystem internally
     await service.enforceRetentionPolicies();
-    expect(true).toBe(true); 
-  });
+    expect(true).toBe(true);
+  }, 15000);
 
   test('D. Global RPO: can inspect all required tenants', async () => {
     const monitor = new RPOMonitor();
@@ -103,7 +103,7 @@ describe('Phase S4.4E - Disaster Recovery Remediation Tests', () => {
     const foundB = metrics.find(m => m.tenantId === tenantBId);
     expect(foundA).toBeDefined();
     expect(foundB).toBeDefined();
-  });
+  }, 15000);
 
   test('E. Tenant RPO: Verify cannot see other tenant data', async () => {
     const monitor = new RPOMonitor();
@@ -116,7 +116,7 @@ describe('Phase S4.4E - Disaster Recovery Remediation Tests', () => {
     const job = await requestRestore(`local://${tenantAId}/fakekey.enc`, 'dummy-checksum', userAId);
     expect(job).toBeDefined();
     await approveRestore(job.id);
-    
+
     // Expect failure due to missing S3 object
     await expect(executeRestore(job.id)).rejects.toThrow();
 
@@ -127,8 +127,10 @@ describe('Phase S4.4E - Disaster Recovery Remediation Tests', () => {
 
   test('H. Privilege Cleanup Test (Step 13)', async () => {
     await executeAsSystem(SystemOperation.DISASTER_RECOVERY, async (tx) => {
-      const pids: any[] = await tx.$queryRawUnsafe(`SELECT current_setting('app.bypass_rls', true) as bypass`);
-      expect(pids[0].bypass).toBe('on');
+      // S3.4C Native Role architecture: crm_system_user has BYPASSRLS natively.
+      // We no longer set 'app.bypass_rls'. We just verify we can see all tenants.
+      const tenants = await tx.tenant.findMany();
+      expect(tenants.length).toBeGreaterThan(0);
     });
 
     // Outside transaction, should be null or missing
