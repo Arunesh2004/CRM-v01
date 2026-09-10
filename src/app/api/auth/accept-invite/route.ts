@@ -24,7 +24,7 @@ const original_POST = async function (req: Request) {
     const client = await clerkClient();
     const clerkUser = await client.users.getUser(clerkId);
     const verifiedEmails = (clerkUser.emailAddresses || [])
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any -- S2 Residual Debt: Legacy internal payload requires architectural typing
+
       // eslint-disable-next-line @typescript-eslint/no-explicit-any -- S2 Residual Debt: Legacy internal payload requires architectural typing
       .filter((e: any) => e.verification?.status === 'verified')
       // eslint-disable-next-line @typescript-eslint/no-explicit-any -- S2 Residual Debt: Legacy internal payload requires architectural typing
@@ -38,8 +38,17 @@ const original_POST = async function (req: Request) {
 
     // Run transaction
     const result = await executeAsSystem(SystemOperation.CLERK_PROVISIONING, async (tx) => {
+      // Acquire pessimistic row lock to prevent concurrent double-redemption
+      const locked = await tx.$queryRaw<{id: string}[]>`
+        SELECT id FROM "UserInvitation" WHERE "tokenHash" = ${tokenHash} FOR UPDATE
+      `;
+
+      if (locked.length === 0) {
+        return { error: 'Invitation not found', status: 404 };
+      }
+
       const invitation = await tx.userInvitation.findUnique({
-        where: { tokenHash }
+        where: { id: locked[0].id }
       });
 
       if (!invitation) {
@@ -72,7 +81,7 @@ const original_POST = async function (req: Request) {
           });
           return { success: true, message: 'User already active. Invitation consumed.' };
         }
-        
+
         if (existingUser.status === 'INVITED' && existingUser.clerkId === null) {
           // Link existing user instead of creating a new one
           const linkedUser = await tx.user.update({
@@ -145,11 +154,11 @@ const original_POST = async function (req: Request) {
     return NextResponse.json({ success: true });
 
   } catch (errRaw: unknown) {
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any -- S2 Residual Debt: Legacy internal payload requires architectural typing
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any -- S2 Residual Debt: Legacy internal payload requires architectural typing
+
+
     const err = errRaw instanceof Error ? errRaw : new Error(String(errRaw));
     Logger.error('Accept invite error:', err);
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any -- S2 Residual Debt: Legacy internal payload requires architectural typing
+
     // eslint-disable-next-line @typescript-eslint/no-explicit-any -- S2 Residual Debt: Legacy internal payload requires architectural typing
     if ((err as any).code === 'P2002' || (err as any).code === 'P2034') {
       return NextResponse.json({ error: 'Conflict or race condition detected' }, { status: 400 });
