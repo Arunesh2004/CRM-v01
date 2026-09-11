@@ -8,6 +8,7 @@ import { CustomerActivityTimeline } from '@/components/crm/CustomerActivityTimel
 import { StatusUpdater } from '@/components/crm/StatusUpdater';
 import { EditLeadForm } from '@/components/crm/EditLeadForm';
 import { LeadActions } from '@/components/crm/LeadActions';
+import { getPipelinesAction } from '@/modules/crm/actions/deal.actions';
 
 export default async function LeadDetailsPage({ params }: { params: Promise<{ id: string } > }) {
   await requireAuth();
@@ -15,7 +16,7 @@ export default async function LeadDetailsPage({ params }: { params: Promise<{ id
   await requirePermission('LEAD', 'READ');
 
   const prisma = withTenant(tenantId);
-  const [lead, users, activities] = await Promise.all([
+  const [lead, users, activities, pipelinesRes] = await Promise.all([
     prisma.lead.findFirst({
       where: { id: (await params).id, tenantId, deletedAt: null },
       include: {
@@ -32,7 +33,8 @@ export default async function LeadDetailsPage({ params }: { params: Promise<{ id
       orderBy: { createdAt: 'desc' },
       take: 20,
       include: { actor: { select: { email: true } } }
-    })
+    }),
+    getPipelinesAction()
   ]);
 
   if (!lead) return notFound();
@@ -60,7 +62,7 @@ export default async function LeadDetailsPage({ params }: { params: Promise<{ id
               <span className="font-medium text-[#8891B0]">{lead.name}</span>
               <StatusUpdater leadId={lead.id} currentStatus={lead.status} />
             </div>
-            <LeadActions leadId={lead.id} users={users} />
+            <LeadActions leadId={lead.id} users={users} pipelines={pipelinesRes.data || []} />
           </div>
         </div>
         <div className="relative z-10 shrink-0 flex gap-2">

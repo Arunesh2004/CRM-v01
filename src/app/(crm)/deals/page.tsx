@@ -14,15 +14,15 @@ export default async function DealsPage(props: {
   searchParams: Promise<{ [key: string]: string | string[] | undefined }>;
 }) {
   const searchParams = await props.searchParams;
-  const tenantId = await requireTenant();
+  const _tenantId = await requireTenant();
 
   // Ensure default pipeline exists
-  await seedDefaultPipelineAction(tenantId);
+  await seedDefaultPipelineAction();
 
   const pipelineRes = await getPipelinesAction();
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any -- S2 Residual Debt: Legacy internal payload requires architectural typing
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any -- S2 Residual Debt: Legacy internal payload requires architectural typing
-  const pipelines: any[] =
+
+
+  const pipelines =
     pipelineRes.success && pipelineRes.data ? pipelineRes.data : [];
 
   if (pipelines.length === 0) {
@@ -33,10 +33,10 @@ export default async function DealsPage(props: {
     typeof searchParams.pipeline === "string"
       ? searchParams.pipeline
       : pipelines[0]?.id;
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any -- S2 Residual Debt: Legacy internal payload requires architectural typing
+
   const pipeline =
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any -- S2 Residual Debt: Legacy internal payload requires architectural typing
-    pipelines.find((p: any) => p.id === selectedPipelineId) || pipelines[0];
+
+    pipelines.find((p) => p.id === selectedPipelineId) || pipelines[0];
 
   const analyticsRes = await getDealAnalyticsAction();
   const metrics = analyticsRes.success ? analyticsRes.data : null;
@@ -54,14 +54,13 @@ export default async function DealsPage(props: {
           </p>
         </div>
         <div className="flex items-center gap-2">
-          {/* Pipeline Selector could go here */}
+
           <select
             className="border rounded-md px-3 py-2 text-sm bg-background"
-            // eslint-disable-next-line @typescript-eslint/no-explicit-any -- S2 Residual Debt: Legacy internal payload requires architectural typing
+
             defaultValue={pipeline.id}
           >
-            // eslint-disable-next-line @typescript-eslint/no-explicit-any -- S2 Residual Debt: Legacy internal payload requires architectural typing
-            {pipelines.map((p: any) => (
+            {pipelines.map((p) => (
               <option key={p.id} value={p.id}>
                 {p.name}
               </option>
@@ -122,7 +121,7 @@ export default async function DealsPage(props: {
         </div>
       )}
 
-      {/* Kanban Board Container */}
+
       <div className="flex-1 overflow-hidden">
         <DealKanbanBoard pipeline={pipeline} />
       </div>

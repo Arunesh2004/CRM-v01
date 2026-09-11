@@ -33,9 +33,9 @@ export async function getDeals(params?: {
     ];
   }
 
+
    
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any -- S2 Residual Debt: Legacy internal payload requires architectural typing
-  const args: any = {
+  const args: Prisma.DealFindManyArgs = {
     where,
     orderBy: { createdAt: 'desc' },
     include: {
@@ -54,7 +54,7 @@ export async function getDeals(params?: {
   }
 
   const results = await prisma.deal.findMany(args);
-  
+
   let hasMore = false;
   let data = results;
   if (params?.limit && results.length > params.limit) {
@@ -110,17 +110,16 @@ export async function createDeal(data: {
   assignedUserId: string;
 }) {
   const user = await requireAuth();
-   
+
   const tenantId = await requireTenant();
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars -- S2 Residual Debt: Legacy unused local
-  const prisma = withTenant(tenantId);
-   
+    const prisma = withTenant(tenantId);
+
   await requirePermission('CUSTOMER', 'CREATE');
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any -- S2 Residual Debt: Legacy internal payload requires architectural typing
-  return await globalPrisma.$transaction(async (baseTx: any) => {
+   
+  return await globalPrisma.$transaction(async (baseTx: Prisma.TransactionClient) => {
     const tx = await withTenantTransaction(baseTx, tenantId);
-    
+
     // Explicit tenant boundary checks to prevent BOLA via nested foreign key assignment
     if (data.customerId) {
        const customer = await tx.customer.findFirst({ where: { id: data.customerId, tenantId } });
@@ -128,7 +127,7 @@ export async function createDeal(data: {
     }
     const pipeline = await tx.pipeline.findFirst({ where: { id: data.pipelineId, tenantId } });
     if (!pipeline) throw new Error('Pipeline not found in current tenant');
-    
+
     const stage = await tx.pipelineStage.findFirst({ where: { id: data.stageId, tenantId } });
     if (!stage) throw new Error('Stage not found in current tenant');
 
@@ -193,18 +192,18 @@ export async function convertLeadToDeal(leadId: string, assignedUserId: string, 
   const prisma = withTenant(tenantId);
   await requirePermission('CUSTOMER', 'UPDATE');
 
-   
+
   const lead = await prisma.lead.findFirst({ where: { id: leadId, tenantId } });
   if (!lead) throw new Error('Lead not found');
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any -- S2 Residual Debt: Legacy internal payload requires architectural typing
-  return await globalPrisma.$transaction(async (baseTx: any) => {
+   
+  return await globalPrisma.$transaction(async (baseTx: Prisma.TransactionClient) => {
     const tx = await withTenantTransaction(baseTx, tenantId);
-    // Note: If customer already exists for this lead (it shouldn't normally if it's just a lead, 
+    // Note: If customer already exists for this lead (it shouldn't normally if it's just a lead,
     // but in case conversion happened partially), we can link or create customer.
     // For simplicity, we just create the deal linked to the Lead.
     // Real CRM conversion creates Customer AND Deal.
-    
+
     let customerId = undefined;
     // Find or create customer from lead
     const normalizedName = lead.name.toLowerCase().trim();
@@ -263,18 +262,17 @@ export async function convertLeadToDeal(leadId: string, assignedUserId: string, 
     return deal;
   });
 }
- 
+
 
 export async function moveDealStage(dealId: string, newStageId: string, lostReason?: string, lostCompetitor?: string, lostNotes?: string) {
   const user = await requireAuth();
-   
+
   const tenantId = await requireTenant();
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars -- S2 Residual Debt: Legacy unused local
-  const prisma = withTenant(tenantId);
+    const prisma = withTenant(tenantId);
   await requirePermission('CUSTOMER', 'UPDATE');
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any -- S2 Residual Debt: Legacy internal payload requires architectural typing
-  return await globalPrisma.$transaction(async (baseTx: any) => {
+   
+  return await globalPrisma.$transaction(async (baseTx: Prisma.TransactionClient) => {
     const tx = await withTenantTransaction(baseTx, tenantId);
     const deal = await tx.deal.findFirst({ where: { id: dealId, tenantId }, include: { stage: true } });
     if (!deal) throw new Error('Deal not found');
@@ -286,7 +284,7 @@ export async function moveDealStage(dealId: string, newStageId: string, lostReas
 
     let status: 'OPEN' | 'WON' | 'LOST' = 'OPEN';
     let actualCloseDate: Date | null = deal.actualCloseDate;
-    
+
     if (newStage.isClosedWon) {
       status = 'WON';
       actualCloseDate = new Date();
@@ -394,8 +392,8 @@ export async function getDealAnalytics() {
     }
   });
 
-  const winRate = (wonDealsCount + (deals.length - activeDealsCount > 0 ? (deals.length - activeDealsCount - wonDealsCount) : 0)) > 0 
-    ? (wonDealsCount / (deals.length - activeDealsCount)) * 100 
+  const winRate = (wonDealsCount + (deals.length - activeDealsCount > 0 ? (deals.length - activeDealsCount - wonDealsCount) : 0)) > 0
+    ? (wonDealsCount / (deals.length - activeDealsCount)) * 100
     : 0;
 
   const averageDealSize = wonDealsCount > 0 ? wonRevenue / wonDealsCount : 0;
@@ -418,15 +416,15 @@ export async function getDealTimeline(
   limit: number = 50
 ) {
   const tenantId = await requireTenant();
-   
+
   const prisma = withTenant(tenantId);
   await requirePermission('CUSTOMER', 'READ');
 
   const deal = await prisma.deal.findFirst({ where: { id: dealId, tenantId, deletedAt: null } });
   if (!deal) throw new Error('Deal not found');
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any -- S2 Residual Debt: Legacy internal payload requires architectural typing
-  const conditions: any[] = [{ entityType: 'DEAL', entityId: dealId }];
+   
+  const conditions: Prisma.ActivityTimelineWhereInput[] = [{ entityType: 'DEAL', entityId: dealId }];
   if (deal.leadId) {
     conditions.push({ entityType: 'LEAD', entityId: deal.leadId });
   }
@@ -449,3 +447,122 @@ export async function getDealTimeline(
   return { events, hasMore, nextCursor };
 }
 
+
+export async function updateDeal(id: string, data: {
+  title?: string;
+  description?: string;
+  source?: string;
+  value?: number;
+  expectedCloseDate?: Date | null;
+  pipelineId?: string;
+  stageId?: string;
+  customerId?: string | null;
+  assignedUserId?: string;
+}) {
+  const user = await requireAuth();
+  const tenantId = await requireTenant();
+  await requirePermission('CUSTOMER', 'UPDATE');
+
+  return await globalPrisma.$transaction(async (baseTx: Prisma.TransactionClient) => {
+    const tx = await withTenantTransaction(baseTx, tenantId);
+
+    const deal = await tx.deal.findFirst({ where: { id, tenantId, deletedAt: null } });
+    if (!deal) throw new Error('Deal not found or archived');
+
+    if (data.customerId && data.customerId !== deal.customerId) {
+       const customer = await tx.customer.findFirst({ where: { id: data.customerId, tenantId } });
+       if (!customer) throw new Error('Customer not found in current tenant');
+    }
+    if (data.pipelineId && data.pipelineId !== deal.pipelineId) {
+      const pipeline = await tx.pipeline.findFirst({ where: { id: data.pipelineId, tenantId } });
+      if (!pipeline) throw new Error('Pipeline not found in current tenant');
+    }
+    if (data.stageId && data.stageId !== deal.stageId) {
+      const stage = await tx.pipelineStage.findFirst({ where: { id: data.stageId, tenantId } });
+      if (!stage) throw new Error('Stage not found in current tenant');
+      if (data.pipelineId && stage.pipelineId !== data.pipelineId) throw new Error('Stage does not belong to Pipeline');
+      if (!data.pipelineId && stage.pipelineId !== deal.pipelineId) throw new Error('Stage does not belong to Pipeline');
+    }
+    if (data.assignedUserId && data.assignedUserId !== deal.assignedUserId) {
+      const assignee = await tx.user.findFirst({ where: { id: data.assignedUserId, tenantId } });
+      if (!assignee) throw new Error('Assigned user not found in current tenant');
+    }
+
+    const updated = await tx.deal.updateMany({
+      where: { id, version: deal.version },
+      data: {
+        ...data,
+        version: { increment: 1 }
+      }
+    });
+
+    if (updated.count === 0) {
+      throw new Error('Concurrency conflict: Deal was updated by another user');
+    }
+
+    await tx.activityTimeline.create({
+      data: {
+        tenantId,
+        entityType: 'DEAL',
+        entityId: id,
+        actorId: user.id,
+        type: 'SYSTEM',
+        content: 'Deal updated',
+      }
+    });
+
+    await tx.eventOutbox.create({
+      data: {
+        eventId: crypto.randomUUID(),
+        tenantId,
+        eventType: 'DEAL_UPDATED',
+        payload: { actorId: user.id, resource: 'DEAL', action: 'UPDATE', metadata: { dealId: id } }
+      }
+    });
+
+    return await tx.deal.findFirst({ where: { id, tenantId } });
+  });
+}
+
+export async function archiveDeal(id: string) {
+  const user = await requireAuth();
+  const tenantId = await requireTenant();
+  await requirePermission('CUSTOMER', 'UPDATE');
+
+  return await globalPrisma.$transaction(async (baseTx: Prisma.TransactionClient) => {
+    const tx = await withTenantTransaction(baseTx, tenantId);
+
+    const deal = await tx.deal.findFirst({ where: { id, tenantId, deletedAt: null } });
+    if (!deal) throw new Error('Deal not found or already archived');
+
+    const now = new Date();
+
+    await tx.deal.update({
+      where: { id },
+      data: { deletedAt: now }
+    });
+
+    await tx.task.updateMany({
+      where: { dealId: id, deletedAt: null },
+      data: { deletedAt: now }
+    });
+
+    await tx.cRMComment.updateMany({
+      where: { entityType: 'DEAL', entityId: id, deletedAt: null },
+      data: { deletedAt: now }
+    });
+
+    await tx.auditLog.create({
+      data: {
+        tenantId,
+        actorId: user.id,
+        actorType: 'USER',
+        action: 'DEAL_DELETED',
+        resource: 'DEAL',
+        resourceId: id,
+      }
+    });
+
+    return { success: true };
+  });
+}

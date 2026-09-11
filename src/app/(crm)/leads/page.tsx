@@ -4,11 +4,12 @@ import { LeadForm } from "@/components/crm/LeadForm";
 import { withTenant } from "@db/utils/prisma-tenant";
 import { requireTenant } from "@/lib/auth";
 import { Skeleton } from "@/components/ui/Skeleton";
+import { FilterBar } from "@/components/crm/FilterBar";
 
 import { KanbanBoardClientWrapper as KanbanBoard } from "@/components/crm/KanbanBoardClientWrapper";
 
-// eslint-disable-next-line @typescript-eslint/no-unused-vars -- S2 Residual Debt: Legacy unused local
-// eslint-disable-next-line @typescript-eslint/no-unused-vars -- S2 Residual Debt: Legacy unused local
+
+
 const STATUS_COLUMNS = ["NEW", "CONTACTED", "QUALIFIED", "CONVERTED", "LOST"];
 
 export default async function LeadsPage(props: {
@@ -34,10 +35,9 @@ export default async function LeadsPage(props: {
     },
   });
   const resData = result.success ? result.data || [] : [];
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars -- S2 Residual Debt: Legacy unused local
+
   const leads = Array.isArray(resData) ? resData : resData.data || [];
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars -- S2 Residual Debt: Legacy unused local
-  const pagination = !Array.isArray(resData) ? resData.pagination : null;
+    const pagination = !Array.isArray(resData) ? resData.pagination : null;
 
   const tenantId = await requireTenant();
   const prisma = withTenant(tenantId);
@@ -64,7 +64,20 @@ export default async function LeadsPage(props: {
 
       <div className="mb-2">
         <div className="mb-2">
-          {/* Filtering can be implemented here later */}
+          <FilterBar
+            filters={[
+              {
+                key: 'status',
+                label: 'Status',
+                options: STATUS_COLUMNS.map(s => ({ label: s.charAt(0) + s.slice(1).toLowerCase(), value: s }))
+              },
+              {
+                key: 'owner',
+                label: 'Owner',
+                options: users.map(u => ({ label: u.email.split('@')[0], value: u.id }))
+              }
+            ]}
+          />
         </div>
       </div>
 

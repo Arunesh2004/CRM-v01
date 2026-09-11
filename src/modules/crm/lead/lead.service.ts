@@ -1,3 +1,4 @@
+import { Prisma, Lead } from '@prisma/client';
 import { requireAuth, requireTenant, requirePermission } from '@/lib/auth';
 import { withTenant, withTenantTransaction } from '@db/utils/prisma-tenant';
 import { CreateLeadInput, UpdateLeadInput } from '../crm.types';
@@ -24,8 +25,8 @@ export async function createLead(input: CreateLeadInput) {
     if (!user) throw new Error('Assigned user does not belong to this tenant.');
   }
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any -- S2 Residual Debt: Legacy internal payload requires architectural typing
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any -- S2 Residual Debt: Legacy internal payload requires architectural typing
+
+
   return await globalPrisma.$transaction(async (baseTx) => {
     const tx = await withTenantTransaction(baseTx, tenantId);
     const lead = await tx.lead.create({
@@ -68,20 +69,18 @@ export async function createLead(input: CreateLeadInput) {
 
 import { QueryParams, PaginatedResponse } from '../../core/types';
 import globalPrisma from '@db/utils/prisma';
-// eslint-disable-next-line @typescript-eslint/no-explicit-any -- S2 Residual Debt: Legacy internal payload requires architectural typing
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any -- S2 Residual Debt: Legacy internal payload requires architectural typing
-export async function getLeads(params?: QueryParams & { createdAtStart?: Date; createdAtEnd?: Date; }): Promise<PaginatedResponse<any>> {
+
+export async function getLeads(params?: QueryParams & { createdAtStart?: Date; createdAtEnd?: Date; }): Promise<PaginatedResponse<Lead>> {
   await requireAuth();
   const tenantId = await requireTenant();
   await requirePermission('LEAD', 'READ');
 
   const prisma = withTenant(tenantId);
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any -- S2 Residual Debt: Legacy internal payload requires architectural typing
+
   const limit = params?.limit || 50;
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any -- S2 Residual Debt: Legacy internal payload requires architectural typing
-  const where: any = { deletedAt: null, tenantId };
+    const where: Prisma.LeadWhereInput = { deletedAt: null, tenantId };
 
   if (params?.search) {
     where.OR = [
@@ -160,12 +159,11 @@ export async function getLeadById(id: string) {
 
   if (!lead) return null;
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any -- S2 Residual Debt: Legacy internal payload requires architectural typing
+
   // Attempt to find a related customer by matching company name or email
   let relatedCustomer = null;
   if (lead.company || lead.email) {
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any -- S2 Residual Debt: Legacy internal payload requires architectural typing
-    const orConditions: any[] = [];
+        const orConditions: Prisma.CustomerWhereInput[] = [];
     if (lead.company) orConditions.push({ name: lead.company });
     if (lead.email) {
       orConditions.push({ contacts: { some: { email: lead.email, deletedAt: null } } });
@@ -191,15 +189,15 @@ export async function updateLead(input: UpdateLeadInput) {
 
   // BUG-CRM-SEC-002 Cross Tenant Lead Assignment Prevention
   if (input.assignedUserId) {
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any -- S2 Residual Debt: Legacy internal payload requires architectural typing
+
     const user = await prisma.user.findFirst({ where: { id: input.assignedUserId, tenantId } });
     if (!user) throw new Error('Assigned user does not belong to this tenant.');
   }
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any -- S2 Residual Debt: Legacy internal payload requires architectural typing
+
   const result = await globalPrisma.$transaction(async (baseTx) => {
     const tx = await withTenantTransaction(baseTx, tenantId);
-    
+
     if (input.idempotencyKey) {
       // Read-before-write idempotency check (avoids aborted-transaction from catching P2002 inside $transaction)
       const existing = await tx.idempotencyKey.findUnique({
@@ -215,7 +213,7 @@ export async function updateLead(input: UpdateLeadInput) {
         data: { tenantId, key: input.idempotencyKey, expiresAt: new Date(Date.now() + 24 * 60 * 60 * 1000) }
       });
     }
-    
+
     const lead = await tx.lead.findFirst({ where: { id: input.id, tenantId }});
     if (!lead) throw new Error('Lead not found');
 
@@ -312,17 +310,16 @@ export async function updateLead(input: UpdateLeadInput) {
 }
 
 export async function convertLeadToCustomer(leadId: string) {
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars -- S2 Residual Debt: Legacy unused local
+
   const user = await requireAuth();
   const tenantId = await requireTenant();
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any -- S2 Residual Debt: Legacy internal payload requires architectural typing
+
   await requirePermission('LEAD', 'UPDATE');
   await requirePermission('CUSTOMER', 'CREATE');
 
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars -- S2 Residual Debt: Legacy unused local
-  const prisma = withTenant(tenantId);
+    const prisma = withTenant(tenantId);
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any -- S2 Residual Debt: Legacy internal payload requires architectural typing
+
   return await globalPrisma.$transaction(async (baseTx) => {
     const tx = await withTenantTransaction(baseTx, tenantId);
     const lead = await tx.lead.findFirst({ where: { id: leadId, tenantId } });
@@ -397,19 +394,18 @@ export async function convertLeadToCustomer(leadId: string) {
 
     return customer;
   });
-// eslint-disable-next-line @typescript-eslint/no-unused-vars -- S2 Residual Debt: Legacy unused local
+
 }
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any -- S2 Residual Debt: Legacy internal payload requires architectural typing
+
 export async function deleteLead(leadId: string) {
   const user = await requireAuth();
   const tenantId = await requireTenant();
   await requirePermission('LEAD', 'DELETE');
 
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars -- S2 Residual Debt: Legacy unused local
-  const prisma = withTenant(tenantId);
+    const prisma = withTenant(tenantId);
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any -- S2 Residual Debt: Legacy internal payload requires architectural typing
+
   return await globalPrisma.$transaction(async (baseTx) => {
     const tx = await withTenantTransaction(baseTx, tenantId);
     const lead = await tx.lead.findFirst({ where: { id: leadId, tenantId, deletedAt: null } });

@@ -19,8 +19,10 @@ async function _getPipelinesAction() {
   }
 }
 
-async function _seedDefaultPipelineAction(tenantId: string) {
+async function _seedDefaultPipelineAction() {
   try {
+    await requireAuth();
+    const tenantId = await requireTenant();
     const data = await seedDefaultPipeline(tenantId);
     return { success: true, data };
   } catch (errorRaw: unknown) {
@@ -29,9 +31,9 @@ async function _seedDefaultPipelineAction(tenantId: string) {
   }
 }
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any -- S2 Residual Debt: Legacy internal payload requires architectural typing
-// eslint-disable-next-line @typescript-eslint/no-explicit-any -- S2 Residual Debt: Legacy internal payload requires architectural typing
-async function _getDealsAction(params: any) {
+
+
+async function _getDealsAction(params: { pipelineId?: string; stageId?: string; assignedUserId?: string; status?: "LOST" | "OPEN" | "WON"; search?: string; cursor?: string; limit?: number; }) {
   try {
     const data = await getDeals(params);
     return { success: true, data };
@@ -102,10 +104,10 @@ async function _getAssignableUsersAction() {
     return { success: false, error: sanitizeClientError(error) };
   }
 }
-// eslint-disable-next-line @typescript-eslint/no-explicit-any -- S2 Residual Debt: Legacy internal payload requires architectural typing
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any -- S2 Residual Debt: Legacy internal payload requires architectural typing
-async function _createDealAction(data: any) {
+
+
+async function _createDealAction(data: z.infer<typeof createDealSchema>) {
   try {
     const validatedData = createDealSchema.parse(data);
     const result = await createDeal(validatedData);
@@ -170,3 +172,48 @@ export const convertLeadToDealAction = withServerActionContext(_convertLeadToDea
 export const getDealAnalyticsAction = withServerActionContext(_getDealAnalyticsAction);
 
 export const getDealTimelineAction = withServerActionContext(_getDealTimelineAction);
+
+const updateDealSchema = z.object({
+  title: z.string().min(1, 'Title is required').optional(),
+  description: z.string().optional(),
+  source: z.string().optional(),
+  value: z.number().min(0, 'Value must be positive').optional(),
+  expectedCloseDate: z.coerce.date().nullable().optional(),
+  pipelineId: z.string().uuid('Invalid pipeline ID').optional(),
+  stageId: z.string().uuid('Invalid stage ID').optional(),
+  customerId: z.string().uuid('Invalid customer ID').nullable().optional(),
+  assignedUserId: z.string().uuid('Invalid user ID').optional()
+});
+
+async function _updateDealAction(dealId: string, data: z.infer<typeof updateDealSchema>) {
+  try {
+    const validatedData = updateDealSchema.parse(data);
+
+    // We dynamically import updateDeal to avoid circular deps if they exist,
+    // or we can just use a regular require since this is a server action
+    const { updateDeal } = await import('../deal/deal.service');
+
+    const result = await updateDeal(dealId, validatedData);
+    revalidatePath('/deals');
+    revalidatePath(`/deals/${dealId}`);
+    return { success: true, data: result };
+  } catch (errorRaw: unknown) {
+    const error = errorRaw instanceof Error ? errorRaw : new Error(String(errorRaw));
+    return { success: false, error: sanitizeClientError(error) };
+  }
+}
+
+async function _archiveDealAction(dealId: string) {
+  try {
+    const { archiveDeal } = await import('../deal/deal.service');
+    const result = await archiveDeal(dealId);
+    revalidatePath('/deals');
+    return { success: true, data: result };
+  } catch (errorRaw: unknown) {
+    const error = errorRaw instanceof Error ? errorRaw : new Error(String(errorRaw));
+    return { success: false, error: sanitizeClientError(error) };
+  }
+}
+
+export const updateDealAction = withServerActionContext(_updateDealAction);
+export const archiveDealAction = withServerActionContext(_archiveDealAction);
