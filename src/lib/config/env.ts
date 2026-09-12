@@ -54,21 +54,21 @@ export function validateEnvironment(): void {
   // Email / Resend constraints
   if (isProduction) {
     if (!process.env.RESEND_API_KEY) {
-      throw new Error(`CRITICAL STARTUP FAILURE: RESEND_API_KEY missing in production`);
+      console.warn(`WARNING: RESEND_API_KEY missing in production. Email features will be safely degraded.`);
     }
   }
 
   // Twilio constraints
   if (isProduction) {
     if (!process.env.TWILIO_ACCOUNT_SID || !process.env.TWILIO_AUTH_TOKEN) {
-      throw new Error(`CRITICAL STARTUP FAILURE: Twilio credentials missing in production`);
+      console.warn(`WARNING: Twilio credentials missing in production. SMS features will be safely degraded.`);
     }
   }
 
   // WhatsApp constraints
   if (isProduction) {
     if (!process.env.WHATSAPP_TOKEN || !process.env.WHATSAPP_PHONE_NUMBER_ID || !process.env.WHATSAPP_WEBHOOK_VERIFY_TOKEN || !process.env.WHATSAPP_APP_SECRET) {
-      throw new Error(`CRITICAL STARTUP FAILURE: WhatsApp credentials missing in production`);
+      console.warn(`WARNING: WhatsApp credentials missing in production. WhatsApp features will be safely degraded.`);
     }
   }
 
@@ -135,7 +135,8 @@ export const ENV = {
       process.env.CCTV_OPAQUE_PATH_SECRET,
       process.env.MEDIAMTX_API_URL,
       process.env.MEDIAMTX_WEBHOOK_SECRET,
-      process.env.PUBLIC_APP_URL
+      process.env.PUBLIC_APP_URL,
+      process.env.CCTV_RECORDINGS_ROOT
     ];
     return cctvVars.every(v => !!v);
   },
@@ -165,6 +166,15 @@ export const ENV = {
     return process.env.MEDIAMTX_WEBHOOK_SECRET!; 
   },
   get encryptionKey() { return process.env.ENCRYPTION_KEY!; },
+
+  get cctvRecordingsRoot() {
+    if (!this.cctvEnabled) throw new Error('CCTV module is disabled: missing required configuration');
+    const root = process.env.CCTV_RECORDINGS_ROOT;
+    if (!root || root.trim() === '') {
+      throw new Error('CCTV_RECORDINGS_ROOT is required when CCTV is enabled');
+    }
+    return root.trim();
+  },
 
   // Voice Bridge
   get voiceStreamingEnabled(): boolean {

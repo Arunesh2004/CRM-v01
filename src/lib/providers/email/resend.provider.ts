@@ -59,9 +59,9 @@ export class ResendProvider implements EmailProvider {
 
 export class MockEmailProvider implements EmailProvider {
   async sendEmail(tenantId: string, payload: EmailPayload): Promise<EmailProviderResponse> {
-    Logger.info(`[MOCK EMAIL] Sent to ${payload.to}`, { tenantId, subject: payload.subject });
+    Logger.warn(`[DEGRADED EMAIL] Attempted to send email to ${payload.to}, but provider is not configured.`, { tenantId, subject: payload.subject });
     // eslint-disable-next-line @typescript-eslint/no-unused-vars -- Intentional callback/interface parameter
-    return { success: true, messageId: `mock_${Date.now()}` };
+    return { success: false, error: 'EMAIL_PROVIDER_NOT_CONFIGURED' };
   }
   // eslint-disable-next-line @typescript-eslint/no-unused-vars -- Intentional callback/interface parameter
   async verifyDomain(domain: string): Promise<{ success: boolean; status: string; error?: string }> {

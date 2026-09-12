@@ -13,22 +13,25 @@ import { MockMessagingProvider } from './messaging/whatsapp.provider';
 
 export class ProviderFactory {
   static getEmailProvider(): EmailProvider {
-    if (process.env.NODE_ENV === 'production' || process.env.VERCEL_ENV === 'production') {
-      if (!process.env.RESEND_API_KEY) {
-        throw new Error('EMAIL_PROVIDER_NOT_CONFIGURED: Production environment requires RESEND_API_KEY');
-      }
-      return new ResendProvider();
+    if (!process.env.RESEND_API_KEY) {
+      return new MockEmailProvider();
     }
-    if (process.env.APP_MODE === 'demo' || !process.env.RESEND_API_KEY) return new MockEmailProvider();
+    if (process.env.APP_MODE === 'demo') return new MockEmailProvider();
     return new ResendProvider();
   }
 
   static getTelephonyProvider(): TelephonyProvider {
+    if (!process.env.TWILIO_ACCOUNT_SID || !process.env.TWILIO_AUTH_TOKEN) {
+      return new MockTelephonyProvider();
+    }
     if (process.env.APP_MODE === 'demo') return new MockTelephonyProvider();
     return new TwilioProvider();
   }
 
   static getMessagingProvider(): MessagingProvider {
+    if (!process.env.WHATSAPP_TOKEN) {
+      return new MockMessagingProvider();
+    }
     if (process.env.APP_MODE === 'demo') return new MockMessagingProvider();
     return new WhatsAppProvider();
   }

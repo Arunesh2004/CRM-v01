@@ -106,17 +106,18 @@ export class TwilioProvider implements TelephonyProvider {
     const readable = Readable.fromWeb(response.body as any);
     await pipeline(readable, fileStream);
   }
+  
   // eslint-disable-next-line @typescript-eslint/no-unused-vars -- Intentional callback/interface parameter
   async fetchRecording(recordingUrl: string): Promise<Buffer> {
     return Buffer.from('mock_buffer_impl');
   }
-// eslint-disable-next-line @typescript-eslint/no-unused-vars -- S2 Residual Debt: Legacy unused local
 
   // eslint-disable-next-line @typescript-eslint/no-unused-vars -- S2 Residual Debt: Legacy unused local
   // eslint-disable-next-line @typescript-eslint/no-unused-vars -- Intentional callback/interface parameter
   async makeCall(to: string, from?: string): Promise<{ success: boolean; callId?: string; error?: string }> {
     return { success: true, callId: 'mock' };
   }
+  
   // eslint-disable-next-line @typescript-eslint/no-unused-vars -- Intentional callback/interface parameter
   async getRecording(callId: string): Promise<{ success: boolean; recordingUrl?: string; error?: string }> {
     return { success: true, recordingUrl: 'mock' };
@@ -137,43 +138,35 @@ export class TwilioProvider implements TelephonyProvider {
       return { success: false, error: err.message };
     }
   }
-// eslint-disable-next-line @typescript-eslint/no-unused-vars -- S2 Residual Debt: Legacy unused local
 }
-// eslint-disable-next-line @typescript-eslint/no-unused-vars -- S2 Residual Debt: Legacy unused local
 
-// eslint-disable-next-line @typescript-eslint/no-unused-vars -- S2 Residual Debt: Legacy unused local
 export class MockTelephonyProvider implements TelephonyProvider {
   async initiateCall(tenantId: string, payload: MakeCallPayload): Promise<TelephonyProviderResponse> {
-    Logger.info(`[MOCK TELEPHONY] Dialing ${payload.to}`, { tenantId });
-    return { success: true, providerCallId: `mock_call_${Date.now()}` };
+    Logger.warn(`[DEGRADED TELEPHONY] Attempted to dial ${payload.to}, but provider is not configured.`, { tenantId });
+    return { success: false, error: 'TELEPHONY_PROVIDER_NOT_CONFIGURED' };
   }
   // eslint-disable-next-line @typescript-eslint/no-unused-vars -- Intentional callback/interface parameter
   async endCall(sid: string) { return true; }
   // eslint-disable-next-line @typescript-eslint/no-unused-vars -- Intentional callback/interface parameter
-  async getCallStatus(sid: string) { return 'completed'; }
+  async getCallStatus(sid: string) { return 'unknown'; }
   // eslint-disable-next-line @typescript-eslint/no-unused-vars -- S2 Residual Debt: Legacy unused local
   // eslint-disable-next-line @typescript-eslint/no-unused-vars -- Intentional callback/interface parameter
-  async fetchRecording(url: string) { return Buffer.from('mock'); }
+  async fetchRecording(url: string): Promise<Buffer> { throw new Error('TELEPHONY_PROVIDER_NOT_CONFIGURED'); }
   
   async downloadRecording(url: string, destPath: string) {
-    const fs = await import('fs');
-    fs.writeFileSync(destPath, 'mock audio content for test');
+    throw new Error('TELEPHONY_PROVIDER_NOT_CONFIGURED');
   }
   // eslint-disable-next-line @typescript-eslint/no-unused-vars -- S2 Residual Debt: Legacy unused local
   // eslint-disable-next-line @typescript-eslint/no-unused-vars -- Intentional callback/interface parameter
   async makeCall(to: string, from?: string): Promise<{ success: boolean; callId?: string; error?: string }> {
-    return { success: true, callId: 'mock' };
+    return { success: false, error: 'TELEPHONY_PROVIDER_NOT_CONFIGURED' };
   }
   // eslint-disable-next-line @typescript-eslint/no-unused-vars -- Intentional callback/interface parameter
   async getRecording(callId: string): Promise<{ success: boolean; recordingUrl?: string; error?: string }> {
-    return { success: true, recordingUrl: 'mock' };
+    return { success: false, error: 'TELEPHONY_PROVIDER_NOT_CONFIGURED' };
   }
   async sendSms(tenantId: string, payload: { to: string, text: string }): Promise<{ success: boolean; error?: string }> {
-    Logger.info(`[MOCK TELEPHONY] Sending SMS to ${payload.to}: ${payload.text}`, { tenantId });
-    // Simulate some failures for robust testing or just succeed
-    if (payload.to.includes('555-0000')) {
-      return { success: false, error: 'Simulated failure' };
-    }
-    return { success: true };
+    Logger.warn(`[DEGRADED TELEPHONY] Attempted to send SMS to ${payload.to}, but provider is not configured.`, { tenantId });
+    return { success: false, error: 'TELEPHONY_PROVIDER_NOT_CONFIGURED' };
   }
 }

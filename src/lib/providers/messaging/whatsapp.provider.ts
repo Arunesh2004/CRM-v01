@@ -63,10 +63,7 @@ export class WhatsAppProvider implements MessagingProvider {
       return { success: false, error: err.message };
     }
   }
-// eslint-disable-next-line @typescript-eslint/no-explicit-any -- S2 Residual Debt: External provider boundary lacks strict types
-// eslint-disable-next-line @typescript-eslint/no-explicit-any -- S2 Residual Debt: External provider boundary lacks strict types
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any -- S2 Residual Debt: External provider boundary lacks strict types
   // eslint-disable-next-line @typescript-eslint/no-explicit-any -- S2 Residual Debt: External provider boundary lacks strict types
   // eslint-disable-next-line @typescript-eslint/no-explicit-any -- S2 Residual Debt: External provider boundary lacks strict types
   async receiveWebhook(payload: any): Promise<any> { return payload; }
@@ -84,15 +81,8 @@ export class WhatsAppProvider implements MessagingProvider {
 
 export class MockMessagingProvider implements MessagingProvider {
   async sendMessage(tenantId: string, payload: SendWhatsAppPayload): Promise<MessagingProviderResponse> {
-    if (payload.to === 'fail') {
-      return { success: false, error: 'Mock provider simulated failure' };
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any -- S2 Residual Debt: External provider boundary lacks strict types
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any -- S2 Residual Debt: External provider boundary lacks strict types
-    }
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars -- S2 Residual Debt: Legacy unused local
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any -- S2 Residual Debt: External provider boundary lacks strict types
-    Logger.info(`[MOCK WHATSAPP] Sending ${payload.type} to ${payload.to}`, { tenantId });
-    return { success: true, messageId: `mock_wa_${Date.now()}` };
+    Logger.warn(`[DEGRADED WHATSAPP] Attempted to send ${payload.type} to ${payload.to}, but provider is not configured.`, { tenantId });
+    return { success: false, error: 'MESSAGING_PROVIDER_NOT_CONFIGURED' };
   }
   // eslint-disable-next-line @typescript-eslint/no-explicit-any -- S2 Residual Debt: External provider boundary lacks strict types
   // eslint-disable-next-line @typescript-eslint/no-explicit-any -- S2 Residual Debt: External provider boundary lacks strict types

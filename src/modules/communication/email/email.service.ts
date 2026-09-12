@@ -21,10 +21,12 @@ export async function sendEmail(input: CreateEmailInput) {
     subject: input.subject,
     html: input.bodyHtml
   });
+  
   if (!response.success) {
-    throw new Error('Email provider failed');
+    throw new Error(response.error || 'Email provider failed');
   }
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any -- S2 Residual Debt: Legacy internal payload requires architectural typing
+  
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any -- S2 Residual Debt: Legacy internal payload requires architectural typing
   
   // eslint-disable-next-line @typescript-eslint/no-explicit-any -- S2 Residual Debt: Legacy internal payload requires architectural typing
   return await globalPrisma.$transaction(async (baseTx) => {
