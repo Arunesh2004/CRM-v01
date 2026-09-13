@@ -107,7 +107,7 @@ export async function processIngestionJobs() {
 
         // 4. Upload to Storage
         const storageKey = `cctv_recordings/${tenantId}/${cameraId}/v${streamVersion}/${job.segmentId}.mp4`;
-        await uploadFile(canonicalFilePath, storageKey);
+        await uploadFile(canonicalFilePath, storageKey, 'video/mp4');
 
         // 5. Create DB Metadata
         let stat;

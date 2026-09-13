@@ -1,7 +1,7 @@
 import { requireAuth, requireTenant, requirePermission } from '@/lib/auth';
 import globalPrisma from '@db/utils/prisma';
 import { withTenant, withTenantTransaction } from '@db/utils/prisma-tenant';
-import crypto from 'crypto';
+import { generateSignedDownloadUrl } from '@/lib/providers/storage/s3.provider';
 
 export async function getCameraRecordings(cameraId: string, limit: number = 50, cursor?: string) {
   await requireAuth();
@@ -44,9 +44,9 @@ export async function generateRecordingDownloadUrl(recordingId: string) {
 
     if (!recording) throw new Error('Recording not found');
 
-    // Create a time-limited signed URL token
-    const token = crypto.randomBytes(32).toString('hex');
-    const expiry = new Date(Date.now() + 60 * 60 * 1000); // 1 hour
+    // Create a time-limited signed URL using the real S3 provider
+    const downloadUrl = await generateSignedDownloadUrl(recording.storageKey, 3600);
+    const expiry = new Date(Date.now() + 3600 * 1000);
 
     await tx.auditLog.create({
       data: {
@@ -61,7 +61,7 @@ export async function generateRecordingDownloadUrl(recordingId: string) {
     });
 
     return {
-      downloadUrl: `https://storage.ai-security-crm.example.com/recordings/${recording.storageKey}?token=${token}`,
+      downloadUrl,
       expiresAt: expiry
     };
   });

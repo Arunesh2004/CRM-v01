@@ -105,35 +105,32 @@ export function RecordingTimeline({ recordings }: { recordings: any[] }) {
 
               {playbackToken && !loading && !error && (
                 <>
-                  <div className="absolute inset-0 opacity-10 bg-[radial-gradient(ellipse_at_center,_var(--tw-gradient-stops))] from-violet-500 via-transparent to-transparent pointer-events-none" />
-                  
-                  <ShieldCheck className="w-12 h-12 text-emerald-400 mb-4 animate-in zoom-in duration-500" />
-                  <h3 className="text-xl text-emerald-400 font-semibold mb-2">Token Authorized</h3>
-                  <p className="text-white mb-6">Simulating secure playback...</p>
-                  
-                  {/* Fake progress bar */}
-                  <div className="w-full max-w-md h-2 bg-white/10 rounded-full overflow-hidden relative">
-                    <div className="absolute top-0 left-0 h-full bg-violet-500" style={{
-                      animation: 'progress 10s linear infinite'
-                    }} />
-                  </div>
-
-                  <div className="mt-8 text-left bg-white/5 p-4 rounded-lg border border-white/10 w-full max-w-lg">
-                    <p className="text-xs text-[#8891B0] mb-1 font-mono uppercase tracking-wider">Secure Token Details</p>
-                    <p className="text-[10px] text-white/70 font-mono break-all mb-2">{playbackToken.downloadUrl}</p>
-                    <p className="text-[10px] text-emerald-400 font-mono">Expires: {new Date(playbackToken.expiresAt).toLocaleString()}</p>
+                  <video
+                    src={playbackToken.downloadUrl}
+                    controls
+                    autoPlay
+                    className="w-full h-full object-contain"
+                  >
+                    Your browser does not support the video tag.
+                  </video>
+                  <div className="absolute top-4 left-4 z-10 flex gap-2">
+                    <a
+                      href={playbackToken.downloadUrl}
+                      download
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="bg-black/50 hover:bg-black/80 backdrop-blur text-white text-sm font-medium px-4 py-2 rounded flex items-center gap-2 border border-white/10 transition-colors shadow-lg"
+                    >
+                      <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
+                      </svg>
+                      Download Recording
+                    </a>
                   </div>
                 </>
               )}
             </div>
           </div>
-          
-          <style dangerouslySetInnerHTML={{__html: `
-            @keyframes progress {
-              0% { width: 0%; }
-              100% { width: 100%; }
-            }
-          `}} />
         </div>
       )}
     </>
