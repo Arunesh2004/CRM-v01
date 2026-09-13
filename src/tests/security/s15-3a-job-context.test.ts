@@ -20,7 +20,9 @@ describe('S15.3A Background Job Observability Context', () => {
   vi.mock('../../../database/utils/prisma-tenant', () => {
     const mockTx = {
       $executeRawUnsafe: vi.fn(),
+      $executeRaw: vi.fn(),
       $queryRawUnsafe: vi.fn().mockResolvedValue([]),
+      $queryRaw: vi.fn().mockResolvedValue([]),
       idempotencyKey: { create: vi.fn() },
     };
     return {

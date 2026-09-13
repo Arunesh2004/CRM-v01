@@ -54,15 +54,7 @@ async function cleanupStalePaths(tenantId: string, cameraId: string, currentPath
   }
 }
 
-// eslint-disable-next-line @typescript-eslint/no-unused-vars -- S2 Residual Debt: Legacy unused local
-// eslint-disable-next-line @typescript-eslint/no-unused-vars -- S2 Residual Debt: Legacy unused local
-// eslint-disable-next-line @typescript-eslint/no-explicit-any -- S2 Residual Debt: Legacy internal payload requires architectural typing
-// eslint-disable-next-line @typescript-eslint/no-unused-vars -- S2 Residual Debt: Legacy unused local
-// eslint-disable-next-line @typescript-eslint/no-explicit-any -- S2 Residual Debt: Legacy internal payload requires architectural typing
-// eslint-disable-next-line @typescript-eslint/no-unused-vars -- S2 Residual Debt: Legacy unused local
-// eslint-disable-next-line @typescript-eslint/no-unused-vars -- S2 Residual Debt: Legacy unused local
-// eslint-disable-next-line @typescript-eslint/no-explicit-any -- S2 Residual Debt: Legacy internal payload requires architectural typing
-// eslint-disable-next-line @typescript-eslint/no-unused-vars -- S2 Residual Debt: Legacy unused local
+// eslint-disable-next-line @typescript-eslint/no-unused-vars -- Legacy interface
 // eslint-disable-next-line @typescript-eslint/no-explicit-any -- S2 Residual Debt: Legacy internal payload requires architectural typing
 export async function invalidateStreamAccess(tenantId: string, camera: any, credential?: any) {
   // Legacy invalidateStreamAccess logic - this should not be called directly.
@@ -74,13 +66,11 @@ export async function generateStreamToken(cameraId: string) {
     throw new Error('CCTV module is disabled');
   }
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any -- S2 Residual Debt: Legacy internal payload requires architectural typing
   const user = await requireAuth();
   const tenantId = await requireTenant();
   
-  await requirePermission('CUSTOMER', 'READ');
+  await requirePermission('STREAM', 'READ');
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any -- S2 Residual Debt: Legacy internal payload requires architectural typing
   return await globalPrisma.$transaction(async (baseTx) => {
     const tx = await withTenantTransaction(baseTx, tenantId);
     
@@ -162,7 +152,7 @@ export async function generateStreamToken(cameraId: string) {
           sourceOnDemand: true,
           sourceOnDemandCloseAfter: '60s',
           record: true,
-          recordPath: '/var/lib/mediamtx/recordings/%path/%Y-%m-%d_%H-%M-%S.mp4',
+          recordPath: `${ENV.cctvRecordingsRoot}/%path/%Y-%m-%d_%H-%M-%S.mp4`,
           recordFormat: 'fmp4',
           recordPartDuration: '15m',
           runOnRecordSegmentComplete: `curl -X POST http://app:3000/api/webhooks/mediamtx/record -H "Content-Type: application/json" -H "Authorization: Bearer ${ENV.mediamtxWebhookSecret}" -d "{\\"path\\":\\"$MTX_PATH\\",\\"file\\":\\"$MTX_SEGMENT_PATH\\"}"`
@@ -238,11 +228,12 @@ export async function generateStreamToken(cameraId: string) {
       jwtid: jti
     });
 
-    // Public URL defaults to relative if empty. Returns explicitly defined WHEP endpoint.
+    // Returns explicitly defined WHEP proxy endpoint. Token is separated.
     const baseUrl = ENV.publicAppUrl;
 
     return {
-      streamUrl: `${baseUrl}/${opaquePath}/whep?token=${token}`
+      streamUrl: `${baseUrl}/api/cctv/cameras/${camera.id}/whep`,
+      token: token
     };
   });
 }

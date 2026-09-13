@@ -11,6 +11,9 @@ import { MockEmailProvider } from './email/resend.provider';
 import { MockTelephonyProvider } from './telephony/twilio.provider';
 import { MockMessagingProvider } from './messaging/whatsapp.provider';
 
+import { RealtimeAdapter } from '@/modules/communication/adapter';
+import { PusherRealtimeAdapter, DegradedRealtimeAdapter } from './realtime/pusher.provider';
+
 export class ProviderFactory {
   static getEmailProvider(): EmailProvider {
     if (!process.env.RESEND_API_KEY) {
@@ -38,5 +41,12 @@ export class ProviderFactory {
 
   static getCameraProvider(): CameraProvider {
     return new MockCameraProvider();
+  }
+
+  static getRealtimeProvider(): RealtimeAdapter {
+    if (!process.env.PUSHER_APP_ID || !process.env.PUSHER_KEY || !process.env.PUSHER_SECRET || !process.env.PUSHER_CLUSTER) {
+      return new DegradedRealtimeAdapter();
+    }
+    return new PusherRealtimeAdapter();
   }
 }

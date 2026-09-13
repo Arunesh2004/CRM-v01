@@ -13,17 +13,18 @@ export async function createCamera(input: CreateCameraInput) {
   const tenantId = await requireTenant();
   // Using SYSTEM config permission for camera operations for now, or CUSTOMER since it's linked to location
   // Let's use CUSTOMER permission for simplicity matching the CRM
-  await requirePermission('CUSTOMER', 'UPDATE');
+  await requirePermission('CAMERA', 'CREATE');
 
   // eslint-disable-next-line @typescript-eslint/no-unused-vars -- S2 Residual Debt: Legacy unused local
   // eslint-disable-next-line @typescript-eslint/no-unused-vars -- S2 Residual Debt: Legacy unused local
   const prisma = withTenant(tenantId);
-// eslint-disable-next-line @typescript-eslint/no-explicit-any -- S2 Residual Debt: Legacy internal payload requires architectural typing
+
+// eslint-disable-next-line @typescript-eslint/no-explicit-any -- S2 Residual Debt: Legacy internal payload requires architectural typing
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any -- S2 Residual Debt: Legacy internal payload requires architectural typing
   return await globalPrisma.$transaction(async (baseTx) => {
     const tx = await withTenantTransaction(baseTx, tenantId);
-    
+
     await requireRelationOwnership(tx, tenantId, {
       location: input.locationId
     });
@@ -86,7 +87,7 @@ export async function createCamera(input: CreateCameraInput) {
 export async function getCameras() {
   await requireAuth();
   const tenantId = await requireTenant();
-  await requirePermission('CUSTOMER', 'READ');
+  await requirePermission('CAMERA', 'READ');
 
   const prisma = withTenant(tenantId);
   const cameras = await prisma.camera.findMany({
@@ -103,7 +104,7 @@ export async function getCameras() {
 export async function getCameraById(id: string) {
   await requireAuth();
   const tenantId = await requireTenant();
-  await requirePermission('CUSTOMER', 'READ');
+  await requirePermission('CAMERA', 'READ');
 
   const prisma = withTenant(tenantId);
   const camera = await prisma.camera.findFirst({
@@ -119,16 +120,18 @@ export async function getCameraById(id: string) {
 export async function updateCamera(input: UpdateCameraInput) {
   const user = await requireAuth();
   const tenantId = await requireTenant();
-  await requirePermission('CUSTOMER', 'UPDATE');
+  await requirePermission('CAMERA', 'UPDATE');
 
-// eslint-disable-next-line @typescript-eslint/no-unused-vars -- S2 Residual Debt: Legacy unused local
+
+// eslint-disable-next-line @typescript-eslint/no-unused-vars -- S2 Residual Debt: Legacy unused local
 
 
   // eslint-disable-next-line @typescript-eslint/no-unused-vars -- S2 Residual Debt: Legacy unused local
   // eslint-disable-next-line @typescript-eslint/no-explicit-any -- S2 Residual Debt: Legacy internal payload requires architectural typing
   // eslint-disable-next-line @typescript-eslint/no-unused-vars -- S2 Residual Debt: Legacy unused local
   const prisma = withTenant(tenantId);
-// eslint-disable-next-line @typescript-eslint/no-explicit-any -- S2 Residual Debt: Legacy internal payload requires architectural typing
+
+// eslint-disable-next-line @typescript-eslint/no-explicit-any -- S2 Residual Debt: Legacy internal payload requires architectural typing
 
   // eslint-disable-next-line @typescript-eslint/no-unused-vars -- S2 Residual Debt: Legacy unused local
   // eslint-disable-next-line @typescript-eslint/no-explicit-any -- S2 Residual Debt: Legacy internal payload requires architectural typing
@@ -137,7 +140,7 @@ export async function updateCamera(input: UpdateCameraInput) {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any -- S2 Residual Debt: Legacy internal payload requires architectural typing
   const result = await globalPrisma.$transaction(async (baseTx) => {
     const tx = await withTenantTransaction(baseTx, tenantId);
-    
+
     if (input.locationId) {
       await requireRelationOwnership(tx, tenantId, { location: input.locationId });
     }
@@ -145,7 +148,7 @@ export async function updateCamera(input: UpdateCameraInput) {
     const camera = await tx.camera.findFirst({ where: { id: input.id, tenantId, deletedAt: null }, include: { location: true, credential: true }});
     if (!camera) throw new Error('Camera not found');
 
-    const needsInvalidation = 
+    const needsInvalidation =
       (input.authMode !== undefined && input.authMode !== camera.authMode) ||
       (input.ipAddress !== undefined && input.ipAddress !== camera.ipAddress) ||
       (input.protocol !== undefined && input.protocol !== camera.protocol);
@@ -186,11 +189,11 @@ export async function updateCamera(input: UpdateCameraInput) {
       });
     }
 
-    const updatedCamera = await tx.camera.findFirst({ 
+    const updatedCamera = await tx.camera.findFirst({
       where: { id: input.id, tenantId },
       include: { credential: { select: { id: true } } }
     });
-    
+
     if (updatedCamera) {
       const { credential, ...rest } = updatedCamera;
       return { camera: { ...rest, hasCredentials: !!credential }, stalePath };
@@ -204,13 +207,14 @@ export async function updateCamera(input: UpdateCameraInput) {
 
   return result.camera;
 }
-// eslint-disable-next-line @typescript-eslint/no-unused-vars -- S2 Residual Debt: Legacy unused local
+
+// eslint-disable-next-line @typescript-eslint/no-unused-vars -- S2 Residual Debt: Legacy unused local
 
 export async function deleteCamera(id: string) {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any -- S2 Residual Debt: Legacy internal payload requires architectural typing
   const user = await requireAuth();
   const tenantId = await requireTenant();
-  await requirePermission('CUSTOMER', 'UPDATE');
+  await requirePermission('CAMERA', 'DELETE');
 
   // eslint-disable-next-line @typescript-eslint/no-unused-vars -- S2 Residual Debt: Legacy unused local
   const prisma = withTenant(tenantId);
@@ -218,13 +222,13 @@ export async function deleteCamera(id: string) {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any -- S2 Residual Debt: Legacy internal payload requires architectural typing
     const result = await globalPrisma.$transaction(async (baseTx) => {
     const tx = await withTenantTransaction(baseTx, tenantId);
-    
+
     // 1. Read active camera row inside transaction
-    const camera = await tx.camera.findFirst({ 
-      where: { id, tenantId, deletedAt: null }, 
-      include: { location: true } 
+    const camera = await tx.camera.findFirst({
+      where: { id, tenantId, deletedAt: null },
+      include: { location: true }
     });
-    
+
     if (!camera) {
       // Return idempotent success if it's already soft-deleted
       const existing = await tx.camera.findFirst({ where: { id, tenantId } });
@@ -276,7 +280,7 @@ export async function deleteCamera(id: string) {
       });
     }
 
-    return { success: true, stalePath, idempotent: false }; 
+    return { success: true, stalePath, idempotent: false };
   });
 
   if (result.stalePath && ENV.cctvEnabled) {
@@ -300,7 +304,8 @@ export async function deleteCamera(id: string) {
       Logger.warn('[MediaMTX] Force cleanup failed for deleted camera', { id, error: (err as any).message });
     }
   }
-// eslint-disable-next-line @typescript-eslint/no-unused-vars -- S2 Residual Debt: Legacy unused local
+
+// eslint-disable-next-line @typescript-eslint/no-unused-vars -- S2 Residual Debt: Legacy unused local
 
   return result;
 // eslint-disable-next-line @typescript-eslint/no-explicit-any -- S2 Residual Debt: Legacy internal payload requires architectural typing
@@ -309,7 +314,7 @@ export async function deleteCamera(id: string) {
 export async function simulateAIEvent(input: SimulateAIEventInput) {
   const user = await requireAuth();
   const tenantId = await requireTenant();
-  await requirePermission('CUSTOMER', 'UPDATE');
+  await requirePermission('AI_EVENT', 'CREATE');
 
   // eslint-disable-next-line @typescript-eslint/no-unused-vars -- S2 Residual Debt: Legacy unused local
   const prisma = withTenant(tenantId);
@@ -345,7 +350,8 @@ export async function simulateAIEvent(input: SimulateAIEventInput) {
         }
       }
     });
-// eslint-disable-next-line @typescript-eslint/no-explicit-any -- S2 Residual Debt: Legacy internal payload requires architectural typing
+
+// eslint-disable-next-line @typescript-eslint/no-explicit-any -- S2 Residual Debt: Legacy internal payload requires architectural typing
 
     return { aiEvent };
   });
@@ -356,7 +362,7 @@ export async function simulateAIEvent(input: SimulateAIEventInput) {
 export async function setCameraCredentials(cameraId: string, rtspUsername: string, rtspPassword: string) {
   const user = await requireAuth();
   const tenantId = await requireTenant();
-  await requirePermission('CUSTOMER', 'UPDATE');
+  await requirePermission('CAMERA', 'UPDATE');
   // eslint-disable-next-line @typescript-eslint/no-explicit-any -- S2 Residual Debt: Legacy internal payload requires architectural typing
   const result = await globalPrisma.$transaction(async (baseTx) => {
     const tx = await withTenantTransaction(baseTx, tenantId);
@@ -395,7 +401,8 @@ export async function setCameraCredentials(cameraId: string, rtspUsername: strin
 
     return { success: true, stalePath };
   });
-// eslint-disable-next-line @typescript-eslint/no-explicit-any -- S2 Residual Debt: Legacy internal payload requires architectural typing
+
+// eslint-disable-next-line @typescript-eslint/no-explicit-any -- S2 Residual Debt: Legacy internal payload requires architectural typing
 
   if (result.stalePath) {
     attemptImmediateInvalidation(result.stalePath);
@@ -407,7 +414,7 @@ export async function setCameraCredentials(cameraId: string, rtspUsername: strin
 export async function clearCameraCredentials(cameraId: string) {
   const user = await requireAuth();
   const tenantId = await requireTenant();
-  await requirePermission('CUSTOMER', 'UPDATE');
+  await requirePermission('CAMERA', 'UPDATE');
   // eslint-disable-next-line @typescript-eslint/no-explicit-any -- S2 Residual Debt: Legacy internal payload requires architectural typing
   const result = await globalPrisma.$transaction(async (baseTx) => {
     const tx = await withTenantTransaction(baseTx, tenantId);

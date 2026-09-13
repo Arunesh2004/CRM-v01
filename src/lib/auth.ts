@@ -1,5 +1,5 @@
 import { auth, clerkClient } from '@clerk/nextjs/server';
-import { Action, Resource } from '@prisma/client';
+import { Action, Resource, Prisma } from '@prisma/client';
 import { synchronizeClerkIdentity } from '@/modules/auth/services/provisioning.service';
 import { Logger } from '@/lib/observability/logger';
 import { headers } from 'next/headers';
@@ -11,6 +11,25 @@ import { setTenantContext } from '@/lib/observability/context';
 import { cache } from 'react';
 
 const logger = new Logger();
+
+// AuthUser: the strict Prisma payload type returned by every authenticated DB lookup.
+// Defined here so getCurrentUser, requireAuth, and callers share a single source of truth.
+export type AuthUser = Prisma.UserGetPayload<{
+  include: {
+    tenant: true;
+    userRoles: {
+      include: {
+        role: {
+          include: {
+            permissions: {
+              include: { permission: true };
+            };
+          };
+        };
+      };
+    };
+  };
+}>;
 
 // The common DB include needed for full user context is inlined below to preserve Prisma type inference.
 
@@ -95,7 +114,7 @@ async function tryLoadTestIdentity() {
   return user;
 }
 
-export const getCurrentUser = cache(async function getCurrentUser() {
+export const getCurrentUser = cache(async function getCurrentUser(): Promise<AuthUser | null> {
   // STAGING-ONLY: Load-test identity bridge (never active in production)
   const loadTestUser = await tryLoadTestIdentity();
   if (loadTestUser) return loadTestUser;
@@ -111,9 +130,8 @@ export const getCurrentUser = cache(async function getCurrentUser() {
 
   if (redis) {
     const cached = await redis.get(`user:${clerkId}`);
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any -- S2 Residual Debt: Legacy internal payload requires architectural typing
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any -- S2 Residual Debt: Legacy internal payload requires architectural typing
-    if (cached) return cached as any;
+    // Cache is written via JSON.stringify(user); Upstash Redis deserializes automatically on get().
+    if (cached) return cached as unknown as AuthUser;
   }
 
   let user = await executeAsSystem(SystemOperation.AUTH_BOOTSTRAP, async (tx) => {
@@ -203,8 +221,7 @@ async function ensureUserProvisionedFromClerk(clerkId: string) {
   }
 }
 
-export async function requireAuth() {
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars -- S2 Residual Debt: Legacy unused local
+export async function requireAuth(): Promise<AuthUser> {
   const user = await getCurrentUser();
   // eslint-disable-next-line @typescript-eslint/no-unused-vars -- S2 Residual Debt: Legacy unused local
   const clerkAuth = await auth();

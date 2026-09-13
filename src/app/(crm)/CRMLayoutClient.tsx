@@ -91,7 +91,6 @@ interface CRMLayoutClientProps {
   tenantName: string;
   userRole: string;
   // eslint-disable-next-line @typescript-eslint/no-explicit-any -- S2 Residual Debt: Legacy internal payload requires architectural typing
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any -- S2 Residual Debt: Legacy internal payload requires architectural typing
   initialNotifications?: any[];
   initialNotificationCount?: number;
 }
@@ -173,7 +172,6 @@ export default function CRMLayoutClient({
         <nav className="flex-1 overflow-y-auto px-3 pb-4 space-y-5">
           {NAV_GROUPS.map((group) => {
             // Filter adminOnly items unless user is admin
-            // eslint-disable-next-line @typescript-eslint/no-explicit-any -- S2 Residual Debt: Legacy internal payload requires architectural typing
             const visibleItems = group.items.filter(
               // eslint-disable-next-line @typescript-eslint/no-explicit-any -- S2 Residual Debt: Legacy internal payload requires architectural typing
               (item: any) => !item.adminOnly || isAdmin
@@ -285,7 +283,7 @@ export default function CRMLayoutClient({
                   {user?.firstName || "User"}
                 </span>
               </span>
-              <UserButton />
+              {userRole?.toUpperCase() !== 'DEMO_USER' && <UserButton />}
             </div>
           </div>
         </header>

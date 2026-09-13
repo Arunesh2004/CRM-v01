@@ -1,5 +1,5 @@
-import { withApiContext } from '@/lib/observability/context';
-import { Logger } from '@/lib/logger/logger';
+import { withApiContext } from "@/lib/observability/context";
+import { Logger } from "@/lib/logger/logger";
 /**
  * MediaMTX Recording Webhook (Phase C13.2)
  *
@@ -18,30 +18,41 @@ import { Logger } from '@/lib/logger/logger';
  * Canonical segmentId = SHA-256 of: `nodeId:opaquePath:filename:recordingEventTimestamp`
  * using the timestamp supplied by the MediaMTX producer in the payload.
  */
-import { NextRequest, NextResponse } from 'next/server';
-import crypto from 'crypto';
-import path from 'path';
-import globalPrisma from '@db/utils/prisma';
-import { parseOpaquePath } from '@/modules/cctv/opaque-path.helper';
+import { NextRequest, NextResponse } from "next/server";
+import crypto from "crypto";
+import path from "path";
+import globalPrisma from "@db/utils/prisma";
+import { parseOpaquePath } from "@/modules/cctv/opaque-path.helper";
+import { ENV } from "@/lib/config/env";
+import { assertPathInRoot } from "@/modules/cctv/validators/path.validator";
 
 const TIMESTAMP_TOLERANCE_MS = 5 * 60 * 1000; // 5 minutes
 
 const original_POST = async function (req: NextRequest) {
   try {
     // ── Step 1: Identify node ─────────────────────────────────────────────────
-    const nodeKeyId = req.headers.get('x-node-key-id');
-    const hmacSignature = req.headers.get('x-hmac-signature');
-    const timestampHeader = req.headers.get('x-timestamp');
-    const nonce = req.headers.get('x-nonce');
+    const nodeKeyId = req.headers.get("x-node-key-id");
+    const hmacSignature = req.headers.get("x-hmac-signature");
+    const timestampHeader = req.headers.get("x-timestamp");
+    const nonce = req.headers.get("x-nonce");
 
     if (!nodeKeyId || !hmacSignature || !timestampHeader || !nonce) {
-      return NextResponse.json({ error: 'Missing required security headers' }, { status: 401 });
+      return NextResponse.json(
+        { error: "Missing required security headers" },
+        { status: 401 },
+      );
     }
 
     // ── Step 2: Validate timestamp ────────────────────────────────────────────
     const requestTimestampMs = parseInt(timestampHeader, 10);
-    if (isNaN(requestTimestampMs) || Math.abs(Date.now() - requestTimestampMs) > TIMESTAMP_TOLERANCE_MS) {
-      return NextResponse.json({ error: 'Request timestamp out of window' }, { status: 401 });
+    if (
+      isNaN(requestTimestampMs) ||
+      Math.abs(Date.now() - requestTimestampMs) > TIMESTAMP_TOLERANCE_MS
+    ) {
+      return NextResponse.json(
+        { error: "Request timestamp out of window" },
+        { status: 401 },
+      );
     }
 
     // ── Step 3: Look up node by webhookKeyId ─────────────────────────────────
@@ -49,10 +60,13 @@ const original_POST = async function (req: NextRequest) {
       where: { webhookKeyId: nodeKeyId },
     });
     if (!node) {
-      return NextResponse.json({ error: 'Unknown node key' }, { status: 401 });
+      return NextResponse.json({ error: "Unknown node key" }, { status: 401 });
     }
-    if (node.status === 'DECOMMISSIONED') {
-      return NextResponse.json({ error: 'Node is decommissioned' }, { status: 403 });
+    if (node.status === "DECOMMISSIONED") {
+      return NextResponse.json(
+        { error: "Node is decommissioned" },
+        { status: 403 },
+      );
     }
 
     // ── Step 4: Verify HMAC ───────────────────────────────────────────────────
@@ -62,36 +76,80 @@ const original_POST = async function (req: NextRequest) {
     const secret = process.env[secretEnvVar];
     if (!secret) {
       Logger.error(`[MediaMTX Webhook] Missing env secret: ${secretEnvVar}`);
-      return NextResponse.json({ error: 'Server configuration error' }, { status: 500 });
+      return NextResponse.json(
+        { error: "Server configuration error" },
+        { status: 500 },
+      );
     }
 
     const expectedHmac = crypto
-      .createHmac('sha256', secret)
+      .createHmac("sha256", secret)
       .update(`${timestampHeader}.${nonce}.${rawBody}`)
-      .digest('hex');
+      .digest("hex");
 
-    if (!crypto.timingSafeEqual(Buffer.from(hmacSignature, 'hex'), Buffer.from(expectedHmac, 'hex'))) {
-      return NextResponse.json({ error: 'Invalid HMAC signature' }, { status: 401 });
+    if (
+      !crypto.timingSafeEqual(
+        Buffer.from(hmacSignature, "hex"),
+        Buffer.from(expectedHmac, "hex"),
+      )
+    ) {
+      return NextResponse.json(
+        { error: "Invalid HMAC signature" },
+        { status: 401 },
+      );
     }
 
     // ── Step 5: Parse and validate payload ───────────────────────────────────
-    let body: { path?: string; file?: string; recordingEventTimestamp?: number };
+    let body: {
+      path?: string;
+      file?: string;
+      recordingEventTimestamp?: number;
+    };
     try {
       body = JSON.parse(rawBody);
     } catch {
-      return NextResponse.json({ error: 'Invalid JSON payload' }, { status: 400 });
+      return NextResponse.json(
+        { error: "Invalid JSON payload" },
+        { status: 400 },
+      );
     }
 
-    const { path: opaquePath, file: localFilePath, recordingEventTimestamp } = body;
+    const {
+      path: opaquePath,
+      file: localFilePath,
+      recordingEventTimestamp,
+    } = body;
     if (!opaquePath || !localFilePath || !recordingEventTimestamp) {
-      return NextResponse.json({ error: 'Missing required fields: path, file, recordingEventTimestamp' }, { status: 400 });
+      return NextResponse.json(
+        {
+          error: "Missing required fields: path, file, recordingEventTimestamp",
+        },
+        { status: 400 },
+      );
     }
 
     // Canonical path validation — must be relative (no traversal)
     const filename = path.basename(localFilePath);
     const normalizedLocal = path.normalize(localFilePath);
-    if (normalizedLocal !== localFilePath || path.isAbsolute(filename) || filename.includes('..')) {
-      return NextResponse.json({ error: 'Invalid file path' }, { status: 403 });
+    if (
+      normalizedLocal !== localFilePath ||
+      path.isAbsolute(filename) ||
+      filename.includes("..")
+    ) {
+      return NextResponse.json({ error: "Invalid file path" }, { status: 403 });
+    }
+
+    // R06 Root Contract: Verify against authoritative root
+    try {
+      await assertPathInRoot(localFilePath, ENV.cctvRecordingsRoot);
+    } catch (e: unknown) {
+      Logger.warn(
+        `[MediaMTX Webhook] Path boundary violation: ${(e as Error).message}`,
+      );
+      return NextResponse.json(
+        { error: "Path outside trusted root" },
+        { status: 403 },
+      );
     }
 
     // ── Step 6: Parse tenant from opaque path ────────────────────────────────
@@ -101,13 +159,21 @@ const original_POST = async function (req: NextRequest) {
     // Canonical fields: nodeId + opaquePath + filename + recordingEventTimestamp (ms from producer).
     // This is stable across retries: MediaMTX retries the same event with the same timestamp.
     const canonicalIdentity = `${node.id}:${opaquePath}:${filename}:${recordingEventTimestamp}`;
-    const segmentId = crypto.createHash('sha256').update(canonicalIdentity).digest('hex');
+    const segmentId = crypto
+      .createHash("sha256")
+      .update(canonicalIdentity)
+      .digest("hex");
 
     // ── Step 8: Idempotency guard (nonce + nodeId prevents replay) ────────────
     const idempotencyKeyStr = `mediamtx_${node.id}_${nonce}`;
 
     try {
       await globalPrisma.$transaction(async (tx) => {
+        // R07 Fix: Establish RLS tenant context for IdempotencyKey writes.
+        // tenantId is derived exclusively from the HMAC-validated opaque path (Step 6).
+        // Uses Prisma tagged template literal — no string interpolation.
+        await tx.$executeRaw`SELECT set_config('app.current_tenant_id', ${tenantId}, true)`;
+
         // 8.1 Replay protection via nonce (short TTL: 10 minutes)
         const existing = await tx.idempotencyKey.findUnique({
           where: { tenantId_key: { tenantId, key: idempotencyKeyStr } },
@@ -131,28 +197,35 @@ const original_POST = async function (req: NextRequest) {
             localFilePath,
             segmentId,
             recordingNodeId: node.id, // AUTHENTICATED node identity — not from payload
-            status: 'PENDING',
+            status: "PENDING",
           },
           update: {}, // Already exists — no-op
         });
       });
     } catch (eRaw: unknown) {
       const e = eRaw instanceof Error ? eRaw : new Error(String(eRaw));
+
       // eslint-disable-next-line @typescript-eslint/no-explicit-any -- S2 Residual Debt: Legacy internal payload requires architectural typing
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any -- S2 Residual Debt: Legacy internal payload requires architectural typing
-      if ((e as any).code === 'P2002') {
+      if ((e as any).code === "P2002") {
         // Concurrent unique violation — idempotent success
-        return NextResponse.json({ success: true, message: 'Job already exists' });
+        return NextResponse.json({
+          success: true,
+          message: "Job already exists",
+        });
       }
       throw e;
     }
 
     return NextResponse.json({ success: true });
   } catch (errorRaw: unknown) {
-    const error = errorRaw instanceof Error ? errorRaw : new Error(String(errorRaw));
-    Logger.error('[Recording Webhook Error]', error);
-    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
+    const error =
+      errorRaw instanceof Error ? errorRaw : new Error(String(errorRaw));
+    Logger.error("[Recording Webhook Error]", error);
+    return NextResponse.json(
+      { error: "Internal server error" },
+      { status: 500 },
+    );
   }
-}
+};
 
 export const POST = withApiContext(original_POST);

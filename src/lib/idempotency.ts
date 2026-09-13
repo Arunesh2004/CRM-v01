@@ -39,7 +39,6 @@ function sortObjectKeys(obj: unknown): unknown {
 }
 
 export function canonicalHash(payload: object): string {
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars -- S2 Residual Debt: Legacy unused local
   // eslint-disable-next-line @typescript-eslint/no-unused-vars -- Intentional unused destructuring exclusion
   const { idempotencyKey: _, ...rest } = payload as Record<string, unknown>;
   const sorted = sortObjectKeys(rest);
@@ -88,7 +87,7 @@ export async function withIdempotency<T extends { id: string }>(
 
   try {
     const result = await globalPrisma.$transaction(async (tx) => {
-      await tx.$executeRawUnsafe(`SELECT set_config('app.current_tenant_id', '${tenantId}', true)`);
+      await tx.$executeRaw`SELECT set_config('app.current_tenant_id', ${tenantId}, true)`;
       await tx.idempotencyKey.deleteMany({
         where: {
           tenantId,

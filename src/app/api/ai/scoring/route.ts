@@ -6,7 +6,7 @@ import { Logger } from '@/lib/logger/logger';
 
 const _orig_POST = async function (req: NextRequest) {
   try {
-    const { userId } = await requireAuth();
+    const { id: userId } = await requireAuth();
     const tenantId = await requireTenant();
 
     const body = await req.json() as { resourceType?: string; resourceId?: string };

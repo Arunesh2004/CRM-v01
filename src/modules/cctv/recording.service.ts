@@ -6,7 +6,7 @@ import crypto from 'crypto';
 export async function getCameraRecordings(cameraId: string, limit: number = 50, cursor?: string) {
   await requireAuth();
   const tenantId = await requireTenant();
-  await requirePermission('CUSTOMER', 'READ');
+  await requirePermission('RECORDING', 'READ');
 
   const prisma = withTenant(tenantId);
   const recordings = await prisma.recording.findMany({
@@ -26,13 +26,14 @@ export async function getCameraRecordings(cameraId: string, limit: number = 50, 
 export async function generateRecordingDownloadUrl(recordingId: string) {
   const user = await requireAuth();
   const tenantId = await requireTenant();
-  await requirePermission('CUSTOMER', 'READ');
+  await requirePermission('RECORDING', 'READ');
 
   // eslint-disable-next-line @typescript-eslint/no-unused-vars -- S2 Residual Debt: Legacy unused local
   // eslint-disable-next-line @typescript-eslint/no-unused-vars -- S2 Residual Debt: Legacy unused local
   const prisma = withTenant(tenantId);
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any -- S2 Residual Debt: Legacy internal payload requires architectural typing
-  
+
+// eslint-disable-next-line @typescript-eslint/no-explicit-any -- S2 Residual Debt: Legacy internal payload requires architectural typing
+
   // eslint-disable-next-line @typescript-eslint/no-explicit-any -- S2 Residual Debt: Legacy internal payload requires architectural typing
   return await globalPrisma.$transaction(async (baseTx) => {
     const tx = await withTenantTransaction(baseTx, tenantId);

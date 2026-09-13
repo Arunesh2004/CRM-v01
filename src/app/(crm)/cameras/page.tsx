@@ -1,7 +1,9 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { getCamerasAction } from '@/modules/cctv/actions/camera.actions';
 import { getAIEventsAction } from '@/modules/ai-events/actions/ai-event.actions';
 import Link from 'next/link';
 import { Video, Activity, ShieldAlert } from 'lucide-react';
+import { CameraStreamCard } from '@/components/cctv/CameraStreamCard';
 
 export default async function CamerasSOCPage() {
   const [camerasResult, aiEventsResult] = await Promise.all([
@@ -45,31 +47,14 @@ export default async function CamerasSOCPage() {
           <h2 className="text-xl font-semibold text-white flex items-center gap-2">
             <Video className="w-5 h-5 text-violet-400" /> Live Feeds
           </h2>
-          // eslint-disable-next-line @typescript-eslint/no-explicit-any -- S2 Residual Debt: Legacy internal payload requires architectural typing
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-            // eslint-disable-next-line @typescript-eslint/no-explicit-any -- S2 Residual Debt: Legacy internal payload requires architectural typing
             {cameras.map((camera: any) => (
-              <Link href={`/cameras/${camera.id}`} key={camera.id}>
-                <div className="glass-panel rounded-xl overflow-hidden group hover:border-violet-500/30 transition-all cursor-pointer relative aspect-video bg-black/40">
-                  {camera.status === 'ONLINE' ? (
-                    <div className="absolute inset-0 flex items-center justify-center opacity-30 group-hover:opacity-60 transition-opacity">
-                      <Video className="w-12 h-12 text-violet-400" />
-                    </div>
-                  ) : (
-                    <div className="absolute inset-0 flex items-center justify-center">
-                      <span className="text-[#8891B0] text-sm">NO SIGNAL</span>
-                    </div>
-                  )}
-                  <div className="absolute bottom-0 inset-x-0 p-3 bg-gradient-to-t from-black/80 to-transparent flex justify-between items-center">
-                    <span className="text-sm font-medium text-white">{camera.name}</span>
-                    <span className={`text-[10px] px-2 py-0.5 rounded-full uppercase font-bold tracking-wider ${
-                      camera.status === 'ONLINE' ? 'bg-emerald-500/20 text-emerald-400' : 'bg-rose-500/20 text-rose-400'
-                    }`}>
-                      {camera.status}
-                    </span>
-                  </div>
-                </div>
-              </Link>
+              <div key={camera.id} className="relative group">
+                <Link href={`/cameras/${camera.id}`} className="absolute top-2 left-2 z-40 bg-black/50 hover:bg-black text-white text-xs px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition-opacity">
+                  View Details
+                </Link>
+                <CameraStreamCard camera={camera} />
+              </div>
             ))}
             {cameras.length === 0 && (
               <div className="col-span-3 p-12 text-center border border-dashed border-white/10 rounded-xl text-[#8891B0]">
@@ -83,10 +68,9 @@ export default async function CamerasSOCPage() {
         <div className="xl:col-span-1 space-y-4">
           <h2 className="text-xl font-semibold text-white flex items-center gap-2">
             <Activity className="w-5 h-5 text-violet-400" /> Live AI Telemetry
-          // eslint-disable-next-line @typescript-eslint/no-explicit-any -- S2 Residual Debt: Legacy internal payload requires architectural typing
           </h2>
           <div className="glass-panel rounded-xl p-4 space-y-4 h-[calc(100%-2.5rem)] overflow-y-auto">
-            // eslint-disable-next-line @typescript-eslint/no-explicit-any -- S2 Residual Debt: Legacy internal payload requires architectural typing
+            {/* eslint-disable-next-line @typescript-eslint/no-explicit-any -- S2 Residual Debt: Legacy internal payload requires architectural typing */}
             {latestEvents.map((event: any) => (
               <div key={event.id} className="border-l-2 border-violet-500 pl-3 py-1">
                 <div className="flex justify-between items-start">

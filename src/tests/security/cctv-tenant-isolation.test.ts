@@ -39,6 +39,34 @@ describe('CCTV Adversarial Security Tests', () => {
       const adminRoleB = await tx.role.create({ data: { name: 'TENANT_ADMIN', tenantId: tB.id } });
 
       // Permissions for testing
+      const permCameraCreate = await tx.permission.upsert({
+        where: { resource_action: { resource: 'CAMERA', action: 'CREATE' } },
+        update: {}, create: { resource: 'CAMERA', action: 'CREATE' }
+      });
+      const permCameraRead = await tx.permission.upsert({
+        where: { resource_action: { resource: 'CAMERA', action: 'READ' } },
+        update: {}, create: { resource: 'CAMERA', action: 'READ' }
+      });
+      const permCameraUpdate = await tx.permission.upsert({
+        where: { resource_action: { resource: 'CAMERA', action: 'UPDATE' } },
+        update: {}, create: { resource: 'CAMERA', action: 'UPDATE' }
+      });
+      const permCameraDelete = await tx.permission.upsert({
+        where: { resource_action: { resource: 'CAMERA', action: 'DELETE' } },
+        update: {}, create: { resource: 'CAMERA', action: 'DELETE' }
+      });
+      const permStreamRead = await tx.permission.upsert({
+        where: { resource_action: { resource: 'STREAM', action: 'READ' } },
+        update: {}, create: { resource: 'STREAM', action: 'READ' }
+      });
+      const permRecordingRead = await tx.permission.upsert({
+        where: { resource_action: { resource: 'RECORDING', action: 'READ' } },
+        update: {}, create: { resource: 'RECORDING', action: 'READ' }
+      });
+      const permAiEventCreate = await tx.permission.upsert({
+        where: { resource_action: { resource: 'AI_EVENT', action: 'CREATE' } },
+        update: {}, create: { resource: 'AI_EVENT', action: 'CREATE' }
+      });
       const permCustomerUpdate = await tx.permission.upsert({
         where: { resource_action: { resource: 'CUSTOMER', action: 'UPDATE' } },
         update: {}, create: { resource: 'CUSTOMER', action: 'UPDATE' }
@@ -48,12 +76,18 @@ describe('CCTV Adversarial Security Tests', () => {
         update: {}, create: { resource: 'CUSTOMER', action: 'READ' }
       });
 
-      await tx.rolePermission.create({ data: { roleId: adminRoleA.id, permissionId: permCustomerUpdate.id, tenantId: tA.id } });
-      await tx.rolePermission.create({ data: { roleId: adminRoleA.id, permissionId: permCustomerRead.id, tenantId: tA.id } });
+      // Assign all CCTV permissions to admin (so it works without relying strictly on TENANT_ADMIN bypass in the test mock)
+      for (const roleId of [adminRoleA.id, adminRoleB.id]) {
+        const tId = roleId === adminRoleA.id ? tA.id : tB.id;
+        for (const pId of [permCameraCreate.id, permCameraRead.id, permCameraUpdate.id, permCameraDelete.id, permStreamRead.id, permRecordingRead.id, permAiEventCreate.id, permCustomerUpdate.id, permCustomerRead.id]) {
+          await tx.rolePermission.create({ data: { roleId, permissionId: pId, tenantId: tId } });
+        }
+      }
+
+      // Assign ONLY read permissions and CUSTOMER:UPDATE to member (to prove CUSTOMER:UPDATE is no longer sufficient)
+      await tx.rolePermission.create({ data: { roleId: memberRoleA.id, permissionId: permCustomerUpdate.id, tenantId: tA.id } });
       await tx.rolePermission.create({ data: { roleId: memberRoleA.id, permissionId: permCustomerRead.id, tenantId: tA.id } });
-      
-      await tx.rolePermission.create({ data: { roleId: adminRoleB.id, permissionId: permCustomerUpdate.id, tenantId: tB.id } });
-      await tx.rolePermission.create({ data: { roleId: adminRoleB.id, permissionId: permCustomerRead.id, tenantId: tB.id } });
+      await tx.rolePermission.create({ data: { roleId: memberRoleA.id, permissionId: permCameraRead.id, tenantId: tA.id } });
 
       // Users
       const uA_Admin = await tx.user.create({
@@ -111,7 +145,7 @@ describe('CCTV Adversarial Security Tests', () => {
     global.fetch = vi.fn().mockResolvedValue({
       ok: true,
       json: async () => ({})
-    }) as any;
+    }) as unknown as typeof fetch;
   });
 
   // Mock helpers
@@ -119,7 +153,7 @@ describe('CCTV Adversarial Security Tests', () => {
     const user = await executeAsSystem(SystemOperation.SECURITY_AUDIT, async (tx) => {
       return tx.user.findUnique({ where: { id: userId }, include: { userRoles: { include: { role: true } } } });
     });
-    vi.spyOn(authLib, 'requireAuth').mockResolvedValue(user as any);
+    vi.spyOn(authLib, 'requireAuth').mockResolvedValue(user as Awaited<ReturnType<typeof authLib.requireAuth>>);
     vi.spyOn(authLib, 'requireTenant').mockResolvedValue(tenantId);
     
     // Simplistic permission mock based on what we seeded
@@ -134,7 +168,6 @@ describe('CCTV Adversarial Security Tests', () => {
         });
       });
       if (!hasPerm) throw new Error(`Forbidden: Missing ${action} on ${resource}`);
-      return undefined as any;
     });
   }
 
@@ -173,7 +206,8 @@ describe('CCTV Adversarial Security Tests', () => {
     it('Tenant A Admin can generate valid stream token', async () => {
       await mockAuthAs(tA_AdminId, tenantAId);
       const res = await generateStreamToken(tA_CameraId);
-      expect(res.streamUrl).toContain('token=');
+      expect(res.streamUrl).toContain('/whep');
+      expect(res.streamUrl).not.toContain('token=');
     });
 
     it('Tenant B cannot generate stream token for Tenant A camera', async () => {
@@ -209,7 +243,7 @@ describe('CCTV Adversarial Security Tests', () => {
   });
 
   describe('F. RBAC / PRIVILEGE ESCALATION', () => {
-    it('Tenant A MEMBER cannot create a camera (lacks UPDATE permission)', async () => {
+    it('Tenant A MEMBER cannot create a camera (lacks CREATE permission)', async () => {
       await mockAuthAs(tA_MemberId, tenantAId);
       await expect(createCamera({
         name: 'Sneaky Cam',
@@ -217,12 +251,12 @@ describe('CCTV Adversarial Security Tests', () => {
         ipAddress: '10.0.0.4',
         protocol: 'RTSP',
         authMode: 'NONE'
-      })).rejects.toThrow('Forbidden: Missing UPDATE on CUSTOMER');
+      })).rejects.toThrow('Forbidden: Missing CREATE on CAMERA');
     });
 
     it('Tenant A MEMBER cannot delete a camera', async () => {
       await mockAuthAs(tA_MemberId, tenantAId);
-      await expect(deleteCamera(tA_CameraId)).rejects.toThrow('Forbidden: Missing UPDATE on CUSTOMER');
+      await expect(deleteCamera(tA_CameraId)).rejects.toThrow('Forbidden: Missing DELETE on CAMERA');
     });
   });
 

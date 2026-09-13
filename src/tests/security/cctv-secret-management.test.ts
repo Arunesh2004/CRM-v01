@@ -23,20 +23,40 @@ describe('CCTV Secret Management Tests (Phase C9.1)', () => {
 
   beforeAll(async () => {
     await executeAsSystem(SystemOperation.SECURITY_AUDIT, async (tx) => {
-      await tx.$executeRawUnsafe(`INSERT INTO "Tenant" (id, name, "createdAt", "updatedAt") VALUES ('${tenantAId}', 'Tenant A', now(), now())`);
-      await tx.$executeRawUnsafe(`INSERT INTO "Tenant" (id, name, "createdAt", "updatedAt") VALUES ('${tenantBId}', 'Tenant B', now(), now())`);
+      await tx.tenant.createMany({
+        data: [
+          { id: tenantAId, name: 'Tenant A' },
+          { id: tenantBId, name: 'Tenant B' }
+        ],
+        skipDuplicates: true
+      });
 
-      await tx.$executeRawUnsafe(`INSERT INTO "User" (id, "tenantId", email, status, "createdAt", "updatedAt") VALUES ('${userAId}', '${tenantAId}', 'usera@test.com', 'ACTIVE', now(), now())`);
-      await tx.$executeRawUnsafe(`INSERT INTO "User" (id, "tenantId", email, status, "createdAt", "updatedAt") VALUES ('${userBId}', '${tenantBId}', 'userb@test.com', 'ACTIVE', now(), now())`);
+      await tx.user.createMany({
+        data: [
+          { id: userAId, tenantId: tenantAId, email: 'usera@test.com', status: 'ACTIVE' },
+          { id: userBId, tenantId: tenantBId, email: 'userb@test.com', status: 'ACTIVE' }
+        ],
+        skipDuplicates: true
+      });
 
       // Mock Customer and Location
       const custA = crypto.randomUUID();
       const custB = crypto.randomUUID();
-      await tx.$executeRawUnsafe(`INSERT INTO "Customer" (id, "tenantId", name, "normalizedName", "createdAt", "updatedAt") VALUES ('${custA}', '${tenantAId}', 'Cust A', 'custa', now(), now())`);
-      await tx.$executeRawUnsafe(`INSERT INTO "Customer" (id, "tenantId", name, "normalizedName", "createdAt", "updatedAt") VALUES ('${custB}', '${tenantBId}', 'Cust B', 'custb', now(), now())`);
+      await tx.customer.createMany({
+        data: [
+          { id: custA, tenantId: tenantAId, name: 'Cust A', normalizedName: 'custa' },
+          { id: custB, tenantId: tenantBId, name: 'Cust B', normalizedName: 'custb' }
+        ],
+        skipDuplicates: true
+      });
 
-      await tx.$executeRawUnsafe(`INSERT INTO "Location" (id, "customerId", "tenantId", name, "createdAt", "updatedAt") VALUES ('${locationAId}', '${custA}', '${tenantAId}', 'Loc A', now(), now())`);
-      await tx.$executeRawUnsafe(`INSERT INTO "Location" (id, "customerId", "tenantId", name, "createdAt", "updatedAt") VALUES ('${locationBId}', '${custB}', '${tenantBId}', 'Loc B', now(), now())`);
+      await tx.location.createMany({
+        data: [
+          { id: locationAId, customerId: custA, tenantId: tenantAId, name: 'Loc A' },
+          { id: locationBId, customerId: custB, tenantId: tenantBId, name: 'Loc B' }
+        ],
+        skipDuplicates: true
+      });
     });
   });
 

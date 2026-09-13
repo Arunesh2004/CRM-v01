@@ -48,6 +48,50 @@ const prismaClientSingleton = (baseClient: PrismaClient) => {
           }
           return result;
         }
+      },
+      cameraStream: {
+        async $allOperations({ operation, args, query }) {
+          if (['create', 'update', 'upsert', 'createMany', 'updateMany'].includes(operation)) {
+            const checkStreamUrl = (urlStr: unknown) => {
+              if (typeof urlStr === 'string' && urlStr) {
+                try {
+                  const parsed = new URL(urlStr);
+                  if (parsed.username !== '' || parsed.password !== '') {
+                    throw new Error('SECURITY VIOLATION: CameraStream.streamUrl cannot contain embedded credentials');
+                  }
+                } catch (e: unknown) {
+                  if (e instanceof Error && e.message.startsWith('SECURITY VIOLATION')) throw e;
+                  throw new Error('SECURITY VIOLATION: Malformed streamUrl is rejected');
+                }
+              }
+            };
+
+            const validateData = (item: unknown) => {
+              if (!item || typeof item !== 'object') return;
+              const obj = item as Record<string, unknown>;
+              if (!obj.streamUrl) return;
+              const streamUrlVal = obj.streamUrl;
+              const urlVal = typeof streamUrlVal === 'string' ? streamUrlVal : (streamUrlVal && typeof streamUrlVal === 'object' && 'set' in streamUrlVal ? (streamUrlVal as Record<string, unknown>).set : undefined);
+              checkStreamUrl(urlVal);
+            };
+
+            const dataArg = (args as { data?: unknown })?.data;
+            if (dataArg) {
+              if (Array.isArray(dataArg)) {
+                dataArg.forEach(validateData);
+              } else {
+                validateData(dataArg);
+              }
+            }
+
+            if (operation === 'upsert') {
+              const upsertArgs = args as { create?: unknown; update?: unknown };
+              validateData(upsertArgs.create);
+              validateData(upsertArgs.update);
+            }
+          }
+          return query(args);
+        }
       }
     }
   });

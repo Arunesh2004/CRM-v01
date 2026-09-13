@@ -1,5 +1,6 @@
 import { describe, it, expect, beforeAll, afterAll } from 'vitest';
 import crypto from 'crypto';
+import { ENV } from '@/lib/config/env';
 import globalPrisma from '@db/utils/prisma';
 import { executeAsSystem, SystemOperation } from '@db/utils/prisma-system';
 
@@ -52,7 +53,7 @@ describe('Phase S11 Chaos / Data-Loss / Failure-Recovery Tests', () => {
       data: {
         segmentId,
         recordingNodeId: node.id,
-        localFilePath: `/tmp/${segmentId}.mp4`,
+        localFilePath: `${ENV.cctvRecordingsRoot}/${segmentId}.mp4`,
         status: 'PENDING'
       }
     });

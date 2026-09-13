@@ -16,6 +16,7 @@ process.env.CCTV_OPAQUE_PATH_SECRET = process.env.CCTV_OPAQUE_PATH_SECRET || 'op
 process.env.MEDIAMTX_API_URL = process.env.MEDIAMTX_API_URL || 'http://mediamtx:9997';
 process.env.MEDIAMTX_WEBHOOK_SECRET = process.env.MEDIAMTX_WEBHOOK_SECRET || 'super_secret';
 process.env.PUBLIC_APP_URL = process.env.PUBLIC_APP_URL || 'http://localhost:3000';
+process.env.CCTV_RECORDINGS_ROOT = process.env.CCTV_RECORDINGS_ROOT || require('os').tmpdir();
 
 export default defineConfig({
   test: {

@@ -216,16 +216,16 @@ model Tenant {
   mailDrafts               MailDraft[]
   communicationAttachments CommunicationAttachment[]
   callLogs                 CallLog[]
-
+  callSessions             CallSession[]
   // CCTV
-  cameras           Camera[]
-  cameraCredentials CameraCredential[]
-  cameraStreams     CameraStream[]
-  recordings        Recording[]
-  cameraEvents      CameraEvent[]
-  aiEvents          AIEvent[]
-  incidents         Incident[]
-  webhookEvents     WebhookEvent[]
+  cameras                  Camera[]
+  cameraCredentials        CameraCredential[]
+  cameraStreams            CameraStream[]
+  recordings               Recording[]
+  cameraEvents             CameraEvent[]
+  aiEvents                 AIEvent[]
+  incidents                Incident[]
+  webhookEvents            WebhookEvent[]
 
   // DR Lock
   isRestoreLocked        Boolean                 @default(false)
@@ -372,34 +372,35 @@ model User {
   mailDrafts               MailDraft[]
   communicationAttachments CommunicationAttachment[]
   userPresences            UserPresence[]
+  initiatedCallSessions    CallSession[]             @relation("CallCaller")
+  receivedCallSessions     CallSession[]             @relation("CallRecipient")
+  incidents                Incident[]
+  deletedAt                DateTime?
+  crmComments              CRMComment[]
+  dealStageHistories       DealStageHistory[]
+  meetingParticipants      MeetingParticipant[]
+  aiConversations          AIConversation[]
+  uploadedDocuments        Document[]
+  securityEvents           SecurityEvent[]
+  aiExecutions             AIExecution[]
+  aiMemories               AIMemory[]                @relation("AIMemoryUser")
+  approvedAiMemories       AIMemory[]                @relation("AIMemoryApprover")
+  approvedAiExecutions     AIExecution[]             @relation("AIExecutionApprover")
+  documentEmbeddings       DocumentEmbedding[]
+  documentPermissions      DocumentPermission[]
+  aiagentExecutions        AIAgentExecution[]
+  aitokenUsages            AITokenUsage[]
+  quotes                   Quote[]
+  userTerritories          UserTerritory[]
+  salesQuotas              SalesQuota[]
+  approvalRequests         ApprovalRequest[]
+  approvalSteps            ApprovalStep[]
 
-  incidents            Incident[]
-  deletedAt            DateTime?
-  crmComments          CRMComment[]
-  dealStageHistories   DealStageHistory[]
-  meetingParticipants  MeetingParticipant[]
-  aiConversations      AIConversation[]
-  uploadedDocuments    Document[]
-  securityEvents       SecurityEvent[]
-  aiExecutions         AIExecution[]
-  aiMemories           AIMemory[]           @relation("AIMemoryUser")
-  approvedAiMemories   AIMemory[]           @relation("AIMemoryApprover")
-  approvedAiExecutions AIExecution[]        @relation("AIExecutionApprover")
-  documentEmbeddings   DocumentEmbedding[]
-  documentPermissions  DocumentPermission[]
-  aiagentExecutions    AIAgentExecution[]
-  aitokenUsages        AITokenUsage[]
-  quotes               Quote[]
-  userTerritories      UserTerritory[]
-  salesQuotas          SalesQuota[]
-  approvalRequests     ApprovalRequest[]
-  approvalSteps        ApprovalStep[]
-
-  assignedTickets    Ticket[]         @relation("TicketAssignee")
-  sentTicketMessages TicketMessage[]
-  sentInvitations    UserInvitation[]
-  createdWorkflows     Workflow[]          @relation("WorkflowCreatedBy")
-  initiatedExecutions  WorkflowExecution[] @relation("WorkflowExecutionInitiator")
+  assignedTickets     Ticket[]            @relation("TicketAssignee")
+  sentTicketMessages  TicketMessage[]
+  sentInvitations     UserInvitation[]
+  createdWorkflows    Workflow[]          @relation("WorkflowCreatedBy")
+  initiatedExecutions WorkflowExecution[] @relation("WorkflowExecutionInitiator")
 
   @@unique([tenantId, email])
   @@unique([tenantId, employeeId])
@@ -1197,6 +1198,17 @@ enum CallStatus {
   IN_PROGRESS
 }
 
+enum CallSessionStatus {
+  RINGING
+  ACCEPTED
+  CONNECTED
+  REJECTED
+  MISSED
+  ENDED
+  FAILED
+  EXPIRED
+}
+
 enum UserPresenceStatus {
   ONLINE
   OFFLINE
@@ -1394,9 +1406,34 @@ model CallLog {
 
   tenant Tenant @relation(fields: [tenantId], references: [id])
 
+  @@unique([tenantId, providerCallId])
   @@index([tenantId, callerEmployeeId])
   @@index([tenantId, receiverEmployeeId])
   @@index([tenantId, createdAt])
+}
+
+model CallSession {
+  id            String            @id @default(uuid())
+  tenantId      String
+  callerId      String // User ID of caller
+  recipientId   String // User ID of recipient
+  status        CallSessionStatus @default(RINGING)
+  createdAt     DateTime          @default(now())
+  updatedAt     DateTime          @updatedAt
+  expiresAt     DateTime
+  acceptedAt    DateTime?
+  connectedAt   DateTime?
+  endedAt       DateTime?
+  failureReason String?
+  version       Int               @default(0) // Optimistic concurrency
+
+  tenant    Tenant @relation(fields: [tenantId], references: [id])
+  caller    User   @relation("CallCaller", fields: [callerId], references: [id])
+  recipient User   @relation("CallRecipient", fields: [recipientId], references: [id])
+
+  @@index([tenantId, status])
+  @@index([callerId, status])
+  @@index([recipientId, status])
 }
 
 model UserPresence {
@@ -1981,7 +2018,7 @@ model AITokenUsage {
   inputTokens   Int
   outputTokens  Int
   latencyMs     Int
-  cost          Decimal @db.Decimal(19,8)
+  cost          Decimal  @db.Decimal(19, 8)
   timestamp     DateTime @default(now())
 
   tenant    Tenant       @relation(fields: [tenantId], references: [id], onDelete: Cascade)
@@ -2054,7 +2091,7 @@ model WorkflowExecution {
   updatedAt  DateTime                @updatedAt
 
   initiatedById String?
-  initiatedBy   User?  @relation("WorkflowExecutionInitiator", fields: [initiatedById], references: [id], onDelete: SetNull)
+  initiatedBy   User?   @relation("WorkflowExecutionInitiator", fields: [initiatedById], references: [id], onDelete: SetNull)
 
   tenantId String
   tenant   Tenant @relation(fields: [tenantId], references: [id], onDelete: Cascade)
@@ -2168,7 +2205,7 @@ model PriceBookEntry {
   tenantId      String
   productId     String
   priceBookId   String
-  unitPrice     Decimal @db.Decimal(19,4)
+  unitPrice     Decimal   @db.Decimal(19, 4)
   currencyCode  String    @default("USD")
   isActive      Boolean   @default(true)
   effectiveFrom DateTime?
@@ -2217,10 +2254,10 @@ model Quote {
   priceBookId       String
   status            QuoteStatus @default(DRAFT)
   expirationDate    DateTime?
-  subtotal          Decimal     @default(0) @db.Decimal(19,4)
-  discountTotal     Decimal     @default(0) @db.Decimal(19,4)
-  taxTotal          Decimal     @default(0) @db.Decimal(19,4)
-  grandTotal        Decimal     @default(0) @db.Decimal(19,4)
+  subtotal          Decimal     @default(0) @db.Decimal(19, 4)
+  discountTotal     Decimal     @default(0) @db.Decimal(19, 4)
+  taxTotal          Decimal     @default(0) @db.Decimal(19, 4)
+  grandTotal        Decimal     @default(0) @db.Decimal(19, 4)
   previousVersionId String?     @unique
   createdAt         DateTime    @default(now())
   updatedAt         DateTime    @updatedAt
@@ -2247,9 +2284,9 @@ model QuoteLineItem {
   priceBookEntryId String
   productId        String // De-normalized for historical stability
   quantity         Int      @default(1)
-  unitPrice        Decimal @db.Decimal(19,4) // Snapshot of the price at quote time
+  unitPrice        Decimal  @db.Decimal(19, 4) // Snapshot of the price at quote time
   discount         Float    @default(0)
-  subtotal         Decimal @db.Decimal(19,4)
+  subtotal         Decimal  @db.Decimal(19, 4)
   metadata         Json?
   createdAt        DateTime @default(now())
   updatedAt        DateTime @updatedAt
@@ -2301,7 +2338,7 @@ model SalesQuota {
   tenantId     String
   userId       String
   period       String
-  targetAmount Decimal @db.Decimal(19,4)
+  targetAmount Decimal  @db.Decimal(19, 4)
   createdAt    DateTime @default(now())
   updatedAt    DateTime @updatedAt
 
@@ -2317,7 +2354,7 @@ model DealSnapshot {
   tenantId    String
   dealId      String
   date        DateTime @default(now())
-  value       Decimal @db.Decimal(19,4)
+  value       Decimal  @db.Decimal(19, 4)
   probability Int?
   stageId     String
   createdAt   DateTime @default(now())
@@ -2547,8 +2584,8 @@ model Invoice {
   tenantId        String
   /// @deprecated
   stripeInvoiceId String?
-  amountDue       Decimal  @default(0) @db.Decimal(19,4)
-  amountPaid      Decimal  @default(0) @db.Decimal(19,4)
+  amountDue       Decimal  @default(0) @db.Decimal(19, 4)
+  amountPaid      Decimal  @default(0) @db.Decimal(19, 4)
   status          String   @default("DRAFT")
   createdAt       DateTime @default(now())
   updatedAt       DateTime @updatedAt

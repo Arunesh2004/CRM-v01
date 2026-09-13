@@ -21,9 +21,9 @@ const original_POST = async function (req: NextRequest) {
       return NextResponse.json({ error: 'Server configuration error' }, { status: 500 });
     }
 
-    // 2. Extract the secret sent by MediaMTX in the query parameters
-    const url = new URL(req.url);
-    const providedSecret = url.searchParams.get('secret');
+    // 2. Extract the secret sent by MediaMTX in the Authorization header
+    const authHeader = req.headers.get('Authorization');
+    const providedSecret = authHeader?.replace('Bearer ', '');
 
     // 3. Compare it safely
     if (!providedSecret) {
@@ -41,9 +41,6 @@ const original_POST = async function (req: NextRequest) {
 
     // 4. Parse the JSON payload sent by MediaMTX
     const body = await req.json().catch(() => ({}));
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars -- S2 Residual Debt: Legacy unused local
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars -- S2 Residual Debt: Legacy unused local
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars -- S2 Residual Debt: Legacy unused local
     // eslint-disable-next-line @typescript-eslint/no-unused-vars -- Intentional unused destructuring exclusion
     const { action, protocol, path, ip, query } = body;
 

@@ -1,12 +1,11 @@
 import { withTenant } from '@db/utils/prisma-tenant';
+import { Tenant } from '@prisma/client';
 import { redis } from '@/lib/cache/redis.client';
 
 export async function getTenantConfig(tenantId: string) {
   if (redis) {
     const cached = await redis.get(`tenant:${tenantId}`);
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any -- S2 Residual Debt: Legacy internal payload requires architectural typing
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any -- S2 Residual Debt: Legacy internal payload requires architectural typing
-    if (cached) return cached as any;
+    if (cached) return (typeof cached === 'string' ? JSON.parse(cached) : cached) as Tenant;
   }
 
   const tenant = await withTenant(tenantId).tenant.findUnique({

@@ -29,12 +29,12 @@ describe('CCTV Concurrency & Rotation Tests (Phase C10.5)', () => {
     
     // Seed tenant and user required by DB foreign keys
     await executeAsSystem(SystemOperation.SECURITY_AUDIT, async (tx) => {
-      await tx.$executeRawUnsafe(`INSERT INTO "Tenant" (id, name, "createdAt", "updatedAt") VALUES ('${tenantId}', 'Test Tenant', now(), now()) ON CONFLICT DO NOTHING`);
-      await tx.$executeRawUnsafe(`INSERT INTO "User" (id, "tenantId", email, status, "createdAt", "updatedAt") VALUES ('${userId}', '${tenantId}', 'test@test.com', 'ACTIVE', now(), now()) ON CONFLICT DO NOTHING`);
+      await tx.tenant.createMany({ data: [{ id: tenantId, name: 'Test Tenant' }], skipDuplicates: true });
+      await tx.user.createMany({ data: [{ id: userId, tenantId, email: 'test@test.com', status: 'ACTIVE', clerkId: `clerk_${userId}`, firstName: 'T', lastName: 'U' }], skipDuplicates: true });
       
       const custId = crypto.randomUUID();
-      await tx.$executeRawUnsafe(`INSERT INTO "Customer" (id, "tenantId", name, "normalizedName", "createdAt", "updatedAt") VALUES ('${custId}', '${tenantId}', 'Test Cust', 'testcust', now(), now()) ON CONFLICT DO NOTHING`);
-      await tx.$executeRawUnsafe(`INSERT INTO "Location" (id, "customerId", "tenantId", name, "createdAt", "updatedAt") VALUES ('${locationId}', '${custId}', '${tenantId}', 'Test Loc', now(), now()) ON CONFLICT DO NOTHING`);
+      await tx.customer.createMany({ data: [{ id: custId, tenantId, name: 'Test Cust', normalizedName: 'testcust' }], skipDuplicates: true });
+      await tx.location.createMany({ data: [{ id: locationId, customerId: custId, tenantId, name: 'Test Loc' }], skipDuplicates: true });
     });
   });
 
@@ -69,15 +69,17 @@ describe('CCTV Concurrency & Rotation Tests (Phase C10.5)', () => {
     expect(streamData.streamUrl).toBeDefined();
 
     // Extract the generated JWT token
-    const tokenUrl = new URL(streamData.streamUrl);
-    const initialToken = tokenUrl.searchParams.get('token');
+    const initialToken = streamData.token;
     expect(initialToken).toBeDefined();
 
     const expectedInitialPath = deriveOpaquePath(tenantId, camera.id, initialStreamVersion);
 
     // Verify webhook accepts the initial token
-    const req1 = new NextRequest(`http://localhost/api?secret=${ENV.mediamtxWebhookSecret}`, {
+    const req1 = new NextRequest(`http://localhost/api`, {
       method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${ENV.mediamtxWebhookSecret}`
+      },
       body: JSON.stringify({
         action: 'read',
         protocol: 'webrtc',
@@ -114,8 +116,11 @@ describe('CCTV Concurrency & Rotation Tests (Phase C10.5)', () => {
     expect(outbox!.opaquePath).toBe(expectedInitialPath);
 
     // 5. Attempt to reconnect using old JWT (Webhook rejection)
-    const req2 = new NextRequest(`http://localhost/api?secret=${ENV.mediamtxWebhookSecret}`, {
+    const req2 = new NextRequest(`http://localhost/api`, {
       method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${ENV.mediamtxWebhookSecret}`
+      },
       body: JSON.stringify({
         action: 'read',
         protocol: 'webrtc',
@@ -131,12 +136,14 @@ describe('CCTV Concurrency & Rotation Tests (Phase C10.5)', () => {
 
     // 6. Verify new credentials/version can establish a new stream
     const newStreamData = await generateStreamToken(camera.id);
-    const newTokenUrl = new URL(newStreamData.streamUrl);
-    const newToken = newTokenUrl.searchParams.get('token');
+    const newToken = newStreamData.token;
     const newExpectedPath = deriveOpaquePath(tenantId, camera.id, 1);
 
-    const req3 = new NextRequest(`http://localhost/api?secret=${ENV.mediamtxWebhookSecret}`, {
+    const req3 = new NextRequest(`http://localhost/api`, {
       method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${ENV.mediamtxWebhookSecret}`
+      },
       body: JSON.stringify({
         action: 'read',
         protocol: 'webrtc',
@@ -203,8 +210,11 @@ describe('CCTV Concurrency & Rotation Tests (Phase C10.5)', () => {
     expect(outbox!.status).toBe('PENDING');
 
     // New stream connections rejected (webhook returns 500 when DB finds null)
-    const req = new NextRequest(`http://localhost/api?secret=${ENV.mediamtxWebhookSecret}`, {
+    const req = new NextRequest(`http://localhost/api`, {
       method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${ENV.mediamtxWebhookSecret}`
+      },
       body: JSON.stringify({
         action: 'read',
         protocol: 'webrtc',

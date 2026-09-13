@@ -1,3 +1,4 @@
+import { Prisma } from '@prisma/client';
 import prisma from '@db/utils/prisma';
 import { withTenant, withTenantTransaction } from '@db/utils/prisma-tenant';
 import { requireAuth, requireTenant, requirePermission, invalidateUserCache } from '@/lib/auth';
@@ -12,16 +13,14 @@ import { Logger } from '@/lib/logger/logger';
 export async function getEmployees(filters?: { search?: string, departmentId?: string, roleName?: string, status?: string }) {
   const actor = await requireAuth();
   const tenantId = await requireTenant();
-  
+
   // Only owners/admins should manage employees, but members can view them (read permission)
   await requirePermission('USER', 'READ');
 
   const prisma = withTenant(tenantId);
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any -- S2 Residual Debt: Legacy internal payload requires architectural typing
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any -- S2 Residual Debt: Legacy internal payload requires architectural typing
-  const where: any = { 
-    tenantId, 
+  const where: Prisma.UserWhereInput = {
+    tenantId,
     clerkId: { not: { startsWith: 'SYSTEM_' } },
     deletedAt: null // Never show hard-deleted
   };
@@ -53,7 +52,7 @@ export async function getEmployees(filters?: { search?: string, departmentId?: s
       { employeeId: { contains: filters.search, mode: 'insensitive' } },
     ];
   }
-  
+
   if (filters?.departmentId) {
     // If Dept Head, they can't override their own department filter (handled by the if block above)
     if (isTenantAdmin) {
@@ -66,7 +65,7 @@ export async function getEmployees(filters?: { search?: string, departmentId?: s
   }
 
   if (filters?.status) {
-    where.status = filters.status;
+    where.status = filters.status as import('@prisma/client').UserStatus;
   }
 
   const users = await prisma.user.findMany({
@@ -102,15 +101,13 @@ async function generateEmployeeId(tenantId: string): Promise<string> {
 export async function inviteEmployee(emailStr: string, roleName: string = 'MEMBER', requestedDepartmentId?: string) {
   const actor = await requireAuth();
   const tenantId = await requireTenant();
-  
+
   await requirePermission('USER', 'CREATE');
-  
+
   const email = emailStr.toLowerCase().trim();
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any -- S2 Residual Debt: Legacy internal payload requires architectural typing
   // Role and Department Authorization
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any -- S2 Residual Debt: Legacy internal payload requires architectural typing
-  const actorRoleNames = actor.userRoles.map((ur: any) => ur.role.name);
+  const actorRoleNames = actor.userRoles.map((ur) => ur.role.name);
   const { finalDepartmentId } = validateDepartmentScope(
     actorRoleNames,
     actor.departmentId,
@@ -144,10 +141,8 @@ export async function inviteEmployee(emailStr: string, roleName: string = 'MEMBE
   const token = crypto.randomBytes(32).toString('hex');
   const tokenHash = crypto.createHash('sha256').update(token).digest('hex');
   const expiresAt = new Date();
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any -- S2 Residual Debt: Legacy internal payload requires architectural typing
   expiresAt.setDate(expiresAt.getDate() + 7); // 7 days from now
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any -- S2 Residual Debt: Legacy internal payload requires architectural typing
   const result = await globalPrisma.$transaction(async (baseTx) => {
     const tx = await withTenantTransaction(baseTx, tenantId);
 
@@ -165,7 +160,7 @@ export async function inviteEmployee(emailStr: string, roleName: string = 'MEMBE
         }
       }
     });
-    
+
     // Create our secure UserInvitation
     await tx.userInvitation.create({
       data: {
@@ -205,7 +200,7 @@ export async function inviteEmployee(emailStr: string, roleName: string = 'MEMBE
 export async function disableEmployee(userId: string) {
   const actor = await requireAuth();
   const tenantId = await requireTenant();
-  
+
   await requirePermission('USER', 'DELETE');
 
   const prismaTenant = withTenant(tenantId);
@@ -217,15 +212,12 @@ export async function disableEmployee(userId: string) {
 
   if (!userToRemove) {
     throw new Error('User not found in this tenant.');
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any -- S2 Residual Debt: Legacy internal payload requires architectural typing
   }
-// eslint-disable-next-line @typescript-eslint/no-explicit-any -- S2 Residual Debt: Legacy internal payload requires architectural typing
+
 
   // Hierarchy and Department Check
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any -- S2 Residual Debt: Legacy internal payload requires architectural typing
-  const actorRoleNames = actor.userRoles.map((ur: any) => ur.role.name);
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any -- S2 Residual Debt: Legacy internal payload requires architectural typing
-  const targetRoleNames = userToRemove.userRoles.map((ur: any) => ur.role.name);
+  const actorRoleNames = actor.userRoles.map((ur) => ur.role.name);
+  const targetRoleNames = userToRemove.userRoles.map((ur) => ur.role.name);
   const isActorGlobal = actorRoleNames.includes('GLOBAL_ADMIN');
   const isActorTenantAdmin = actorRoleNames.includes('TENANT_ADMIN');
   const isActorDeptHead = actorRoleNames.includes('DEPARTMENT_HEAD');
@@ -238,7 +230,7 @@ export async function disableEmployee(userId: string) {
     if (isTargetGlobal || (isTargetTenantAdmin && !isActorTenantAdmin) || (isTargetDeptHead && !isActorTenantAdmin && !isActorGlobal)) {
       throw new Error('Forbidden: Cannot disable a user with equal or higher privileges.');
     }
-    
+
     if (isActorDeptHead && !isActorTenantAdmin) {
       if (!actor.departmentId) {
         throw new Error('Forbidden: You do not belong to a department to manage.');
@@ -286,7 +278,7 @@ export async function disableEmployee(userId: string) {
 export async function updateEmployeeRole(userId: string, newRoleName: string) {
   const actor = await requireAuth();
   const tenantId = await requireTenant();
-  
+
   await requirePermission('USER', 'UPDATE');
 
   // RBAC checks
@@ -313,13 +305,11 @@ export async function updateEmployeeRole(userId: string, newRoleName: string) {
     where: { name: newRoleName, tenantId }
   });
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any -- S2 Residual Debt: Legacy internal payload requires architectural typing
   if (!role) {
     throw new Error(`Role ${newRoleName} does not exist for this tenant.`);
   }
 
   // Transaction to update role
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any -- S2 Residual Debt: Legacy internal payload requires architectural typing
   await globalPrisma.$transaction(async (baseTx) => {
     const tx = await withTenantTransaction(baseTx, tenantId);
     // Delete existing roles
@@ -336,7 +326,7 @@ export async function updateEmployeeRole(userId: string, newRoleName: string) {
       }
     });
   });
-  
+
   // Log Audit
   const { createAuditLog } = await import('../audit/audit.service');
   await createAuditLog({
@@ -358,7 +348,7 @@ export async function updateEmployeeRole(userId: string, newRoleName: string) {
 export async function reassignDepartment(userId: string, newDepartmentId: string) {
   const actor = await requireAuth();
   const tenantId = await requireTenant();
-  
+
   await requirePermission('USER', 'UPDATE');
 
   const tenantPrisma = withTenant(tenantId);
@@ -366,21 +356,20 @@ export async function reassignDepartment(userId: string, newDepartmentId: string
   const userToUpdate = await tenantPrisma.user.findFirst({
     where: { id: userId, tenantId }
   });
-// eslint-disable-next-line @typescript-eslint/no-explicit-any -- S2 Residual Debt: Legacy internal payload requires architectural typing
+
 
   if (!userToUpdate) {
     throw new Error('User not found in this tenant.');
   }
 
   // Role and Department Authorization
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any -- S2 Residual Debt: Legacy internal payload requires architectural typing
-  const actorRoleNames = actor.userRoles.map((ur: any) => ur.role.name);
+  const actorRoleNames = actor.userRoles.map((ur) => ur.role.name);
   const { finalDepartmentId } = validateDepartmentScope(
     actorRoleNames,
     actor.departmentId,
     newDepartmentId
   );
-  
+
   if (!finalDepartmentId) {
     throw new Error("Invalid department target.");
   }
@@ -420,7 +409,7 @@ export async function reassignDepartment(userId: string, newDepartmentId: string
   if (userToUpdate.clerkId) {
     await invalidateUserCache(userToUpdate.clerkId);
   }
-  
+
   return { success: true };
 }
 
@@ -451,7 +440,6 @@ export async function updateProfile(userId: string, data: { firstName?: string, 
     }
   });
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any -- S2 Residual Debt: Legacy internal payload requires architectural typing
   const { createAuditLog } = await import('../audit/audit.service');
   await createAuditLog({
     tenantId,
@@ -459,8 +447,7 @@ export async function updateProfile(userId: string, data: { firstName?: string, 
     action: 'PROFILE_UPDATED',
     resource: 'USER',
     resourceId: userId,
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any -- S2 Residual Debt: Legacy internal payload requires architectural typing
-    metadata: { updatedFields: Object.keys(data).filter(k => (data as any)[k] !== undefined) }
+    metadata: { updatedFields: Object.keys(data).filter(k => data[k as keyof typeof data] !== undefined) }
   });
 
   return { success: true };
