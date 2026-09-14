@@ -10,7 +10,8 @@ describe('System Client Isolation', () => {
     vi.resetModules();
 
     try {
-      await import('@db/utils/prisma-system');
+      const { executeAsSystem, SystemOperation } = await import('@db/utils/prisma-system');
+      await executeAsSystem(SystemOperation.SECURITY_AUDIT, async () => { return true; });
       expect.fail('Should have thrown an error');
     } catch (e: any) {
       expect(e.message).toContain('SECURITY_ERROR: ADMIN_DATABASE_URL must be strictly defined');

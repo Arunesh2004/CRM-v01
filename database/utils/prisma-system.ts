@@ -1,13 +1,22 @@
 import { PrismaClient, Prisma } from '@prisma/client';
 import { Logger } from '../../src/lib/logger/logger';
 
-if (!process.env.ADMIN_DATABASE_URL) {
-  throw new Error('SECURITY_ERROR: ADMIN_DATABASE_URL must be strictly defined for system execution.');
-}
+let globalSystemPrisma: PrismaClient | null = null;
 
-const globalSystemPrisma = new PrismaClient({
-  datasources: { db: { url: process.env.ADMIN_DATABASE_URL } }
-});
+function getSystemPrisma(): PrismaClient {
+  const url = process.env.ADMIN_DATABASE_URL;
+  if (!url) {
+    throw new Error('SECURITY_ERROR: ADMIN_DATABASE_URL must be strictly defined for system execution.');
+  }
+  
+  if (!globalSystemPrisma) {
+    globalSystemPrisma = new PrismaClient({
+      datasources: { db: { url } }
+    });
+  }
+  
+  return globalSystemPrisma;
+}
 export enum SystemOperation {
   AUTH_BOOTSTRAP = 'AUTH_BOOTSTRAP',
   CLERK_PROVISIONING = 'CLERK_PROVISIONING',
@@ -35,7 +44,8 @@ export async function executeAsSystem<T>(
   });
 
   try {
-    const result = await globalSystemPrisma.$transaction(async (tx) => {
+    const prisma = getSystemPrisma();
+    const result = await prisma.$transaction(async (tx) => {
       return await handler(tx);
     }, {
       maxWait: 25000,

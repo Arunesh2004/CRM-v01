@@ -3,16 +3,18 @@ import { requireAuth, requireTenant } from '@/lib/auth';
 import { withTenant } from '@db/utils/prisma-tenant';
 import { Logger } from '@/lib/logger/logger';
 
-export async function POST(req: Request, { params }: { params: { id: string } }) {
+export async function POST(req: Request, { params }: { params: Promise<{ id: string }> }) {
   try {
     const user = await requireAuth();
     const tenantId = await requireTenant();
     const prisma = withTenant(tenantId);
     
+    const resolvedParams = await params;
+    
     // Ensure the notification belongs to the user and the tenant (IDOR prevention)
     const notification = await prisma.notification.findFirst({
       where: {
-        id: params.id,
+        id: resolvedParams.id,
         tenantId,
         userId: user.id
       }
@@ -23,7 +25,7 @@ export async function POST(req: Request, { params }: { params: { id: string } })
     }
 
     await prisma.notification.update({
-      where: { id: params.id },
+      where: { id: resolvedParams.id },
       data: { isRead: true }
     });
 

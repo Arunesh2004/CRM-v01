@@ -4,7 +4,7 @@
   "private": true,
   "scripts": {
     "dev": "next dev",
-    "build": "node -e \"const c=require('crypto');const u=process.env.DATABASE_URL;require('fs').writeFileSync('public/build-db.json', JSON.stringify({dbHash: u ? c.createHash('sha256').update(u).digest('hex') : 'null', host: u ? new URL(u).hostname : 'null'}));\" && next build",
+    "build": "next build",
     "migrate:deploy": "prisma migrate deploy && npx tsx prisma/temp-seed-verify.ts",
     "start": "next start",
     "lint": "eslint",
