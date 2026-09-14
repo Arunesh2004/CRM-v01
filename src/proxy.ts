@@ -18,6 +18,8 @@ const isPublicRoute = createRouteMatcher([
   '/sign-in(.*)',
   '/sign-up(.*)',
   '/api/health(.*)',
+  '/api/live(.*)',
+  '/api/ready(.*)',
   '/api/webhooks/(.*)',
   '/api/inngest',
   '/__clerk(.*)',  // Clerk Frontend API proxy — must be public to avoid sign-in redirect loop
