@@ -4,11 +4,12 @@ import { DateFilter } from '@/components/reporting/DateFilter';
 import { DashboardClientView } from '@/components/reporting/DashboardClientView';
 import { EmptyState } from '@/components/ui/EmptyState';
 import { LayoutDashboard } from 'lucide-react';
+import { ExportControls } from '@/components/reporting/ExportControls';
+import { parseDateRange } from '@/lib/utils/date-range';
 
 export default async function ReportsPage(props: { searchParams: Promise<{ [key: string]: string | undefined }> }) {
   const searchParams = await props.searchParams;
-  const startDate = searchParams.start ? new Date(searchParams.start) : undefined;
-  const endDate = searchParams.end ? new Date(searchParams.end) : undefined;
+  const { startDate, endDate } = parseDateRange(searchParams.start, searchParams.end);
 
   const res = await getDashboardMetricsAction(startDate, endDate);
   const metrics = res.success ? res.data : null;
@@ -21,9 +22,8 @@ export default async function ReportsPage(props: { searchParams: Promise<{ [key:
           <p className="text-[#8891B0] mt-2">Enterprise Command Center</p>
         </div>
         <div className="flex items-center gap-2">
-          {/* Note: DateFilter is visually preserved but only works if fully implemented in server action. */}
           <DateFilter currentStart={searchParams.start} currentEnd={searchParams.end} />
-          {/* Export Controls disabled/removed to prevent fake UI unless fully implemented */}
+          <ExportControls startDate={searchParams.start} endDate={searchParams.end} />
         </div>
       </div>
 

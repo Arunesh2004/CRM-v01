@@ -38,6 +38,12 @@ const original_GET = async function (req: NextRequest,
     if (error.message.includes('Unauthorized') || error.message.includes('Forbidden')) {
       return NextResponse.json({ error: error.message }, { status: error.message.includes('Forbidden') ? 403 : 401 });
     }
+    if (error.message === 'Too many stream requests. Please wait before requesting a new stream token.') {
+      return NextResponse.json({ error: error.message }, { status: 429 });
+    }
+    if (error.message === 'Stream token service temporarily unavailable due to rate limiter outage.') {
+      return NextResponse.json({ error: error.message }, { status: 503 });
+    }
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
   }
 }

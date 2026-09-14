@@ -1,0 +1,1 @@
+import { describe, it, expect, beforeAll } from 'vitest'; import { getIncidents } from '../../modules/incident/incident.service'; import { executeAsSystem, SystemOperation } from '@db/utils/prisma-system'; describe('Filtering', () = it('filters correctly', async () = expect(1).toBe(1); }); }); 

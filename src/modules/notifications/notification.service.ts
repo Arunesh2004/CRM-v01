@@ -12,36 +12,30 @@ export interface CreateNotificationParams {
   actionUrl?: string;
 }
 
+// Ensure Prisma.TransactionClient is imported for typing
+import { Prisma } from '@prisma/client';
+
 export class NotificationService {
-  static async sendNotification(params: CreateNotificationParams) {
-    // 1. Persist to DB
-    const notification = await prisma.notification.create({
+  static async queueNotification(tx: Prisma.TransactionClient, params: CreateNotificationParams) {
+    // 1. Transactionally persist to EventOutbox
+    // This guarantees notification dispatch only happens if the business transaction commits.
+    const { randomUUID } = await import('crypto');
+    
+    await tx.eventOutbox.create({
       data: {
         tenantId: params.tenantId,
-        userId: params.userId,
-        type: params.type,
-        title: params.title,
-        body: params.body,
-        actionUrl: params.actionUrl
+        eventId: randomUUID(),
+        eventType: 'NOTIFICATION_SEND',
+        payload: {
+          tenantId: params.tenantId,
+          userId: params.userId,
+          type: params.type,
+          title: params.title,
+          body: params.body,
+          actionUrl: params.actionUrl
+        }
       }
     });
-
-    // 2. Push to realtime provider
-    const provider = NotificationProviderFactory.getNotificationProvider();
-    
-    // Fire and forget so we don't block
-    provider.send({
-      tenantId: params.tenantId,
-      userId: params.userId,
-      title: params.title,
-      body: params.body,
-      type: params.type,
-      actionUrl: params.actionUrl
-    }).catch(err => {
-      Logger.error('Failed to push realtime notification', err instanceof Error ? err : new Error(String(err)));
-    });
-
-    return notification;
   }
 
   static async getNotifications(params?: { userId?: string, limit?: number }) {

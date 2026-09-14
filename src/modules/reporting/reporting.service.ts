@@ -6,14 +6,16 @@ export async function getSecurityMetrics(startDate?: Date, endDate?: Date) {
   const tenantId = await requireTenant();
   const prisma = withTenant(tenantId);
 
-  const dateFilter = startDate && endDate ? { createdAt: { gte: startDate, lte: endDate } } : {};
+  const createdAtFilter = startDate && endDate ? { createdAt: { gte: startDate, lte: endDate } } : {};
+  const resolvedAtFilter = startDate && endDate ? { resolvedAt: { gte: startDate, lte: endDate } } : {};
 
   const [total, open, investigating, resolved, critical] = await Promise.all([
-    prisma.incident.count({ where: { tenantId, ...dateFilter } }),
-    prisma.incident.count({ where: { tenantId, status: 'OPEN', ...dateFilter } }),
-    prisma.incident.count({ where: { tenantId, status: 'INVESTIGATING', ...dateFilter } }),
-    prisma.incident.count({ where: { tenantId, status: 'RESOLVED', ...dateFilter } }),
-    prisma.incident.count({ where: { tenantId, severity: 'CRITICAL', ...dateFilter } }),
+    prisma.incident.count({ where: { tenantId, ...createdAtFilter } }),
+    prisma.incident.count({ where: { tenantId, status: 'OPEN', ...createdAtFilter } }),
+    prisma.incident.count({ where: { tenantId, status: 'INVESTIGATING', ...createdAtFilter } }),
+    // use resolvedAt for resolved incidents
+    prisma.incident.count({ where: { tenantId, status: 'RESOLVED', ...resolvedAtFilter } }),
+    prisma.incident.count({ where: { tenantId, severity: 'CRITICAL', ...createdAtFilter } }),
   ]);
 
   return { total, open, investigating, resolved, critical };
@@ -24,6 +26,7 @@ export async function getCameraMetrics() {
   const tenantId = await requireTenant();
   const prisma = withTenant(tenantId);
 
+  // Cameras are point-in-time metrics representing current infrastructure state, no date filter
   const [total, active, offline] = await Promise.all([
     prisma.camera.count({ where: { tenantId } }),
     prisma.camera.count({ where: { tenantId, status: 'ONLINE' } }),
@@ -38,12 +41,14 @@ export async function getCrmMetrics(startDate?: Date, endDate?: Date) {
   const tenantId = await requireTenant();
   const prisma = withTenant(tenantId);
 
-  const dateFilter = startDate && endDate ? { createdAt: { gte: startDate, lte: endDate } } : {};
-
+  const createdAtFilter = startDate && endDate ? { createdAt: { gte: startDate, lte: endDate } } : {};
+  // completed tasks use updatedAt since we don't have completedAt explicit field usually, or just createdAt for creation rate.
+  // Actually, we are just counting tasks, so createdAt is fine for "New Tasks" metric.
+  
   const [leads, customers, tasks] = await Promise.all([
-    prisma.lead.count({ where: { tenantId, ...dateFilter } }),
-    prisma.customer.count({ where: { tenantId, ...dateFilter } }),
-    prisma.task.count({ where: { tenantId, ...dateFilter } })
+    prisma.lead.count({ where: { tenantId, ...createdAtFilter } }),
+    prisma.customer.count({ where: { tenantId, ...createdAtFilter } }),
+    prisma.task.count({ where: { tenantId, ...createdAtFilter } })
   ]);
 
   const conversionRate = (leads + customers) > 0 ? (customers / (leads + customers)) * 100 : 0;
@@ -56,12 +61,12 @@ export async function getCommunicationMetrics(startDate?: Date, endDate?: Date) 
   const tenantId = await requireTenant();
   const prisma = withTenant(tenantId);
 
-  const dateFilter = startDate && endDate ? { createdAt: { gte: startDate, lte: endDate } } : {};
+  // Notification uses createdAt (dispatch timestamp)
+  const createdAtFilter = startDate && endDate ? { createdAt: { gte: startDate, lte: endDate } } : {};
 
   // Cap at 1000 rows to prevent memory exhaustion on large tenants.
-  // getCommunicationSummary is AI-reachable; an unbounded load is a DoS vector.
   const notifications = await prisma.notification.findMany({
-    where: { tenantId, ...dateFilter },
+    where: { tenantId, ...createdAtFilter },
     select: { type: true, title: true },
     take: 1000,
     orderBy: { createdAt: 'desc' },
@@ -82,7 +87,7 @@ export async function getCommunicationMetrics(startDate?: Date, endDate?: Date) 
 
   const successRate = total > 0 ? (success / total) * 100 : 0;
 
-  const calls = await prisma.callLog.count({ where: { tenantId, ...dateFilter } });
+  const calls = await prisma.callLog.count({ where: { tenantId, ...createdAtFilter } });
 
   return { total, email, sms, whatsapp, calls, successRate: successRate.toFixed(1) };
 }
@@ -178,5 +183,59 @@ export async function getMyAggregateMetrics(startDate?: Date, endDate?: Date) {
     myOpenLeads: myOpenLeadsCount,
     myTasks: myTasksCount,
     myOverdueTasks: myOverdueTasksCount
+  };
+}
+
+export async function getRevenueMetrics(startDate?: Date, endDate?: Date) {
+  await requireAuth();
+  const tenantId = await requireTenant();
+  await requirePermission('REVENUE', 'READ');
+  const prisma = withTenant(tenantId);
+
+  // LIMITATION: Quote model lacks `acceptedAt`, `approvedAt`, `sentAt`.
+  // We must use `createdAt` as the canonical date boundary for reporting queries to ensure stable boundaries,
+  // acknowledging that this represents "Quotes created in this period that reached state X", rather than "Quotes that reached state X in this period".
+  const dateFilter = startDate && endDate ? { createdAt: { gte: startDate, lte: endDate } } : {};
+
+  // Aggregate ACCEPTED Quotes
+  const acceptedAgg = await prisma.quote.aggregate({
+    _count: { id: true },
+    _sum: { grandTotal: true, discountTotal: true },
+    where: { tenantId, status: 'ACCEPTED', ...dateFilter }
+  });
+
+  // Aggregate APPROVED Quotes (includes PENDING_ACCEPTANCE if it existed, but exact schema enum is: DRAFT, PENDING_APPROVAL, APPROVED, SENT, ACCEPTED, REJECTED, EXPIRED)
+  const approvedAgg = await prisma.quote.aggregate({
+    _count: { id: true },
+    _sum: { grandTotal: true },
+    where: { tenantId, status: 'APPROVED', ...dateFilter }
+  });
+
+  // Aggregate SENT Quotes
+  const sentAgg = await prisma.quote.aggregate({
+    _count: { id: true },
+    _sum: { grandTotal: true },
+    where: { tenantId, status: 'SENT', ...dateFilter }
+  });
+
+  const acceptedQuoteCount = acceptedAgg._count.id;
+  const acceptedQuoteValue = Number(acceptedAgg._sum.grandTotal || 0);
+  const discountAmount = Number(acceptedAgg._sum.discountTotal || 0);
+  const averageQuoteValue = acceptedQuoteCount > 0 ? acceptedQuoteValue / acceptedQuoteCount : 0;
+
+  return {
+    commercial: {
+      acceptedQuoteCount,
+      acceptedQuoteValue,
+      approvedQuoteCount: approvedAgg._count.id,
+      approvedQuoteValue: Number(approvedAgg._sum.grandTotal || 0),
+      sentQuoteCount: sentAgg._count.id,
+      sentQuoteValue: Number(sentAgg._sum.grandTotal || 0),
+      averageQuoteValue,
+      discountAmount
+    },
+    recurring: {
+      available: false
+    }
   };
 }

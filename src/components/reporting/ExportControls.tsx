@@ -22,7 +22,7 @@ export function ExportControls({ startDate, endDate }: { startDate?: string, end
       document.body.appendChild(a);
       a.click();
       a.remove();
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars -- S2 Residual Debt: Legacy unused local
+     
     // eslint-disable-next-line @typescript-eslint/no-unused-vars -- Intentional callback/interface parameter
     } catch (err) {
       alert('Error exporting data');
@@ -52,6 +52,13 @@ export function ExportControls({ startDate, endDate }: { startDate?: string, end
         className="px-3 py-1.5 bg-white/5 border border-white/[.08] rounded-lg text-xs font-semibold text-white hover:bg-white/10 transition-colors disabled:opacity-50"
       >
         Export Comms
+      </button>
+      <button 
+        onClick={() => handleExport('quotes')}
+        disabled={loading}
+        className="px-3 py-1.5 bg-white/5 border border-white/[.08] rounded-lg text-xs font-semibold text-white hover:bg-white/10 transition-colors disabled:opacity-50"
+      >
+        Export Quotes
       </button>
     </div>
   );

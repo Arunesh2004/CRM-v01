@@ -14,8 +14,11 @@ import { MockMessagingProvider } from './messaging/whatsapp.provider';
 import { RealtimeAdapter } from '@/modules/communication/adapter';
 import { PusherRealtimeAdapter, DegradedRealtimeAdapter } from './realtime/pusher.provider';
 
+import { LoadTestEmailProvider, LoadTestTelephonyProvider, LoadTestMessagingProvider, LoadTestCameraProvider } from './load-test-mock.provider';
+
 export class ProviderFactory {
   static getEmailProvider(): EmailProvider {
+    if (process.env.LOAD_TEST_MODE === 'true') return new LoadTestEmailProvider();
     if (!process.env.RESEND_API_KEY) {
       return new MockEmailProvider();
     }
@@ -24,6 +27,7 @@ export class ProviderFactory {
   }
 
   static getTelephonyProvider(): TelephonyProvider {
+    if (process.env.LOAD_TEST_MODE === 'true') return new LoadTestTelephonyProvider();
     if (!process.env.TWILIO_ACCOUNT_SID || !process.env.TWILIO_AUTH_TOKEN) {
       return new MockTelephonyProvider();
     }
@@ -32,6 +36,7 @@ export class ProviderFactory {
   }
 
   static getMessagingProvider(): MessagingProvider {
+    if (process.env.LOAD_TEST_MODE === 'true') return new LoadTestMessagingProvider();
     if (!process.env.WHATSAPP_TOKEN) {
       return new MockMessagingProvider();
     }
@@ -40,6 +45,7 @@ export class ProviderFactory {
   }
 
   static getCameraProvider(): CameraProvider {
+    if (process.env.LOAD_TEST_MODE === 'true') return new LoadTestCameraProvider();
     return new MockCameraProvider();
   }
 

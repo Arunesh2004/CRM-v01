@@ -1,4 +1,4 @@
-import { Prisma } from '@prisma/client';
+import { Prisma, IncidentStatus, IncidentSeverity } from '@prisma/client';
 import { requireAuth, requireTenant, requirePermission } from '@/lib/auth';
 import { withTenant, withTenantTransaction } from '@db/utils/prisma-tenant';
 import { CreateIncidentInput, UpdateIncidentStatusInput, AssignIncidentInput } from './incident.types';
@@ -106,14 +106,23 @@ export async function createIncident(input: CreateIncidentInput & { idempotencyK
   return incident;
 }
 
-export async function getIncidents() {
+export async function getIncidents(filters?: { status?: string, severity?: string }) {
   await requireAuth();
   const tenantId = await requireTenant();
   await requirePermission('CUSTOMER', 'READ');
 
   const prisma = withTenant(tenantId);
+  
+  const whereClause: Prisma.IncidentWhereInput = { tenantId, deletedAt: null };
+  if (filters?.status && Object.values(IncidentStatus).includes(filters.status as IncidentStatus)) {
+    whereClause.status = filters.status as IncidentStatus;
+  }
+  if (filters?.severity && Object.values(IncidentSeverity).includes(filters.severity as IncidentSeverity)) {
+    whereClause.severity = filters.severity as IncidentSeverity;
+  }
+
   return await prisma.incident.findMany({
-    where: { tenantId, deletedAt: null },
+    where: whereClause,
     include: {
       location: true,
       camera: true,

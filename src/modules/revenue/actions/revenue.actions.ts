@@ -107,3 +107,19 @@ async function _acceptQuoteAction(quoteId: string) {
 }
 
 export const acceptQuoteAction = withServerActionContext(_acceptQuoteAction);
+
+async function _createQuoteRevisionAction(quoteId: string) {
+  try {
+    const tenantId = await requireTenant();
+    const session = await requireAuth();
+    const result = await RevenueService.createQuoteRevision(tenantId, session.id, quoteId);
+    revalidatePath(`/quotes/${quoteId}`);
+    revalidatePath(`/quotes`);
+    return { success: true, data: serializeDecimal(result) };
+  } catch (errorRaw: unknown) {
+    const error = errorRaw instanceof Error ? errorRaw : new Error(String(errorRaw));
+    return { success: false, error: sanitizeClientError(error) };
+  }
+}
+
+export const createQuoteRevisionAction = withServerActionContext(_createQuoteRevisionAction);

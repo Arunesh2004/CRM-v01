@@ -50,7 +50,8 @@ export async function processOutbox() {
           jobId: event.id,
           tenantId: event.tenantId,
           actorType: 'SYSTEM',
-          correlationId: event.id,
+          // Extract correlationId from strictly backend-stamped payload field to prevent spoofing, otherwise fallback to outbox ID
+          correlationId: (event.payload as any)?._sys_correlationId || event.id,
           jobType: event.eventType,
           payload: event.payload,
           schemaVersion: '1.0'

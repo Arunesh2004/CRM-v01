@@ -1,10 +1,11 @@
-import { requireAuth, requireTenant, requireAuthIdentity, requireTenantFromIdentity } from '@/lib/auth';
+import { requireAuth, requireTenant, requireAuthIdentity, requireTenantFromIdentity, requirePermission } from '@/lib/auth';
 import { withTenant } from '../../../database/utils/prisma-tenant';
 import { getTenantCustomersForExport } from '../../../database/utils/fast-tenant-queries';
 
 export async function getIncidentsCsv(startDate?: Date, endDate?: Date): Promise<string> {
   await requireAuth();
   const tenantId = await requireTenant();
+  await requirePermission('CUSTOMER', 'READ'); // Assuming incident reading requires customer/incident read
   const prisma = withTenant(tenantId);
 
   const dateFilter = startDate && endDate ? { createdAt: { gte: startDate, lte: endDate } } : {};
@@ -40,6 +41,7 @@ export async function getCustomersCsv(startDate?: Date, endDate?: Date): Promise
 export async function getCommunicationsCsv(startDate?: Date, endDate?: Date): Promise<string> {
   await requireAuth();
   const tenantId = await requireTenant();
+  await requirePermission('COMMUNICATION', 'READ');
   const prisma = withTenant(tenantId);
 
   const dateFilter = startDate && endDate ? { createdAt: { gte: startDate, lte: endDate } } : {};
@@ -52,6 +54,28 @@ export async function getCommunicationsCsv(startDate?: Date, endDate?: Date): Pr
   const header = ['ID,Type,Title,Body,IsRead,CreatedAt\n'];
   const rows = notifications.map(n => 
     `${n.id},${n.type},"${n.title}","${n.body.replace(/"/g, '""')}",${n.isRead},${n.createdAt.toISOString()}`
+  );
+
+  return header.concat(rows).join('\n');
+}
+
+export async function getQuotesCsv(startDate?: Date, endDate?: Date): Promise<string> {
+  await requireAuth();
+  const tenantId = await requireTenant();
+  await requirePermission('REVENUE', 'READ');
+  const prisma = withTenant(tenantId);
+
+  const dateFilter = startDate && endDate ? { createdAt: { gte: startDate, lte: endDate } } : {};
+
+  const quotes = await prisma.quote.findMany({
+    where: { tenantId, ...dateFilter },
+    include: { customer: { select: { name: true } } },
+    orderBy: { createdAt: 'desc' }
+  });
+
+  const header = ['Quote ID,Status,Customer,Subtotal,Discount,Grand Total,CreatedAt\n'];
+  const rows = quotes.map(q => 
+    `${q.id},${q.status},"${q.customer?.name || ''}",${q.subtotal.toString()},${q.discountTotal.toString()},${q.grandTotal.toString()},${q.createdAt.toISOString()}`
   );
 
   return header.concat(rows).join('\n');

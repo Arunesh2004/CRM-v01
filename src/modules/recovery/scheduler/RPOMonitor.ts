@@ -15,33 +15,37 @@ export class RPOMonitor {
    * Calculates RPO status for all tenants.
    */
   async getGlobalRPOStatus(): Promise<RPOMetrics[]> {
-    const tenants = await executeAsSystem(SystemOperation.DISASTER_RECOVERY, async (tx) => tx.tenant.findMany({
-      where: { status: { not: 'DELETED' } },
-      select: { id: true, rpoPolicy: true }
-    }));
+    return executeAsSystem(SystemOperation.DISASTER_RECOVERY, async (tx) => {
+      const tenants = await tx.tenant.findMany({
+        where: { status: { not: 'DELETED' } },
+        select: { id: true, rpoPolicy: true }
+      });
 
-    const metrics: RPOMetrics[] = [];
-    for (const tenant of tenants) {
-      metrics.push(await this.calculateRPO(tenant.id, tenant.rpoPolicy));
-    }
-    return metrics;
+      // PostgreSQL DISTINCT ON guarantees the first row matching the ORDER BY clause
+      const latestSnapshots = await tx.recoverySnapshot.findMany({
+        where: { status: 'ACTIVE' },
+        orderBy: { createdAt: 'desc' },
+        distinct: ['tenantId'],
+        select: { id: true, tenantId: true, createdAt: true }
+      });
+
+      const snapshotMap = new Map(latestSnapshots.map((s: any) => [s.tenantId, s]));
+      const metrics: RPOMetrics[] = [];
+      
+      for (const tenant of tenants) {
+        metrics.push(this.calculateRpoSync(tenant.id, tenant.rpoPolicy, snapshotMap.get(tenant.id) || null));
+      }
+      return metrics;
+    });
   }
 
   /**
-   * Calculates the exact RPO metric and health status for a single tenant.
+   * Calculates the exact RPO metric and health status for a single tenant using a provided snapshot.
    */
-  async calculateRPO(tenantId: string, policy: string = 'BASIC'): Promise<RPOMetrics> {
-    // Map policy to hours
+  calculateRpoSync(tenantId: string, policy: string = 'BASIC', latestSnapshot: { createdAt: Date } | null): RPOMetrics {
     let targetRPOHours = 24;
     if (policy === 'BUSINESS') targetRPOHours = 12;
     if (policy === 'ENTERPRISE') targetRPOHours = 1;
-
-    // Get the most recent successful snapshot
-    const tenantPrisma = withTenant(tenantId);
-    const latestSnapshot = await tenantPrisma.recoverySnapshot.findFirst({
-      where: { tenantId, status: 'ACTIVE' },
-      orderBy: { createdAt: 'desc' }
-    });
 
     if (!latestSnapshot) {
       return {
@@ -72,5 +76,19 @@ export class RPOMonitor {
       lastSuccessfulBackup: latestSnapshot.createdAt,
       status
     };
+  }
+
+  /**
+   * Calculates the exact RPO metric and health status for a single tenant dynamically.
+   */
+  async calculateRPO(tenantId: string, policy: string = 'BASIC'): Promise<RPOMetrics> {
+    const tenantPrisma = withTenant(tenantId);
+    const latestSnapshot = await tenantPrisma.recoverySnapshot.findFirst({
+      where: { tenantId, status: 'ACTIVE' },
+      orderBy: { createdAt: 'desc' },
+      select: { createdAt: true }
+    });
+
+    return this.calculateRpoSync(tenantId, policy, latestSnapshot);
   }
 }

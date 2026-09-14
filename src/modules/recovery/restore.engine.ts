@@ -8,6 +8,14 @@ import { KeyManagementService } from './security/KeyManagementService';
 const ENCRYPTION_ALGORITHM = 'aes-256-gcm';
 
 export async function requestRestore(archiveLocation: string, checksum: string, requestorUserId: string, mode: 'RECOVERY' | 'CLONE' | 'DRY_RUN' = 'DRY_RUN') {
+  if (mode === 'RECOVERY') {
+    if (process.env.ALLOW_DESTRUCTIVE_RESTORE !== 'true') {
+      throw new Error('Forbidden: Destructive RECOVERY mode is disabled in this environment.');
+    }
+    if (process.env.RECOVERY_TARGET_ENV !== 'isolated_recovery' || process.env.NODE_ENV === 'production') {
+      throw new Error('Forbidden: RECOVERY must explicitly target an isolated environment. Production targets are strictly prohibited.');
+    }
+  }
   // 1. Resolve archive ownership
   let sourceTenantId = '';
   const [uri] = archiveLocation.split('?');

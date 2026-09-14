@@ -38,9 +38,14 @@ function isLoadTestRequest(req: Request): boolean {
 }
 
 function applySecurityHeaders(response: NextResponse, request: NextRequest): NextResponse {
+  const isProduction = process.env.NODE_ENV === 'production' || process.env.VERCEL_ENV === 'production';
+  const scriptSrc = isProduction 
+    ? "script-src 'self' 'unsafe-inline' https://clerk.com https://*.clerk.com https://*.clerk.accounts.dev"
+    : "script-src 'self' 'unsafe-eval' 'unsafe-inline' https://clerk.com https://*.clerk.com https://*.clerk.accounts.dev";
+
   const csp = [
     "default-src 'self'",
-    "script-src 'self' 'unsafe-eval' 'unsafe-inline' https://clerk.com https://*.clerk.com https://*.clerk.accounts.dev",
+    scriptSrc,
     "connect-src 'self' https://*.clerk.com https://*.clerk.accounts.dev wss://*.clerk.com",
     "frame-src 'self'",
     "worker-src 'self' blob:",
@@ -136,16 +141,43 @@ const middlewareHandler = async (auth: any, request: NextRequest) => {
   return applySecurityHeaders(response, request);
 };
 
-export default hasClerkKeys 
+/**
+ * G2 REMEDIATION — Clerk configuration absent fallback.
+ *
+ * When Clerk publishable/secret keys are not present this deployment is
+ * misconfigured and MUST NOT allow protected application routes to be
+ * accessed without identity verification.
+ *
+ * Route classification when Clerk is absent:
+ *   PUBLIC BY DESIGN      — routes in isPublicRoute() (health, webhooks,
+ *                           inngest, sign-in, sign-up, __clerk proxy)
+ *   INFRASTRUCTURE BY DESIGN — static assets excluded by config.matcher
+ *   AUTHENTICATION REQUIRED  — everything else → fail-closed (503)
+ *
+ * 503 is chosen over 401/403: the server cannot authenticate because it is
+ * misconfigured, not because the caller lacks credentials.
+ */
+export default hasClerkKeys
   ? clerkMiddleware(middlewareHandler)
   : async (request: NextRequest) => {
-      // Fallback middleware when Clerk is absent
       const ip = request.headers.get('x-forwarded-for') || '127.0.0.1';
       const rateLimitResponse = await handleRateLimiting(request, ip);
       if (rateLimitResponse) return rateLimitResponse;
-      
-      const response = NextResponse.next();
-      return applySecurityHeaders(response, request);
+
+      // Pass-through for intentionally public routes only
+      if (isPublicRoute(request)) {
+        const response = NextResponse.next();
+        return applySecurityHeaders(response, request);
+      }
+
+      // FAIL CLOSED — protected route, Clerk not configured
+      return new NextResponse(
+        JSON.stringify({ error: 'Service Unavailable: Authentication provider not configured.' }),
+        {
+          status: 503,
+          headers: { 'Content-Type': 'application/json' },
+        }
+      );
     };
 
 export const config = {

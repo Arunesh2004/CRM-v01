@@ -3,8 +3,9 @@
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/Card';
 import { ResponsiveContainer, BarChart, Bar, XAxis, YAxis, Tooltip, Cell, PieChart, Pie, Cell as PieCell, CartesianGrid } from 'recharts';
 import { Users, Target, ShieldAlert, Video, IndianRupee, Shield, ShieldCheck, MessageSquare } from 'lucide-react';
+import Link from 'next/link';
 
-// eslint-disable-next-line @typescript-eslint/no-unused-vars -- S2 Residual Debt: Legacy unused local
+ 
 // eslint-disable-next-line @typescript-eslint/no-unused-vars -- S2 Residual Debt: Legacy unused local
 const COLORS = {
   primary: '#0f172a',
@@ -15,7 +16,7 @@ const COLORS = {
   muted: '#cbd5e1'
 };
 
-// eslint-disable-next-line @typescript-eslint/no-unused-vars -- S2 Residual Debt: Legacy unused local
+ 
 const PIE_COLORS = ['#3b82f6', '#f59e0b', '#10b981', '#ef4444'];
 // eslint-disable-next-line @typescript-eslint/no-unused-vars -- S2 Residual Debt: Legacy unused local
 const SEVERITY_COLORS = ['#3b82f6', '#eab308', '#f97316', '#ef4444'];
@@ -51,7 +52,7 @@ export function DashboardClientView({ metrics }: { metrics: any }) {
     { name: 'Emails', value: communication.email },
     { name: 'SMS', value: communication.sms },
     { name: 'WhatsApp', value: communication.whatsapp },
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars -- Intentional unused destructuring exclusion
+     
     { name: 'Calls', value: communication.calls }
   ].filter(d => d.value > 0);
 
@@ -70,8 +71,8 @@ export function DashboardClientView({ metrics }: { metrics: any }) {
           <div className="absolute inset-0 bg-gradient-to-br from-[#7C5CFC]/5 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
           <CardContent className="p-4 flex items-center justify-between">
             <div>
-              <p className="text-[10px] font-semibold text-[#8891B0] uppercase tracking-wider">Total ARR</p>
-              <h3 className="text-2xl font-display font-bold mt-1 text-white">{formatINR(billing.arr)}</h3>
+              <p className="text-[10px] font-semibold text-[#8891B0] uppercase tracking-wider">Accepted Quotes</p>
+              <h3 className="text-2xl font-display font-bold mt-1 text-white">{formatINR(billing?.commercial?.acceptedQuoteValue || 0)}</h3>
             </div>
             <div className="w-10 h-10 rounded-xl bg-violet-500/10 border border-violet-500/20 flex items-center justify-center">
               <IndianRupee className="w-5 h-5 text-accent" />
@@ -79,44 +80,50 @@ export function DashboardClientView({ metrics }: { metrics: any }) {
           </CardContent>
         </Card>
 
-        <Card className="group relative overflow-hidden">
-          <div className="absolute inset-0 bg-gradient-to-br from-cyan-500/5 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
-          <CardContent className="p-4 flex items-center justify-between relative z-10">
-            <div>
-              <p className="text-[10px] font-semibold text-[#8891B0] uppercase tracking-wider">Total Customers</p>
-              <h3 className="text-2xl font-display font-bold text-white mt-1">{crm.customers}</h3>
-            </div>
-            <div className="w-10 h-10 rounded-xl bg-cyan-500/10 border border-cyan-500/20 flex items-center justify-center text-cyan-400">
-              <Users className="w-5 h-5" />
-            </div>
-          </CardContent>
-        </Card>
+        <Link href="/customers" className="block">
+          <Card className="group relative overflow-hidden hover:ring-2 hover:ring-cyan-500/50 transition-all">
+            <div className="absolute inset-0 bg-gradient-to-br from-cyan-500/5 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
+            <CardContent className="p-4 flex items-center justify-between relative z-10">
+              <div>
+                <p className="text-[10px] font-semibold text-[#8891B0] uppercase tracking-wider">Total Customers</p>
+                <h3 className="text-2xl font-display font-bold text-white mt-1">{crm.customers}</h3>
+              </div>
+              <div className="w-10 h-10 rounded-xl bg-cyan-500/10 border border-cyan-500/20 flex items-center justify-center text-cyan-400">
+                <Users className="w-5 h-5" />
+              </div>
+            </CardContent>
+          </Card>
+        </Link>
 
-        <Card className="group relative overflow-hidden">
-          <div className="absolute inset-0 bg-gradient-to-br from-amber-500/5 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
-          <CardContent className="p-4 flex items-center justify-between relative z-10">
-            <div>
-              <p className="text-[10px] font-semibold text-[#8891B0] uppercase tracking-wider">Lead Pipeline</p>
-              <h3 className="text-2xl font-display font-bold text-white mt-1">{crm.leads}</h3>
-            </div>
-            <div className="w-10 h-10 rounded-xl bg-amber-500/10 border border-amber-500/20 flex items-center justify-center text-amber-400">
-              <Target className="w-5 h-5" />
-            </div>
-          </CardContent>
-        </Card>
+        <Link href="/leads" className="block">
+          <Card className="group relative overflow-hidden hover:ring-2 hover:ring-amber-500/50 transition-all">
+            <div className="absolute inset-0 bg-gradient-to-br from-amber-500/5 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
+            <CardContent className="p-4 flex items-center justify-between relative z-10">
+              <div>
+                <p className="text-[10px] font-semibold text-[#8891B0] uppercase tracking-wider">Lead Pipeline</p>
+                <h3 className="text-2xl font-display font-bold text-white mt-1">{crm.leads}</h3>
+              </div>
+              <div className="w-10 h-10 rounded-xl bg-amber-500/10 border border-amber-500/20 flex items-center justify-center text-amber-400">
+                <Target className="w-5 h-5" />
+              </div>
+            </CardContent>
+          </Card>
+        </Link>
 
-        <Card className="group relative overflow-hidden">
-          <div className="absolute inset-0 bg-gradient-to-br from-rose-500/5 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
-          <CardContent className="p-4 flex items-center justify-between relative z-10">
-            <div>
-              <p className="text-[10px] font-semibold text-[#8891B0] uppercase tracking-wider">Active Alerts</p>
-              <h3 className="text-2xl font-display font-bold text-white mt-1">{security.open + security.investigating}</h3>
-            </div>
-            <div className="w-10 h-10 rounded-xl bg-rose-500/10 border border-rose-500/20 flex items-center justify-center text-rose-400">
-              <ShieldAlert className="w-5 h-5" />
-            </div>
-          </CardContent>
-        </Card>
+        <Link href="/incidents?status=OPEN" className="block">
+          <Card className="group relative overflow-hidden hover:ring-2 hover:ring-rose-500/50 transition-all">
+            <div className="absolute inset-0 bg-gradient-to-br from-rose-500/5 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
+            <CardContent className="p-4 flex items-center justify-between relative z-10">
+              <div>
+                <p className="text-[10px] font-semibold text-[#8891B0] uppercase tracking-wider">Active Alerts</p>
+                <h3 className="text-2xl font-display font-bold text-white mt-1">{security.open + security.investigating}</h3>
+              </div>
+              <div className="w-10 h-10 rounded-xl bg-rose-500/10 border border-rose-500/20 flex items-center justify-center text-rose-400">
+                <ShieldAlert className="w-5 h-5" />
+              </div>
+            </CardContent>
+          </Card>
+        </Link>
 
         <Card className="group relative overflow-hidden">
           <div className="absolute inset-0 bg-gradient-to-br from-emerald-500/5 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
@@ -307,26 +314,26 @@ export function DashboardClientView({ metrics }: { metrics: any }) {
             <CardHeader className="border-b bg-muted/20 pb-4">
               <CardTitle className="text-sm font-bold flex items-center">
                 <IndianRupee className="w-4 h-4 mr-2 text-primary" />
-                Revenue Operations
+                Commercial Operations
               </CardTitle>
             </CardHeader>
             <CardContent className="p-6">
               <div className="grid grid-cols-2 gap-6">
                 <div>
-                  <p className="text-xs text-muted-foreground uppercase tracking-wider mb-1">Monthly Recurring</p>
-                  <p className="text-2xl font-bold text-foreground">{formatINR(billing.mrr)}</p>
+                  <p className="text-xs text-muted-foreground uppercase tracking-wider mb-1">Accepted Value</p>
+                  <p className="text-2xl font-bold text-foreground">{formatINR(billing?.commercial?.acceptedQuoteValue || 0)}</p>
                 </div>
                 <div>
-                  <p className="text-xs text-muted-foreground uppercase tracking-wider mb-1">Annual Run Rate</p>
-                  <p className="text-2xl font-bold text-accent">{formatINR(billing.arr)}</p>
+                  <p className="text-xs text-muted-foreground uppercase tracking-wider mb-1">Approved Value</p>
+                  <p className="text-2xl font-bold text-accent">{formatINR(billing?.commercial?.approvedQuoteValue || 0)}</p>
                 </div>
                 <div>
-                  <p className="text-xs text-muted-foreground uppercase tracking-wider mb-1">Active Subscriptions</p>
-                  <p className="text-lg font-bold text-foreground">{billing.subscriptions}</p>
+                  <p className="text-xs text-muted-foreground uppercase tracking-wider mb-1">Sent Value</p>
+                  <p className="text-lg font-bold text-foreground">{formatINR(billing?.commercial?.sentQuoteValue || 0)}</p>
                 </div>
                 <div>
-                  <p className="text-xs text-muted-foreground uppercase tracking-wider mb-1">Processed Invoices</p>
-                  <p className="text-lg font-bold text-foreground">{billing.invoices}</p>
+                  <p className="text-xs text-muted-foreground uppercase tracking-wider mb-1">Total Accepted</p>
+                  <p className="text-lg font-bold text-foreground">{billing?.commercial?.acceptedQuoteCount || 0}</p>
                 </div>
               </div>
             </CardContent>

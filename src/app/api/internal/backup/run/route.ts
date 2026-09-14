@@ -21,10 +21,18 @@ const _orig_POST = async function (request: Request) {
       return NextResponse.json({ error: 'Request timestamp invalid or expired (Replay protection)' }, { status: 403 });
     }
 
+    // G1 REMEDIATION: Fail-closed when secret is absent.
+    // Never substitute a default — that defeats HMAC verification entirely.
+    // Matches the fail-closed pattern used by verifyCronSecret() in process-outbox.
+    const secret = process.env.INTERNAL_SCHEDULER_SECRET;
+    if (!secret) {
+      Logger.warn('INTERNAL_SCHEDULER_SECRET is not configured. Denying scheduler request.');
+      return NextResponse.json({ error: 'Service Unavailable' }, { status: 503 });
+    }
+
     const payload = await request.text();
 
     // HMAC SHA256 Signature Verification
-    const secret = process.env.INTERNAL_SCHEDULER_SECRET || 'default-insecure-secret-for-dev';
     const expectedSignature = crypto
       .createHmac('sha256', secret)
       .update(`${timestamp}.${payload}`)
@@ -41,7 +49,7 @@ const _orig_POST = async function (request: Request) {
     // Authenticated! Trigger the backup cycle asynchronously (fire and forget)
     // We don't await the entire cycle to prevent HTTP timeout
     const scheduler = new BackupSchedulerService();
-    scheduler.triggerBackupCycle().catch(console.error);
+    scheduler.triggerBackupCycle().catch((error) => Logger.error('Backup cycle error:', error));
 
     return NextResponse.json({ success: true, message: 'Backup cycle initiated' }, { status: 202 });
   } catch (errorRaw: unknown) {

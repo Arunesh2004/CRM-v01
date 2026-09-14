@@ -4,6 +4,7 @@ import { QuoteStatus, Quote, Prisma } from '@prisma/client';
 import { checkPermissionFast } from '../../lib/auth';
 import { SecurityEventService } from '../security-events/security-event.service';
 import { FieldSecurityService } from '../security/field-security/field-security.service';
+import crypto from 'crypto';
 
 export class RevenueService {
 
@@ -61,9 +62,16 @@ export class RevenueService {
       throw new Error('Unauthorized');
     }
 
-    // 2. Fetch PriceBook & Deal
+    // 2. Fetch Deal, Customer, and PriceBook
     const deal = await prisma.deal.findFirst({ where: { id: dealId, tenantId } });
     if (!deal) throw new Error('Deal not found or cross-tenant access denied');
+    if (deal.customerId !== customerId) throw new Error('Customer mismatch for this deal');
+
+    const customer = await prisma.customer.findFirst({ where: { id: customerId, tenantId } });
+    if (!customer) throw new Error('Customer not found or cross-tenant access denied');
+
+    const priceBook = await prisma.priceBook.findFirst({ where: { id: priceBookId, tenantId, isActive: true } });
+    if (!priceBook) throw new Error('Active PriceBook not found or cross-tenant access denied');
 
     // 3. Resolve Line Items and compute totals (Snapshots price)
     let subtotal = new Prisma.Decimal(0);
@@ -80,8 +88,11 @@ export class RevenueService {
     }[] = [];
     
     for (const item of lineItemsInput) {
-      const pbe = await prisma.priceBookEntry.findFirst({ where: { id: item.priceBookEntryId, priceBookId, tenantId } });
-      if (!pbe) throw new Error('Invalid PriceBookEntry');
+      if (item.quantity <= 0) throw new Error('Invalid quantity');
+      if (item.discount < 0) throw new Error('Invalid discount');
+
+      const pbe = await prisma.priceBookEntry.findFirst({ where: { id: item.priceBookEntryId, priceBookId, tenantId, isActive: true } });
+      if (!pbe) throw new Error('Active PriceBookEntry not found or cross-tenant access denied');
 
       const quantityDec = new Prisma.Decimal(item.quantity);
       const itemSubtotal = pbe.unitPrice.mul(quantityDec).toDecimalPlaces(4, Prisma.Decimal.ROUND_HALF_UP);
@@ -105,6 +116,7 @@ export class RevenueService {
     }
 
     const grandTotal = subtotal.sub(discountTotal);
+    if (grandTotal.isNegative()) throw new Error('Total cannot be negative');
 
     // 4. Create Quote
     const tenantPrisma = withTenant(tenantId);
@@ -137,6 +149,15 @@ export class RevenueService {
           resource: 'Quote',
           resourceId: quote.id,
           metadata: { grandTotal }
+        }
+      });
+
+      await tx.eventOutbox.create({
+        data: {
+          eventId: crypto.randomUUID(),
+          tenantId,
+          eventType: 'QUOTE_CREATED',
+          payload: { actorId: userId, resource: 'QUOTE', action: 'CREATE', metadata: { quoteId: quote.id } }
         }
       });
 
@@ -216,6 +237,15 @@ export class RevenueService {
         }
       }
 
+      await tx.eventOutbox.create({
+        data: {
+          eventId: crypto.randomUUID(),
+          tenantId,
+          eventType: 'QUOTE_STATUS_CHANGED',
+          payload: { actorId: userId, resource: 'QUOTE', action: 'STATUS_CHANGE', metadata: { quoteId: quote.id, newStatus: nextStatus } }
+        }
+      });
+
       return updated;
     });
   }
@@ -231,6 +261,7 @@ export class RevenueService {
      
     const quote = await tenantPrisma.quote.findFirst({ where: { id: quoteId, tenantId } });
     if (!quote || quote.status !== 'PENDING_APPROVAL') throw new Error('Invalid quote state for approval');
+    if (quote.ownerId === approverId) throw new Error('Self-approval is not allowed');
 
     // eslint-disable-next-line @typescript-eslint/no-explicit-any -- S2 Residual Debt: Legacy internal payload requires architectural typing
     return tenantPrisma.$transaction(async (tx: any) => {
@@ -250,6 +281,16 @@ export class RevenueService {
           metadata: {}
         }
       });
+
+      await tx.eventOutbox.create({
+        data: {
+          eventId: crypto.randomUUID(),
+          tenantId,
+          eventType: 'QUOTE_APPROVED',
+          payload: { actorId: approverId, resource: 'QUOTE', action: 'APPROVE', metadata: { quoteId: quote.id } }
+        }
+      });
+
       return updated;
     });
   }
@@ -289,6 +330,16 @@ export class RevenueService {
           metadata: {}
         }
       });
+
+      await tx.eventOutbox.create({
+        data: {
+          eventId: crypto.randomUUID(),
+          tenantId,
+          eventType: 'QUOTE_SENT',
+          payload: { actorId: senderId, resource: 'QUOTE', action: 'SEND', metadata: { quoteId: quote.id } }
+        }
+      });
+
       return updated;
     });
   }
@@ -345,6 +396,15 @@ export class RevenueService {
           }
         });
 
+        await tx.eventOutbox.create({
+          data: {
+            eventId: crypto.randomUUID(),
+            tenantId,
+            eventType: 'QUOTE_REVISION_CREATED',
+            payload: { actorId: userId, resource: 'QUOTE', action: 'REVISE', metadata: { quoteId: newQuote.id, previousVersionId: quote.id } }
+          }
+        });
+
         return newQuote;
      });
   }
@@ -393,6 +453,15 @@ export class RevenueService {
             resource: 'Quote',
             resourceId: quote.id,
             metadata: { dealUpdated: true }
+          }
+        });
+
+        await tx.eventOutbox.create({
+          data: {
+            eventId: crypto.randomUUID(),
+            tenantId,
+            eventType: 'QUOTE_ACCEPTED',
+            payload: { actorId: userId, resource: 'QUOTE', action: 'ACCEPT', metadata: { quoteId: quote.id } }
           }
         });
 

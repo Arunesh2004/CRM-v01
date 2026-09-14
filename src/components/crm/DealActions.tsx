@@ -45,6 +45,9 @@ export function DealActions({
           </Button>
         }
       />
+      <Button variant="ghost" className="bg-emerald-500/10 text-emerald-400 hover:bg-emerald-500/20 hover:text-emerald-300" onClick={() => router.push('/quotes')}>
+        Quotes
+      </Button>
     </div>
   );
 }

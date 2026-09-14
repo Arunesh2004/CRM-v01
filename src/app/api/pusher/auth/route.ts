@@ -32,19 +32,14 @@ const original_POST = async function (req: NextRequest) {
       return NextResponse.json({ error: 'Missing socket_id or channel_name' }, { status: 400 });
     }
 
-    // Authorize private-tenant-{tenantId} — tenant isolation enforced here
-    if (channelName.startsWith('private-tenant-')) {
-      const requestedTenantId = channelName.replace('private-tenant-', '');
-      if (user.tenantId !== requestedTenantId) {
-        return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
-      }
-    } else if (channelName.startsWith('private-user-')) {
-      const requestedUserId = channelName.replace('private-user-', '');
-      if (user.id !== requestedUserId) {
-        return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
-      }
+    // Exact Structural Validation (G4)
+    if (channelName === `private-tenant-${user.tenantId}`) {
+      // Valid generic tenant channel
+    } else if (channelName === `private-user-${user.id}`) {
+      // Valid explicit user channel
     } else {
-      return NextResponse.json({ error: 'Unsupported channel type' }, { status: 403 });
+      Logger.warn('Pusher Auth Failed: Invalid or unauthorized channel structure', { channelName, userId: user.id, tenantId: user.tenantId });
+      return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
     }
 
     const secret = process.env.PUSHER_SECRET;

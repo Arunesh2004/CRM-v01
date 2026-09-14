@@ -88,11 +88,11 @@ describe('CCTV Ingestion Daemon Tenant Hardening (R03)', () => {
     expect(rec!.tenantId).toBe(tenantId);
     expect(rec!.cameraId).toBe(cameraId);
     
-    // Verify AI job created
-    const aiJob = await executeAsSystem(SystemOperation.SECURITY_AUDIT, async (tx) => 
-      tx.aIAnalysisJob.findUnique({ where: { dedupeKey: segmentId + '-vision' } })
+    // Verify EventOutbox job created
+    const outboxJob = await executeAsSystem(SystemOperation.SECURITY_AUDIT, async (tx) => 
+      tx.eventOutbox.findFirst({ where: { eventType: 'cctv.recording.completed', payload: { path: ['recordingId'], equals: rec!.id } } })
     );
-    expect(aiJob).toBeDefined();
+    expect(outboxJob).toBeDefined();
   });
 
   it('2. Forged opaque path rejected (tenant mismatch)', async () => {

@@ -7,6 +7,8 @@ import { aiScoringWorker } from '@/lib/queue/functions/ai.scoring';
 import { outboxWorker } from '@/lib/queue/functions/outbox.worker';
 import { webhookWorker } from '@/lib/queue/functions/webhook.worker';
 import { workflowWorker } from '@/lib/queue/functions/workflow.worker';
+import { quoteApprovedWorker } from '@/lib/queue/functions/revenue.workflows';
+import { notificationWorker } from '@/lib/queue/functions/notification.worker';
 
 // Export the API handler for Inngest to reach our app
 export const { GET, POST, PUT } = serve({
@@ -19,5 +21,7 @@ export const { GET, POST, PUT } = serve({
     outboxWorker,
     webhookWorker,
     workflowWorker,
+    quoteApprovedWorker,
+    notificationWorker,
   ],
 });

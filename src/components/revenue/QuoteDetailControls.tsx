@@ -2,7 +2,7 @@
 
 import { toast } from 'sonner';
 import { SubmitButton } from '@/components/ui/SubmitButton';
-import { submitQuoteForApprovalAction, approveQuoteAction, acceptQuoteAction, sendQuoteAction } from '@/modules/revenue/actions/revenue.actions';
+import { submitQuoteForApprovalAction, approveQuoteAction, acceptQuoteAction, sendQuoteAction, createQuoteRevisionAction } from '@/modules/revenue/actions/revenue.actions';
 
 import { useRouter } from 'next/navigation';
 
@@ -92,10 +92,26 @@ export function QuoteDetailControls({
           </SubmitButton>
         </form>
       )}
+
+      {status !== 'ACCEPTED' && isOwner && (
+        <form action={async () => {
+          const res = await createQuoteRevisionAction(quoteId);
+          if (res?.error) toast.error(res.error);
+          else {
+            toast.success('Quote revision created');
+            router.push(`/quotes/${res.data.id}`);
+          }
+        }}>
+          <SubmitButton className="w-full bg-violet-600 hover:bg-violet-700 text-white">
+            Create Revision
+          </SubmitButton>
+        </form>
+      )}
       
       {!(status === 'DRAFT' && isOwner) && 
        !(status === 'PENDING_APPROVAL' && isApprover) && 
-       !(status === 'APPROVED' || status === 'SENT') && (
+       !(status === 'APPROVED' || status === 'SENT') && 
+       status === 'ACCEPTED' && (
         <p className="text-sm text-[#8891B0] text-center italic">No actions available in current state.</p>
       )}
     </div>

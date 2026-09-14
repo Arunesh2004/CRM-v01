@@ -29,49 +29,55 @@ export class WorkflowService {
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any -- S2 Residual Debt: Legacy internal payload requires architectural typing
   static async executeWorkflow(tenantId: string, userId: string | null, workflowId: string, triggerData?: any) {
-    const prisma = withTenant(tenantId);
-    
-    const workflow = await prisma.workflow.findFirst({
-      where: { id: workflowId, tenantId }
-    });
-    if (!workflow) throw new Error('404: Workflow not found in tenant');
+    return await globalPrisma.$transaction(async (baseTx) => {
+      const tx = await withTenantTransaction(baseTx, tenantId);
+      
+      const workflow = await tx.workflow.findFirst({
+        where: { id: workflowId, tenantId }
+      });
+      if (!workflow) throw new Error('404: Workflow not found in tenant');
 
-    const execution = await prisma.workflowExecution.create({
-      data: {
-        tenantId,
-        workflowId,
-        status: 'PENDING',
-        context: triggerData || {},
-        initiatedById: userId,
-      }
-    });
+      const execution = await tx.workflowExecution.create({
+        data: {
+          tenantId,
+          workflowId,
+          status: 'PENDING',
+          context: triggerData || {},
+          initiatedById: userId,
+        }
+      });
 
-    await inngest.send({
-      name: 'workflow.execute',
-      data: {
-        jobId: execution.id,
-        tenantId,
-        actorType: 'SYSTEM',
-        correlationId: execution.id,
-        jobType: 'workflow.execute',
-        payload: { workflowId: workflow.id, executionId: execution.id },
-        schemaVersion: '1.0'
-      }
-    });
+      await tx.eventOutbox.create({
+        data: {
+          tenantId,
+          eventId: execution.id,
+          eventType: 'workflow.execute',
+          payload: {
+            jobId: execution.id,
+            tenantId,
+            actorType: 'SYSTEM',
+            correlationId: execution.id,
+            jobType: 'workflow.execute',
+            payload: { workflowId: workflow.id, executionId: execution.id },
+            schemaVersion: '1.0'
+          }
+        }
+      });
 
-    await prisma.auditLog.create({
-      data: {
-        tenantId,
-        actorId: userId || 'SYSTEM', 
-        actorType: userId ? 'USER' : 'SYSTEM',
-        action: 'EXECUTE',
-        resource: 'SYSTEM',
-        resourceId: execution.id,
-        metadata: { workflowId, status: 'QUEUED' }
-      }
+      await tx.auditLog.create({
+        data: {
+          tenantId,
+          actorId: userId || 'SYSTEM', 
+          actorType: userId ? 'USER' : 'SYSTEM',
+          action: 'EXECUTE',
+          resource: 'SYSTEM',
+          resourceId: execution.id,
+          metadata: { workflowId, status: 'QUEUED' }
+        }
+      });
+      
+      return execution;
     });
-
-    return execution;
   }
 
   static async getWorkflowActions(tenantId: string, workflowId: string, executionId: string) {

@@ -131,8 +131,37 @@ export async function getCustomerTimeline({
     }
   }
 
-  // Merge and Sort
-  events.sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime());
+  // 6. CRM Comments timeline (excluding soft-deleted)
+  const crmComments = await prisma.cRMComment.findMany({
+    where: {
+      tenantId,
+      entityType: 'CUSTOMER',
+      entityId: customerId,
+      deletedAt: null
+    },
+    orderBy: { createdAt: 'desc' },
+    take: 200,
+    include: { user: { select: { email: true } } }
+  });
+  
+  for (const c of crmComments) {
+    events.push({
+      id: c.id,
+      type: 'NOTE', // Map to NOTE for generic comment representation
+      title: 'Comment',
+      description: c.content,
+      actor: { name: c.user?.email || 'Unknown' },
+      timestamp: c.createdAt.toISOString(),
+      metadata: { parentId: c.parentId }
+    });
+  }
+
+  // Merge and Sort deterministically by timestamp descending, then by id for stable sorting
+  events.sort((a, b) => {
+    const timeDiff = new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime();
+    if (timeDiff !== 0) return timeDiff;
+    return a.id.localeCompare(b.id);
+  });
 
   // Cursor Pagination implementation in memory
   let paginatedEvents = events;

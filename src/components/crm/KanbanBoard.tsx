@@ -6,7 +6,8 @@ import {
   DragOverlay,
   closestCorners,
   KeyboardSensor,
-  PointerSensor,
+  MouseSensor,
+  TouchSensor,
   useSensor,
   useSensors,
   DragStartEvent,
@@ -43,7 +44,8 @@ export function KanbanBoard({ initialLeads, users }: { initialLeads: any[]; user
   );
 
   const sensors = useSensors(
-    useSensor(PointerSensor, { activationConstraint: { distance: 5 } }),
+    useSensor(MouseSensor, { activationConstraint: { distance: 5 } }),
+    useSensor(TouchSensor, { activationConstraint: { delay: 250, tolerance: 5 } }),
     useSensor(KeyboardSensor, { coordinateGetter: sortableKeyboardCoordinates })
   );
 
@@ -128,15 +130,18 @@ export function KanbanBoard({ initialLeads, users }: { initialLeads: any[]; user
       onDragOver={handleDragOver}
       onDragEnd={handleDragEnd}
     >
-      <div className="flex space-x-4 h-[75vh] min-w-max items-start custom-scrollbar">
-        {STATUS_COLUMNS.map((status) => (
-          <KanbanColumn
-            key={status}
-            id={status}
-            leads={leads.filter((l) => l.status === status)}
-            users={users}
-          />
-        ))}
+      <div className="w-full overflow-x-auto pb-4 custom-scrollbar snap-x snap-mandatory">
+        <div className="flex space-x-4 h-[75vh] w-max min-w-full items-start px-1 lg:h-[80vh]">
+          {STATUS_COLUMNS.map((status) => (
+            <div key={status} className="snap-center sm:snap-align-none w-[85vw] sm:w-[320px] shrink-0">
+              <KanbanColumn
+                id={status}
+                leads={leads.filter((l) => l.status === status)}
+                users={users}
+              />
+            </div>
+          ))}
+        </div>
       </div>
 
       <DragOverlay>

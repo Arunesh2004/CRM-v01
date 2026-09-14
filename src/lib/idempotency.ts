@@ -8,6 +8,7 @@ export const IdempotencyOperations = {
   CREATE_TASK: 'CREATE_TASK',
   CREATE_TICKET: 'CREATE_TICKET',
   CREATE_INCIDENT: 'CREATE_INCIDENT',
+  SEND_NOTIFICATION: 'SEND_NOTIFICATION',
 } as const;
 
 export type IdempotencyOperation = typeof IdempotencyOperations[keyof typeof IdempotencyOperations];

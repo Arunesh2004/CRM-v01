@@ -1,6 +1,5 @@
 // eslint-disable-next-line @typescript-eslint/no-explicit-any -- S2 Residual Debt: Legacy internal payload requires architectural typing
-// eslint-disable-next-line @typescript-eslint/no-explicit-any -- S2 Residual Debt: Legacy internal payload requires architectural typing
-export function CommunicationMetricsCard({ data }: { data: any }) {
+export function CommunicationMetricsCard({ communication: data }: { communication: any }) {
   if (!data) return null;
   return (
     <div className="glass-panel p-6 border-l-4 border-l-blue-500">

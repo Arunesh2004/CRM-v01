@@ -36,10 +36,6 @@ const _orig_POST = async function (req: Request) {
     const isValid = signature.length === expectedSignature.length && 
                     crypto.timingSafeEqual(Buffer.from(signature), Buffer.from(expectedSignature));
 
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars -- S2 Residual Debt: Legacy unused local
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars -- S2 Residual Debt: Legacy unused local
-    const tenantPrisma = withTenant(tenantId);
-
     if (!isValid) {
       // SECURITY: Log unauthorized attempts to SecurityEvent
       await prisma.$transaction(async (baseTx) => {
@@ -58,6 +54,35 @@ const _orig_POST = async function (req: Request) {
       });
       return NextResponse.json({ error: 'Invalid signature' }, { status: 401 });
     }
+
+    // G15 Remediation: Establish authoritative tenant binding
+    let authoritativeTenantId = tenantId;
+
+    if (payload.resourceId && payload.resourceType) {
+      // Authoritative Resource Ownership: Derive tenant from database directly
+      if (payload.resourceType === 'CAMERA') {
+        const camera = await prisma.camera.findUnique({ where: { id: payload.resourceId } });
+        if (camera) authoritativeTenantId = camera.tenantId;
+      } else if (payload.resourceType === 'LEAD') {
+        const lead = await prisma.lead.findUnique({ where: { id: payload.resourceId } });
+        if (lead) authoritativeTenantId = lead.tenantId;
+      }
+      
+      if (authoritativeTenantId !== tenantId) {
+         Logger.warn(`[Webhook] Cross-tenant replay blocked. DB Authoritative Tenant ${authoritativeTenantId} != Query Tenant ${tenantId}`);
+         return NextResponse.json({ error: 'Tenant ownership mismatch' }, { status: 403 });
+      }
+    } else if (payload.tenantId) {
+      // Consistency Check if no resource identifier is provided
+      if (payload.tenantId !== tenantId) {
+         Logger.warn(`[Webhook] Cross-tenant replay blocked. Payload Tenant ${payload.tenantId} != Query Tenant ${tenantId}`);
+         return NextResponse.json({ error: 'Tenant mismatch in signed payload' }, { status: 403 });
+      }
+    }
+
+    // Note: If neither resourceId nor payload.tenantId exist, the global webhook secret 
+    // is currently the only tenant binding (relying on ?tenantId=X). This is a known 
+    // architectural limitation documented in Phase 9.
 
     const payloadHash = crypto.createHash('sha256').update(rawBody).digest('hex');
     const eventId = payload.id || crypto.randomUUID();

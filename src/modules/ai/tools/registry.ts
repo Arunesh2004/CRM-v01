@@ -80,7 +80,15 @@ export class ToolRegistry {
     }
 
     // Execute the actual tool
-    return await tool.execute(sanitizedArgs, context);
+    const rawResult = await tool.execute(sanitizedArgs, context);
+
+    // G10: Prompt-Injection Boundary for Untrusted Data
+    // We encapsulate the untrusted CRM data in explicit structural delimiters.
+    // This allows the model to distinguish instructions from fetched data.
+    if (typeof rawResult === 'object' && rawResult !== null) {
+      return `<crm_data>\n${JSON.stringify(rawResult)}\n</crm_data>`;
+    }
+    return `<crm_data>\n${String(rawResult)}\n</crm_data>`;
   }
 
   static async bootstrapTools() {

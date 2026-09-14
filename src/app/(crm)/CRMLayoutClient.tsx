@@ -23,7 +23,7 @@ import {
   X,
   Activity,
 } from "lucide-react";
-import NotificationBell from "./NotificationBell";
+import { NotificationCenter } from "@/components/notifications/NotificationCenter";
 import { CommandPalette } from "@/components/ui/CommandPalette";
 import { UserButton, useUser } from "@clerk/nextjs";
 import { QuickAddMenu } from "@/components/ui/QuickAddMenu";
@@ -90,17 +90,12 @@ interface CRMLayoutClientProps {
   children: ReactNode;
   tenantName: string;
   userRole: string;
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any -- S2 Residual Debt: Legacy internal payload requires architectural typing
-  initialNotifications?: any[];
-  initialNotificationCount?: number;
 }
 
 export default function CRMLayoutClient({
   children,
   tenantName,
   userRole,
-  initialNotifications = [],
-  initialNotificationCount = 0,
 }: CRMLayoutClientProps) {
   const pathname = usePathname();
   const { user } = useUser();
@@ -264,11 +259,8 @@ export default function CRMLayoutClient({
               <Sparkles className="w-4 h-4 text-violet-400" />
             </button>
 
-            {/* Notification bell */}
-            <NotificationBell
-              initialNotifications={initialNotifications}
-              initialNotificationCount={initialNotificationCount}
-            />
+            {/* Notification center */}
+            <NotificationCenter />
 
             {/* Divider */}
             <div className="w-px h-5 bg-white/10 hidden sm:block" />

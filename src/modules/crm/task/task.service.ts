@@ -2,6 +2,8 @@ import { requireAuth, requireTenant, requirePermission } from '@/lib/auth';
 import { withTenant, withTenantTransaction } from '@db/utils/prisma-tenant';
 import { CreateTaskInput, UpdateTaskInput } from '../crm.types';
 import { EventBus } from '../../core/events/event-bus';
+import { NotificationService } from '../../notifications/notification.service';
+import { NotificationType } from '@prisma/client';
 import { QueryParams, PaginatedResponse } from '../../core/types';
 import globalPrisma from '@db/utils/prisma';
 import { TaskCore } from './task.core';
@@ -205,7 +207,16 @@ export async function updateTask(input: UpdateTaskInput) {
           entityId: input.id
         }
       });
-      EventBus.emit('task.status_changed', { tenantId, taskId: input.id, status: input.status, title: input.title || task.title });
+      if (task.assignedUserId || input.assignedUserId) {
+        await NotificationService.queueNotification(tx, {
+          tenantId,
+          userId: input.assignedUserId || task.assignedUserId!,
+          type: NotificationType.SYSTEM,
+          title: 'Task Status Updated',
+          body: `Task ${input.title || task.title} was moved to ${input.status}`,
+          actionUrl: `/tasks`
+        });
+      }
     }
 
     if (input.assignedUserId && input.assignedUserId !== task.assignedUserId) {
@@ -219,7 +230,14 @@ export async function updateTask(input: UpdateTaskInput) {
           entityId: input.id
         }
       });
-      EventBus.emit('task.assigned', { tenantId, taskId: input.id, assigneeId: input.assignedUserId, title: input.title || task.title });
+      await NotificationService.queueNotification(tx, {
+        tenantId,
+        userId: input.assignedUserId,
+        type: NotificationType.SYSTEM,
+        title: 'Task Reassigned',
+        body: `You have been assigned to task: ${input.title || task.title}`,
+        actionUrl: `/tasks`
+      });
     }
 
     return tx.task.findFirst({ where: { id: input.id, tenantId }});

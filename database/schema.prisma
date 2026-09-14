@@ -281,6 +281,8 @@ model Tenant {
   rolePermissions        RolePermission[]
   userRoles              UserRole[]
   userInvitations        UserInvitation[]
+  cameraStreamInvalidations CameraStreamInvalidation[]
+  aiAnalysisJobs         AIAnalysisJob[]
 }
 
 model TenantBootstrap {
@@ -971,6 +973,7 @@ model Camera {
 
   credential CameraCredential?
   stream     CameraStream?
+  cameraStreamInvalidations CameraStreamInvalidation[]
   recordings Recording[]
   events     CameraEvent[]
   aiEvents   AIEvent[]
@@ -1084,6 +1087,9 @@ model CameraStreamInvalidation {
   updatedAt     DateTime                       @updatedAt
   completedAt   DateTime?
 
+  camera        Camera    @relation(fields: [cameraId], references: [id], onDelete: Cascade)
+  tenant        Tenant    @relation(fields: [tenantId], references: [id])
+
   @@unique([cameraId, streamVersion])
   @@index([cameraId])
   @@index([status, nextAttemptAt])
@@ -1144,6 +1150,7 @@ model RetentionDeletionJob {
 
 model AIAnalysisJob {
   id             String    @id @default(uuid())
+  tenantId       String
   recordingId    String
   analysisType   String
   dedupeKey      String    @unique
@@ -1156,8 +1163,10 @@ model AIAnalysisJob {
   createdAt      DateTime  @default(now())
   updatedAt      DateTime  @updatedAt
 
-  recording Recording @relation(fields: [recordingId], references: [id], onDelete: Cascade)
+  tenant         Tenant    @relation(fields: [tenantId], references: [id])
+  recording      Recording @relation(fields: [recordingId], references: [id], onDelete: Cascade)
 
+  @@index([tenantId])
   @@index([status, leaseExpiresAt])
 }
 

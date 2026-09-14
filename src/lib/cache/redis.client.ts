@@ -28,4 +28,6 @@ export const rateLimiters = {
   ai: createRateLimiter({ tokens: 50, window: '1 h' }),   // 50 requests per hour
   webhook: createRateLimiter({ tokens: 100, window: '1 m' }), // 100 requests per minute
   api: createRateLimiter({ tokens: 60, window: '1 m' }),  // 60 requests per minute
+  export: createRateLimiter({ tokens: 5, window: '1 m' }), // 5 requests per minute (strict)
+  cctvStream: createRateLimiter({ tokens: 20, window: '1 m' }), // 20 requests per minute
 };

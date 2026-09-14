@@ -40,13 +40,13 @@ export const withTenant = (tenantId: string) => {
             'Pipeline', 'PipelineStage', 'Deal', 'DealStageHistory', 'DealSnapshot',
             'Territory', 'UserTerritory', 'SalesQuota',
             // === CCTV / Monitoring ===
-            'Camera', 'CameraCredential', 'CameraStream', 'Recording', 'CameraEvent',
+            'Camera', 'CameraCredential', 'CameraStream', 'Recording', 'CameraEvent', 'CameraStreamInvalidation',
             // === Incidents & Recovery ===
             'Incident', 'RecoveryJob', 'RecoverySnapshot', 'RecoveryAuditLog', 'RestoreCheckpoint',
             // === AI ===
             'AIEvent', 'AIConversation', 'AIConversationMessage',
             'AIExecution', 'AIAgentExecution', 'AIMemory', 'AIReference',
-            'AIProviderConfig', 'AITokenUsage',
+            'AIProviderConfig', 'AITokenUsage', 'AIAnalysisJob',
             // === Workflows & Automation ===
             'Workflow', 'WorkflowTrigger', 'WorkflowAction', 'WorkflowExecution', 'WorkflowExecutionStep',
             // === Events & Integration ===

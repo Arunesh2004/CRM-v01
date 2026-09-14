@@ -3,6 +3,7 @@ import { requireAuth, requireTenant } from '@/lib/auth';
 import { PusherRealtimeAdapter } from '@/lib/providers/realtime/pusher.provider';
 import { ProviderFactory } from '@/lib/providers/provider.factory';
 import Pusher from 'pusher';
+import { Logger } from '@/lib/logger/logger';
 
 export async function POST(req: NextRequest) {
   try {
@@ -19,26 +20,16 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'Missing socket_id or channel_name' }, { status: 400 });
     }
 
-    // Only private- and presence- channels are supported
-    if (!channelName.startsWith('private-') && !channelName.startsWith('presence-')) {
-      return NextResponse.json({ error: 'Invalid channel type' }, { status: 403 });
-    }
+    // Exact Structural Validation (G4 Remediation)
+    const isValidTenantUserChannel = channelName === `private-tenant_${tenantId}_user_${user.id}`;
+    // E.g. call channels or generic tenant channels: private-tenant_{tenantId}_{channelId}
+    const isGenericTenantChannel = channelName.startsWith(`private-tenant_${tenantId}_`) && !channelName.includes('_user_');
+    const isValidPresenceChannel = channelName === `presence-tenant-${tenantId}` || channelName === `presence-tenant_${tenantId}`;
 
-    // All channels must be scoped to the authenticated tenant
-    const tenantPrefix = `tenant_${tenantId}`;
-    if (!channelName.includes(tenantPrefix)) {
-      return NextResponse.json({ error: 'Cross-tenant access denied' }, { status: 403 });
+    if (!isValidTenantUserChannel && !isGenericTenantChannel && !isValidPresenceChannel) {
+      Logger.warn('Realtime Auth Failed: Invalid or unauthorized channel structure', { channelName, userId: user.id, tenantId });
+      return NextResponse.json({ error: 'Forbidden channel access' }, { status: 403 });
     }
-
-    // Private user channels must belong to the authenticated user
-    if (channelName.startsWith('private-')) {
-      const userPrefix = `user_${user.id}`;
-      if (!channelName.includes(userPrefix)) {
-        return NextResponse.json({ error: 'Unauthorized user channel access' }, { status: 403 });
-      }
-    }
-
-    // Presence channels are authorized by tenant membership (already verified above)
 
     const realtimeAdapter = ProviderFactory.getRealtimeProvider();
 
@@ -68,7 +59,9 @@ export async function POST(req: NextRequest) {
     }
 
     return NextResponse.json(authResponse);
-  } catch {
+  } catch (errorRaw: unknown) {
+    const error = errorRaw instanceof Error ? errorRaw : new Error(String(errorRaw));
+    Logger.error('Realtime Auth Error', { error: error.message });
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   }
 }

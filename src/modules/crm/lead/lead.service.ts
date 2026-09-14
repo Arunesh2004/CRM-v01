@@ -1,8 +1,9 @@
-import { Prisma, Lead } from '@prisma/client';
+import { Prisma, Lead, NotificationType } from '@prisma/client';
 import { requireAuth, requireTenant, requirePermission } from '@/lib/auth';
 import { withTenant, withTenantTransaction } from '@db/utils/prisma-tenant';
 import { CreateLeadInput, UpdateLeadInput } from '../crm.types';
 import { EventBus } from '../../core/events/event-bus';
+import { NotificationService } from '../../notifications/notification.service';
 
 export async function createLead(input: CreateLeadInput) {
   const user = await requireAuth();
@@ -281,30 +282,32 @@ export async function updateLead(input: UpdateLeadInput) {
 
       // Attempt to find user to notify (if assigned)
       if (lead.assignedUserId || input.assignedUserId) {
-        await tx.notification.create({
-          data: {
-            tenantId,
-            userId: input.assignedUserId || lead.assignedUserId!,
-            type: 'SYSTEM',
-            title: 'Lead Status Updated',
-            body: `Lead ${lead.company || lead.name} was moved to ${input.status}`,
-            actionUrl: `/leads`
-          }
+        await NotificationService.queueNotification(tx, {
+          tenantId,
+          userId: input.assignedUserId || lead.assignedUserId!,
+          type: NotificationType.SYSTEM,
+          title: 'Lead Status Updated',
+          body: `Lead ${lead.company || lead.name} was moved to ${input.status}`,
+          actionUrl: `/leads`
         });
       }
     }
 
     const updatedLead = await tx.lead.findFirst({ where: { id: input.id, tenantId }, include: { assignedUser: { select: { id: true, email: true } } }});
+    
+    if (assignmentChanged && input.assignedUserId) {
+       await NotificationService.queueNotification(tx, {
+          tenantId,
+          userId: input.assignedUserId,
+          type: NotificationType.SYSTEM,
+          title: 'New Lead Assigned',
+          body: 'A new lead has been assigned to you.',
+          actionUrl: `/leads/${input.id}`
+       });
+    }
+
     return { lead: updatedLead, assignmentChanged };
   });
-
-  if (result.assignmentChanged && input.assignedUserId) {
-    EventBus.emit('lead.assigned', {
-      tenantId,
-      leadId: input.id,
-      assigneeId: input.assignedUserId
-    });
-  }
 
   return result.lead;
 }

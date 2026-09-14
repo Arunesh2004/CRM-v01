@@ -7,6 +7,8 @@ import { ENV } from '@/lib/config/env';
 import { decrypt } from '@/lib/encryption';
 import { validateAndResolveHostname } from '@/lib/security/ssrf';
 import { Logger } from '@/lib/logger/logger';
+import { ProviderConfigurationError, ProviderTransientError } from '@/lib/observability/errors';
+import { rateLimiters } from '@/lib/cache/redis.client';
 
 import { deriveOpaquePath } from './opaque-path.helper';
 export { deriveOpaquePath };
@@ -70,6 +72,22 @@ export async function generateStreamToken(cameraId: string) {
   const tenantId = await requireTenant();
   
   await requirePermission('STREAM', 'READ');
+
+  if (rateLimiters.cctvStream) {
+    try {
+      const { success } = await rateLimiters.cctvStream.limit(`${tenantId}:${user.id}:${cameraId}`);
+      if (!success) {
+        throw new Error('Too many stream requests. Please wait before requesting a new stream token.');
+      }
+    } catch (e: any) {
+      if (e.message !== 'Too many stream requests. Please wait before requesting a new stream token.') {
+         // Fallback if redis is down: Fail closed for security limits? Wait, the prompt says "Redis/rate-limiter failure behavior must be explicitly determined". We will fail closed to prevent abuse when redis is down.
+         Logger.error('CCTV stream rate limiter failure:', e);
+         throw new Error('Stream token service temporarily unavailable due to rate limiter outage.');
+      }
+      throw e;
+    }
+  }
 
   return await globalPrisma.$transaction(async (baseTx) => {
     const tx = await withTenantTransaction(baseTx, tenantId);
@@ -165,21 +183,21 @@ export async function generateStreamToken(cameraId: string) {
           try {
             body = await response.json();
           } catch {
-            throw new Error('MediaMTX API Error: HTTP 400 with non-JSON response');
+            throw new ProviderTransientError('MediaMTX API Error: HTTP 400 with non-JSON response');
           }
           
           if (!body || typeof body !== 'object' || !body.error) {
-            throw new Error('MediaMTX API Error: HTTP 400 with missing error field');
+            throw new ProviderTransientError('MediaMTX API Error: HTTP 400 with missing error field');
           }
           
           if (body.error === 'path already exists') {
             // Intentional TOCTOU mitigation: Path already exists, safe to continue
           } else {
             Logger.error(`MediaMTX 400 error during path provisioning for camera`, new Error(String(body.error)), { cameraId: camera.id });
-            throw new Error(`MediaMTX Config Error: ${body.error}`);
+            throw new ProviderConfigurationError(`MediaMTX Config Error: ${body.error}`);
           }
         } else {
-          throw new Error(`MediaMTX provisioning failed with status: ${response.status}`);
+          throw new ProviderTransientError(`MediaMTX provisioning failed with status: ${response.status}`);
         }
       }
     } catch (errRaw: unknown) {
@@ -187,7 +205,7 @@ export async function generateStreamToken(cameraId: string) {
       if (err.message && (err.message.startsWith('MediaMTX Config Error') || err.message.startsWith('MediaMTX API Error') || err.message.startsWith('MediaMTX provisioning failed'))) {
         throw err;
       }
-      throw new Error('Internal stream provisioning error');
+      throw new ProviderTransientError('Internal stream provisioning error');
     }
 
     // Post-Provisioning Version Revalidation

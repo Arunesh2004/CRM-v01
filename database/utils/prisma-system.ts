@@ -1,4 +1,5 @@
 import { PrismaClient, Prisma } from '@prisma/client';
+import { Logger } from '../../src/lib/logger/logger';
 
 if (!process.env.ADMIN_DATABASE_URL) {
   throw new Error('SECURITY_ERROR: ADMIN_DATABASE_URL must be strictly defined for system execution.');
@@ -21,21 +22,39 @@ export enum SystemOperation {
 export async function executeAsSystem<T>(
   operation: SystemOperation,
   handler: (tx: Prisma.TransactionClient) => Promise<T>,
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any -- S2 Residual Debt: System context allows arbitrary types
   context?: any
 ): Promise<T> {
-  console.log(JSON.stringify({
-    level: 'warn',
-    message: 'System RLS Bypass Invoked',
+  const startTime = Date.now();
+  
+  // Safe categorical logging without dumping the raw execution context
+  Logger.warn('System RLS Bypass Invoked', {
     operation,
-    timestamp: new Date().toISOString(),
-    context,
-    environment: process.env.NODE_ENV
-  }));
-
-  return await globalSystemPrisma.$transaction(async (tx) => {
-    return await handler(tx);
-  }, {
-    maxWait: 25000,
-    timeout: 25000
+    environment: process.env.NODE_ENV,
+    hasContext: !!context
   });
+
+  try {
+    const result = await globalSystemPrisma.$transaction(async (tx) => {
+      return await handler(tx);
+    }, {
+      maxWait: 25000,
+      timeout: 25000
+    });
+    
+    Logger.info('System RLS Bypass Completed', {
+      operation,
+      durationMs: Date.now() - startTime
+    });
+    
+    return result;
+  } catch (errorRaw: unknown) {
+    const error = errorRaw instanceof Error ? errorRaw : new Error(String(errorRaw));
+    Logger.error('System RLS Bypass Failed', {
+      operation,
+      durationMs: Date.now() - startTime,
+      error: error.message
+    });
+    throw error;
+  }
 }

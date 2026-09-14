@@ -4,6 +4,7 @@ import { SecurityEventService } from '../security-events/security-event.service'
 import { checkPermissionFast } from '../../lib/auth';
 import { Action, Resource } from '@prisma/client';
 import { FieldSecurityService } from '../security/field-security/field-security.service';
+import crypto from 'crypto';
 
 export class ApprovalService {
   static async getPendingApprovals(tenantId: string, userId: string) {
@@ -53,6 +54,15 @@ export class ApprovalService {
           tenantId, actorId: requesterId, actorType: 'USER', action: 'CREATE_APPROVAL_REQUEST',
           resource, resourceId,
           metadata: { requestId: request.id }
+        }
+      });
+
+      await tx.eventOutbox.create({
+        data: {
+          eventId: crypto.randomUUID(),
+          tenantId,
+          eventType: 'APPROVAL_REQUESTED',
+          payload: { actorId: requesterId, resource, action: 'REQUEST_APPROVAL', metadata: { requestId: request.id, resourceId } }
         }
       });
 
@@ -144,6 +154,15 @@ export class ApprovalService {
           tenantId, actorId: approverId, actorType: 'USER', action: 'APPROVE_STEP',
           resource: 'SYSTEM', resourceId: stepId,
           metadata: { requestId: request.id }
+        }
+      });
+
+      await tx.eventOutbox.create({
+        data: {
+          eventId: crypto.randomUUID(),
+          tenantId,
+          eventType: 'APPROVAL_STEP_APPROVED',
+          payload: { actorId: approverId, resource: 'SYSTEM', action: 'APPROVE_STEP', metadata: { requestId: request.id, stepId } }
         }
       });
 

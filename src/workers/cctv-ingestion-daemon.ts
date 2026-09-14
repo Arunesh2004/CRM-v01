@@ -148,15 +148,20 @@ export async function processIngestionJobs() {
             update: {},
           });
 
-          // 6.3 Queue AI Job atomically (Idempotent via dedupeKey)
-          await tx.aIAnalysisJob.upsert({
-            where: { dedupeKey: job.segmentId + "-vision" },
-            create: {
-              recordingId: recording.id,
-              analysisType: "vision",
-              dedupeKey: job.segmentId + "-vision",
-            },
-            update: {},
+          // 6.3 Queue EventOutbox for Inngest cctv.recording.completed
+          await tx.eventOutbox.create({
+            data: {
+              eventId: crypto.randomUUID(),
+              tenantId,
+              eventType: 'cctv.recording.completed',
+              payload: { 
+                tenantId, 
+                recordingId: recording.id,
+                actorType: 'SYSTEM',
+                actorId: 'cctv-ingestion-daemon'
+              },
+              status: 'PENDING'
+            }
           });
 
           const completion = await tx.recordingIngestionJob.updateMany({

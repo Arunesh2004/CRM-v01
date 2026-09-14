@@ -1,3 +1,4 @@
+import { requestContext } from '@/lib/observability/context';
 import { PrismaClient } from "@prisma/client";
 
 const softDeleteModels = [
@@ -18,6 +19,29 @@ const getBasePrismaClient = () => {
 const prismaClientSingleton = (baseClient: PrismaClient) => {
   return baseClient.$extends({
     query: {
+      eventOutbox: {
+        async $allOperations({ operation, args, query }) {
+          if (['create', 'createMany', 'update', 'upsert'].includes(operation)) {
+            const ctx = requestContext.getStore();
+            const processData = (data: any) => {
+              if (data && typeof data === 'object' && data.payload && typeof data.payload === 'object') {
+                if (ctx?.requestId || ctx?.jobId) {
+                  data.payload._sys_correlationId = ctx.requestId || ctx.jobId;
+                } else {
+                  // Aggressively remove any user-spoofed correlation ID if no trusted context exists
+                  delete data.payload._sys_correlationId;
+                }
+              }
+            };
+            if (args && 'data' in args && args.data) {
+              if (Array.isArray(args.data)) args.data.forEach(processData);
+              else processData(args.data);
+            }
+          }
+          return query(args);
+        }
+      },
+
       $allModels: {
         async $allOperations({ model, operation, args, query }) {
           if (softDeleteModels.includes(model as string)) {

@@ -3,6 +3,7 @@ import { AIEngineProvider, AISession, AITurnContext, AIToolResult, AITurnResult 
 import { AIContext } from '@/modules/ai/context/context-builder.service';
 import { Logger } from '../../logger/logger';
 import { AIConfig } from '../../config/ai.config';
+import { ProviderRateLimitError, ProviderTransientError, ProviderPermanentError, ProviderConfigurationError } from '../../observability/errors';
 
 export class GeminiEngineProvider implements AIEngineProvider {
   private ai?: GoogleGenAI;

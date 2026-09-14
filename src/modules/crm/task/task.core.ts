@@ -2,6 +2,8 @@ import { Prisma } from '@prisma/client';
 import { CreateTaskInput } from '../crm.types';
 import { requireRelationOwnership } from '@/lib/auth/relation-auth';
 import { EventBus } from '../../core/events/event-bus';
+import { NotificationService } from '../../notifications/notification.service';
+import { NotificationType } from '@prisma/client';
 
 export class TaskCore {
    
@@ -38,7 +40,14 @@ export class TaskCore {
     });
 
     if (input.assignedUserId) {
-      EventBus.emit('task.assigned', { tenantId, taskId: task.id, assigneeId: input.assignedUserId, title: task.title });
+      await NotificationService.queueNotification(tx, {
+        tenantId,
+        userId: input.assignedUserId,
+        type: NotificationType.SYSTEM,
+        title: 'Task Assigned',
+        body: `You have been assigned to task: ${task.title}`,
+        actionUrl: `/tasks`
+      });
     }
 
     return task;

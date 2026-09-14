@@ -16,42 +16,67 @@ export class RetentionPolicyService {
    * Enforces retention policies for all tenants based on their settings.
    */
   async enforceRetentionPolicies(): Promise<void> {
-    const tenants = await executeAsSystem(SystemOperation.DISASTER_RECOVERY, async (tx) => tx.tenant.findMany({
-      where: { status: { not: 'DELETED' } },
-      select: { id: true, rpoPolicy: true }
-    }));
+    const toDelete: any[] = [];
+    
+    // Step 1: Identify all snapshots to delete in a single bounded system transaction
+    await executeAsSystem(SystemOperation.DISASTER_RECOVERY, async (tx) => {
+      const tenants = await tx.tenant.findMany({
+        where: { status: { not: 'DELETED' } },
+        select: { id: true, rpoPolicy: true }
+      });
 
-    for (const tenant of tenants) {
-      await this.enforceTenantRetention(tenant.id);
+      const allActiveSnapshots = await tx.recoverySnapshot.findMany({
+        where: { status: 'ACTIVE' },
+        orderBy: { createdAt: 'desc' },
+        select: { id: true, tenantId: true, checksum: true }
+      });
+
+      const snapshotsByTenant = new Map<string, any[]>();
+      for (const s of allActiveSnapshots) {
+        if (!snapshotsByTenant.has(s.tenantId)) snapshotsByTenant.set(s.tenantId, []);
+        snapshotsByTenant.get(s.tenantId)!.push(s);
+      }
+
+      for (const tenant of tenants) {
+        let keepCount = 7; // Default Basic
+        if (tenant.rpoPolicy === 'ENTERPRISE') keepCount = 30;
+        if (tenant.rpoPolicy === 'BUSINESS') keepCount = 14;
+
+        const snapshots = snapshotsByTenant.get(tenant.id) || [];
+        if (snapshots.length > keepCount) {
+          toDelete.push(...snapshots.slice(keepCount));
+        }
+      }
+    });
+
+    // Step 2: Perform external deletions safely outside the global transaction lock
+    for (const snapshot of toDelete) {
+      await this.deleteSnapshotSafely(snapshot);
     }
   }
 
   /**
-   * Evaluates and prunes old snapshots for a single tenant.
+   * Evaluates and prunes old snapshots for a single tenant manually.
    * Never deletes the most recent successful snapshot.
    */
   async enforceTenantRetention(tenantId: string): Promise<void> {
-    // For simplicity, we just implement a flat N-count retention policy per tenant
-    // based on their RPO tier. 
-    // ENTERPRISE = keep 30, BUSINESS = keep 14, BASIC = keep 7
     let keepCount = 7; // Default Basic
-    const tenantPrisma = withTenant(tenantId);
-    const tenant = await tenantPrisma.tenant.findUnique({ where: { id: tenantId } });
-    if (tenant?.rpoPolicy === 'ENTERPRISE') keepCount = 30;
-    if (tenant?.rpoPolicy === 'BUSINESS') keepCount = 14;
+    
+    // Scoped local query for manual execution
+    const toDelete = await executeAsSystem(SystemOperation.DISASTER_RECOVERY, async (tx) => {
+      const tenant = await tx.tenant.findUnique({ where: { id: tenantId }, select: { rpoPolicy: true } });
+      if (tenant?.rpoPolicy === 'ENTERPRISE') keepCount = 30;
+      if (tenant?.rpoPolicy === 'BUSINESS') keepCount = 14;
 
-    const snapshots = await tenantPrisma.recoverySnapshot.findMany({
-      where: { tenantId, status: 'ACTIVE' },
-      orderBy: { createdAt: 'desc' }
+      const snapshots = await tx.recoverySnapshot.findMany({
+        where: { tenantId, status: 'ACTIVE' },
+        orderBy: { createdAt: 'desc' },
+        select: { id: true, tenantId: true, checksum: true }
+      });
+
+      if (snapshots.length <= keepCount) return [];
+      return snapshots.slice(keepCount);
     });
-
-    // If we have fewer snapshots than the limit, do nothing.
-    if (snapshots.length <= keepCount) {
-      return;
-    }
-
-    // The first `keepCount` snapshots are safe. The rest are to be deleted.
-    const toDelete = snapshots.slice(keepCount);
 
     for (const snapshot of toDelete) {
       await this.deleteSnapshotSafely(snapshot);
@@ -60,22 +85,31 @@ export class RetentionPolicyService {
 
   /**
    * Safely deletes a snapshot:
-   * 1. Marks DELETE_PENDING
+   * 1. Marks DELETE_PENDING atomically
    * 2. Audit record
    * 3. Deletes object storage
    * 4. Deletes DB metadata (or marks DELETED)
    // eslint-disable-next-line @typescript-eslint/no-explicit-any -- S2 Residual Debt: Legacy internal payload requires architectural typing
    */
   // eslint-disable-next-line @typescript-eslint/no-explicit-any -- S2 Residual Debt: Legacy internal payload requires architectural typing
-  async deleteSnapshotSafely(snapshot: any): Promise<void> {
+  async deleteSnapshotSafely(snapshot: any, isRetry = false): Promise<void> {
     const storage = getStorageProvider();
     const tenantPrisma = withTenant(snapshot.tenantId);
 
-    // 1. Mark DELETE_PENDING
-    await tenantPrisma.recoverySnapshot.update({
-      where: { id: snapshot.id },
+    // 1. Mark DELETE_PENDING atomically to avoid TOCTOU races with other retention workers
+    // Prisma does not return the updated row on updateMany, but it returns the count.
+    const updateResult = await tenantPrisma.recoverySnapshot.updateMany({
+      where: { 
+        id: snapshot.id, 
+        status: isRetry ? 'DELETE_PENDING' : 'ACTIVE' 
+      },
       data: { status: 'DELETE_PENDING' }
     });
+
+    if (updateResult.count === 0 && !isRetry) {
+      // Snapshot was already transitioned (e.g. by another concurrent worker)
+      return;
+    }
 
     // We need to extract the objectKey from the checksum/id, but actually we need the `RecoveryJob` that created it to get the `archiveLocation`.
     // We don't have a direct link from RecoverySnapshot -> Job right now in the schema.
@@ -156,7 +190,7 @@ export class RetentionPolicyService {
     }));
 
     for (const snapshot of pending) {
-      await this.deleteSnapshotSafely(snapshot);
+      await this.deleteSnapshotSafely(snapshot, true);
     }
   }
 }

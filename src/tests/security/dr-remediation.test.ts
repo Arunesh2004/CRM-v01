@@ -11,7 +11,8 @@ vi.mock('../../lib/storage', () => ({
   getStorageProvider: () => ({
     verifyObjectExists: vi.fn().mockResolvedValue(true),
     download: vi.fn().mockRejectedValue(new Error('Simulated download failure')),
-    upload: vi.fn().mockResolvedValue('local://fake/path')
+    upload: vi.fn().mockResolvedValue('local://fake/path'),
+    deleteObject: vi.fn().mockResolvedValue(true)
   })
 }));
 
@@ -150,6 +151,117 @@ describe('Phase S4.4E - Disaster Recovery Remediation Tests', () => {
         const normalResult = await prisma.$queryRawUnsafe(`SELECT current_setting('app.bypass_rls', true) as bypass`);
         expect((normalResult as any[])[0].bypass).toBeNull();
     }
+  });
+
+  test('J. DR Correctness: RPO Latest Snapshot', async () => {
+    // We will create multiple snapshots for Tenant A and Tenant B
+    await executeAsSystem(SystemOperation.DEMO_SEED, async (tx) => {
+      // Clean up previous snapshots first
+      await tx.recoverySnapshot.deleteMany({ where: { tenantId: { in: [tenantAId, tenantBId] } } });
+
+      const now = Date.now();
+      
+      // Tenant A: Older and Newer
+      await tx.recoverySnapshot.create({
+        data: {
+          id: crypto.randomUUID(), tenantId: tenantAId, version: 1, schemaVersion: '1.0',
+          checksum: 'A-old', status: 'ACTIVE', sizeBytes: 1024,
+          createdAt: new Date(now - 10000)
+        }
+      });
+      await tx.recoverySnapshot.create({
+        data: {
+          id: crypto.randomUUID(), tenantId: tenantAId, version: 1, schemaVersion: '1.0',
+          checksum: 'A-new', status: 'ACTIVE', sizeBytes: 1024,
+          createdAt: new Date(now - 2000) // latest
+        }
+      });
+
+      // Tenant B: Older and Newer
+      await tx.recoverySnapshot.create({
+        data: {
+          id: crypto.randomUUID(), tenantId: tenantBId, version: 1, schemaVersion: '1.0',
+          checksum: 'B-old', status: 'ACTIVE', sizeBytes: 1024,
+          createdAt: new Date(now - 8000)
+        }
+      });
+      await tx.recoverySnapshot.create({
+        data: {
+          id: crypto.randomUUID(), tenantId: tenantBId, version: 1, schemaVersion: '1.0',
+          checksum: 'B-new', status: 'ACTIVE', sizeBytes: 1024,
+          createdAt: new Date(now - 1000) // latest
+        }
+      });
+    });
+
+    const monitor = new RPOMonitor();
+    const metrics = await monitor.getGlobalRPOStatus();
+
+    const metricA = metrics.find(m => m.tenantId === tenantAId);
+    const metricB = metrics.find(m => m.tenantId === tenantBId);
+
+    // Verify it picked the latest (the one we seeded closest to `now`)
+    expect(metricA?.lastSuccessfulBackup).toBeDefined();
+    expect(metricB?.lastSuccessfulBackup).toBeDefined();
+
+    // Let's verify directly what `DISTINCT ON` pulled
+    const latestA = await executeAsSystem(SystemOperation.DISASTER_RECOVERY, async (tx) => {
+        return tx.recoverySnapshot.findFirst({
+            where: { tenantId: tenantAId, status: 'ACTIVE' },
+            orderBy: { createdAt: 'desc' }
+        });
+    });
+    // It should have checksum 'A-new'
+    expect(latestA?.checksum).toBe('A-new');
+    
+    // Ensure the mapped metric timestamp matches exactly
+    expect(metricA?.lastSuccessfulBackup?.getTime()).toEqual(latestA?.createdAt.getTime());
+  });
+
+  test('K. DR Correctness: Retention Policies (BASIC, BUSINESS, ENTERPRISE)', async () => {
+    // Create a new tenant with ENTERPRISE
+    const tenantCId = crypto.randomUUID();
+    await executeAsSystem(SystemOperation.DEMO_SEED, async (tx) => {
+      await tx.tenant.create({ data: { id: tenantCId, name: 'DR Tenant C', rpoPolicy: 'ENTERPRISE' } });
+
+      // We need to insert 35 snapshots for Tenant C
+      const data = [];
+      const now = Date.now();
+      for(let i = 0; i < 35; i++) {
+         data.push({
+            id: crypto.randomUUID(), tenantId: tenantCId, version: 1, schemaVersion: '1.0',
+            checksum: `C-snap-${i}`, status: 'ACTIVE', sizeBytes: 1024,
+            // make them older descending
+            createdAt: new Date(now - (i * 10000))
+         });
+      }
+      // Insert in bulk
+      await tx.recoverySnapshot.createMany({ data });
+    });
+
+    const service = new RetentionPolicyService();
+    // enforce tenant C only to avoid side effects
+    await service.enforceTenantRetention(tenantCId);
+
+    // ENTERPRISE should keep 30.
+    const remaining = await executeAsSystem(SystemOperation.DISASTER_RECOVERY, async (tx) => {
+      return tx.recoverySnapshot.findMany({ where: { tenantId: tenantCId, status: 'ACTIVE' }});
+    });
+    
+    // We expect exactly 30 ACTIVE remaining. 5 should be DELETED.
+    expect(remaining.length).toBe(30);
+
+    const deleted = await executeAsSystem(SystemOperation.DISASTER_RECOVERY, async (tx) => {
+      return tx.recoverySnapshot.findMany({ where: { tenantId: tenantCId, status: 'DELETED' }});
+    });
+    // Our S3 mock should succeed, hence they get marked DELETED.
+    expect(deleted.length).toBe(5);
+
+    // cleanup
+    await executeAsSystem(SystemOperation.DEMO_SEED, async (tx) => {
+      await tx.recoverySnapshot.deleteMany({ where: { tenantId: tenantCId } });
+      await tx.tenant.delete({ where: { id: tenantCId } });
+    });
   });
 
 });

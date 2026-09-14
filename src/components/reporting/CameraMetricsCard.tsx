@@ -1,34 +1,56 @@
-// eslint-disable-next-line @typescript-eslint/no-explicit-any -- S2 Residual Debt: Legacy internal payload requires architectural typing
-// eslint-disable-next-line @typescript-eslint/no-explicit-any -- S2 Residual Debt: Legacy internal payload requires architectural typing
-export function CameraMetricsCard({ data }: { data: any }) {
-  if (!data) return null;
-  return (
-    <div className="glass-panel p-6 border-l-4 border-l-emerald-500">
-      <h2 className="text-xl font-display font-bold text-white mb-4">Camera Health</h2>
-      <div className="grid grid-cols-2 gap-4">
-        <div className="bg-[#0D1326]/40 p-4 rounded-xl text-center border border-white/[.04]">
-          <p className="text-[#8891B0] text-[10px] uppercase tracking-wider font-semibold">Total Provisioned</p>
-          <p className="text-3xl font-display font-bold text-white mt-1">{data.total}</p>
-        </div>
-        <div className="bg-emerald-500/10 p-4 rounded-xl text-center border border-emerald-500/20">
-          <p className="text-emerald-400 text-[10px] uppercase tracking-wider font-semibold">Active Streams</p>
-          <p className="text-3xl font-display font-bold text-emerald-500 mt-1">{data.active}</p>
-        </div>
-      </div>
+'use client';
+import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/Card';
+import { Video } from 'lucide-react';
+import Link from 'next/link';
 
-      <div className="mt-6">
-        <div className="flex justify-between text-[11px] uppercase tracking-wider font-semibold mb-2">
-          <span className="text-[#8891B0]">Online Rate</span>
-          <span className="text-emerald-400">{data.total > 0 ? ((data.active / data.total) * 100).toFixed(1) : 0}%</span>
-        </div>
-        <div className="w-full bg-rose-500/20 rounded-full h-1.5 flex overflow-hidden border border-white/[.02]">
-          <div 
-            className="bg-emerald-500 h-1.5 shadow-[0_0_10px_rgba(16,185,129,0.8)]" 
-            style={{ width: `${data.total > 0 ? (data.active / data.total) * 100 : 0}%` }}
-          ></div>
-        </div>
-        <p className="text-[10px] font-semibold text-rose-400 mt-2 text-right uppercase tracking-wider">{data.offline} offline</p>
-      </div>
+export function CameraMetricsCard({ camera }: { camera: any }) {
+  return (
+    <div className="space-y-6">
+      <Link href="/infrastructure/cctv" className="block">
+        <Card className="group relative overflow-hidden hover:ring-2 hover:ring-emerald-500/50 transition-all">
+          <div className="absolute inset-0 bg-gradient-to-br from-emerald-500/5 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
+          <CardContent className="p-4 flex items-center justify-between relative z-10">
+            <div>
+              <p className="text-[10px] font-semibold text-[#8891B0] uppercase tracking-wider">CCTV Health</p>
+              <h3 className="text-2xl font-display font-bold text-white mt-1">{camera.total > 0 ? Math.round((camera.active / camera.total) * 100) : 0}%</h3>
+            </div>
+            <div className="w-10 h-10 rounded-xl bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center text-emerald-400">
+              <Video className="w-5 h-5" />
+            </div>
+          </CardContent>
+        </Card>
+      </Link>
+
+      <Card className="shadow-sm flex-1">
+        <CardHeader className="border-b bg-muted/20 pb-4">
+          <CardTitle className="text-sm font-bold flex items-center">
+            <Video className="w-4 h-4 mr-2 text-primary" />
+            Surveillance Infrastructure
+          </CardTitle>
+        </CardHeader>
+        <CardContent className="p-6 flex flex-col justify-center items-center">
+          <div className="flex gap-8 w-full justify-around mt-4">
+            <div className="text-center">
+              <div className="w-16 h-16 rounded-2xl bg-white/5 border border-white/[.08] flex items-center justify-center mx-auto mb-3">
+                <span className="text-2xl font-display font-bold text-white">{camera.total}</span>
+              </div>
+              <p className="text-xs font-semibold text-[#8891B0] uppercase tracking-wider">Total Cameras</p>
+            </div>
+            <div className="text-center">
+              <div className="w-16 h-16 rounded-2xl bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center mx-auto mb-3">
+                <span className="text-2xl font-display font-bold text-emerald-400">{camera.active}</span>
+              </div>
+              <p className="text-xs font-semibold text-[#8891B0] uppercase tracking-wider">Online</p>
+            </div>
+            <div className="text-center">
+              <div className="w-16 h-16 rounded-2xl bg-rose-500/10 border border-rose-500/20 flex items-center justify-center mx-auto mb-3">
+                <span className="text-2xl font-display font-bold text-rose-400">{camera.offline}</span>
+              </div>
+              <p className="text-xs font-semibold text-[#8891B0] uppercase tracking-wider">Offline</p>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
     </div>
   );
 }

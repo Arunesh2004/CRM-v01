@@ -71,9 +71,10 @@ export async function getCRMComments(
       entityType,
       entityId,
       parentId: null, // top-level only
-      deletedAt: null,
-      ...(cursor ? { id: { lt: cursor } } : {}) // cursor: older than cursor id (desc order)
+      deletedAt: null
     },
+    cursor: cursor ? { id: cursor } : undefined,
+    skip: cursor ? 1 : undefined,
     orderBy: { createdAt: 'desc' },
     take,
     include: {

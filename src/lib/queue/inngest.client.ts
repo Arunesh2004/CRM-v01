@@ -21,6 +21,9 @@ export type Events = {
   'workflow.approval': {
     data: { payload: { executionId: string } };
   };
+  'NOTIFICATION_SEND': {
+    data: SecureJobEnvelope<any>;
+  };
 };
 
 // Create a client to send and receive events

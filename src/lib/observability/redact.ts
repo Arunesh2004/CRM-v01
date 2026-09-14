@@ -6,6 +6,12 @@ const SENSITIVE_KEYS = new Set([
   'privatekey'
 ]);
 
+function isSensitiveKey(key: string): boolean {
+  const k = key.toLowerCase();
+  if (SENSITIVE_KEYS.has(k)) return true;
+  return k.includes('token') || k.includes('secret') || k.includes('password') || k.includes('key') || k.includes('auth');
+}
+
 function maskEmail(email: string): string {
   if (!email || typeof email !== 'string' || !email.includes('@')) return '[REDACTED]';
   return email.replace(/(?<=.).(?=.*@)/g, '*');
@@ -53,7 +59,7 @@ export function redact(obj: any): any {
       // Also redact custom error properties that might contain PII or payloads
       for (const [key, value] of Object.entries(obj)) {
         if (key !== 'name' && key !== 'message' && key !== 'stack') {
-           if (SENSITIVE_KEYS.has(key.toLowerCase())) {
+           if (isSensitiveKey(key)) {
              errObj[key] = '[REDACTED]';
            } else if (key.toLowerCase() === 'email' && typeof value === 'string') {
              errObj[key] = maskEmail(value);
@@ -71,7 +77,7 @@ export function redact(obj: any): any {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any -- Intentional dynamic record for generic context
     const redactedObj: Record<string, any> = {};
     for (const [key, value] of Object.entries(obj)) {
-      if (SENSITIVE_KEYS.has(key.toLowerCase())) {
+      if (isSensitiveKey(key)) {
         redactedObj[key] = '[REDACTED]';
       } else if (key.toLowerCase() === 'email' && typeof value === 'string') {
         redactedObj[key] = maskEmail(value);
