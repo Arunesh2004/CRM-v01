@@ -136,7 +136,7 @@ const middlewareHandler = async (auth: any, request: NextRequest) => {
   }
 
   if (auth && !isPublicRoute(request)) {
-    await auth.protect();
+    await auth.protect({ unauthenticatedUrl: '/sign-in' });
   }
 
   const response = NextResponse.next();
