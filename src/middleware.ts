@@ -136,7 +136,15 @@ const middlewareHandler = async (auth: any, request: NextRequest) => {
   }
 
   if (auth && !isPublicRoute(request)) {
-    await auth.protect();
+    const authObj = typeof auth === 'function' ? auth() : auth;
+    if (!authObj?.userId) {
+      const signInUrl = new URL('/sign-in', request.url);
+      return NextResponse.redirect(signInUrl);
+    }
+    // Only call protect() if they are logged in, to enforce roles if any (none currently)
+    if (typeof authObj.protect === 'function') {
+      authObj.protect();
+    }
   }
 
   const response = NextResponse.next();
