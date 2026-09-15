@@ -2,6 +2,11 @@
   "env": {
     "NEXT_PUBLIC_CLERK_SIGN_IN_URL": "/sign-in"
   },
+  "build": {
+    "env": {
+      "NEXT_PUBLIC_CLERK_SIGN_IN_URL": "/sign-in"
+    }
+  },
   "regions": ["sin1"],
   "crons": [
     {
