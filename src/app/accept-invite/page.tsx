@@ -1,19 +1,19 @@
 'use client';
 
 import { Suspense, useEffect, useState } from 'react';
-import { useUser } from '@clerk/nextjs';
 import { useRouter, useSearchParams } from 'next/navigation';
+import { useUser } from '@clerk/nextjs';
 import Link from 'next/link';
 
 export default function AcceptInvitePage() {
   return (
-    <Suspense fallback={<div className="min-h-screen flex items-center justify-center bg-gray-50"><div className="text-gray-500">Loading...</div></div>}>
-      <AcceptInvitePageInner />
+    <Suspense fallback={<div className="min-h-screen flex items-center justify-center bg-[#070B18] text-[#8891B0]">Loading invite...</div>}>
+      <AcceptInviteInner />
     </Suspense>
   );
 }
 
-function AcceptInvitePageInner() {
+function AcceptInviteInner() {
   // eslint-disable-next-line @typescript-eslint/no-unused-vars -- S2 Residual Debt: Legacy unused local
   // eslint-disable-next-line @typescript-eslint/no-unused-vars -- Intentional unused destructuring exclusion
   const { isLoaded, isSignedIn, user } = useUser();
