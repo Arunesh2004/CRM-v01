@@ -1,4 +1,5 @@
 import { ClerkProvider } from '@clerk/nextjs'
+import { Suspense } from 'react'
 import SetupScreen from '@/components/setup/SetupScreen'
 import type { Metadata } from "next";
 import { Space_Grotesk, Inter, IBM_Plex_Mono } from "next/font/google";
@@ -46,7 +47,11 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         lang="en"
         className={`${spaceGrotesk.variable} ${inter.variable} ${ibmPlexMono.variable} h-full antialiased dark`}
       >
-        <body className="min-h-full flex flex-col bg-[#070B18] text-[#E7EAF5]">{children}</body>
+        <body className="min-h-full flex flex-col bg-[#070B18] text-[#E7EAF5]">
+          <Suspense>
+            {children}
+          </Suspense>
+        </body>
       </html>
     </ClerkProvider>
   );

@@ -1,4 +1,4 @@
-import { ReactNode } from "react";
+import { ReactNode, Suspense } from "react";
 import { requireAuth } from "@/lib/auth";
 import CRMLayoutClient from "./CRMLayoutClient";
 
@@ -23,7 +23,9 @@ export default async function CRMLayout({ children }: { children: ReactNode }) {
       tenantName={tenantName}
       userRole={userRole}
     >
-      {children}
+      <Suspense fallback={<div className="h-full w-full flex items-center justify-center text-white/50">Loading workspace...</div>}>
+        {children}
+      </Suspense>
     </CRMLayoutClient>
   );
 }
