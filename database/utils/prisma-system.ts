@@ -4,9 +4,14 @@ import { Logger } from '../../src/lib/logger/logger';
 let globalSystemPrisma: PrismaClient | null = null;
 
 function getSystemPrisma(): PrismaClient {
-  const url = process.env.ADMIN_DATABASE_URL;
+  let url = process.env.ADMIN_DATABASE_URL;
   if (!url) {
     throw new Error('SECURITY_ERROR: ADMIN_DATABASE_URL must be strictly defined for system execution.');
+  }
+  
+  // Safely ensure PgBouncer compatibility for Vercel/Supabase transaction pooler
+  if (!url.includes('pgbouncer=true')) {
+    url += (url.includes('?') ? '&' : '?') + 'pgbouncer=true';
   }
   
   if (!globalSystemPrisma) {

@@ -9,7 +9,13 @@ const softDeleteModels = [
 const connectionUrl = process.env.DATABASE_URL;
 
 const getBasePrismaClient = () => {
+  let url = process.env.DATABASE_URL;
+  if (url && !url.includes('pgbouncer=true')) {
+    url += (url.includes('?') ? '&' : '?') + 'pgbouncer=true';
+  }
+  
   return new PrismaClient({
+    datasources: url ? { db: { url } } : undefined,
     log: process.env.NODE_ENV === 'production' 
       ? ['error', 'warn'] 
       : ['query', 'error', 'warn'],
