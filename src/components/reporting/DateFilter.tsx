@@ -1,7 +1,16 @@
 'use client';
 import { useRouter, usePathname, useSearchParams } from 'next/navigation';
+import { Suspense } from 'react';
 
-export function DateFilter({ currentStart, currentEnd }: { currentStart?: string, currentEnd?: string }) {
+export function DateFilter(props: { currentStart?: string, currentEnd?: string }) {
+  return (
+    <Suspense fallback={<div className="h-8 w-48 bg-white/5 animate-pulse rounded-lg" />}>
+      <DateFilterInner {...props} />
+    </Suspense>
+  );
+}
+
+function DateFilterInner({ currentStart, currentEnd }: { currentStart?: string, currentEnd?: string }) {
   const router = useRouter();
   const pathname = usePathname();
   const searchParams = useSearchParams();

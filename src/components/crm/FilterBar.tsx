@@ -1,5 +1,7 @@
 'use client';
 
+import { Suspense } from 'react';
+
 import { useRouter, useSearchParams } from 'next/navigation';
 import { useCallback, useState } from 'react';
 import { Search } from 'lucide-react';
@@ -19,7 +21,15 @@ interface FilterBarProps {
   }[];
 }
 
-export function FilterBar({ filters = [] }: FilterBarProps) {
+export function FilterBar(props: FilterBarProps) {
+  return (
+    <Suspense fallback={<div className="h-[44px] w-full bg-white/5 animate-pulse rounded-[.7rem]" />}>
+      <FilterBarInner {...props} />
+    </Suspense>
+  );
+}
+
+function FilterBarInner({ filters = [] }: FilterBarProps) {
   const router = useRouter();
   const searchParams = useSearchParams();
   
