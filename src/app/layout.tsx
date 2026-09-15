@@ -47,11 +47,9 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
       className={`${spaceGrotesk.variable} ${inter.variable} ${ibmPlexMono.variable} h-full antialiased dark`}
     >
       <body className="min-h-full flex flex-col bg-[#070B18] text-[#E7EAF5]">
-        <Suspense fallback={<div className="min-h-screen flex items-center justify-center bg-[#070B18] text-[#8891B0]">Loading workspace...</div>}>
-          <ClerkProvider>
-            {children}
-          </ClerkProvider>
-        </Suspense>
+        <ClerkProvider>
+          {children}
+        </ClerkProvider>
       </body>
     </html>
   );
