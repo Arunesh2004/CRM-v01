@@ -227,11 +227,13 @@ export async function requireAuth(): Promise<AuthUser> {
   const clerkAuth = await auth();
   
   if (!user) {
-    throw new Error('Unauthorized');
+    const { redirect } = await import('next/navigation');
+    redirect('/sign-in?reason=unauthorized');
   }
 
   if (user.status === 'INACTIVE') {
-    throw new Error('Unauthorized');
+    const { redirect } = await import('next/navigation');
+    redirect('/sign-in?reason=inactive');
   }
 
   return user;
@@ -396,12 +398,14 @@ export async function requireAuthIdentity() {
       }
     }
     if (!user) {
-      throw new Error('Unauthorized');
+      const { redirect } = await import('next/navigation');
+      redirect('/sign-in?reason=unauthorized');
     }
   }
 
   if (user.status === 'INACTIVE') {
-    throw new Error('Unauthorized');
+    const { redirect } = await import('next/navigation');
+    redirect('/sign-in?reason=inactive');
   }
 
   return user;
