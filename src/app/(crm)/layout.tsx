@@ -1,14 +1,22 @@
 import { ReactNode, Suspense } from "react";
 import { requireAuth } from "@/lib/auth";
 import CRMLayoutClient from "./CRMLayoutClient";
+import { redirect } from "next/navigation";
 
 export const dynamic = 'force-dynamic';
 
 export default async function CRMLayout({ children }: { children: ReactNode }) {
-  const user = await requireAuth();
+  let user;
+  try {
+    user = await requireAuth();
+  } catch {
+    // requireAuth() throws 'Unauthorized' when the Clerk session has no corresponding
+    // CRM database identity (e.g. unprovisioned account, inactive account).
+    // In a Server Component we redirect cleanly rather than crash into Error #441.
+    redirect('/sign-in?reason=unauthorized');
+  }
   
   if (user.onboardingStatus === 'PENDING') {
-    const { redirect } = await import('next/navigation');
     redirect('/onboarding/profile');
   }
 

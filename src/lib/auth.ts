@@ -227,13 +227,15 @@ export async function requireAuth(): Promise<AuthUser> {
   const clerkAuth = await auth();
   
   if (!user) {
-    const { redirect } = await import('next/navigation');
-    redirect('/sign-in?reason=unauthorized');
+    // NOTE: Throw an Error — do NOT redirect here.
+    // requireAuth() is called from API routes, Server Actions, AND Server Component layouts.
+    // API routes catch this error and return HTTP 401.
+    // Server Component layouts (e.g. (crm)/layout.tsx) handle redirect to /sign-in explicitly.
+    throw new Error('Unauthorized');
   }
 
   if (user.status === 'INACTIVE') {
-    const { redirect } = await import('next/navigation');
-    redirect('/sign-in?reason=inactive');
+    throw new Error('Unauthorized');
   }
 
   return user;
@@ -398,14 +400,14 @@ export async function requireAuthIdentity() {
       }
     }
     if (!user) {
-      const { redirect } = await import('next/navigation');
-      redirect('/sign-in?reason=unauthorized');
+      // NOTE: Throw an Error — do NOT redirect here.
+      // requireAuthIdentity() is called from API routes which must return HTTP 401.
+      throw new Error('Unauthorized');
     }
   }
 
   if (user.status === 'INACTIVE') {
-    const { redirect } = await import('next/navigation');
-    redirect('/sign-in?reason=inactive');
+    throw new Error('Unauthorized');
   }
 
   return user;
