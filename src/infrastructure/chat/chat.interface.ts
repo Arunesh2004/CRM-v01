@@ -3,7 +3,7 @@ export interface ChatMessagePayload {
   senderId: string;
   content: string;
   type?: 'TEXT' | 'FILE' | 'SYSTEM';
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any -- S2 Residual Debt: Legacy internal payload requires architectural typing
+   
   // eslint-disable-next-line @typescript-eslint/no-explicit-any -- S2 Residual Debt: Legacy internal payload requires architectural typing
   metadata?: any;
 }

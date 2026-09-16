@@ -20,9 +20,9 @@ export interface EmailProvider {
    * Normalizes an incoming webhook event from the provider.
    * Can handle both delivery status updates and inbound email parsing.
    */
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any -- S2 Residual Debt: Legacy internal payload requires architectural typing
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any -- S2 Residual Debt: Legacy internal payload requires architectural typing
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any -- S2 Residual Debt: Legacy internal payload requires architectural typing
+   
+   
+   
   // eslint-disable-next-line @typescript-eslint/no-explicit-any -- S2 Residual Debt: Legacy internal payload requires architectural typing
   normalizeWebhookEvent(payload: any, headers: any): Promise<NormalizedEmailEvent>;
 }
@@ -36,7 +36,7 @@ export interface NormalizedEmailEvent {
     to: string;
     subject: string;
     text: string;
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any -- S2 Residual Debt: Legacy internal payload requires architectural typing
+     
     html: string;
   };
   // eslint-disable-next-line @typescript-eslint/no-explicit-any -- S2 Residual Debt: Legacy internal payload requires architectural typing

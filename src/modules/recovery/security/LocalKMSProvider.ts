@@ -32,12 +32,12 @@ export class LocalKMSProvider implements KMSProvider {
     fs.writeFileSync(this.storageFile, JSON.stringify(data, null, 2));
   }
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any -- S2 Residual Debt: Legacy internal payload requires architectural typing
+   
   // eslint-disable-next-line @typescript-eslint/no-explicit-any -- S2 Residual Debt: Legacy internal payload requires architectural typing
   private readStorage(): any {
     return JSON.parse(fs.readFileSync(this.storageFile, 'utf-8'));
   }
-// eslint-disable-next-line @typescript-eslint/no-explicit-any -- S2 Residual Debt: Legacy internal payload requires architectural typing
+ 
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any -- S2 Residual Debt: Legacy internal payload requires architectural typing
   private writeStorage(data: any) {

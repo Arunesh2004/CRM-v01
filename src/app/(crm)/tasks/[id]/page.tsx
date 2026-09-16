@@ -33,7 +33,7 @@ export default async function TaskDetailPage({ params }: { params: Promise<{ id:
 
   // Map activities and comments to UnifiedTimelineItem
   const timelineEvents: UnifiedTimelineItem[] = [
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any -- S2 Residual Debt: Legacy internal payload requires architectural typing
+     
     // eslint-disable-next-line @typescript-eslint/no-explicit-any -- S2 Residual Debt: Legacy internal payload requires architectural typing
     ...(task.activities || []).map((a: any) => ({
       id: a.id,
@@ -42,7 +42,7 @@ export default async function TaskDetailPage({ params }: { params: Promise<{ id:
       description: a.content,
       actor: { name: a.actor?.email || 'System' },
       timestamp: new Date(a.createdAt).toISOString()
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any -- S2 Residual Debt: Legacy internal payload requires architectural typing
+     
     })),
     // eslint-disable-next-line @typescript-eslint/no-explicit-any -- S2 Residual Debt: Legacy internal payload requires architectural typing
     ...(task.comments || []).map((c: any) => ({
@@ -63,7 +63,7 @@ export default async function TaskDetailPage({ params }: { params: Promise<{ id:
       case 'LOW': return 'bg-gray-100 text-gray-800 border-gray-200';
       default: return 'bg-gray-100 text-gray-800';
     }
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars -- S2 Residual Debt: Legacy unused local
+   
   };
 
   // eslint-disable-next-line @typescript-eslint/no-unused-vars -- S2 Residual Debt: Legacy unused local

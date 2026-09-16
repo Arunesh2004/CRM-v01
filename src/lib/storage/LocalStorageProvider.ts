@@ -52,7 +52,7 @@ export class LocalStorageProvider implements StorageProvider {
     }
   }
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any -- S2 Residual Debt: Legacy internal payload requires architectural typing
+   
   // eslint-disable-next-line @typescript-eslint/no-explicit-any -- S2 Residual Debt: Legacy internal payload requires architectural typing
   async getObjectMetadata(tenantId: string, objectKey: string): Promise<any> {
     const fullPath = path.join(this.getTenantPath(tenantId), objectKey);

@@ -10,7 +10,7 @@ import { CheckCircle2, CircleDashed, Info, MessageSquare, Loader2 } from 'lucide
 const PAGE_LIMIT = 50;
 
 export function DealTimeline({ dealId }: { dealId: string }) {
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any -- S2 Residual Debt: Legacy internal payload requires architectural typing
+   
   // eslint-disable-next-line @typescript-eslint/no-explicit-any -- S2 Residual Debt: Legacy internal payload requires architectural typing
   const [events, setEvents] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
@@ -50,7 +50,7 @@ export function DealTimeline({ dealId }: { dealId: string }) {
     }
     setLoadingMore(false);
   }, [loadingMore, hasMore, cursor, dealId]);
-// eslint-disable-next-line @typescript-eslint/no-explicit-any -- S2 Residual Debt: Legacy internal payload requires architectural typing
+ 
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any -- S2 Residual Debt: Legacy internal payload requires architectural typing
   const getIconForEvent = (event: any) => {

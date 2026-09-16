@@ -30,7 +30,7 @@ export type TenantScopedModel =
  * @throws Error if any supplied ID does not exist or belongs to another tenant.
  */
 export async function requireRelationOwnership(
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any -- S2 Residual Debt: Legacy internal payload requires architectural typing
+   
   // eslint-disable-next-line @typescript-eslint/no-explicit-any -- S2 Residual Debt: Legacy internal payload requires architectural typing
   tx: any,
   tenantId: string,

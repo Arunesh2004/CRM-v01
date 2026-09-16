@@ -4,7 +4,7 @@ import { withTenant } from '../../../../database/utils/prisma-tenant';
 export class DemoStorageProvider implements StorageProvider {
   constructor(private tenantId: string) {}
 
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars -- S2 Residual Debt: Legacy unused local
+   
   // eslint-disable-next-line @typescript-eslint/no-unused-vars -- Intentional callback/interface parameter
   async upload(buffer: Buffer, fileName: string, mimeType: string, prefix?: string): Promise<string> {
     const prisma = withTenant(this.tenantId);
@@ -29,7 +29,7 @@ export class DemoStorageProvider implements StorageProvider {
       throw e;
     }
   }
-// eslint-disable-next-line @typescript-eslint/no-unused-vars -- S2 Residual Debt: Legacy unused local
+ 
 
   // eslint-disable-next-line @typescript-eslint/no-unused-vars -- Intentional callback/interface parameter
   async getSignedUrl(storageKey: string, expiresInSeconds?: number): Promise<string> {

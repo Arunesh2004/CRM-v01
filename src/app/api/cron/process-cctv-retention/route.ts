@@ -43,7 +43,7 @@ const original_GET = async function (req: NextRequest) {
           });
           scheduledCount++;
         } catch (eRaw: unknown) {
-          // eslint-disable-next-line @typescript-eslint/no-unused-vars -- S2 Residual Debt: Legacy unused local
+           
           // eslint-disable-next-line @typescript-eslint/no-unused-vars -- S2 Residual Debt: Legacy unused local
           const e = eRaw instanceof Error ? eRaw : new Error(String(eRaw));
           // Ignore if exists

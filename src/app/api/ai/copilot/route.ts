@@ -5,7 +5,7 @@ import { Logger } from '@/lib/logger/logger';
 
 const _orig_POST = async function (req: NextRequest) {
   try {
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any -- S2 Residual Debt: Legacy internal payload requires architectural typing
+     
     // eslint-disable-next-line @typescript-eslint/no-explicit-any -- S2 Residual Debt: Legacy internal payload requires architectural typing
     const body = await req.json() as { message?: string; history?: any[] };
     const { message, history } = body;

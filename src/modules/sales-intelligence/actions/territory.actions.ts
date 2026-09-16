@@ -38,7 +38,7 @@ async function _createTerritoryAction(data: z.infer<typeof createTerritorySchema
     const user = await requireAuth();
     const validData = createTerritorySchema.parse(data);
     
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any -- S2 Residual Debt: Legacy internal payload requires architectural typing
+     
     // eslint-disable-next-line @typescript-eslint/no-explicit-any -- S2 Residual Debt: Legacy internal payload requires architectural typing
     const territory = await TerritoryService.createTerritory(user.id, tenantId, validData as any);
     return { success: true, data: territory };
@@ -53,7 +53,7 @@ async function _updateTerritoryAction(territoryId: string, data: z.infer<typeof 
     const tenantId = await requireTenant();
     const user = await requireAuth();
     const validData = updateTerritorySchema.parse(data);
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any -- S2 Residual Debt: Legacy internal payload requires architectural typing
+     
     
     // eslint-disable-next-line @typescript-eslint/no-explicit-any -- S2 Residual Debt: Legacy internal payload requires architectural typing
     const territory = await TerritoryService.updateTerritory(user.id, tenantId, territoryId, validData as any);

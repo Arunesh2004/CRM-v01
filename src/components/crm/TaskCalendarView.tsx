@@ -5,7 +5,7 @@ import { format, startOfWeek, endOfWeek, eachDayOfInterval, startOfMonth, endOfM
 import { ChevronLeft, ChevronRight } from 'lucide-react';
 import Link from 'next/link';
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any -- S2 Residual Debt: Legacy internal payload requires architectural typing
+ 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any -- S2 Residual Debt: Legacy internal payload requires architectural typing
 export function TaskCalendarView({ tasks }: { tasks: any[] }) {
   const [currentDate, setCurrentDate] = useState(new Date());

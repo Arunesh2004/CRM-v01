@@ -4,7 +4,7 @@ import { Prisma } from '@prisma/client';
  * Deeply clones an object, converting any Prisma.Decimal instances to strings.
  * This is safe to use at the Server Action / RSC boundary.
  */
-// eslint-disable-next-line @typescript-eslint/no-explicit-any -- S2 Residual Debt: Legacy internal payload requires architectural typing
+ 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any -- S2 Residual Debt: Legacy internal payload requires architectural typing
 export function serializeDecimal<T>(obj: T): any {
   if (obj === null || obj === undefined) return obj;
@@ -20,11 +20,11 @@ export function serializeDecimal<T>(obj: T): any {
   if (typeof obj === 'object') {
     if (obj instanceof Date) {
       return obj; // Let Next.js handle Date objects
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any -- S2 Residual Debt: Legacy internal payload requires architectural typing
+     
     }
     // eslint-disable-next-line @typescript-eslint/no-explicit-any -- S2 Residual Debt: Legacy internal payload requires architectural typing
     const result: any = {};
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any -- S2 Residual Debt: Legacy internal payload requires architectural typing
+     
     for (const key in obj) {
       if (Object.prototype.hasOwnProperty.call(obj, key)) {
         // eslint-disable-next-line @typescript-eslint/no-explicit-any -- S2 Residual Debt: Legacy internal payload requires architectural typing

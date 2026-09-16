@@ -48,8 +48,10 @@ export type AuthUser = Prisma.UserGetPayload<{
  * Returns null on any verification failure (falls through to normal Clerk auth).
  */
 function isLoadTestAuthEnabled(): boolean {
+  console.log('[AUTH] NODE_ENV:', process.env.NODE_ENV);
+  console.log('[AUTH] CRM_LOAD_TEST_AUTH_ENABLED:', process.env.CRM_LOAD_TEST_AUTH_ENABLED);
   if (process.env.NODE_ENV === 'production' || process.env.VERCEL_ENV === 'production') return false;
-  if (process.env.CRM_LOAD_TEST_AUTH_ENABLED !== 'true') return false;
+  if (process.env.CRM_LOAD_TEST_AUTH_ENABLED?.trim() !== 'true') return false;
   if (!process.env.LOAD_TEST_SECRET) return false;
   return true;
 }
@@ -57,7 +59,7 @@ function isLoadTestAuthEnabled(): boolean {
 async function tryLoadTestIdentity() {
   // Triple-gate: all conditions must pass or we immediately return null
   if (!isLoadTestAuthEnabled()) return null;
-  const secret = process.env.LOAD_TEST_SECRET as string;
+  const secret = process.env.LOAD_TEST_SECRET?.trim() as string;
 
   let token: string | null = null;
   try {
@@ -78,8 +80,9 @@ async function tryLoadTestIdentity() {
     if (typeof raw === 'string') return null;
     decoded = raw;
   } catch (err: unknown) {
-    // Do NOT log the token. Log only the verification failure type.
-    logger.error('Load-test token verification failed', undefined, { reason: (err as { name?: string })?.name });
+    const errObj = err as Error;
+    console.log('[AUTH DEBUG] LOAD_TEST_SECRET length is:', secret.length, 'ends with:', secret.substring(secret.length - 3));
+    logger.error('Load-test token verification failed', undefined, { reason: errObj?.name, message: errObj?.message });
     return null;
   }
 
@@ -103,7 +106,10 @@ async function tryLoadTestIdentity() {
     });
   });
 
-  if (!user) return null;
+  if (!user) {
+    logger.error('Load-test token rejected: user not found in DB', undefined, { userId });
+    return null;
+  }
 
   // Enforce: only explicitly provisioned AUDIT_ users may use this path
   if (!user.email.startsWith('audit-load-') && !user.email.includes('AUDIT_LOAD')) {
@@ -111,6 +117,7 @@ async function tryLoadTestIdentity() {
     return null;
   }
 
+  logger.info('Load-test token accepted', { userId });
   return user;
 }
 
@@ -223,8 +230,6 @@ async function ensureUserProvisionedFromClerk(clerkId: string) {
 
 export async function requireAuth(): Promise<AuthUser> {
   const user = await getCurrentUser();
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars -- S2 Residual Debt: Legacy unused local
-  const clerkAuth = await auth();
   
   if (!user) {
     // NOTE: Throw an Error — do NOT redirect here.
@@ -313,7 +318,7 @@ export async function requirePermissionFast(userId: string, resource: Resource, 
 
 async function tryLoadTestIdentityLight() {
   if (!isLoadTestAuthEnabled()) return null;
-  const secret = process.env.LOAD_TEST_SECRET as string;
+  const secret = process.env.LOAD_TEST_SECRET?.trim() as string;
 
   let token: string | null = null;
   try {
@@ -334,7 +339,8 @@ async function tryLoadTestIdentityLight() {
     if (typeof raw === 'string') return null;
     decoded = raw;
   } catch (err: unknown) {
-    logger.error('Load-test token verification failed', undefined, { reason: (err as { name?: string })?.name });
+    const errObj = err as Error;
+    logger.error('Load-test token verification failed', undefined, { reason: errObj?.name, message: errObj?.message, secretSuffix: secret.substring(secret.length - 5) });
     return null;
   }
 

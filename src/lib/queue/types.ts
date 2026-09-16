@@ -11,7 +11,7 @@ export const SecureJobEnvelopeSchema = z.object({
   schemaVersion: z.literal('1.0'),
 });
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any -- S2 Residual Debt: Legacy internal payload requires architectural typing
+ 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any -- S2 Residual Debt: Legacy internal payload requires architectural typing
 export type SecureJobEnvelope<T = any> = {
   jobId: string;

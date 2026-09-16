@@ -6,7 +6,7 @@ import { ZodError } from 'zod';
  * Parses unknown errors caught in Server Actions and API Routes,
  * logging the full diagnostic internally and returning only client-safe messages.
  */
-// eslint-disable-next-line @typescript-eslint/no-explicit-any -- S2 Residual Debt: Legacy internal payload requires architectural typing
+ 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any -- Intentional dynamic record for generic context
 export function sanitizeClientError(error: unknown, context?: Record<string, any>): string {
   // 1. Log the full diagnostic internally

@@ -13,9 +13,9 @@ const priorityBadge: Record<string, string> = {
   LOW:    'badge-slate',
 };
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any -- S2 Residual Debt: Legacy internal payload requires architectural typing
-// eslint-disable-next-line @typescript-eslint/no-explicit-any -- S2 Residual Debt: Legacy internal payload requires architectural typing
-// eslint-disable-next-line @typescript-eslint/no-explicit-any -- S2 Residual Debt: Legacy internal payload requires architectural typing
+ 
+ 
+ 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any -- S2 Residual Debt: Legacy internal payload requires architectural typing
 export function KanbanCard({ lead, users, isOverlay = false }: { lead: any, users: any[], isOverlay?: boolean }) {
   const {

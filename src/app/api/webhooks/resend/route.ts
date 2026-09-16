@@ -21,7 +21,7 @@ const _orig_POST = async function (req: Request) {
     if (process.env.NODE_ENV === 'production' || process.env.NODE_ENV === 'test') {
       try {
         const wh = new Webhook(secret);
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any -- S2 Residual Debt
+         
         payload = wh.verify(rawBody, {
           'svix-id': req.headers.get('svix-id') as string,
           'svix-timestamp': req.headers.get('svix-timestamp') as string,

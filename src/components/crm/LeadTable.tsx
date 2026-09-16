@@ -15,19 +15,15 @@ const statusBadge: Record<string, string> = {
   CONVERTED:   'badge-emerald',
 };
 
-const priorityBadge: Record<string, string> = {
-  HIGH:   'badge-rose',
-  MEDIUM: 'badge-amber',
-  LOW:    'badge-slate',
-};
+import type { Lead, User } from '@prisma/client';
+
+export type LeadTableRow = Lead & { assignedUser?: User | null };
 
 export default function LeadTable({
   initialLeads,
   canCreate,
 }: {
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any -- S2 Residual Debt: Legacy internal payload requires architectural typing
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any -- S2 Residual Debt: Legacy internal payload requires architectural typing
-  initialLeads: any[];
+  initialLeads: LeadTableRow[];
   canCreate: boolean;
 }) {
   const [leads] = useState(initialLeads);
@@ -65,16 +61,12 @@ export default function LeadTable({
               <th className="py-3 px-4">Lead</th>
               <th className="py-3 px-4">Company</th>
               <th className="py-3 px-4">Status</th>
-              <th className="py-3 px-4">Priority</th>
-              <th className="py-3 px-4">Source</th>
               <th className="py-3 px-4">Owner</th>
               <th className="py-3 px-4" />
             </tr>
           </thead>
-          // eslint-disable-next-line @typescript-eslint/no-explicit-any -- S2 Residual Debt: Legacy internal payload requires architectural typing
           <tbody>
-            // eslint-disable-next-line @typescript-eslint/no-explicit-any -- S2 Residual Debt: Legacy internal payload requires architectural typing
-            {leads.map((lead: any) => (
+            {leads.map((lead) => (
               <tr key={lead.id} className="border-b border-white/[.05] last:border-0">
                 <td className="py-3 px-4">
                   <div className="flex items-center gap-3">
@@ -98,14 +90,8 @@ export default function LeadTable({
                     {lead.status?.replace(/_/g, " ") || "New"}
                   </span>
                 </td>
-                <td className="py-3 px-4">
-                  <span className={`badge ${priorityBadge[lead.priority] ?? 'badge-slate'}`}>
-                    {lead.priority || "—"}
-                  </span>
-                </td>
-                <td className="py-3 px-4 text-slate-400 text-xs">{lead.source || "—"}</td>
                 <td className="py-3 px-4 text-slate-400 text-xs">
-                  {lead.owner?.email?.split("@")[0] || "—"}
+                  {lead.assignedUser?.email?.split("@")[0] || "—"}
                 </td>
                 <td className="py-3 px-4 text-right">
                   <Link

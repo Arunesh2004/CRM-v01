@@ -128,8 +128,7 @@ export function DocumentList({
       <div className="flex flex-col">
         {filteredDocs.length === 0 ? (
           <div className="p-8 text-center text-sm text-[#8891B0]">
-            // eslint-disable-next-line react/no-unescaped-entities -- Cosmetic unescaped entity safely ignored.
-            No documents match "{searchQuery}"
+            No documents match &quot;{searchQuery}&quot;
           </div>
         ) : (
           filteredDocs.map((doc, idx) => (

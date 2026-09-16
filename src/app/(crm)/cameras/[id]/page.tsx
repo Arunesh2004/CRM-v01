@@ -17,7 +17,7 @@ export default async function CameraDetailPage({ params }: { params: Promise<{ i
   ]);
 
   const p = await params;
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any -- S2 Residual Debt: Legacy internal payload requires architectural typing
+   
   // eslint-disable-next-line @typescript-eslint/no-explicit-any -- S2 Residual Debt: Legacy internal payload requires architectural typing
   const camera = (camerasResult.data || []).find((c: any) => c.id === p.id);
   if (!camera) return notFound();

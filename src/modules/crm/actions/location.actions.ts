@@ -31,7 +31,7 @@ async function _updateLocationAction(payload: z.infer<typeof UpdateLocationSchem
     await requireTenant();
     await requirePermission('CUSTOMER', 'UPDATE');
     
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any -- S2 Residual Debt: Legacy internal payload requires architectural typing
+     
     // eslint-disable-next-line @typescript-eslint/no-explicit-any -- S2 Residual Debt: Legacy internal payload requires architectural typing
     const result = await locationService.updateLocation(validatedData as any);
     return { success: true, data: result };

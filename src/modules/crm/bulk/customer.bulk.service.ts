@@ -25,15 +25,15 @@ export class CustomerBulkService {
       return { count: customerIds.length, queued: true };
     }
 
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any -- S2 Residual Debt: Legacy internal payload requires architectural typing
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any -- S2 Residual Debt: Legacy internal payload requires architectural typing
+     
+     
     const result = await globalPrisma.$transaction(async (baseTx) => {
     const tx = await withTenantTransaction(baseTx, tenantId);
       // 1. Verify tenant ownership
       const existing = await tx.customer.findMany({
         where: { id: { in: customerIds }, tenantId },
         select: { id: true }
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any -- S2 Residual Debt: Legacy internal payload requires architectural typing
+       
       });
       // eslint-disable-next-line @typescript-eslint/no-explicit-any -- S2 Residual Debt: Legacy internal payload requires architectural typing
       const validIds = existing.map((e: any) => e.id);
@@ -61,9 +61,9 @@ export class CustomerBulkService {
 
       // 4. Activity Timeline for each (atomic batch)
       const timelineData = validIds.map((id: string) => ({
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any -- S2 Residual Debt: Legacy internal payload requires architectural typing
+         
         tenantId,
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any -- S2 Residual Debt: Legacy internal payload requires architectural typing
+         
         entityId: id,
         // eslint-disable-next-line @typescript-eslint/no-explicit-any -- S2 Residual Debt: Legacy internal payload requires architectural typing
         entityType: 'CUSTOMER' as any,

@@ -27,7 +27,7 @@ export const crmTools: AITool[] = [
       properties: { query: { type: 'string' } },
       required: ['query']
     },
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any -- S2 Residual Debt: Legacy internal payload requires architectural typing
+     
     // eslint-disable-next-line @typescript-eslint/no-explicit-any -- S2 Residual Debt: Legacy internal payload requires architectural typing
     execute: async (args: any, context?: AIContext) => {
       if (!context || !context.tenantId || !context.user?.id) {
@@ -50,7 +50,7 @@ export const crmTools: AITool[] = [
       type: 'object',
       properties: { customerId: { type: 'string' } },
       required: ['customerId']
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any -- S2 Residual Debt: Legacy internal payload requires architectural typing
+     
     },
     // eslint-disable-next-line @typescript-eslint/no-explicit-any -- S2 Residual Debt: Legacy internal payload requires architectural typing
     execute: async (args: any, context?: AIContext) => {
@@ -79,7 +79,7 @@ export const crmTools: AITool[] = [
         leadId: { type: 'string' },
         status: { type: 'string', enum: ['NEW', 'CONTACTED', 'QUALIFIED', 'LOST', 'CONVERTED'] }
       },
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any -- S2 Residual Debt: Legacy internal payload requires architectural typing
+       
       required: ['leadId', 'status']
     },
     // eslint-disable-next-line @typescript-eslint/no-explicit-any -- S2 Residual Debt: Legacy internal payload requires architectural typing
@@ -93,7 +93,7 @@ export const crmTools: AITool[] = [
         input: args
       }, { user: { id: context.user.id }, tenantId: context.tenantId });
 
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any -- S2 Residual Debt: Legacy internal payload requires architectural typing
+       
       // Assuming async context is preserved from the original API route call.
       const updated = await updateLead({
         id: args.leadId,

@@ -19,7 +19,7 @@ export class ProcessRecordingWorker extends BaseWorker<ProcessRecordingContext> 
     
     try {
       // 1. Fetch raw audio buffer from Twilio API
-      // eslint-disable-next-line @typescript-eslint/no-unused-vars -- S2 Residual Debt: Legacy unused local
+       
       // eslint-disable-next-line @typescript-eslint/no-unused-vars -- S2 Residual Debt: Legacy unused local
       const audioBuffer = await provider.fetchRecording(data.recordingUrl);
       

@@ -14,8 +14,8 @@ export default async function CamerasSOCPage() {
   const cameras = camerasResult.success ? (camerasResult.data || []) : [];
   const latestEvents = aiEventsResult.success ? (aiEventsResult.data?.data || []) : [];
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any -- S2 Residual Debt: Legacy internal payload requires architectural typing
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any -- S2 Residual Debt: Legacy internal payload requires architectural typing
+   
+   
   const onlineCameras = cameras.filter((c: any) => c.status === 'ONLINE').length;
   const offlineCameras = cameras.length - onlineCameras;
 
@@ -70,7 +70,7 @@ export default async function CamerasSOCPage() {
             <Activity className="w-5 h-5 text-violet-400" /> Live AI Telemetry
           </h2>
           <div className="glass-panel rounded-xl p-4 space-y-4 h-[calc(100%-2.5rem)] overflow-y-auto">
-            {/* eslint-disable-next-line @typescript-eslint/no-explicit-any -- S2 Residual Debt: Legacy internal payload requires architectural typing */}
+            { }
             {latestEvents.map((event: any) => (
               <div key={event.id} className="border-l-2 border-violet-500 pl-3 py-1">
                 <div className="flex justify-between items-start">

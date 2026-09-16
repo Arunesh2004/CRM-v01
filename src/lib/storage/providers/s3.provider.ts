@@ -71,7 +71,7 @@ export class S3StorageProvider implements StorageProvider {
     }
   }
 
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars -- S2 Residual Debt: Legacy unused local
+   
   // eslint-disable-next-line @typescript-eslint/no-unused-vars -- Intentional callback/interface parameter
   async generateSignedUploadUrl(tenantId: string, key: string, mimeType: string, maxSizeMB: number): Promise<string> {
     const fullPath = this.constructPath(tenantId, key);

@@ -6,7 +6,7 @@ import { FieldSecurityService } from '../../modules/security/field-security/fiel
  * Creates a Prisma extension that automatically handles field-level encryption and masking.
  * @param user The current authenticated user (needed to evaluate read permissions).
  */
-// eslint-disable-next-line @typescript-eslint/no-explicit-any -- S2 Residual Debt: Legacy internal payload requires architectural typing
+ 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any -- S2 Residual Debt: Legacy internal payload requires architectural typing
 export function withEncryptionContext(user: any | null = null) {
   return Prisma.defineExtension({
@@ -17,7 +17,7 @@ export function withEncryptionContext(user: any | null = null) {
           const tenantId = user?.tenantId || null;
           
           // 1. ON CREATE / UPDATE: Encrypt sensitive fields
-          // eslint-disable-next-line @typescript-eslint/no-explicit-any -- S2 Residual Debt: Legacy internal payload requires architectural typing
+           
           if (['create', 'update', 'createMany', 'updateMany', 'upsert'].includes(operation)) {
             // eslint-disable-next-line @typescript-eslint/no-explicit-any -- S2 Residual Debt: Legacy internal payload requires architectural typing
             const anyArgs = args as any;
@@ -29,13 +29,13 @@ export function withEncryptionContext(user: any | null = null) {
                     dataObj[field] = EncryptionService.encrypt(dataObj[field]);
                   }
                 }
-              // eslint-disable-next-line @typescript-eslint/no-explicit-any -- S2 Residual Debt: Legacy internal payload requires architectural typing
-              // eslint-disable-next-line @typescript-eslint/no-explicit-any -- S2 Residual Debt: Legacy internal payload requires architectural typing
+               
+               
               }
-            // eslint-disable-next-line @typescript-eslint/no-explicit-any -- S2 Residual Debt: Legacy internal payload requires architectural typing
+             
             }
-            // eslint-disable-next-line @typescript-eslint/no-explicit-any -- S2 Residual Debt: Legacy internal payload requires architectural typing
-            // eslint-disable-next-line @typescript-eslint/no-explicit-any -- S2 Residual Debt: Legacy internal payload requires architectural typing
+             
+             
             // eslint-disable-next-line @typescript-eslint/no-explicit-any -- S2 Residual Debt: Legacy internal payload requires architectural typing
             if (operation === 'upsert' && (args as any).create && (args as any).update) {
               // eslint-disable-next-line @typescript-eslint/no-explicit-any -- S2 Residual Debt: Legacy internal payload requires architectural typing
@@ -76,15 +76,15 @@ export function withEncryptionContext(user: any | null = null) {
         }
       }
     }
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any -- S2 Residual Debt: Legacy internal payload requires architectural typing
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any -- S2 Residual Debt: Legacy internal payload requires architectural typing
+   
+   
   });
 }
 
 /**
  * Mutates the read database row in-place, decrypting and applying masks.
  */
-// eslint-disable-next-line @typescript-eslint/no-explicit-any -- S2 Residual Debt: Legacy internal payload requires architectural typing
+ 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any -- S2 Residual Debt: Legacy internal payload requires architectural typing
 async function processReadData(modelName: string, data: any, user: any) {
   if (!data || typeof data !== 'object') return;

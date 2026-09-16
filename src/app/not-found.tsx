@@ -11,7 +11,7 @@ export default function NotFound() {
         </div>
         <h2 className="text-2xl font-bold font-display text-white mb-2">Page Not Found</h2>
         <p className="text-[#8891B0] mb-6">
-          We couldn't find the page you were looking for. It might have been moved or doesn't exist.
+          We couldn&apos;t find the page you were looking for. It might have been moved or doesn&apos;t exist.
         </p>
         <Link
           href="/dashboard"

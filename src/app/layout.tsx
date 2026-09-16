@@ -1,4 +1,5 @@
 import { ClerkProvider } from '@clerk/nextjs'
+
 import { Suspense } from 'react'
 import SetupScreen from '@/components/setup/SetupScreen'
 import type { Metadata } from "next";
@@ -41,15 +42,15 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
     return <SetupScreen missingVars={missingVars} />;
   }
 
+  const isLoadTest = process.env.CRM_LOAD_TEST_AUTH_ENABLED === 'true';
+
   return (
     <html
       lang="en"
       className={`${spaceGrotesk.variable} ${inter.variable} ${ibmPlexMono.variable} h-full antialiased dark`}
     >
       <body className="min-h-full flex flex-col bg-[#070B18] text-[#E7EAF5]">
-        <ClerkProvider>
-          {children}
-        </ClerkProvider>
+        <ClerkProvider>{children}</ClerkProvider>
       </body>
     </html>
   );

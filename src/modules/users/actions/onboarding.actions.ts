@@ -22,7 +22,7 @@ async function _completeProfileAction(formData: FormData) {
     throw new Error('All fields are required.');
   }
 
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars -- S2 Residual Debt: Legacy unused local
+   
   // eslint-disable-next-line @typescript-eslint/no-unused-vars -- S2 Residual Debt: Legacy unused local
   const updatedUser = await withTenant(user.tenantId).user.update({
     where: { id: user.id },

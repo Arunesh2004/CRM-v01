@@ -19,11 +19,11 @@ export class TaskBulkService {
       return { count: taskIds.length, queued: true };
     }
 
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any -- S2 Residual Debt: Legacy internal payload requires architectural typing
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any -- S2 Residual Debt: Legacy internal payload requires architectural typing
+     
+     
     const result = await globalPrisma.$transaction(async (baseTx) => {
     const tx = await withTenantTransaction(baseTx, tenantId);
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any -- S2 Residual Debt: Legacy internal payload requires architectural typing
+       
       const existing = await tx.task.findMany({ where: { id: { in: taskIds }, tenantId }, select: { id: true } });
       // eslint-disable-next-line @typescript-eslint/no-explicit-any -- S2 Residual Debt: Legacy internal payload requires architectural typing
       const validIds = existing.map((e: any) => e.id);
@@ -47,9 +47,9 @@ export class TaskBulkService {
       });
 
       const timelineData = validIds.map((id: string) => ({
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any -- S2 Residual Debt: Legacy internal payload requires architectural typing
+         
         tenantId,
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any -- S2 Residual Debt: Legacy internal payload requires architectural typing
+         
         entityId: id,
         // eslint-disable-next-line @typescript-eslint/no-explicit-any -- S2 Residual Debt: Legacy internal payload requires architectural typing
         entityType: 'TASK' as any,
@@ -78,13 +78,13 @@ export class TaskBulkService {
       if (!runAsync) throw new Error(`Exceeds max sync size of ${MAX_SYNC_BULK_SIZE}.`);
       return { count: taskIds.length, queued: true };
     }
-// eslint-disable-next-line @typescript-eslint/no-explicit-any -- S2 Residual Debt: Legacy internal payload requires architectural typing
+ 
 
     const targetUser = await prisma.user.findFirst({ where: { id: assignedUserId, tenantId } });
     if (!targetUser) throw new Error("Assigned user not found in tenant.");
-// eslint-disable-next-line @typescript-eslint/no-explicit-any -- S2 Residual Debt: Legacy internal payload requires architectural typing
+ 
 
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any -- S2 Residual Debt: Legacy internal payload requires architectural typing
+     
     const result = await globalPrisma.$transaction(async (baseTx) => {
     const tx = await withTenantTransaction(baseTx, tenantId);
       const existing = await tx.task.findMany({ where: { id: { in: taskIds }, tenantId }, select: { id: true } });

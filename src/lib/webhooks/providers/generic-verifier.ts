@@ -18,7 +18,7 @@ export class GenericWebhookVerifier implements WebhookVerifier {
         Buffer.from(signature),
         Buffer.from(expectedSignature)
       );
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars -- S2 Residual Debt: Legacy unused local
+     
     // eslint-disable-next-line @typescript-eslint/no-unused-vars -- Intentional callback/interface parameter
     } catch (err) {
       return false;

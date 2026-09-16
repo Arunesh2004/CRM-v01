@@ -4,7 +4,7 @@ import { requireAuth, requireTenant } from '@/lib/auth';
 import { TerritoryService } from '@/modules/sales-intel/territory.service';
 import { Logger } from '@/lib/logger/logger';
 
-// eslint-disable-next-line @typescript-eslint/no-unused-vars -- S2 Residual Debt: Legacy unused local
+ 
 // eslint-disable-next-line @typescript-eslint/no-unused-vars -- Intentional callback/interface parameter
 const _orig_GET = async function (req: NextRequest) {
   try {

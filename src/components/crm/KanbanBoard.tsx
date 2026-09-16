@@ -28,9 +28,9 @@ function isValidStatus(s: string): s is LeadStatus {
   return (STATUS_COLUMNS as readonly string[]).includes(s);
 }
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any -- S2 Residual Debt: Legacy internal payload requires architectural typing
-// eslint-disable-next-line @typescript-eslint/no-explicit-any -- S2 Residual Debt: Legacy internal payload requires architectural typing
-// eslint-disable-next-line @typescript-eslint/no-explicit-any -- S2 Residual Debt: Legacy internal payload requires architectural typing
+ 
+ 
+ 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any -- S2 Residual Debt: Legacy internal payload requires architectural typing
 export function KanbanBoard({ initialLeads, users }: { initialLeads: any[]; users: any[] }) {
   const [leads, setLeads] = useState(initialLeads);

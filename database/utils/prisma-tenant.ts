@@ -77,7 +77,7 @@ export const withTenant = (tenantId: string) => {
             return query(args);
           }
 
-          let modifiedArgs = args ? ({ ...args } as any) : {};
+          const modifiedArgs = args ? ({ ...args } as any) : {};
 
           if (operation === 'create' || operation === 'createMany') {
              if (modifiedArgs.data) {

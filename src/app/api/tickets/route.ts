@@ -4,7 +4,7 @@ import { requireAuth, requireTenant } from '@/lib/auth';
 import { TicketService } from '@/modules/support/ticket.service';
 import { Logger } from '@/lib/logger/logger';
 
-// eslint-disable-next-line @typescript-eslint/no-unused-vars -- S2 Residual Debt: Legacy unused local
+ 
 // eslint-disable-next-line @typescript-eslint/no-unused-vars -- Intentional callback/interface parameter
 const _orig_GET = async function (req: NextRequest) {
   try {

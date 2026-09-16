@@ -7,7 +7,7 @@ export interface LogContext {
   tenantId?: string;
   requestId?: string;
   userId?: string;
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any -- S2 Residual Debt: Legacy internal payload requires architectural typing
+   
   // eslint-disable-next-line @typescript-eslint/no-explicit-any -- S2 Residual Debt: Legacy internal payload requires architectural typing
   [key: string]: any;
 }

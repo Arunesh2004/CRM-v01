@@ -11,13 +11,13 @@ export type SearchResult = {
 
 export async function globalSearch(tenantId: string, query: string, userId: string): Promise<SearchResult[]> {
   const prisma = withTenant(tenantId);
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars -- S2 Residual Debt: Legacy unused local
+   
   // eslint-disable-next-line @typescript-eslint/no-unused-vars -- Intentional unused destructuring exclusion
   const q = `%${query}%`;
   // eslint-disable-next-line @typescript-eslint/no-unused-vars -- S2 Residual Debt: Legacy unused local
   const lowerQuery = query.toLowerCase();
   const results: SearchResult[] = [];
-// eslint-disable-next-line @typescript-eslint/no-unused-vars -- S2 Residual Debt: Legacy unused local
+ 
 
   // Check permissions in parallel
   // eslint-disable-next-line @typescript-eslint/no-unused-vars -- S2 Residual Debt: Legacy unused local

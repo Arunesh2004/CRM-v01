@@ -24,10 +24,19 @@ async function _getUsersAction() {
         firstName: true,
         lastName: true,
         status: true,
+        createdAt: true,
+        userRoles: {
+          include: { role: true }
+        }
       }
     });
 
-    return { success: true, data: users };
+    const data = users.map(u => ({
+      ...u,
+      role: u.userRoles?.[0]?.role?.name || 'USER',
+    }));
+
+    return { success: true, data };
   } catch (errorRaw: unknown) {
     const error = errorRaw instanceof Error ? errorRaw : new Error(String(errorRaw));
     return { success: false, error: sanitizeClientError(error) };

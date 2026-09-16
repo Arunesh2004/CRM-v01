@@ -7,7 +7,7 @@ import { Mail, ArrowLeft, Clock } from 'lucide-react';
 import Link from 'next/link';
 
 export default async function MailDetailPage({ params }: { params: Promise<{ id: string } > }) {
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars -- S2 Residual Debt: Legacy unused local
+   
   // eslint-disable-next-line @typescript-eslint/no-unused-vars -- S2 Residual Debt: Legacy unused local
   const user = await requireAuth();
   const tenantId = await requireTenant();
@@ -63,7 +63,7 @@ export default async function MailDetailPage({ params }: { params: Promise<{ id:
                   <span>To: {message.recipients.filter((r: any) => r.type === 'TO').map((r: any) => r.user.email).join(', ')}</span>
                   // eslint-disable-next-line @typescript-eslint/no-explicit-any -- S2 Residual Debt: Legacy internal payload requires architectural typing
                   {message.recipients.some((r: any) => r.type === 'CC') && (
-                    // eslint-disable-next-line @typescript-eslint/no-explicit-any -- S2 Residual Debt: Legacy internal payload requires architectural typing
+                     
                     // eslint-disable-next-line @typescript-eslint/no-explicit-any -- S2 Residual Debt: Legacy internal payload requires architectural typing
                     <span>CC: {message.recipients.filter((r: any) => r.type === 'CC').map((r: any) => r.user.email).join(', ')}</span>
                   )}

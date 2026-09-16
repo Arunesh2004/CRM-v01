@@ -118,7 +118,7 @@ export async function executeRestore(jobId: string) {
   }
 }
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any -- S2 Residual Debt: Legacy internal payload requires architectural typing
+ 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any -- S2 Residual Debt: Legacy internal payload requires architectural typing
 async function processRestore(job: any) {
   const { archiveLocation, requestedBy: requestorUserId, mode, id: jobId } = job;
@@ -169,7 +169,7 @@ async function processRestore(job: any) {
   const iv = Buffer.from(ivHex, 'hex');
   const authTag = Buffer.from(tagHex, 'hex');
   
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any -- S2 Residual Debt: Legacy internal payload requires architectural typing
+   
   const decipher = crypto.createDecipheriv(snapshot.encryptionAlgorithm || ENCRYPTION_ALGORITHM, plaintextDEK, iv);
   // eslint-disable-next-line @typescript-eslint/no-explicit-any -- S2 Residual Debt: Legacy internal payload requires architectural typing
   (decipher as any).setAuthTag(authTag);
@@ -211,7 +211,7 @@ async function processRestore(job: any) {
 
           if (snapshot.schemaVersion !== '1.0' || snapshot.backupFormatVersion !== '1') {
             throw new Error('Incompatible backup version.');
-          // eslint-disable-next-line @typescript-eslint/no-unused-vars -- S2 Residual Debt: Legacy unused local
+           
           }
 
           // eslint-disable-next-line @typescript-eslint/no-unused-vars -- S2 Residual Debt: Legacy unused local
@@ -241,7 +241,7 @@ async function processRestore(job: any) {
       
           await executeAsSystem(SystemOperation.DISASTER_RECOVERY, async (tx) => tx.recoveryJob.update({
             where: { id: jobId },
-            // eslint-disable-next-line @typescript-eslint/no-explicit-any -- S2 Residual Debt: Legacy internal payload requires architectural typing
+             
             data: { tenantId: targetTenantId }
           }));
       
@@ -252,13 +252,13 @@ async function processRestore(job: any) {
               if (item.tenantId === originalTenantId) item.tenantId = targetTenantId;
               if (item.id === originalTenantId) item.id = targetTenantId;
               return item;
-            // eslint-disable-next-line @typescript-eslint/no-explicit-any -- S2 Residual Debt: Legacy internal payload requires architectural typing
-            // eslint-disable-next-line @typescript-eslint/no-explicit-any -- S2 Residual Debt: Legacy internal payload requires architectural typing
+             
+             
             });
           };
       
           await executeAsSystem(SystemOperation.DISASTER_RECOVERY, async (tx) => {
-            // eslint-disable-next-line @typescript-eslint/no-explicit-any -- S2 Residual Debt: Legacy internal payload requires architectural typing
+             
             // eslint-disable-next-line @typescript-eslint/no-explicit-any -- S2 Residual Debt: Legacy internal payload requires architectural typing
             const insert = async (model: any, data: any[]) => {
               if (!data || data.length === 0) return;
@@ -285,7 +285,7 @@ async function processRestore(job: any) {
             await insert(tx.chatConversation, payload.chatConversation);
             await insert(tx.chatParticipant, payload.chatParticipant);
             await insert(tx.chatMessage, payload.chatMessage);
-            // eslint-disable-next-line @typescript-eslint/no-explicit-any -- S2 Residual Debt: Legacy internal payload requires architectural typing
+             
             await insert(tx.communicationAttachment, payload.communicationAttachment);
             await insert(tx.mailThread, payload.mailThread);
             await insert(tx.mailRecipient, payload.mailRecipient);

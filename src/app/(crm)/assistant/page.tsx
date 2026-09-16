@@ -5,7 +5,7 @@ import { Send, Bot, User, Loader2, Sparkles, AlertCircle, LayoutDashboard, Searc
 import { Card } from '@/components/ui/Card';
 
 export default function AssistantPage() {
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any -- S2 Residual Debt: Legacy internal payload requires architectural typing
+   
   // eslint-disable-next-line @typescript-eslint/no-explicit-any -- S2 Residual Debt: Legacy internal payload requires architectural typing
   const [messages, setMessages] = useState<{ role: 'user' | 'assistant'; text: string; tools?: any[] }[]>([]);
   const [input, setInput] = useState('');
@@ -50,7 +50,7 @@ export default function AssistantPage() {
       let done = false;
       let buffer = '';
 
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any -- S2 Residual Debt: Legacy internal payload requires architectural typing
+       
       let text = '';
       // eslint-disable-next-line @typescript-eslint/no-explicit-any -- S2 Residual Debt: Legacy internal payload requires architectural typing
       let tools: any[] = [];
@@ -86,14 +86,14 @@ export default function AssistantPage() {
                    const copy = [...prev];
                    copy[copy.length - 1].text = text;
                    copy[copy.length - 1].tools = tools;
-                   // eslint-disable-next-line @typescript-eslint/no-unused-vars -- S2 Residual Debt: Legacy unused local
+                    
                    return copy;
                  });
                // eslint-disable-next-line @typescript-eslint/no-unused-vars -- Intentional callback/interface parameter
                } catch(e) {}
              }
            }
-        // eslint-disable-next-line @typescript-eslint/no-unused-vars -- S2 Residual Debt: Legacy unused local
+         
         }
       }
     } catch (errorRaw: unknown) {
@@ -157,7 +157,7 @@ export default function AssistantPage() {
         return copy;
       });
     } finally {
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any -- S2 Residual Debt: Legacy internal payload requires architectural typing
+       
       setLoading(false);
     }
   };
@@ -228,8 +228,7 @@ export default function AssistantPage() {
                 >
                   <Search className="w-5 h-5 text-blue-400 mb-2 group-hover:scale-110 transition-transform" />
                   <div className="text-sm font-medium text-white">Search Customers</div>
-                  // eslint-disable-next-line react/no-unescaped-entities -- Cosmetic unescaped entity safely ignored.
-                  <div className="text-xs text-gray-400 mt-1">"Find customers related to Acme"</div>
+                  <div className="text-xs text-gray-400 mt-1">&quot;Find customers related to Acme&quot;</div>
                 </button>
                 <button 
                   onClick={() => sendMessage("Show me my active leads")}
@@ -237,8 +236,7 @@ export default function AssistantPage() {
                 >
                   <LayoutDashboard className="w-5 h-5 text-purple-400 mb-2 group-hover:scale-110 transition-transform" />
                   <div className="text-sm font-medium text-white">Pipeline Review</div>
-                  // eslint-disable-next-line react/no-unescaped-entities -- Cosmetic unescaped entity safely ignored.
-                  <div className="text-xs text-gray-400 mt-1">"Show me my active leads"</div>
+                  <div className="text-xs text-gray-400 mt-1">&quot;Show me my active leads&quot;</div>
                 </button>
               </div>
             </div>

@@ -43,7 +43,7 @@ export class SLAService {
           });
         } catch (errRaw: unknown) {
           const err = errRaw instanceof Error ? errRaw : new Error(String(errRaw));
-          // eslint-disable-next-line @typescript-eslint/no-explicit-any -- S2 Residual Debt: Legacy internal payload requires architectural typing
+           
           // eslint-disable-next-line @typescript-eslint/no-explicit-any -- S2 Residual Debt: Legacy internal payload requires architectural typing
           if ((err as any).code !== 'P2002') {
             throw err;

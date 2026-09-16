@@ -27,8 +27,11 @@ const isPublicRoute = createRouteMatcher([
 
 
 function isLoadTestAuthEnabled(): boolean {
-  if (process.env.VERCEL_ENV !== 'preview') return false;
-  if (process.env.CRM_LOAD_TEST_AUTH_ENABLED !== 'true') return false;
+  console.log('[MIDDLEWARE] NODE_ENV:', process.env.NODE_ENV);
+  console.log('[MIDDLEWARE] CRM_LOAD_TEST_AUTH_ENABLED:', process.env.CRM_LOAD_TEST_AUTH_ENABLED);
+  console.log('[MIDDLEWARE] LOAD_TEST_SECRET:', process.env.LOAD_TEST_SECRET);
+  if (process.env.NODE_ENV === 'production' || process.env.VERCEL_ENV === 'production') return false;
+  if (process.env.CRM_LOAD_TEST_AUTH_ENABLED?.trim() !== 'true') return false;
   if (!process.env.LOAD_TEST_SECRET) return false;
   return true;
 }
@@ -167,20 +170,18 @@ const middlewareHandler = async (auth: any, request: NextRequest) => {
  * 503 is chosen over 401/403: the server cannot authenticate because it is
  * misconfigured, not because the caller lacks credentials.
  */
-export default hasClerkKeys
+const baseMiddleware = hasClerkKeys
   ? clerkMiddleware(middlewareHandler)
   : async (request: NextRequest) => {
       const ip = request.headers.get('x-forwarded-for') || '127.0.0.1';
       const rateLimitResponse = await handleRateLimiting(request, ip);
       if (rateLimitResponse) return rateLimitResponse;
 
-      // Pass-through for intentionally public routes only
       if (isPublicRoute(request)) {
         const response = NextResponse.next();
         return applySecurityHeaders(response, request);
       }
 
-      // FAIL CLOSED — protected route, Clerk not configured
       return new NextResponse(
         JSON.stringify({ error: 'Service Unavailable: Authentication provider not configured.' }),
         {
@@ -189,6 +190,16 @@ export default hasClerkKeys
         }
       );
     };
+
+export default async function middleware(request: NextRequest, event: any) {
+  if (isLoadTestRequest(request)) {
+    // Completely bypass Clerk for load tests to prevent handshake redirect crashes
+    const response = NextResponse.next();
+    return applySecurityHeaders(response, request);
+  }
+  
+  return baseMiddleware(request, event);
+}
 
 export const config = {
   matcher: [

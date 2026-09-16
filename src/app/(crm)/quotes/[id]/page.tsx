@@ -25,18 +25,15 @@ export default async function QuoteDetailPage({ params }: { params: Promise<{ id
         include: { priceBookEntry: { include: { product: true } } }
       }
     }
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any -- S2 Residual Debt: Legacy internal payload requires architectural typing
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any -- S2 Residual Debt: Legacy internal payload requires architectural typing
-  }) as any;
+  });
 
   if (!quote) return notFound();
 
   // Simple permissions check for UI display
   // Real security is handled in the server actions calling RevenueService
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any -- S2 Residual Debt: Legacy internal payload requires architectural typing
+   
   const isOwner = quote.ownerId === actor.id;
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any -- S2 Residual Debt: Legacy internal payload requires architectural typing
-  const isApprover = actor.userRoles.some((ur: any) => ur.role.name === 'REVENUE_MANAGER' || ur.role.name === 'TENANT_ADMIN' || ur.role.name === 'GLOBAL_ADMIN');
+  const isApprover = actor.userRoles.some((ur) => ur.role.name === 'REVENUE_MANAGER' || ur.role.name === 'TENANT_ADMIN' || ur.role.name === 'GLOBAL_ADMIN');
 
   const getStatusBadge = (s: string) => {
     switch(s) {
@@ -80,17 +77,15 @@ export default async function QuoteDetailPage({ params }: { params: Promise<{ id
                     <th className="pb-3 font-medium text-[#8891B0]">Discount</th>
                     <th className="pb-3 font-medium text-[#8891B0] text-right">Subtotal</th>
                   </tr>
-                // eslint-disable-next-line @typescript-eslint/no-explicit-any -- S2 Residual Debt: Legacy internal payload requires architectural typing
                 </thead>
                 <tbody className="divide-y divide-white/5">
-                  // eslint-disable-next-line @typescript-eslint/no-explicit-any -- S2 Residual Debt: Legacy internal payload requires architectural typing
-                  {quote.lineItems?.map((item: any) => (
+                  {quote.lineItems?.map((item) => (
                     <tr key={item.id}>
                       <td className="py-4 text-white">{item.priceBookEntry?.product?.name || item.productId}</td>
                       <td className="py-4 text-[#8891B0]">{item.quantity}</td>
-                      <td className="py-4 text-[#8891B0]">${item.unitPrice.toLocaleString(undefined, { minimumFractionDigits: 2 })}</td>
+                      <td className="py-4 text-[#8891B0]">${item.unitPrice.toNumber().toLocaleString(undefined, { minimumFractionDigits: 2 })}</td>
                       <td className="py-4 text-[#8891B0]">{item.discount}%</td>
-                      <td className="py-4 text-white text-right font-medium">${item.subtotal.toLocaleString(undefined, { minimumFractionDigits: 2 })}</td>
+                      <td className="py-4 text-white text-right font-medium">${item.subtotal.toNumber().toLocaleString(undefined, { minimumFractionDigits: 2 })}</td>
                     </tr>
                   ))}
                   {(!quote.lineItems || quote.lineItems.length === 0) && (
@@ -106,15 +101,15 @@ export default async function QuoteDetailPage({ params }: { params: Promise<{ id
               <div className="w-64 space-y-2 text-sm">
                 <div className="flex justify-between text-[#8891B0]">
                   <span>Subtotal</span>
-                  <span>${quote.subtotal.toLocaleString(undefined, { minimumFractionDigits: 2 })}</span>
+                  <span>${quote.subtotal.toNumber().toLocaleString(undefined, { minimumFractionDigits: 2 })}</span>
                 </div>
                 <div className="flex justify-between text-[#8891B0]">
                   <span>Discount Total</span>
-                  <span>-${quote.discountTotal.toLocaleString(undefined, { minimumFractionDigits: 2 })}</span>
+                  <span>-${quote.discountTotal.toNumber().toLocaleString(undefined, { minimumFractionDigits: 2 })}</span>
                 </div>
                 <div className="flex justify-between text-white font-bold text-lg pt-2 border-t border-white/10">
                   <span>Grand Total</span>
-                  <span>${quote.grandTotal.toLocaleString(undefined, { minimumFractionDigits: 2 })}</span>
+                  <span>${quote.grandTotal.toNumber().toLocaleString(undefined, { minimumFractionDigits: 2 })}</span>
                 </div>
               </div>
             </div>

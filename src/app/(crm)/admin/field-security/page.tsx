@@ -13,6 +13,8 @@ export default async function AdminFieldSecurityPage() {
   const result = await getFieldSecurityAction();
   const configs = result.success ? result.data : [];
 
+  type FieldSecurityDTO = NonNullable<typeof result.data>[number];
+
   return (
     <div className="space-y-6 animate-in fade-in duration-500 pb-10">
       <div className="glass-panel rounded-[1.25rem] p-5 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
@@ -30,26 +32,20 @@ export default async function AdminFieldSecurityPage() {
             <thead>
               <tr className="border-b border-white/[.04] bg-[#0D1326]/50">
                 <th className="px-6 py-4 font-semibold text-[#8891B0] uppercase tracking-wider text-[10px]">Resource</th>
-                <th className="px-6 py-4 font-semibold text-[#8891B0] uppercase tracking-wider text-[10px]">Role</th>
-                <th className="px-6 py-4 font-semibold text-[#8891B0] uppercase tracking-wider text-[10px]">Rules</th>
+                <th className="px-6 py-4 font-semibold text-[#8891B0] uppercase tracking-wider text-[10px]">Field</th>
+                <th className="px-6 py-4 font-semibold text-[#8891B0] uppercase tracking-wider text-[10px]">Security Level</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-white/[.04]">
-              // eslint-disable-next-line @typescript-eslint/no-explicit-any -- S2 Residual Debt: Legacy internal payload requires architectural typing
-              // eslint-disable-next-line @typescript-eslint/no-explicit-any -- S2 Residual Debt: Legacy internal payload requires architectural typing
-              {configs?.map((config: any) => (
+              {configs?.map((config: FieldSecurityDTO) => (
                 <tr key={config.id} className="hover:bg-white/[.02] transition-colors group">
-                  <td className="px-6 py-4 font-medium text-white">{config.resource}</td>
-                  <td className="px-6 py-4 text-[#8891B0]">{config.roleName}</td>
+                  <td className="px-6 py-4 font-medium text-white">{config.modelName}</td>
+                  <td className="px-6 py-4 text-[#8891B0]">{config.fieldName}</td>
                   <td className="px-6 py-4">
-                    // eslint-disable-next-line @typescript-eslint/no-explicit-any -- S2 Residual Debt: Legacy internal payload requires architectural typing
                     <div className="flex gap-2 flex-wrap">
-                      // eslint-disable-next-line @typescript-eslint/no-explicit-any -- S2 Residual Debt: Legacy internal payload requires architectural typing
-                      {config.rules?.map((rule: any) => (
-                        <Badge key={rule.id} variant="slate" className="flex items-center gap-1">
-                           <EyeOff className="w-3 h-3"/> {rule.fieldName} ({rule.maskType})
+                        <Badge variant="slate" className="flex items-center gap-1">
+                           <EyeOff className="w-3 h-3"/> {config.securityLevel}
                         </Badge>
-                      ))}
                     </div>
                   </td>
                 </tr>

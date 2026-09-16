@@ -51,7 +51,7 @@ export class TwilioProvider implements TelephonyProvider {
     try {
       const call = await this.client.calls(providerCallId).fetch();
       return call.status;
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars -- S2 Residual Debt: Legacy unused local
+     
     // eslint-disable-next-line @typescript-eslint/no-unused-vars -- Intentional callback/interface parameter
     } catch (e) {
       return 'unknown';
@@ -68,7 +68,7 @@ export class TwilioProvider implements TelephonyProvider {
 
     let parsedUrl;
     try {
-      // eslint-disable-next-line @typescript-eslint/no-unused-vars -- Intentional callback/interface parameter
+       
       parsedUrl = new URL(recordingUrl);
     // eslint-disable-next-line @typescript-eslint/no-unused-vars -- Intentional callback/interface parameter
     } catch (e) {
@@ -99,7 +99,7 @@ export class TwilioProvider implements TelephonyProvider {
       throw new Error('No body returned in Twilio recording response');
     }
 
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any -- S2 Residual Debt: External provider boundary lacks strict types
+     
     const fileStream = fs.createWriteStream(destinationPath);
     const { Readable } = await import('stream');
     // eslint-disable-next-line @typescript-eslint/no-explicit-any -- S2 Residual Debt: External provider boundary lacks strict types
@@ -112,7 +112,7 @@ export class TwilioProvider implements TelephonyProvider {
     return Buffer.from('mock_buffer_impl');
   }
 
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars -- S2 Residual Debt: Legacy unused local
+   
   // eslint-disable-next-line @typescript-eslint/no-unused-vars -- Intentional callback/interface parameter
   async makeCall(to: string, from?: string): Promise<{ success: boolean; callId?: string; error?: string }> {
     return { success: true, callId: 'mock' };
@@ -149,14 +149,14 @@ export class MockTelephonyProvider implements TelephonyProvider {
   async endCall(sid: string) { return true; }
   // eslint-disable-next-line @typescript-eslint/no-unused-vars -- Intentional callback/interface parameter
   async getCallStatus(sid: string) { return 'unknown'; }
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars -- S2 Residual Debt: Legacy unused local
+   
   // eslint-disable-next-line @typescript-eslint/no-unused-vars -- Intentional callback/interface parameter
   async fetchRecording(url: string): Promise<Buffer> { throw new Error('TELEPHONY_PROVIDER_NOT_CONFIGURED'); }
   
   async downloadRecording(url: string, destPath: string) {
     throw new Error('TELEPHONY_PROVIDER_NOT_CONFIGURED');
   }
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars -- S2 Residual Debt: Legacy unused local
+   
   // eslint-disable-next-line @typescript-eslint/no-unused-vars -- Intentional callback/interface parameter
   async makeCall(to: string, from?: string): Promise<{ success: boolean; callId?: string; error?: string }> {
     return { success: false, error: 'TELEPHONY_PROVIDER_NOT_CONFIGURED' };

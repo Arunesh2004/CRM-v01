@@ -1,41 +1,62 @@
 'use server';
+
+import { requireAuth } from '@/lib/auth';
+import { MailService } from '../mail.service';
+import { DistributedRateLimiter } from '@/lib/rate-limit/rate-limiter';
+import { z } from 'zod';
 import { withServerActionContext } from '@/lib/observability/server-action';
 
-import { sanitizeClientError } from '@/lib/errors/client-safe-error';
-import { requireAuth, requireTenant, requirePermission } from '@/lib/auth';
-import { withTenant } from '@db/utils/prisma-tenant';
-import { Resource, Action } from '@prisma/client';
+const SendInternalMailSchema = z.object({
+  subject: z.string().min(1).max(255),
+  bodyHtml: z.string().min(1).max(20000), // Max 20KB to prevent abuse
+  toIds: z.array(z.string()).min(1).max(50),
+  ccIds: z.array(z.string()).max(50).optional(),
+  bccIds: z.array(z.string()).max(50).optional(),
+  referenceType: z.string().optional(),
+  referenceId: z.string().uuid().optional(),
+});
 
-async function _getInboxAction() {
-  try {
-    const tenantId = await requireTenant();
-    await requireAuth();
-    await requirePermission(Resource.COMMUNICATION, Action.READ);
+export async function _sendInternalMailAction(data: z.infer<typeof SendInternalMailSchema>) {
+  const user = await requireAuth();
+  const parsed = SendInternalMailSchema.parse(data);
 
-    const prisma = withTenant(tenantId);
-    
-    // Fetch recent emails
-    const emails = await prisma.mailMessage.findMany({
-      where: { tenantId },
-      orderBy: { createdAt: 'desc' },
-      take: 20,
-      include: {
-        sender: { select: { email: true, firstName: true, lastName: true } }
-      }
-    });
+  // Rate Limiting: Max 20 internal emails per minute per user
+  const rl = await DistributedRateLimiter.checkLimit(user.tenantId, 'MAIL', 'SEND', 20, 60, undefined, user.id);
+  if (!rl.allowed) throw new Error('Too many requests');
 
-    // Fetch recent SMS/Chats (if we use chatMessage for SMS or internal chat)
-    const chats = await prisma.chatMessage.findMany({
-      where: { tenantId },
-      orderBy: { createdAt: 'desc' },
-      take: 20
-    });
+  const message = await MailService.sendMail(
+    user.tenantId,
+    user.id,
+    parsed.subject,
+    parsed.bodyHtml,
+    parsed.toIds,
+    parsed.ccIds || [],
+    parsed.bccIds || []
+  );
 
-    return { success: true, data: { emails, chats } };
-  } catch (errorRaw: unknown) {
-    const error = errorRaw instanceof Error ? errorRaw : new Error(String(errorRaw));
-    return { success: false, error: sanitizeClientError(error) };
-  }
+  return { success: true, data: message };
 }
 
+export async function _getInboxAction(cursor?: string) {
+  const user = await requireAuth();
+  
+  const rl = await DistributedRateLimiter.checkLimit(user.tenantId, 'MAIL', 'GET_INBOX', 100, 60, undefined, user.id);
+  if (!rl.allowed) throw new Error('Too many requests');
+
+  const inbox = await MailService.getInbox(user.tenantId, user.id, cursor);
+  return { success: true, data: inbox };
+}
+
+export async function _archiveMailAction(messageId: string) {
+  const user = await requireAuth();
+  
+  const rl = await DistributedRateLimiter.checkLimit(user.tenantId, 'MAIL', 'ARCHIVE', 100, 60, undefined, user.id);
+  if (!rl.allowed) throw new Error('Too many requests');
+
+  const result = await MailService.archiveMail(user.tenantId, messageId, user.id);
+  return { success: true, data: result };
+}
+
+export const sendInternalMailAction = withServerActionContext(_sendInternalMailAction);
 export const getInboxAction = withServerActionContext(_getInboxAction);
+export const archiveMailAction = withServerActionContext(_archiveMailAction);

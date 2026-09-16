@@ -8,7 +8,7 @@ import path from 'path';
 import os from 'os';
 import fs from 'fs';
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any -- S2 Residual Debt: Legacy internal payload requires architectural typing
+ 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any -- S2 Residual Debt: Legacy internal payload requires architectural typing
 export async function processCallCompleted(envelope: SecureJobEnvelope<any>) {
   // eslint-disable-next-line @typescript-eslint/no-unused-vars -- Intentional unused destructuring exclusion
@@ -30,7 +30,7 @@ export async function processCallCompleted(envelope: SecureJobEnvelope<any>) {
 
     if (!callLog) {
       throw new Error(`CallLog not found for CallSid: ${callSid}`);
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any -- S2 Residual Debt: Legacy internal payload requires architectural typing
+     
     }
 
     // eslint-disable-next-line @typescript-eslint/no-explicit-any -- S2 Residual Debt: Legacy internal payload requires architectural typing

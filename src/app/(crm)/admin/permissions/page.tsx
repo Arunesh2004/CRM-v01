@@ -30,19 +30,15 @@ export default async function AdminPermissionsPage() {
             <thead>
               <tr className="border-b border-white/[.04] bg-[#0D1326]/50">
                 <th className="px-6 py-4 font-semibold text-[#8891B0] uppercase tracking-wider text-[10px]">Role Name</th>
-                <th className="px-6 py-4 font-semibold text-[#8891B0] uppercase tracking-wider text-[10px]">Description</th>
                 <th className="px-6 py-4 font-semibold text-[#8891B0] uppercase tracking-wider text-[10px]">Permissions Count</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-white/[.04]">
-              // eslint-disable-next-line @typescript-eslint/no-explicit-any -- S2 Residual Debt: Legacy internal payload requires architectural typing
-              // eslint-disable-next-line @typescript-eslint/no-explicit-any -- S2 Residual Debt: Legacy internal payload requires architectural typing
-              {roles?.map((role: any) => (
+              {roles?.map((role: NonNullable<typeof result.data>[number]) => (
                 <tr key={role.id} className="hover:bg-white/[.02] transition-colors group">
                   <td className="px-6 py-4">
                     <p className="font-medium text-white">{role.name}</p>
                   </td>
-                  <td className="px-6 py-4 text-[#8891B0]">{role.description || '-'}</td>
                   <td className="px-6 py-4">
                     <Badge variant="slate">{role.permissions?.length || 0} permissions</Badge>
                   </td>
@@ -50,7 +46,7 @@ export default async function AdminPermissionsPage() {
               ))}
               {(!roles || roles.length === 0) && (
                 <tr>
-                  <td colSpan={3} className="px-6 py-8 text-center text-[#8891B0]">
+                  <td colSpan={2} className="px-6 py-8 text-center text-[#8891B0]">
                     No custom roles found.
                   </td>
                 </tr>

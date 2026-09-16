@@ -14,7 +14,7 @@ export default function AcceptInvitePage() {
 }
 
 function AcceptInviteInner() {
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars -- S2 Residual Debt: Legacy unused local
+   
   // eslint-disable-next-line @typescript-eslint/no-unused-vars -- Intentional unused destructuring exclusion
   const { isLoaded, isSignedIn, user } = useUser();
   const searchParams = useSearchParams();
@@ -61,7 +61,7 @@ function AcceptInviteInner() {
           setStatus('error');
           setErrorMsg(data.error || 'Failed to accept invitation.');
         }
-      // eslint-disable-next-line @typescript-eslint/no-unused-vars -- Intentional unused destructuring exclusion
+       
       } catch (errRaw: unknown) {
         // eslint-disable-next-line @typescript-eslint/no-unused-vars -- S2 Residual Debt: Legacy unused local
         const err = errRaw instanceof Error ? errRaw : new Error(String(errRaw));

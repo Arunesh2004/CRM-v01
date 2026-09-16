@@ -14,9 +14,8 @@ export async function TaskDocumentsWrapper({ taskId }: { taskId: string }) {
         </div>
         <DocumentUploader taskId={taskId} />
       </div>
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any -- S2 Residual Debt: Legacy internal payload requires architectural typing
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any -- S2 Residual Debt: Legacy internal payload requires architectural typing
-      <DocumentList documents={documents as any} taskId={taskId} />
+
+      <DocumentList documents={documents} taskId={taskId} />
     </div>
   );
 }

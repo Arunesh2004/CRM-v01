@@ -39,7 +39,7 @@ export function resolveDateRange(timeframe?: string | null, userTimezone?: strin
   let localNow: Date;
   try {
     localNow = toZonedTime(now, tz);
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars -- S2 Residual Debt: Legacy unused local
+   
   // eslint-disable-next-line @typescript-eslint/no-unused-vars -- Intentional callback/interface parameter
   } catch (e) {
     // If timezone is malformed, fallback to UTC
@@ -105,7 +105,7 @@ export function resolveDateRange(timeframe?: string | null, userTimezone?: strin
   
   try {
     utcStart = fromZonedTime(localStart, { timeZone: tz });
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars -- Intentional callback/interface parameter
+     
     utcEnd = fromZonedTime(localEnd, { timeZone: tz });
   // eslint-disable-next-line @typescript-eslint/no-unused-vars -- Intentional callback/interface parameter
   } catch (e) {

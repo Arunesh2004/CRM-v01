@@ -3,6 +3,7 @@ import { MockAIProvider } from './mock-ai.provider';
 
 import { GeminiProvider } from './gemini.provider';
 import { GeminiEngineProvider } from './gemini-engine.provider';
+import { GeminiVisionProvider } from './gemini-vision.provider';
 
 export type SupportedAIProvider = 'MOCK' | 'OPENAI' | 'GEMINI';
 
@@ -46,8 +47,6 @@ export class AIProviderFactory {
     
     switch (providerName) {
       case 'GEMINI': {
-        // dynamic import or require to avoid circular deps if any, but since it's just a class, we can import it above.
-        const { GeminiVisionProvider } = require('./gemini-vision.provider');
         return new GeminiVisionProvider();
       }
       default:

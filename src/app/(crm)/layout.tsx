@@ -2,6 +2,7 @@ import { ReactNode, Suspense } from "react";
 import { requireAuth } from "@/lib/auth";
 import CRMLayoutClient from "./CRMLayoutClient";
 import { redirect } from "next/navigation";
+import WebRTCCallManager from "@/components/communication/WebRTCCallManager";
 
 export const dynamic = 'force-dynamic';
 
@@ -31,6 +32,7 @@ export default async function CRMLayout({ children }: { children: ReactNode }) {
       tenantName={tenantName}
       userRole={userRole}
     >
+      <WebRTCCallManager userId={user.id} tenantId={user.tenantId} />
       <Suspense fallback={<div className="h-full w-full flex items-center justify-center text-white/50">Loading workspace...</div>}>
         {children}
       </Suspense>

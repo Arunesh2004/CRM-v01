@@ -19,13 +19,13 @@ const REQUIRED_PROVIDERS = [
 ];
 
 export default function IntegrationsPage() {
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any -- S2 Residual Debt: Legacy internal payload requires architectural typing
+   
   // eslint-disable-next-line @typescript-eslint/no-explicit-any -- S2 Residual Debt: Legacy internal payload requires architectural typing
   const [integrations, setIntegrations] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [isUpdating, setIsUpdating] = useState(false);
   
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any -- S2 Residual Debt: Legacy internal payload requires architectural typing
+   
   // Dialog state
   // eslint-disable-next-line @typescript-eslint/no-explicit-any -- S2 Residual Debt: Legacy internal payload requires architectural typing
   const [selectedProvider, setSelectedProvider] = useState<any>(null);
@@ -46,7 +46,7 @@ export default function IntegrationsPage() {
 
   const getIntegrationData = (providerType: string) => {
     return integrations.find(i => i.provider === providerType);
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any -- S2 Residual Debt: Legacy internal payload requires architectural typing
+   
   };
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any -- S2 Residual Debt: External provider boundary lacks strict types
@@ -72,7 +72,7 @@ export default function IntegrationsPage() {
     } else {
       toast.error(res.error || 'Update failed');
     }
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any -- S2 Residual Debt: Legacy internal payload requires architectural typing
+     
     setIsUpdating(false);
   };
 
@@ -192,7 +192,7 @@ export default function IntegrationsPage() {
                 </Dialog>
 
                 {!isDemo && (
-                  // eslint-disable-next-line @typescript-eslint/no-explicit-any -- S2 Residual Debt: Legacy internal payload requires architectural typing
+                   
                   <>
                     // eslint-disable-next-line @typescript-eslint/no-explicit-any -- S2 Residual Debt: External provider boundary lacks strict types
                     <Button variant="ghost" size="icon" className="bg-white/5 hover:bg-white/10 hover:text-cyan-400" onClick={() => handleTestConnection(providerDef.id as any)} title="Test Connection">

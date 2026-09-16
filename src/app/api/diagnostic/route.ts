@@ -13,7 +13,7 @@ const _orig_GET = async function () {
     const authUser = await requireAuth();
     
     // Enforce GLOBAL_ADMIN access only for diagnostic info
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any -- S2 Residual Debt: Legacy internal payload requires architectural typing
+     
     // eslint-disable-next-line @typescript-eslint/no-explicit-any -- S2 Residual Debt: Legacy internal payload requires architectural typing
     const isGlobalAdmin = authUser.userRoles.some((ur: any) => ur.role.name === 'GLOBAL_ADMIN');
     if (!isGlobalAdmin) {
@@ -35,7 +35,7 @@ const _orig_GET = async function () {
         const urlObj = new URL(dbUrl);
         host = urlObj.hostname;
         dbName = urlObj.pathname.slice(1);
-      // eslint-disable-next-line @typescript-eslint/no-unused-vars -- S2 Residual Debt: Legacy unused local
+       
       }
     // eslint-disable-next-line @typescript-eslint/no-unused-vars -- Intentional callback/interface parameter
     } catch(e) {}
@@ -89,7 +89,7 @@ const _orig_GET = async function () {
       user: {
         exists: !!user,
         status: user?.status || null,
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any -- S2 Residual Debt: Legacy internal payload requires architectural typing
+         
         tenantIdPresent: !!user?.tenantId,
         clerkIdPresent: !!user?.clerkId,
         // eslint-disable-next-line @typescript-eslint/no-explicit-any -- S2 Residual Debt: Legacy internal payload requires architectural typing

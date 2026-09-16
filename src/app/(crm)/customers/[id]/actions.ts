@@ -8,9 +8,9 @@ import { ChatService } from '@/modules/communication/chat.service';
 import { withTenant } from '@db/utils/prisma-tenant';
 import { sanitizeClientError } from '@/lib/errors/client-safe-error';
 
-// eslint-disable-next-line @typescript-eslint/no-unused-vars -- Intentional callback/interface parameter
-// eslint-disable-next-line @typescript-eslint/no-explicit-any -- S2 Residual Debt: Legacy internal payload requires architectural typing
-// eslint-disable-next-line @typescript-eslint/no-unused-vars -- Intentional callback/interface parameter
+ 
+ 
+ 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any -- S2 Residual Debt: Legacy internal payload requires architectural typing
 async function _sendEmailAction(customerId: string, to: string, subject: string, body: string, ...args: any[]): Promise<{success?: boolean, error?: string}> {
   try {
@@ -50,22 +50,22 @@ async function _sendEmailAction(customerId: string, to: string, subject: string,
     return { success: false, error: sanitizeClientError(error) };
   }
 }
-// eslint-disable-next-line @typescript-eslint/no-unused-vars -- S2 Residual Debt: Legacy unused local
-// eslint-disable-next-line @typescript-eslint/no-unused-vars -- S2 Residual Debt: Legacy unused local
-// eslint-disable-next-line @typescript-eslint/no-unused-vars -- Intentional callback/interface parameter
-// eslint-disable-next-line @typescript-eslint/no-explicit-any -- S2 Residual Debt: Legacy internal payload requires architectural typing
+ 
+ 
+ 
+ 
 export const sendEmailAction = withServerActionContext(_sendEmailAction);
 
-// eslint-disable-next-line @typescript-eslint/no-unused-vars -- S2 Residual Debt: Legacy unused local
-// eslint-disable-next-line @typescript-eslint/no-unused-vars -- S2 Residual Debt: Legacy unused local
-// eslint-disable-next-line @typescript-eslint/no-unused-vars -- Intentional callback/interface parameter
+ 
+ 
+ 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any -- S2 Residual Debt: Legacy internal payload requires architectural typing
 async function _initiateCallAction(customerId: string, toPhone: string, ...args: any[]): Promise<{success?: boolean, error?: string}> {
   return { success: true };
 }
 export const initiateCallAction = withServerActionContext(_initiateCallAction);
 
-// eslint-disable-next-line @typescript-eslint/no-unused-vars -- Intentional callback/interface parameter
+ 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any -- S2 Residual Debt: Legacy internal payload requires architectural typing
 async function _sendMessageAction(customerId: string, message: string, ...args: any[]): Promise<{success?: boolean, error?: string}> {
   try {

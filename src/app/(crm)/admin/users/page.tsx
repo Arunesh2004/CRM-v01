@@ -36,9 +36,7 @@ export default async function AdminUsersPage() {
               </tr>
             </thead>
             <tbody className="divide-y divide-white/[.04]">
-              // eslint-disable-next-line @typescript-eslint/no-explicit-any -- S2 Residual Debt: Legacy internal payload requires architectural typing
-              // eslint-disable-next-line @typescript-eslint/no-explicit-any -- S2 Residual Debt: Legacy internal payload requires architectural typing
-              {users?.map((user: any) => (
+              {users?.map((user: NonNullable<typeof result.data>[number]) => (
                 <tr key={user.id} className="hover:bg-white/[.02] transition-colors group">
                   <td className="px-6 py-4">
                     <p className="font-medium text-white">{user.email}</p>
@@ -47,13 +45,13 @@ export default async function AdminUsersPage() {
                     <Badge variant="cyan"><Shield className="w-3 h-3 mr-1"/>{user.role}</Badge>
                   </td>
                   <td className="px-6 py-4">
-                    {user.isActive ? (
-                      <Badge variant="emerald">Active</Badge>
+                    {user.status === 'ACTIVE' ? (
+                      <Badge variant="emerald"><Shield className="w-3 h-3 mr-1"/>Active</Badge>
                     ) : (
                       <Badge variant="slate">Inactive</Badge>
                     )}
                   </td>
-                  <td className="px-6 py-4 text-[#8891B0]">{new Date(user.createdAt).toLocaleDateString()}</td>
+                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{new Date(user.createdAt).toLocaleDateString()}</td>
                 </tr>
               ))}
               {(!users || users.length === 0) && (

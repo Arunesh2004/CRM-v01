@@ -39,9 +39,7 @@ export default async function TasksPage(props: {
     }
   });
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any -- S2 Residual Debt: Legacy internal payload requires architectural typing
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any -- S2 Residual Debt: Legacy internal payload requires architectural typing
-  const resData = result.success ? (result.data as any) : { data: [], pagination: { hasMore: false, nextCursor: null } };
+  const resData = (result.success && result.data) ? result.data : { data: [], pagination: { hasMore: false, nextCursor: null } };
   const tasks = Array.isArray(resData) ? resData : (resData.data || []);
   const pagination = !Array.isArray(resData) ? resData.pagination : null;
 
@@ -56,18 +54,16 @@ export default async function TasksPage(props: {
   });
 
   const getPriorityBadge = (p: string) => {
-    const map: Record<string, string> = {
-      URGENT: 'badge-rose',
-      HIGH:   'badge-rose',
-      MEDIUM: 'badge-amber',
-      LOW:    'badge-slate',
+    const map: Record<string, "rose" | "amber" | "slate"> = {
+      URGENT: 'rose',
+      HIGH:   'rose',
+      MEDIUM: 'amber',
+      LOW:    'slate',
     };
-    return map[p] ?? 'badge-slate';
+    return map[p] ?? 'slate';
   };
-// eslint-disable-next-line @typescript-eslint/no-explicit-any -- S2 Residual Debt: Legacy internal payload requires architectural typing
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any -- S2 Residual Debt: Legacy internal payload requires architectural typing
-  const getDueDateBadge = (task: any) => {
+  const getDueDateBadge = (task: { status: string; dueDate?: Date | string | null }) => {
     if (task.status === 'COMPLETED') {
       return <Badge variant="emerald"><CheckCircle2 className="w-3 h-3"/>Done</Badge>;
     }
@@ -147,11 +143,9 @@ export default async function TasksPage(props: {
               ]
             },
             {
-              // eslint-disable-next-line @typescript-eslint/no-explicit-any -- S2 Residual Debt: Legacy internal payload requires architectural typing
               key: 'owner',
               label: 'All Owners',
-              // eslint-disable-next-line @typescript-eslint/no-explicit-any -- S2 Residual Debt: Legacy internal payload requires architectural typing
-              options: users.map((u: any) => ({ label: u.email, value: u.id }))
+              options: users.map((u) => ({ label: u.email, value: u.id }))
             }
           ]}
         />
@@ -167,13 +161,10 @@ export default async function TasksPage(props: {
                 icon={<CheckSquare className="w-12 h-12" />}
                 title="No tasks found"
                 description="Try adjusting your filters or create a new task."
-              // eslint-disable-next-line @typescript-eslint/no-explicit-any -- S2 Residual Debt: Legacy internal payload requires architectural typing
               />
             ) : (
               <div className="grid gap-3">
-                // eslint-disable-next-line @typescript-eslint/no-explicit-any -- S2 Residual Debt: Legacy internal payload requires architectural typing
-                {tasks.map((task: any) => (
-                  // eslint-disable-next-line @typescript-eslint/no-explicit-any -- S2 Residual Debt: Legacy internal payload — typed Prisma/API result shape requires architectural schema work deferred to S3
+                {tasks.map((task) => (
                   <Link href={`/tasks/${task.id}`} key={task.id} className="block group">
                     <div
                       className="glass rounded-[.9rem] p-4 card-hover flex flex-col md:flex-row md:items-center justify-between gap-4"
@@ -196,14 +187,11 @@ export default async function TasksPage(props: {
                                 ? 'line-through text-slate-500'
                                 : ''
                             }`}
-                          // eslint-disable-next-line @typescript-eslint/no-explicit-any -- S2 Residual Debt: Legacy internal payload requires architectural typing
                           >
                             {task.title}
                           </p>
                           <div className="flex items-center gap-2 mt-1.5 flex-wrap">
-                            // eslint-disable-next-line @typescript-eslint/no-explicit-any -- S2 Residual Debt: Legacy internal payload requires architectural typing
-                            <Badge variant={getPriorityBadge(task.priority) as any}>
-                              // eslint-disable-next-line @typescript-eslint/no-explicit-any -- S2 Residual Debt: Legacy internal payload — typed Prisma/API result shape requires architectural schema work deferred to S3
+                            <Badge variant={getPriorityBadge(task.priority)}>
                               {task.priority}
                             </Badge>
                             {task.assignedUser ? (

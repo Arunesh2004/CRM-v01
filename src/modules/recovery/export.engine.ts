@@ -79,7 +79,7 @@ export async function exportTenant(tenantId: string, requestorUserId: string, ex
         jsonStream.write(`    "backupFormatVersion": "1"\n`);
         jsonStream.write(`  },\n`);
 
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any -- S2 Residual Debt: Legacy internal payload requires architectural typing
+         
         // eslint-disable-next-line @typescript-eslint/no-explicit-any -- S2 Residual Debt: Legacy internal payload requires architectural typing
         const exportTable = async (tableName: string, prismaModel: any, isLast = false) => {
           jsonStream.write(`  "${tableName}": [\n`);
@@ -88,7 +88,7 @@ export async function exportTenant(tenantId: string, requestorUserId: string, ex
           let hasMore = true;
           const CHUNK_SIZE = 5000;
 
-          // eslint-disable-next-line @typescript-eslint/no-explicit-any -- S2 Residual Debt: Legacy internal payload requires architectural typing
+           
           while (hasMore) {
             // eslint-disable-next-line @typescript-eslint/no-explicit-any -- S2 Residual Debt: Legacy internal payload requires architectural typing
             const records: any[] = (await prismaModel.findMany({
@@ -191,11 +191,11 @@ export async function exportTenant(tenantId: string, requestorUserId: string, ex
     await logAudit(tenantPrisma, tenantId, job.id, 'FAILURE', requestorUserId, { error: error.message });
     throw error;
   }
-// eslint-disable-next-line @typescript-eslint/no-explicit-any -- S2 Residual Debt: Legacy internal payload requires architectural typing
-// eslint-disable-next-line @typescript-eslint/no-explicit-any -- S2 Residual Debt: Legacy internal payload requires architectural typing
+ 
+ 
 }
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any -- S2 Residual Debt: Legacy internal payload requires architectural typing
+ 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any -- S2 Residual Debt: Legacy internal payload requires architectural typing
 async function logAudit(tenantPrisma: any, tenantId: string, jobId: string, action: string, actorId: string, metadata?: any) {
   await tenantPrisma.recoveryAuditLog.create({

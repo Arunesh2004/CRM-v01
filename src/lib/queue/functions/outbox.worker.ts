@@ -14,7 +14,7 @@ export const outboxWorker = inngest.createFunction(
     retries: 3,
     onFailure: async ({ event, error }) => {
       const { getFailureEventIdSafe, sendToDeadLetterQueue } = await import('../worker');
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any -- S2 Residual Debt: Legacy internal payload requires architectural typing
+       
       // eslint-disable-next-line @typescript-eslint/no-explicit-any -- S2 Residual Debt: Legacy internal payload requires architectural typing
       const safeEvent = event as { data: { event: { data: any, attemptCount?: number } } };
       const originalEvent = safeEvent.data.event;
@@ -24,7 +24,7 @@ export const outboxWorker = inngest.createFunction(
         await sendToDeadLetterQueue(envelope, new Error(error.message), originalEvent.attemptCount ?? 1, eventId);
       }
     },
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any -- S2 Residual Debt: Legacy internal payload requires architectural typing
+   
   },
   outboxWorkerHandler
 );
@@ -179,7 +179,7 @@ export async function outboxWorkerHandler({ event, step }: { event: { data: Secu
           const aiEventId = payload.aiEventId;
           const cameraId = payload.cameraId;
           
-          // eslint-disable-next-line @typescript-eslint/no-explicit-any -- S2 Residual Debt: Legacy internal payload requires architectural typing
+           
           const camera = await tx.camera.findFirst({ where: { id: cameraId }, include: { location: true } });
           if (!camera) throw new Error("Camera not found");
 

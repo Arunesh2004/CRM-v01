@@ -20,7 +20,19 @@ async function _getAuditLogsAction() {
       take: 50
     });
 
-    return { success: true, data: logs };
+    const userActorIds = Array.from(new Set(logs.filter(l => l.actorType === 'USER').map(l => l.actorId)));
+    const users = await prisma.user.findMany({
+      where: { id: { in: userActorIds } },
+      select: { id: true, email: true }
+    });
+    const userMap = new Map(users.map(u => [u.id, u.email]));
+
+    const data = logs.map(log => ({
+      ...log,
+      actorUser: log.actorType === 'USER' ? { email: userMap.get(log.actorId) || null } : null
+    }));
+
+    return { success: true, data };
   } catch (errorRaw: unknown) {
     const error = errorRaw instanceof Error ? errorRaw : new Error(String(errorRaw));
     return { success: false, error: sanitizeClientError(error) };

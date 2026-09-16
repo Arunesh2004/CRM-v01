@@ -54,29 +54,29 @@ export class ContextBuilderService {
         throw new Error('Unauthorized: User not found in tenant');
       }
 
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any -- S2 Residual Debt: Legacy internal payload requires architectural typing
+       
       // eslint-disable-next-line @typescript-eslint/no-explicit-any -- S2 Residual Debt: Legacy internal payload requires architectural typing
       const userRoles = user.userRoles.map((r: any) => r.role.name);
       
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any -- S2 Residual Debt: Legacy internal payload requires architectural typing
+       
       const permissions: string[] = Array.from(new Set(
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any -- S2 Residual Debt: Legacy internal payload requires architectural typing
+         
         // eslint-disable-next-line @typescript-eslint/no-explicit-any -- S2 Residual Debt: Legacy internal payload requires architectural typing
         user.userRoles.flatMap((r: any) => 
           // eslint-disable-next-line @typescript-eslint/no-explicit-any -- S2 Residual Debt: Legacy internal payload requires architectural typing
           r.role.permissions.map((p: any) => `${p.permission.resource}:${p.permission.action}`)
         )
       ));
-// eslint-disable-next-line @typescript-eslint/no-explicit-any -- S2 Residual Debt: Legacy internal payload requires architectural typing
+ 
 
       // Derive accessible modules based on permissions
       const accessibleModules = Array.from(new Set(
         // eslint-disable-next-line @typescript-eslint/no-explicit-any -- S2 Residual Debt: Legacy internal payload requires architectural typing
         permissions.map((p: any) => p.split(':')[0])
       ));
-// eslint-disable-next-line @typescript-eslint/no-explicit-any -- S2 Residual Debt: Legacy internal payload requires architectural typing
+ 
 
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any -- S2 Residual Debt: Legacy internal payload requires architectural typing
+       
       // Fetch allowed tools based on permissions
       const tools = await prisma.aITool.findMany({});
       const allowedTools = tools
@@ -102,7 +102,7 @@ export class ContextBuilderService {
         }),
         tenantId,
         userRoles: Object.freeze(userRoles),
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any -- S2 Residual Debt: Legacy internal payload requires architectural typing
+         
         permissions: Object.freeze(permissions),
         accessibleModules: Object.freeze(accessibleModules),
         allowedTools: Object.freeze(allowedTools),

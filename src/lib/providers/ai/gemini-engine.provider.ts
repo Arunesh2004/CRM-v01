@@ -25,15 +25,15 @@ export class GeminiEngineProvider implements AIEngineProvider {
     }
 
     Object.freeze(aiContext);
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any -- S2 Residual Debt: External provider boundary lacks strict types
+     
     // eslint-disable-next-line @typescript-eslint/no-explicit-any -- S2 Residual Debt: External provider boundary lacks strict types
     let chat: any = null;
     const aiClient = this.ai;
     const model = this.modelName;
-// eslint-disable-next-line @typescript-eslint/no-explicit-any -- S2 Residual Debt: External provider boundary lacks strict types
-// eslint-disable-next-line @typescript-eslint/no-explicit-any -- S2 Residual Debt: External provider boundary lacks strict types
+ 
+ 
 
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any -- S2 Residual Debt: External provider boundary lacks strict types
+     
     // eslint-disable-next-line @typescript-eslint/no-explicit-any -- S2 Residual Debt: External provider boundary lacks strict types
     const sendMessageWithRetry = async (payload: any, requestId?: string): Promise<any> => {
       let attempt = 0;
@@ -41,12 +41,12 @@ export class GeminiEngineProvider implements AIEngineProvider {
         try {
           return await chat.sendMessage(payload);
         } catch (errRaw: unknown) {
-          // eslint-disable-next-line @typescript-eslint/no-explicit-any -- S2 Residual Debt: External provider boundary lacks strict types
-          // eslint-disable-next-line @typescript-eslint/no-explicit-any -- S2 Residual Debt: External provider boundary lacks strict types
+           
+           
           const err = errRaw instanceof Error ? errRaw : new Error(String(errRaw));
           attempt++;
           const msg = err.message || '';
-          // eslint-disable-next-line @typescript-eslint/no-explicit-any -- S2 Residual Debt: External provider boundary lacks strict types
+           
           // eslint-disable-next-line @typescript-eslint/no-explicit-any -- S2 Residual Debt: External provider boundary lacks strict types
           const status = (err as any)?.status || (err as any)?.response?.status;
 
@@ -93,7 +93,7 @@ export class GeminiEngineProvider implements AIEngineProvider {
         }
 
         // Initialize chat on first turn
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any -- S2 Residual Debt: External provider boundary lacks strict types
+         
         if (!chat) {
           chat = aiClient.chats.create({
             model: model,
@@ -104,7 +104,7 @@ export class GeminiEngineProvider implements AIEngineProvider {
               temperature: 0.1,
             },
             history: geminiHistory ?? [],
-          // eslint-disable-next-line @typescript-eslint/no-explicit-any -- S2 Residual Debt: External provider boundary lacks strict types
+           
           });
         }
 
@@ -121,26 +121,26 @@ export class GeminiEngineProvider implements AIEngineProvider {
         }
 
         return { text: response.text || '' };
-      // eslint-disable-next-line @typescript-eslint/no-unused-vars -- S2 Residual Debt: Legacy unused local
+       
       },
 
       async submitToolResults(results: AIToolResult[]): Promise<AITurnResult> {
         const functionResponses = results.map(res => {
            let resultStr = '';
-           // eslint-disable-next-line @typescript-eslint/no-explicit-any -- S2 Residual Debt: External provider boundary lacks strict types
+            
            try {
              resultStr = JSON.stringify(res.result);
            // eslint-disable-next-line @typescript-eslint/no-unused-vars -- Intentional callback/interface parameter
            } catch(e) {
-             // eslint-disable-next-line @typescript-eslint/no-explicit-any -- S2 Residual Debt: External provider boundary lacks strict types
+              
              resultStr = String(res.result);
            }
            if (resultStr.length > AIConfig.MAX_TOOL_RESULT_BYTES) {
-              // eslint-disable-next-line @typescript-eslint/no-explicit-any -- S2 Residual Debt: External provider boundary lacks strict types
+               
               return { 
                 // eslint-disable-next-line @typescript-eslint/no-explicit-any -- S2 Residual Debt: External provider boundary lacks strict types
                 name: (res as any).name || 'unknown', 
-                // eslint-disable-next-line @typescript-eslint/no-explicit-any -- S2 Residual Debt: External provider boundary lacks strict types
+                 
                 response: { truncated: true, reason: 'RESULT_SIZE_LIMIT' } 
               };
            }

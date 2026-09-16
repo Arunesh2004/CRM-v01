@@ -8,7 +8,7 @@ export interface CallProvider {
   /**
    * Initiates an outbound call.
    */
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any -- S2 Residual Debt: Legacy internal payload requires architectural typing
+   
   // eslint-disable-next-line @typescript-eslint/no-explicit-any -- S2 Residual Debt: Legacy internal payload requires architectural typing
   startCall(from: string, to: string, options?: any): Promise<string>;
 
@@ -27,7 +27,7 @@ export interface CallProvider {
    // eslint-disable-next-line @typescript-eslint/no-explicit-any -- S2 Residual Debt: Legacy internal payload requires architectural typing
    // eslint-disable-next-line @typescript-eslint/no-explicit-any -- S2 Residual Debt: Legacy internal payload requires architectural typing
    */
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any -- S2 Residual Debt: Legacy internal payload requires architectural typing
+   
   // eslint-disable-next-line @typescript-eslint/no-explicit-any -- S2 Residual Debt: Legacy internal payload requires architectural typing
   normalizeWebhookEvent(payload: any, headers: any): Promise<NormalizedCallEvent>;
 }
@@ -35,7 +35,7 @@ export interface CallProvider {
 export interface NormalizedCallEvent {
   providerCallId: string;
   type: 'STATUS_CHANGE' | 'RECORDING_AVAILABLE' | 'COMPLETED';
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any -- S2 Residual Debt: Legacy internal payload requires architectural typing
+   
   status?: string;
   duration?: number;
   recordingUrl?: string;

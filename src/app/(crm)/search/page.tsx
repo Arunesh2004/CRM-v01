@@ -73,8 +73,7 @@ export default function GlobalSearchPage() {
          
          {!loading && !error && query.trim().length >= 2 && results.length === 0 && (
            <div className="p-12 text-center text-[#8891B0]">
-             // eslint-disable-next-line react/no-unescaped-entities -- Cosmetic unescaped entity safely ignored.
-             No accessible results found for "{query}".
+             No accessible results found for &quot;{query}&quot;.
            </div>
          )}
 

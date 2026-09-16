@@ -39,7 +39,7 @@ export const secureTools: AITool[] = [
         timeframe: { type: 'STRING', description: 'A semantic timeframe for dueDate (e.g., "today", "yesterday", "tomorrow", "this_week", "last_week", "this_month", "last_month"). Do not generate ISO dates.' }
       }
     },
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any -- S2 Residual Debt: Legacy internal payload requires architectural typing
+     
     // eslint-disable-next-line @typescript-eslint/no-explicit-any -- S2 Residual Debt: Legacy internal payload requires architectural typing
     execute: async (args: any) => {
       const user = await requireAuth();
@@ -55,7 +55,7 @@ export const secureTools: AITool[] = [
       });
       return {
         totalReturned: response.data.length,
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any -- S2 Residual Debt: Legacy internal payload requires architectural typing
+         
         hasMore: response.pagination.hasMore,
         // eslint-disable-next-line @typescript-eslint/no-explicit-any -- S2 Residual Debt: Legacy internal payload requires architectural typing
         tasks: response.data.map((t: any) => ({
@@ -77,7 +77,7 @@ export const secureTools: AITool[] = [
         limit: { type: 'INTEGER', description: 'Maximum number to return. Max 50.' },
         status: { type: 'STRING', description: 'Filter by status, e.g., NEW, CONTACTED, QUALIFIED' },
         timeframe: { type: 'STRING', description: 'A semantic timeframe for lead creation date (e.g., "today", "yesterday", "this_week", "last_week", "this_month", "last_month"). Do not generate ISO dates.' }
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any -- S2 Residual Debt: Legacy internal payload requires architectural typing
+       
       }
     },
     // eslint-disable-next-line @typescript-eslint/no-explicit-any -- S2 Residual Debt: Legacy internal payload requires architectural typing
@@ -93,7 +93,7 @@ export const secureTools: AITool[] = [
         ...(bounds?.startDate && { createdAtStart: bounds.startDate }),
         ...(bounds?.endDate && { createdAtEnd: bounds.endDate })
       });
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any -- S2 Residual Debt: Legacy internal payload requires architectural typing
+       
       return {
         totalReturned: response.data.length,
         hasMore: response.pagination.hasMore,
@@ -115,7 +115,7 @@ export const secureTools: AITool[] = [
       type: 'OBJECT',
       properties: {
         limit: { type: 'INTEGER', description: 'Max number to return. Max 50.' },
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any -- S2 Residual Debt: Legacy internal payload requires architectural typing
+         
         status: { type: 'STRING', description: 'Filter by status, e.g., ACTIVE' },
         timeframe: { type: 'STRING', description: 'A semantic timeframe for customer creation date (e.g., "today", "yesterday", "this_week", "last_week", "this_month", "last_month"). Do not generate ISO dates.' }
       }
@@ -131,7 +131,7 @@ export const secureTools: AITool[] = [
         limit,
         filters: { assignedUserId: user.id, ...(args.status && { status: args.status }) },
         ...(bounds?.startDate && { createdAtStart: bounds.startDate }),
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any -- S2 Residual Debt: Legacy internal payload requires architectural typing
+         
         ...(bounds?.endDate && { createdAtEnd: bounds.endDate })
       });
       return {
@@ -150,7 +150,7 @@ export const secureTools: AITool[] = [
   {
     ...getCanonical('getMyActivity'),
     parameters: {
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any -- S2 Residual Debt: Legacy internal payload requires architectural typing
+       
       type: 'OBJECT',
       properties: {
         limit: { type: 'INTEGER', description: 'Max number to return. Max 50.' },
@@ -183,7 +183,7 @@ export const secureTools: AITool[] = [
     }
   },
   {
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any -- S2 Residual Debt: Legacy internal payload requires architectural typing
+     
     ...getCanonical('getMyNotifications'),
     parameters: {
       type: 'OBJECT',
@@ -208,7 +208,7 @@ export const secureTools: AITool[] = [
       };
     }
   },
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any -- S2 Residual Debt: Legacy internal payload requires architectural typing
+   
   {
     ...getCanonical('getEmployeeSummary'),
     parameters: {
@@ -229,26 +229,26 @@ export const secureTools: AITool[] = [
         return { error: `No employees found matching "${args.nameOrEmail}".` };
       }
 
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any -- S2 Residual Debt: Legacy internal payload requires architectural typing
+       
       if (employees.length > 1) {
         return {
           error: `Ambiguity Error: I found ${employees.length} employees matching "${args.nameOrEmail}". Please specify which one you mean.`,
-          // eslint-disable-next-line @typescript-eslint/no-explicit-any -- S2 Residual Debt: Legacy internal payload requires architectural typing
+           
           matches: employees.map(e => e.email)
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any -- S2 Residual Debt: Legacy internal payload requires architectural typing
+         
         };
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any -- S2 Residual Debt: Legacy internal payload requires architectural typing
+       
       }
 
-      // eslint-disable-next-line @typescript-eslint/no-unused-vars -- S2 Residual Debt: Legacy unused local
+       
       const employee = employees[0];
 
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any -- S2 Residual Debt: Legacy internal payload requires architectural typing
+       
       // eslint-disable-next-line @typescript-eslint/no-explicit-any -- S2 Residual Debt: Legacy internal payload requires architectural typing
       let taskSummary: any = { error: 'Not authorized to view tasks' };
       try {
         const tasks = await getTasks({ limit: 100, filters: { assignedUserId: employee.id } });
-        // eslint-disable-next-line @typescript-eslint/no-unused-vars -- S2 Residual Debt: Legacy unused local
+         
         // eslint-disable-next-line @typescript-eslint/no-explicit-any -- S2 Residual Debt: Legacy internal payload requires architectural typing
         const pending = tasks.data.filter((t: any) => t.status === 'PENDING').length;
         // eslint-disable-next-line @typescript-eslint/no-explicit-any -- S2 Residual Debt: Legacy internal payload requires architectural typing
@@ -256,7 +256,7 @@ export const secureTools: AITool[] = [
         // eslint-disable-next-line @typescript-eslint/no-explicit-any -- S2 Residual Debt: Legacy internal payload requires architectural typing
         const completed = tasks.data.filter((t: any) => t.status === 'COMPLETED').length;
         taskSummary = { total: tasks.data.length, pending, inProgress, completed };
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any -- S2 Residual Debt: Legacy internal payload requires architectural typing
+       
       // eslint-disable-next-line @typescript-eslint/no-unused-vars -- Intentional callback/interface parameter
       } catch (e) {}
 
@@ -301,7 +301,7 @@ export const secureTools: AITool[] = [
     execute: async () => {
       return await reportingService.getCameraMetrics();
     }
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any -- S2 Residual Debt: Legacy internal payload requires architectural typing
+   
   },
   {
     ...getCanonical('getCommunicationSummary'),
@@ -336,7 +336,7 @@ export const secureTools: AITool[] = [
         name: c.name,
         industry: c.industry,
         status: c.status
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any -- S2 Residual Debt: Legacy internal payload requires architectural typing
+       
       }));
 
       // If multiple candidates, we advise the LLM to ask user, although we still return success with the list
@@ -355,7 +355,7 @@ export const secureTools: AITool[] = [
         customerId: { type: 'STRING', description: 'The unique ID of the customer.' }
       }
     },
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any -- S2 Residual Debt: Legacy internal payload requires architectural typing
+     
     // eslint-disable-next-line @typescript-eslint/no-explicit-any -- S2 Residual Debt: Legacy internal payload requires architectural typing
     execute: async (args: any) => {
       if (!args.customerId) return { ok: false, error: 'Missing customerId' };
@@ -373,7 +373,7 @@ export const secureTools: AITool[] = [
           createdAt: details.createdAt,
           assignedUser: details.assignedUser,
           counts: details._count,
-          // eslint-disable-next-line @typescript-eslint/no-explicit-any -- S2 Residual Debt: Legacy internal payload requires architectural typing
+           
           contacts: details.contacts.slice(0, 10).map(c => ({ name: c.firstName + ' ' + c.lastName, email: c.email, phone: c.phone, isPrimary: c.isPrimary })),
           locations: details.locations.slice(0, 5).map(l => ({ name: l.name, city: l.city, state: l.state })),
           // eslint-disable-next-line @typescript-eslint/no-explicit-any -- S2 Residual Debt: Legacy internal payload requires architectural typing
@@ -408,7 +408,7 @@ export const secureTools: AITool[] = [
       }
 
       const candidates = res.data.map(l => ({
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any -- S2 Residual Debt: Legacy internal payload requires architectural typing
+         
         id: l.id,
         name: l.name,
         company: l.company,
@@ -442,7 +442,7 @@ export const secureTools: AITool[] = [
         data: {
           id: details.id,
           name: details.name,
-          // eslint-disable-next-line @typescript-eslint/no-explicit-any -- S2 Residual Debt: Legacy internal payload requires architectural typing
+           
           company: details.company,
           email: details.email,
           phone: details.phone,
@@ -471,7 +471,7 @@ export const secureTools: AITool[] = [
       const bounds = resolveDateRange(args.timeframe);
       const data = await reportingService.getLeadConversionMetrics(bounds?.startDate, bounds?.endDate);
       return { ok: true, data };
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any -- S2 Residual Debt: Legacy internal payload requires architectural typing
+     
     }
   },
   {
@@ -491,11 +491,11 @@ export const secureTools: AITool[] = [
     requiredResource: 'SYSTEM', // Baseline functionality safe for all users
     requiredAction: 'READ',
     parameters: {
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any -- S2 Residual Debt: Legacy internal payload requires architectural typing
+       
       type: 'OBJECT',
       properties: {
         timeframe: { type: 'STRING', description: 'A semantic timeframe. Do not generate ISO dates.' }
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any -- S2 Residual Debt: Legacy internal payload requires architectural typing
+       
       }
     },
     // eslint-disable-next-line @typescript-eslint/no-explicit-any -- S2 Residual Debt: Legacy internal payload requires architectural typing
@@ -540,7 +540,7 @@ export const secureTools: AITool[] = [
       }
 
       const tasks = res.data.map(t => ({
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any -- S2 Residual Debt: Legacy internal payload requires architectural typing
+         
         id: t.id,
         title: t.title,
         status: t.status,

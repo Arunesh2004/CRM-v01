@@ -14,7 +14,7 @@ export interface ErrorTrackerOptions {
 export class ErrorTracker {
   captureException(error: Error | unknown, context?: LogContext, options?: ErrorTrackerOptions) {
     const normalizedError = error instanceof Error ? error : new Error(String(error));
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars -- S2 Residual Debt: Legacy unused local
+     
     // eslint-disable-next-line @typescript-eslint/no-unused-vars -- S2 Residual Debt: Legacy unused local
     const asyncCtx = getContext();
     

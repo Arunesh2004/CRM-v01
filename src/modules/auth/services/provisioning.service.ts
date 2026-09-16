@@ -2,7 +2,7 @@ import { Logger } from '@/lib/logger/logger';
 import type { User as ClerkUser } from '@clerk/nextjs/server';
 import { executeAsSystem, SystemOperation } from '@db/utils/prisma-system';
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any -- S2 Residual Debt: Legacy internal payload requires architectural typing
+ 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any -- S2 Residual Debt: Legacy internal payload requires architectural typing
 export async function ensureUserProvisioned(clerkUser: ClerkUser | any) {
   // Normalize user data handling both Clerk SDK User object and Webhook payload

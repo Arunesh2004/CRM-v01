@@ -14,9 +14,8 @@ export async function DocumentsTabWrapper({ customerId }: { customerId: string }
         </div>
         <DocumentUploader customerId={customerId} />
       </div>
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any -- S2 Residual Debt: Legacy internal payload requires architectural typing
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any -- S2 Residual Debt: Legacy internal payload requires architectural typing
-      <DocumentList documents={documents as any} customerId={customerId} />
+
+      <DocumentList documents={documents} customerId={customerId} />
     </div>
   );
 }

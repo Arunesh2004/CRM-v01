@@ -1,4 +1,19 @@
 {
+  "src\\modules\\admin\\actions\\audit.actions.ts": [
+    "getAuditLogsAction"
+  ],
+  "src\\modules\\admin\\actions\\field-security.actions.ts": [
+    "getFieldSecurityAction"
+  ],
+  "src\\modules\\admin\\actions\\role.actions.ts": [
+    "getRolesAction"
+  ],
+  "src\\modules\\admin\\actions\\user.actions.ts": [
+    "getUsersAction"
+  ],
+  "src\\modules\\admin\\actions\\workflow.actions.ts": [
+    "getWorkflowsAction"
+  ],
   "src\\modules\\ai\\actions\\assistant.actions.ts": [
     "askAssistantAction"
   ],
@@ -8,76 +23,50 @@
   "src\\modules\\ai\\tools\\ai.tools.ts": [
     "secureTools"
   ],
+  "src\\modules\\ai\\tools\\config.ts": [
+    "CANONICAL_AI_TOOLS"
+  ],
+  "src\\modules\\ai\\tools\\crm.tools.ts": [
+    "crmTools"
+  ],
+  "src\\modules\\ai-events\\actions\\ai-event.actions.ts": [
+    "getAIEventsAction"
+  ],
+  "src\\modules\\ai-events\\ai-event.service.ts": [
+    "getAIEvents",
+    "ingestAIEventWebhook"
+  ],
+  "src\\modules\\analytics\\analytics.service.ts": [
+    "getDashboardAnalytics"
+  ],
+  "src\\modules\\audit\\audit.service.ts": [
+    "createAuditLog"
+  ],
+  "src\\modules\\auth\\actions\\onboarding.actions.ts": [
+    "submitOnboarding"
+  ],
   "src\\modules\\auth\\services\\provisioning.service.ts": [
-    "ensureUserProvisioned"
-  ],
-  "src\\modules\\billing\\actions\\invoice.actions.ts": [
-    "createInvoiceAction",
-    "updateInvoiceStatusAction",
-    "getInvoicesAction"
-  ],
-  "src\\modules\\billing\\actions\\payment.actions.ts": [
-    "createPaymentAction",
-    "handlePaymentSuccessAction"
-  ],
-  "src\\modules\\billing\\actions\\subscription.actions.ts": [
-    "createSubscriptionAction",
-    "updateSubscriptionStatusAction",
-    "getCurrentSubscriptionAction",
-    "getPlansAction",
-    "simulateCheckoutAction"
-  ],
-  "src\\modules\\billing\\actions\\usage.actions.ts": [
-    "recordUsageAction",
-    "getUsageSummaryAction",
-    "getTenantUsageAction"
-  ],
-  "src\\modules\\billing\\entitlement\\feature-guards.ts": [
-    "requirePlanFeature",
-    "requireUsageLimit"
-  ],
-  "src\\modules\\billing\\invoice\\invoice.service.ts": [
-    "createInvoice",
-    "updateInvoiceStatus",
-    "getInvoices"
-  ],
-  "src\\modules\\billing\\payment\\payment.service.ts": [
-    "createPaymentRecord",
-    "handlePaymentSuccess"
-  ],
-  "src\\modules\\billing\\subscription\\subscription.service.ts": [
-    "getCurrentSubscription",
-    "getPlans",
-    "createCheckoutSession",
-    "processSuccessfulCheckout",
-    "createSubscription",
-    "updateSubscriptionStatus"
-  ],
-  "src\\modules\\billing\\usage\\usage.service.ts": [
-    "getTenantUsage"
-  ],
-  "src\\modules\\billing\\validators\\invoice.schema.ts": [
-    "CreateInvoiceSchema",
-    "UpdateInvoiceStatusSchema"
-  ],
-  "src\\modules\\billing\\validators\\payment.schema.ts": [
-    "CreatePaymentSchema",
-    "HandlePaymentSuccessSchema"
-  ],
-  "src\\modules\\billing\\validators\\subscription.schema.ts": [
-    "CreateSubscriptionSchema",
-    "UpdateSubscriptionStatusSchema"
-  ],
-  "src\\modules\\billing\\validators\\usage.schema.ts": [
-    "RecordUsageSchema",
-    "GetUsageSummarySchema"
+    "ensureUserProvisioned",
+    "synchronizeClerkIdentity"
   ],
   "src\\modules\\cctv\\actions\\camera.actions.ts": [
     "createCameraAction",
     "updateCameraAction",
     "getCamerasAction",
     "deleteCameraAction",
-    "simulateAIEventAction"
+    "simulateAIEventAction",
+    "setCameraCredentialsAction",
+    "clearCameraCredentialsAction"
+  ],
+  "src\\modules\\cctv\\actions\\recording.actions.ts": [
+    "getCameraRecordingsAction",
+    "generateRecordingDownloadUrlAction"
+  ],
+  "src\\modules\\cctv\\actions\\stream.actions.ts": [
+    "generateStreamTokenAction"
+  ],
+  "src\\modules\\cctv\\camera-event.service.ts": [
+    "VisionOutputSchema"
   ],
   "src\\modules\\cctv\\camera.service.ts": [
     "createCamera",
@@ -85,28 +74,64 @@
     "getCameraById",
     "updateCamera",
     "deleteCamera",
-    "simulateAIEvent"
+    "simulateAIEvent",
+    "setCameraCredentials",
+    "clearCameraCredentials"
+  ],
+  "src\\modules\\cctv\\opaque-path.helper.ts": [
+    "deriveOpaquePath",
+    "parseOpaquePath"
+  ],
+  "src\\modules\\cctv\\recording.service.ts": [
+    "getCameraRecordings",
+    "generateRecordingDownloadUrl"
+  ],
+  "src\\modules\\cctv\\stream-version.helper.ts": [
+    "invalidateCurrentStreamGeneration",
+    "attemptImmediateInvalidation"
+  ],
+  "src\\modules\\cctv\\stream.service.ts": [
+    "invalidateStreamAccess",
+    "generateStreamToken"
   ],
   "src\\modules\\cctv\\validators\\camera.schema.ts": [
     "CreateCameraSchema",
     "UpdateCameraSchema",
+    "SetCameraCredentialsSchema",
+    "ClearCameraCredentialsSchema",
     "SimulateAIEventSchema"
   ],
+  "src\\modules\\cctv\\validators\\path.validator.ts": [
+    "assertPathInRoot"
+  ],
   "src\\modules\\communication\\actions\\call.actions.ts": [
-    "createCallAction",
-    "getCallHistoryAction"
+    "getCallsAction",
+    "initiateCallAction",
+    "acceptCallAction",
+    "rejectCallAction",
+    "markConnectedAction",
+    "endCallAction"
   ],
-  "src\\modules\\communication\\actions\\email.actions.ts": [
-    "sendEmailAction"
+  "src\\modules\\communication\\actions\\chat.actions.ts": [
+    "getConversationsAction",
+    "startChatAction",
+    "sendMessageAction",
+    "getMessagesAction"
   ],
-  "src\\modules\\communication\\actions\\message.actions.ts": [
-    "sendMessageAction"
+  "src\\modules\\communication\\actions\\inbox.actions.ts": [
+    "_sendInternalMailAction",
+    "_getInboxAction",
+    "_archiveMailAction",
+    "sendInternalMailAction",
+    "getInboxAction",
+    "archiveMailAction"
   ],
-  "src\\modules\\communication\\actions\\notification.actions.ts": [
-    "getNotificationsAction",
-    "markNotificationReadAction",
-    "getAllNotificationsAction",
-    "getNotificationsByIncidentAction"
+  "src\\modules\\communication\\actions\\presence.actions.ts": [
+    "heartbeatAction",
+    "getPresenceAction"
+  ],
+  "src\\modules\\communication\\adapter.ts": [
+    "realtime"
   ],
   "src\\modules\\communication\\email\\email.service.ts": [
     "sendEmail"
@@ -115,17 +140,30 @@
     "renderEmailTemplate",
     "BASIC_WELCOME_TEMPLATE"
   ],
+  "src\\modules\\communication\\jobs\\call-transcription.worker.ts": [
+    "processCallCompleted"
+  ],
   "src\\modules\\communication\\messaging\\messaging.service.ts": [
     "sendMessage"
   ],
   "src\\modules\\communication\\notification\\notification.service.ts": [
     "createNotification"
   ],
-  "src\\modules\\communication\\notification.service.ts": [
-    "sendIncidentNotification"
+  "src\\modules\\communication\\storage\\storage.service.ts": [
+    "generateRecordingAccessUrl"
   ],
   "src\\modules\\communication\\telephony\\telephony.service.ts": [
-    "createCall"
+    "createCall",
+    "completeCall",
+    "processCallRecording",
+    "requestAITranscript",
+    "completeAITranscript",
+    "requestAISummary",
+    "completeAISummary",
+    "getCalls",
+    "getRecordings",
+    "getTranscripts",
+    "getAISummaries"
   ],
   "src\\modules\\communication\\validators\\call.schema.ts": [
     "CreateCallSchema"
@@ -139,19 +177,66 @@
   "src\\modules\\communication\\validators\\notification.schema.ts": [
     "MarkNotificationReadSchema"
   ],
-  "src\\modules\\communication\\webhook\\webhook.service.ts": [
-    "processWebhook"
+  "src\\modules\\core\\comments\\comment.service.ts": [
+    "createCRMComment",
+    "getCRMComments",
+    "updateCRMComment",
+    "deleteCRMComment"
+  ],
+  "src\\modules\\core\\events\\event-bus.ts": [
+    "EventBus"
+  ],
+  "src\\modules\\core\\events\\outbox.service.ts": [
+    "processOutbox",
+    "cleanupOutbox"
+  ],
+  "src\\modules\\core\\jobs\\retention.job.ts": [
+    "dataRetentionCron"
+  ],
+  "src\\modules\\core\\providers\\email.provider.ts": [
+    "emailProvider"
+  ],
+  "src\\modules\\crm\\actions\\comment.actions.ts": [
+    "createCRMCommentAction",
+    "getCRMCommentsAction",
+    "updateCRMCommentAction",
+    "deleteCRMCommentAction"
   ],
   "src\\modules\\crm\\actions\\customer.actions.ts": [
     "createCustomerAction",
     "updateCustomerAction",
     "getCustomersAction",
-    "getCustomerByIdAction"
+    "getCustomerByIdAction",
+    "deleteCustomerAction",
+    "createContactAction",
+    "updateContactAction",
+    "deleteContactAction",
+    "createLocationAction",
+    "getCustomerTimelineAction"
+  ],
+  "src\\modules\\crm\\actions\\deal.actions.ts": [
+    "getPipelinesAction",
+    "seedDefaultPipelineAction",
+    "getDealsAction",
+    "getDealsByStageAction",
+    "getDealByIdAction",
+    "moveDealStageAction",
+    "getAssignableUsersAction",
+    "createDealAction",
+    "convertLeadToDealAction",
+    "getDealAnalyticsAction",
+    "getDealTimelineAction",
+    "updateDealAction",
+    "archiveDealAction"
   ],
   "src\\modules\\crm\\actions\\lead.actions.ts": [
+    "updateLeadStatusAction",
     "createLeadAction",
     "updateLeadAction",
-    "getLeadsAction"
+    "getLeadsAction",
+    "assignLeadAction",
+    "convertLeadAction",
+    "deleteLeadAction"
   ],
   "src\\modules\\crm\\actions\\location.actions.ts": [
     "createLocationAction",
@@ -162,22 +247,75 @@
   "src\\modules\\crm\\actions\\task.actions.ts": [
     "createTaskAction",
     "updateTaskAction",
-    "getTasksAction"
+    "getTasksAction",
+    "getTaskByIdAction",
+    "createTaskCommentAction",
+    "deleteTaskCommentAction",
+    "getTaskWorkloadMetricsAction"
   ],
   "src\\modules\\crm\\activity\\activity.service.ts": [
-    "createTimelineEntry"
+    "createTimelineEntry",
+    "getActivities"
+  ],
+  "src\\modules\\crm\\bulk\\customer.bulk.service.ts": [
+    "MAX_SYNC_BULK_SIZE"
+  ],
+  "src\\modules\\crm\\bulk\\lead.bulk.service.ts": [
+    "MAX_SYNC_BULK_SIZE"
+  ],
+  "src\\modules\\crm\\bulk\\task.bulk.service.ts": [
+    "MAX_SYNC_BULK_SIZE"
   ],
   "src\\modules\\crm\\customer\\customer.service.ts": [
     "createCustomer",
     "getCustomers",
     "getCustomerById",
-    "updateCustomer"
+    "updateCustomer",
+    "deleteCustomer",
+    "createContact",
+    "createLocation",
+    "updateContact",
+    "deleteContact"
+  ],
+  "src\\modules\\crm\\customer\\customer.timeline.service.ts": [
+    "getCustomerTimeline"
+  ],
+  "src\\modules\\crm\\deal\\deal.service.ts": [
+    "getDeals",
+    "getDealById",
+    "createDeal",
+    "convertLeadToDeal",
+    "moveDealStage",
+    "getDealAnalytics",
+    "getDealTimeline",
+    "updateDeal",
+    "archiveDeal"
+  ],
+  "src\\modules\\crm\\deal\\pipeline.service.ts": [
+    "getPipelines",
+    "createPipeline",
+    "createPipelineStage",
+    "seedDefaultPipeline"
+  ],
+  "src\\modules\\crm\\document\\document.actions.ts": [
+    "uploadDocumentAction",
+    "deleteDocumentAction"
+  ],
+  "src\\modules\\crm\\document\\document.service.ts": [
+    "requireDocumentAccess",
+    "createDocument",
+    "getDocument",
+    "getDocumentsForCustomer",
+    "getDocumentsForTask",
+    "deleteDocument"
   ],
   "src\\modules\\crm\\lead\\lead.service.ts": [
     "createLead",
     "getLeads",
+    "getLeadById",
     "updateLead",
-    "convertLeadToCustomer"
+    "convertLeadToCustomer",
+    "deleteLead"
   ],
   "src\\modules\\crm\\location\\location.service.ts": [
     "createLocation",
@@ -189,8 +327,9 @@
   "src\\modules\\crm\\task\\task.service.ts": [
     "createTask",
     "getTasks",
+    "getTaskById",
     "updateTask",
-    "assignTask"
+    "getTaskWorkloadMetrics"
   ],
   "src\\modules\\crm\\validators\\customer.schema.ts": [
     "CreateCustomerSchema",
@@ -208,11 +347,20 @@
     "CreateTaskSchema",
     "UpdateTaskSchema"
   ],
+  "src\\modules\\departments\\department.service.ts": [
+    "getDepartments",
+    "createDepartment",
+    "updateDepartment",
+    "deleteDepartment"
+  ],
   "src\\modules\\incident\\actions\\incident.actions.ts": [
+    "createIncidentAction",
     "getIncidentsAction",
+    "getIncidentByIdAction",
     "updateIncidentStatusAction",
     "assignIncidentAction",
-    "resolveIncidentAction"
+    "resolveIncidentAction",
+    "deleteIncidentAction"
   ],
   "src\\modules\\incident\\incident.service.ts": [
     "createIncident",
@@ -220,12 +368,21 @@
     "getIncidentById",
     "updateIncidentStatus",
     "assignIncident",
-    "resolveIncident"
+    "resolveIncident",
+    "deleteIncident"
   ],
   "src\\modules\\incident\\validators\\incident.schema.ts": [
     "CreateIncidentSchema",
     "UpdateIncidentStatusSchema",
     "AssignIncidentSchema"
+  ],
+  "src\\modules\\recovery\\export.engine.ts": [
+    "exportTenant"
+  ],
+  "src\\modules\\recovery\\restore.engine.ts": [
+    "requestRestore",
+    "approveRestore",
+    "executeRestore"
   ],
   "src\\modules\\reporting\\actions\\reporting.actions.ts": [
     "getDashboardMetricsAction"
@@ -233,12 +390,84 @@
   "src\\modules\\reporting\\export.service.ts": [
     "getIncidentsCsv",
     "getCustomersCsv",
-    "getCommunicationsCsv"
+    "getCommunicationsCsv",
+    "getQuotesCsv"
   ],
   "src\\modules\\reporting\\reporting.service.ts": [
     "getSecurityMetrics",
     "getCameraMetrics",
     "getCrmMetrics",
-    "getCommunicationMetrics"
+    "getCommunicationMetrics",
+    "getLeadConversionMetrics",
+    "getOverdueTaskDistribution",
+    "getMyAggregateMetrics",
+    "getRevenueMetrics"
+  ],
+  "src\\modules\\revenue\\actions\\approval.actions.ts": [
+    "getApprovalsAction"
+  ],
+  "src\\modules\\revenue\\actions\\product.actions.ts": [
+    "getProductsAction",
+    "createProductAction",
+    "updateProductAction",
+    "deactivateProductAction"
+  ],
+  "src\\modules\\revenue\\actions\\revenue.actions.ts": [
+    "getQuotesAction",
+    "createQuoteAction",
+    "submitQuoteForApprovalAction",
+    "approveQuoteAction",
+    "sendQuoteAction",
+    "acceptQuoteAction",
+    "createQuoteRevisionAction"
+  ],
+  "src\\modules\\revenue\\product.service.ts": [
+    "productCreateSchema",
+    "productUpdateSchema"
+  ],
+  "src\\modules\\sales-intelligence\\actions\\territory.actions.ts": [
+    "getTerritoriesAction",
+    "createTerritoryAction",
+    "updateTerritoryAction",
+    "assignTerritoryUserAction",
+    "removeTerritoryAssignmentAction"
+  ],
+  "src\\modules\\search\\actions\\search.actions.ts": [
+    "searchAction"
+  ],
+  "src\\modules\\search\\search.service.ts": [
+    "globalSearch"
+  ],
+  "src\\modules\\security\\abac\\department-scope.ts": [
+    "validateDepartmentScope"
+  ],
+  "src\\modules\\settings\\integration.actions.ts": [
+    "getTenantIntegrationsAction",
+    "testIntegrationConnectionAction",
+    "updateIntegrationCredentialsAction",
+    "deleteIntegrationAction"
+  ],
+  "src\\modules\\support\\actions\\ticket.actions.ts": [
+    "getTicketsAction",
+    "createTicketAction",
+    "getTicketByIdAction"
+  ],
+  "src\\modules\\tenant\\tenant-lifecycle.service.ts": [
+    "requestTenantDeletion"
+  ],
+  "src\\modules\\tenant\\tenant.service.ts": [
+    "getTenantConfig",
+    "invalidateTenantCache"
+  ],
+  "src\\modules\\users\\actions\\onboarding.actions.ts": [
+    "completeProfileAction"
+  ],
+  "src\\modules\\users\\user.service.ts": [
+    "getEmployees",
+    "inviteEmployee",
+    "disableEmployee",
+    "updateEmployeeRole",
+    "reassignDepartment",
+    "updateProfile"
   ]
 }

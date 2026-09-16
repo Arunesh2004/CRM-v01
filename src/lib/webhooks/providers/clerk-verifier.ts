@@ -7,7 +7,7 @@ export class ClerkWebhookVerifier implements WebhookVerifier {
       const wh = new Webhook(secret);
       wh.verify(payload, headers);
       return true;
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars -- S2 Residual Debt: Legacy unused local
+     
     // eslint-disable-next-line @typescript-eslint/no-unused-vars -- Intentional callback/interface parameter
     } catch (err) {
       return false;

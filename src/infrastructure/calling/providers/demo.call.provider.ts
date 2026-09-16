@@ -4,9 +4,9 @@ import crypto from 'crypto';
 export class DemoCallProvider implements CallProvider {
   constructor(private tenantId: string) {}
 
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars -- S2 Residual Debt: Legacy unused local
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any -- S2 Residual Debt: External provider boundary lacks strict types
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars -- S2 Residual Debt: Legacy unused local
+   
+   
+   
   // eslint-disable-next-line @typescript-eslint/no-explicit-any -- S2 Residual Debt: External provider boundary lacks strict types
   async startCall(from: string, to: string, options?: any): Promise<string> {
     const providerCallId = `demo_call_${crypto.randomBytes(8).toString('hex')}`;
@@ -25,13 +25,13 @@ export class DemoCallProvider implements CallProvider {
 
   async generateClientToken(userId: string): Promise<string> {
     return `demo_token_for_${userId}`;
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any -- S2 Residual Debt: External provider boundary lacks strict types
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars -- S2 Residual Debt: Legacy unused local
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any -- S2 Residual Debt: External provider boundary lacks strict types
+   
+   
+   
   }
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any -- S2 Residual Debt: External provider boundary lacks strict types
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars -- S2 Residual Debt: Legacy unused local
+   
+   
   // eslint-disable-next-line @typescript-eslint/no-explicit-any -- S2 Residual Debt: External provider boundary lacks strict types
   async normalizeWebhookEvent(payload: any, headers: any): Promise<NormalizedCallEvent> {
     // In demo mode, we might hit an endpoint manually to simulate a webhook

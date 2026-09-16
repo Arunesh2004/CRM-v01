@@ -7,7 +7,7 @@ import { IncidentNotificationStatus } from './IncidentNotificationStatus';
 import { Badge } from '@/components/ui/Badge';
 import { AlertCircle, ShieldAlert, Video, MapPin, Clock, Search, Shield, User2 } from 'lucide-react';
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any -- S2 Residual Debt: Legacy internal payload requires architectural typing
+ 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any -- S2 Residual Debt: Legacy internal payload requires architectural typing
 export function IncidentClientTable({ incidents }: { incidents: any[] }) {
   const router = useRouter();

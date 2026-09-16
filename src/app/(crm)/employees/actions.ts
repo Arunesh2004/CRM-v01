@@ -76,9 +76,9 @@ async function _updateProfileAction(userId: string, formData: FormData) {
     
     // Clean up empty strings
     Object.keys(data).forEach(key => {
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any -- S2 Residual Debt: Legacy internal payload requires architectural typing
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any -- S2 Residual Debt: Legacy internal payload requires architectural typing
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any -- S2 Residual Debt: Legacy internal payload requires architectural typing
+       
+       
+       
       // eslint-disable-next-line @typescript-eslint/no-explicit-any -- S2 Residual Debt: Legacy internal payload requires architectural typing
       if ((data as any)[key] === '') (data as any)[key] = undefined;
     });

@@ -13,7 +13,7 @@ export class TerritoryService {
         where: { tenantId },
         orderBy: { createdAt: 'desc' }
       });
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any -- S2 Residual Debt: Legacy internal payload requires architectural typing
+       
       // eslint-disable-next-line @typescript-eslint/no-explicit-any -- S2 Residual Debt: Legacy internal payload requires architectural typing
       return Promise.all(territories.map((t: any) => FieldSecurityService.maskFields(tenantId, userId, 'Territory', t)));
     });

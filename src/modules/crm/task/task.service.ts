@@ -23,8 +23,8 @@ export async function createTask(input: CreateTaskInput & { idempotencyKey?: str
       IdempotencyOperations.CREATE_TASK,
       idempotencyKey,
       taskData,
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any -- S2 Residual Debt: Legacy internal payload requires architectural typing
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any -- S2 Residual Debt: Legacy internal payload requires architectural typing
+       
+       
       async (baseTx) => {
         const tx = await withTenantTransaction(baseTx, tenantId);
         return await TaskCore.createTask(tx, tenantId, user.id, taskData);
@@ -38,16 +38,16 @@ export async function createTask(input: CreateTaskInput & { idempotencyKey?: str
             customer: { select: { id: true, name: true } },
             lead: { select: { id: true, name: true, company: true } }
           }
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any -- S2 Residual Debt: Legacy internal payload requires architectural typing
+         
         });
         // eslint-disable-next-line @typescript-eslint/no-explicit-any -- S2 Residual Debt: Legacy internal payload requires architectural typing
         return task as any;
       }
     );
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any -- S2 Residual Debt: Legacy internal payload requires architectural typing
+   
   }
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any -- S2 Residual Debt: Legacy internal payload requires architectural typing
+   
   return await globalPrisma.$transaction(async (baseTx) => {
     const tx = await withTenantTransaction(baseTx, tenantId);
     return await TaskCore.createTask(tx, tenantId, user.id, taskData);
@@ -57,7 +57,7 @@ export async function createTask(input: CreateTaskInput & { idempotencyKey?: str
 export async function getTasks(params?: QueryParams & {
   priority?: string;
   customerId?: string;
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any -- S2 Residual Debt: Legacy internal payload requires architectural typing
+   
   leadId?: string;
   dueDateStart?: Date;
   dueDateEnd?: Date;
@@ -66,7 +66,7 @@ export async function getTasks(params?: QueryParams & {
   await requireAuth();
   const tenantId = await requireTenant();
   await requirePermission('TASK', 'READ');
-// eslint-disable-next-line @typescript-eslint/no-explicit-any -- S2 Residual Debt: Legacy internal payload requires architectural typing
+ 
 
   const prisma = withTenant(tenantId);
   const limit = params?.limit || 50;
@@ -159,17 +159,17 @@ export async function getTaskById(taskId: string) {
   return { ...task, activities, comments };
 }
 
-// eslint-disable-next-line @typescript-eslint/no-unused-vars -- S2 Residual Debt: Legacy unused local
+ 
 export async function updateTask(input: UpdateTaskInput) {
   const user = await requireAuth();
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any -- S2 Residual Debt: Legacy internal payload requires architectural typing
+   
   const tenantId = await requireTenant();
   await requirePermission('TASK', 'UPDATE');
 
   // eslint-disable-next-line @typescript-eslint/no-unused-vars -- S2 Residual Debt: Legacy unused local
   const prisma = withTenant(tenantId);
   
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any -- S2 Residual Debt: Legacy internal payload requires architectural typing
+   
   return await globalPrisma.$transaction(async (baseTx) => {
     const tx = await withTenantTransaction(baseTx, tenantId);
     const task = await tx.task.findFirst({ where: { id: input.id, tenantId }});

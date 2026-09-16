@@ -289,7 +289,7 @@ export function useMediaMTXWebRTC(cameraId: string) {
         handleFailure(attemptId, finalErrorType);
       }
 
-      // eslint-disable-next-line react-hooks/exhaustive-deps
+       
     },
     [cameraId, cleanupSession],
   );

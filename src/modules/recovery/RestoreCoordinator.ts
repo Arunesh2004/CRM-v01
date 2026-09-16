@@ -5,7 +5,7 @@ import { JobQueueProvider } from '@/../src/lib/queue/JobQueueProvider';
 import { BullMQProvider } from '@/../src/lib/queue/BullMQProvider';
 
 // Map models exactly as per the dependency graph
-// eslint-disable-next-line @typescript-eslint/no-unused-vars -- S2 Residual Debt: Legacy unused local
+ 
 // eslint-disable-next-line @typescript-eslint/no-unused-vars -- S2 Residual Debt: Legacy unused local
 const RESTORE_PHASES = [
   'Role', 'User', 'UserRole', 'DeviceSession', // Access Control
@@ -14,7 +14,7 @@ const RESTORE_PHASES = [
   'Conversation', 'Message', 'MessageAttachment', 'Call', 'CallParticipant', 'CallRecording', // Communication
   'TenantIntegration', 'WebhookEvent' // Hooks
 ];
-// eslint-disable-next-line @typescript-eslint/no-unused-vars -- S2 Residual Debt: Legacy unused local
+ 
 
 // eslint-disable-next-line @typescript-eslint/no-unused-vars -- S2 Residual Debt: Legacy unused local
 const CHUNK_SIZE = parseInt(process.env.RESTORE_CHUNK_SIZE || '10000', 10);
@@ -38,7 +38,7 @@ export class RestoreCoordinator {
     const uri = new URL(archiveLocation);
     const query = new URLSearchParams(uri.search);
     const jobIdParam = query.get('job');
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars -- S2 Residual Debt: Legacy unused local
+     
     if (!jobIdParam) throw new Error('Invalid archive location format');
 
     // eslint-disable-next-line @typescript-eslint/no-unused-vars -- S2 Residual Debt: Legacy unused local
@@ -78,9 +78,9 @@ export class RestoreCoordinator {
       });
       await tx.recoveryJob.create({
         data: {
-          // eslint-disable-next-line @typescript-eslint/no-explicit-any -- S2 Residual Debt: Legacy internal payload requires architectural typing
+           
           id: restoreJobId,
-          // eslint-disable-next-line @typescript-eslint/no-explicit-any -- S2 Residual Debt: Legacy internal payload requires architectural typing
+           
           tenantId,
           requestedBy: requestorUserId,
           // eslint-disable-next-line @typescript-eslint/no-explicit-any -- S2 Residual Debt: Legacy internal payload requires architectural typing

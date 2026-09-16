@@ -10,7 +10,7 @@ import {
 } from '@/modules/sales-intelligence/actions/territory.actions';
 import { toast } from 'sonner';
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any -- S2 Residual Debt: Legacy internal payload requires architectural typing
+ 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any -- S2 Residual Debt: Legacy internal payload requires architectural typing
 export function TerritoriesClient({ territories, canManage }: { territories: any[], canManage: boolean }) {
   const [isPending, startTransition] = useTransition();

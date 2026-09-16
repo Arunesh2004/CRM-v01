@@ -1,7 +1,7 @@
 import { CameraProvider, CameraStreamInfo } from './camera-provider.interface';
 
 export class MockCameraProvider implements CameraProvider {
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars -- S2 Residual Debt: Legacy unused local
+   
   // eslint-disable-next-line @typescript-eslint/no-unused-vars -- Intentional callback/interface parameter
   async getStreamStatus(cameraId: string): Promise<CameraStreamInfo> {
     // For demo purposes, we randomly simulate a slightly degraded or offline state occasionally,

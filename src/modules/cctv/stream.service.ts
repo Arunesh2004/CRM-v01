@@ -56,7 +56,7 @@ async function cleanupStalePaths(tenantId: string, cameraId: string, currentPath
   }
 }
 
-// eslint-disable-next-line @typescript-eslint/no-unused-vars -- Legacy interface
+ 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any -- S2 Residual Debt: Legacy internal payload requires architectural typing
 export async function invalidateStreamAccess(tenantId: string, camera: any, credential?: any) {
   // Legacy invalidateStreamAccess logic - this should not be called directly.

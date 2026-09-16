@@ -1,5 +1,5 @@
 export interface IProviderCache {
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any -- S2 Residual Debt: Legacy internal payload requires architectural typing
+   
   // eslint-disable-next-line @typescript-eslint/no-explicit-any -- S2 Residual Debt: Legacy internal payload requires architectural typing
   get(key: string): any;
   // eslint-disable-next-line @typescript-eslint/no-explicit-any -- S2 Residual Debt: Legacy internal payload requires architectural typing
@@ -7,14 +7,14 @@ export interface IProviderCache {
   invalidate(key: string): void;
 }
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any -- S2 Residual Debt: Legacy internal payload requires architectural typing
+ 
 // In-memory implementation that survives Next.js dev server reloads
 class MemoryCache implements IProviderCache {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any -- S2 Residual Debt: Legacy internal payload requires architectural typing
   private cache: Map<string, { value: any; expiresAt: number }>;
 
   constructor() {
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any -- S2 Residual Debt: Legacy internal payload requires architectural typing
+     
     this.cache = new Map();
   }
 
@@ -27,7 +27,7 @@ class MemoryCache implements IProviderCache {
       this.cache.delete(key);
       return null;
     }
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any -- S2 Residual Debt: Legacy internal payload requires architectural typing
+     
     
     return item.value;
   }

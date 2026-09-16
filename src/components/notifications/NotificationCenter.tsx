@@ -20,26 +20,10 @@ export function NotificationCenter() {
   const [notifications, setNotifications] = useState<Notification[]>([]);
   const [isOpen, setIsOpen] = useState(false);
   const [unreadCount, setUnreadCount] = useState(0);
-  const [loading, setLoading] = useState(false);
+  const [loading, setLoading] = useState(true);
 
-  useEffect(() => {
-    if (user && isOpen) {
-      fetchNotifications();
-    }
-  }, [user, isOpen]);
-
-  // Periodic polling for unread count, or via Pusher later
-  useEffect(() => {
-    if (user) {
-      fetchNotifications();
-      const interval = setInterval(fetchNotifications, 60000);
-      return () => clearInterval(interval);
-    }
-  }, [user]);
-
-  const fetchNotifications = async () => {
+  const fetchNotifications = React.useCallback(async () => {
     try {
-      setLoading(true);
       const res = await fetch('/api/notifications');
       if (res.ok) {
         const data = await res.json();
@@ -51,7 +35,27 @@ export function NotificationCenter() {
     } finally {
       setLoading(false);
     }
-  };
+  }, []);
+
+  useEffect(() => {
+    if (user && isOpen) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect -- False positive: fetchNotifications contains only asynchronous setState after network fetch
+      fetchNotifications();
+    }
+  }, [user, isOpen, fetchNotifications]);
+
+  // Periodic polling for unread count, or via Pusher later
+  useEffect(() => {
+    if (user) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect -- False positive: fetchNotifications contains only asynchronous setState after network fetch
+      fetchNotifications();
+      // eslint-disable-next-line react-hooks/set-state-in-effect -- False positive: fetchNotifications contains only asynchronous setState after network fetch
+      const interval = setInterval(fetchNotifications, 60000);
+      return () => clearInterval(interval);
+    }
+  }, [user, fetchNotifications]);
+
+
 
   const markAsRead = async (id: string) => {
     try {

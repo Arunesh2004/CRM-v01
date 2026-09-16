@@ -13,7 +13,7 @@ export class AIPermissionService {
    * If they lack permissions, it blocks the action and logs a security event.
    * If the tool requires approval, sets status to WAITING_APPROVAL.
    */
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any -- S2 Residual Debt: Legacy internal payload requires architectural typing
+   
   // eslint-disable-next-line @typescript-eslint/no-explicit-any -- S2 Residual Debt: Legacy internal payload requires architectural typing
   static async requestToolExecution(input: RequestAIExecutionInput, mockContext?: any): Promise<AIExecution> {
     const user = mockContext?.user || await requireAuth();
@@ -36,14 +36,14 @@ export class AIPermissionService {
            await mockContext.requirePermission(resource, action);
         } else {
            await requirePermission(resource as Resource, action as Action);
-        // eslint-disable-next-line @typescript-eslint/no-unused-vars -- S2 Residual Debt: Legacy unused local
+         
         }
       // eslint-disable-next-line @typescript-eslint/no-unused-vars -- Intentional callback/interface parameter
       } catch (error) {
         hasPerm = false;
       }
 
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any -- S2 Residual Debt: Legacy internal payload requires architectural typing
+       
       // ABAC Integration
       if (hasPerm) {
         // eslint-disable-next-line @typescript-eslint/no-explicit-any -- Intentional dynamic record for generic context
@@ -70,11 +70,11 @@ export class AIPermissionService {
 
       throw new Error('403: Forbidden - AI lacks inherited permission to execute this tool.');
     }
-// eslint-disable-next-line @typescript-eslint/no-explicit-any -- S2 Residual Debt: Legacy internal payload requires architectural typing
+ 
 
     const initialStatus: AIExecutionStatus = tool.requiresApproval ? 'WAITING_APPROVAL' : 'APPROVED';
 
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any -- S2 Residual Debt: Legacy internal payload requires architectural typing
+     
     return await globalPrisma.$transaction(async (baseTx) => {
       const tx = await withTenantTransaction(baseTx, tenantId);
 
@@ -127,12 +127,12 @@ export class AIPermissionService {
 
     if (!execution || execution.status !== 'WAITING_APPROVAL') {
       throw new Error('Execution not found or not waiting for approval');
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any -- S2 Residual Debt: Legacy internal payload requires architectural typing
+     
     }
 
     const newStatus: AIExecutionStatus = input.approved ? 'APPROVED' : 'REJECTED';
 
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any -- S2 Residual Debt: Legacy internal payload requires architectural typing
+     
     return await globalPrisma.$transaction(async (baseTx) => {
       const tx = await withTenantTransaction(baseTx, tenantId);
 

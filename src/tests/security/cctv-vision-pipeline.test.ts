@@ -13,18 +13,18 @@ vi.mock('@/lib/providers/storage/s3.provider', () => ({
 
 // Mock Inngest context
 const mockStep = {
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+   
   run: async (name: string, fn: () => Promise<any>) => await fn()
 };
 
 describe('Phase C7.2 - CCTV Vision Pipeline Security', () => {
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+   
   let tenantA: any;
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+   
   let tenantB: any;
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+   
   let cameraA: any;
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+   
   let recordingA: any;
 
   beforeEach(async () => {

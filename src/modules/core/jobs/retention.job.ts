@@ -3,7 +3,7 @@ import { inngest } from '@/lib/queue/inngest.client';
 
 export const dataRetentionCron = inngest.createFunction(
   { id: 'data-retention-cron' },
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any -- S2 Residual Debt: Legacy internal payload requires architectural typing
+   
   // eslint-disable-next-line @typescript-eslint/no-explicit-any -- S2 Residual Debt: Legacy internal payload requires architectural typing
   async ({ step }: { step: any }) => {
     // 1. Fetch all tenants

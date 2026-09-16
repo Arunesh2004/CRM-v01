@@ -7,7 +7,7 @@ export class WebhookSignatureService {
   /**
    * Validate webhook signature using the ProviderFactory.
    */
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any -- S2 Residual Debt: External provider boundary lacks strict types
+   
   // eslint-disable-next-line @typescript-eslint/no-explicit-any -- S2 Residual Debt: External provider boundary lacks strict types
   static async validateSignature(providerName: string, signature: string, payload: any): Promise<boolean> {
     if (!signature) return false;
@@ -16,7 +16,7 @@ export class WebhookSignatureService {
     try {
       if (providerName.toLowerCase() === 'whatsapp' || providerName.toLowerCase() === 'twilio' || providerName.toLowerCase() === 'resend') {
         provider = ProviderFactory.getMessagingProvider();
-      // eslint-disable-next-line @typescript-eslint/no-unused-vars -- S2 Residual Debt: Legacy unused local
+       
       }
     // eslint-disable-next-line @typescript-eslint/no-unused-vars -- Intentional callback/interface parameter
     } catch (e) {
@@ -55,7 +55,7 @@ export class WebhookSignatureService {
           signatureVerified: true,
           status: 'PENDING',
         }
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any -- S2 Residual Debt: Legacy internal payload requires architectural typing
+       
       });
     } catch (eRaw: unknown) {
       const e = eRaw instanceof Error ? eRaw : new Error(String(eRaw));
@@ -80,7 +80,7 @@ export class WebhookSignatureService {
         where: { id: webhookEvent.id },
         data: { status: 'FAILED' }
       });
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any -- S2 Residual Debt: Legacy internal payload requires architectural typing
+       
       throw e;
     }
   }
@@ -96,7 +96,7 @@ export class WebhookSignatureService {
       // Find message by a provider message ID (mocked lookup or actual if stored in future)
       const msg = await withTenant(tenantId).chatMessage.findFirst({ 
         where: { 
-          // eslint-disable-next-line @typescript-eslint/no-explicit-any -- S2 Residual Debt: External provider boundary lacks strict types
+           
           metadata: { path: ['idempotencyKey'], equals: providerMessageId } 
         } 
       });

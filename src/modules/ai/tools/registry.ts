@@ -16,9 +16,9 @@ export class ToolRegistry {
     return Array.from(this.tools.values());
   }
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any -- S2 Residual Debt: Legacy internal payload requires architectural typing
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any -- S2 Residual Debt: Legacy internal payload requires architectural typing
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any -- S2 Residual Debt: Legacy internal payload requires architectural typing
+   
+   
+   
   // eslint-disable-next-line @typescript-eslint/no-explicit-any -- S2 Residual Debt: Legacy internal payload requires architectural typing
   static async executeTool(toolName: string, args: any, context: AIContext): Promise<any> {
     const tool = this.tools.get(toolName);
@@ -96,7 +96,7 @@ export class ToolRegistry {
       for (const t of CANONICAL_AI_TOOLS) {
         await tx.aITool.upsert({
           where: { name: t.name },
-          // eslint-disable-next-line @typescript-eslint/no-explicit-any -- S2 Residual Debt: Legacy internal payload requires architectural typing
+           
           update: {
             requiredPermission: `${t.requiredResource}:${t.requiredAction}`,
             // eslint-disable-next-line @typescript-eslint/no-explicit-any -- S2 Residual Debt: Legacy internal payload requires architectural typing
@@ -104,7 +104,7 @@ export class ToolRegistry {
             requiresApproval: t.requiresApproval
           },
           create: {
-            // eslint-disable-next-line @typescript-eslint/no-explicit-any -- S2 Residual Debt: Legacy internal payload requires architectural typing
+             
             name: t.name,
             description: t.description,
             requiredPermission: `${t.requiredResource}:${t.requiredAction}`,

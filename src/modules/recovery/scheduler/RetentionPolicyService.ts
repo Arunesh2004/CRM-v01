@@ -3,7 +3,7 @@ import { withTenant } from '@db/utils/prisma-tenant';
 import { getStorageProvider } from '../../../lib/storage';
 import { Logger } from '@/lib/logger/logger';
 
-// eslint-disable-next-line @typescript-eslint/no-unused-vars -- S2 Residual Debt: Legacy unused local
+ 
 // eslint-disable-next-line @typescript-eslint/no-unused-vars -- S2 Residual Debt: Legacy unused local
 const POLICY_LIMITS: Record<string, number> = {
   DAILY: 7,
@@ -125,7 +125,7 @@ export class RetentionPolicyService {
         data: { status: 'DELETED' }
       });
       return;
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars -- S2 Residual Debt: Legacy unused local
+     
     }
 
     // eslint-disable-next-line @typescript-eslint/no-unused-vars -- S2 Residual Debt: Legacy unused local

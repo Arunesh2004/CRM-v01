@@ -11,13 +11,15 @@ import { moveDealStageAction, getDealsByStageAction } from '@/modules/crm/action
 import { toast } from 'sonner';
 import { useRouter } from 'next/navigation';
 import { format } from 'date-fns';
+import type { Deal, Customer, User } from '@prisma/client';
+export type DealKanbanRow = Deal & { customer: Customer | null; assignedUser: User | null; };
 import { Loader2 } from 'lucide-react';
 
 // Props shape also includes: onCountChange so parent can track totals if needed
-// eslint-disable-next-line @typescript-eslint/no-explicit-any -- S2 Residual Debt: Legacy internal payload requires architectural typing
-// eslint-disable-next-line @typescript-eslint/no-explicit-any -- S2 Residual Debt: Legacy internal payload requires architectural typing
+
+
 function KanbanColumn({ stage, handleDragStart, handleDragOver, handleDrop, router, onCountChange }: any) {
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any -- S2 Residual Debt: Legacy internal payload requires architectural typing
+  
   const [deals, setDeals] = useState<any[]>([]);
   const [hasMore, setHasMore] = useState(false);
   const [loading, setLoading] = useState(true);
@@ -34,7 +36,7 @@ function KanbanColumn({ stage, handleDragStart, handleDragOver, handleDrop, rout
       const lastId = res.data.data.length > 0 ? res.data.data[res.data.data.length - 1].id : undefined;
       setCursor(lastId);
       setDisplayCount(res.data.data.length);
-      onCountChange?.(stage.id, res.data.data.length);
+      if (onCountChange) onCountChange(stage.id, res.data.data.length);
     } else {
       console.error("Failed to load deals for stage", stage.id, ":", res.error);
     }
@@ -55,7 +57,7 @@ function KanbanColumn({ stage, handleDragStart, handleDragOver, handleDrop, rout
       setDeals(prev => {
         const merged = [...prev, ...res.data.data];
         setDisplayCount(merged.length);
-        onCountChange?.(stage.id, merged.length);
+        if (onCountChange) onCountChange(stage.id, merged.length);
         return merged;
       });
       setHasMore(res.data.hasMore);
@@ -64,15 +66,15 @@ function KanbanColumn({ stage, handleDragStart, handleDragOver, handleDrop, rout
     }
     setLoading(false);
   };
-// eslint-disable-next-line @typescript-eslint/no-explicit-any -- S2 Residual Debt: Legacy internal payload requires architectural typing
+
 
   // Exposed setDeals with count side effect for drag/drop synchronisation
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any -- S2 Residual Debt: Legacy internal payload requires architectural typing
-  const setDealsWithCount = (updater: any) => {
+  
+  const setDealsWithCount = (updater: React.SetStateAction<DealKanbanRow[]>) => {
     setDeals(prev => {
       const next = typeof updater === 'function' ? updater(prev) : updater;
       setDisplayCount(next.length);
-      onCountChange?.(stage.id, next.length);
+      if (onCountChange) onCountChange(stage.id, next.length);
       return next;
     });
   };
@@ -109,11 +111,11 @@ function KanbanColumn({ stage, handleDragStart, handleDragOver, handleDrop, rout
             onDragStart={(e) => handleDragStart(e, deal, setDealsWithCount)}
             onClick={() => router.push(`/deals/${deal.id}`)}
           >
-            // eslint-disable-next-line @typescript-eslint/no-explicit-any -- S2 Residual Debt: Legacy internal payload requires architectural typing
+            
             <CardContent className="p-3">
               <div className="font-medium text-sm mb-1 line-clamp-1">{deal.title}</div>
               <div className="text-xs text-muted-foreground mb-2 line-clamp-1">
-                // eslint-disable-next-line @typescript-eslint/no-explicit-any -- S2 Residual Debt: Legacy internal payload requires architectural typing
+                
                 {(deal.customer as any)?.company || deal.customer?.name || 'No Customer'}
               // eslint-disable-next-line @typescript-eslint/no-explicit-any -- S2 Residual Debt: Legacy internal payload — typed Prisma/API result shape requires architectural schema work deferred to S3
               </div>
@@ -133,67 +135,67 @@ function KanbanColumn({ stage, handleDragStart, handleDragOver, handleDrop, rout
           <div className="text-xs text-muted-foreground text-center py-4 italic">No deals</div>
         )}
       </div>
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any -- S2 Residual Debt: Legacy internal payload requires architectural typing
+    
     </div>
   );
 }
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any -- S2 Residual Debt: Legacy internal payload requires architectural typing
-// eslint-disable-next-line @typescript-eslint/no-explicit-any -- S2 Residual Debt: Legacy internal payload requires architectural typing
+
+
 export function DealKanbanBoard({ pipeline }: { pipeline: any }) {
   const router = useRouter();
 
   // Drag state
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any -- S2 Residual Debt: Legacy internal payload requires architectural typing
+  
   const [draggedDeal, setDraggedDeal] = useState<any>(null);
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any -- S2 Residual Debt: Legacy internal payload requires architectural typing
-  const [sourceSetter, setSourceSetter] = useState<any>(null);
-// eslint-disable-next-line @typescript-eslint/no-explicit-any -- S2 Residual Debt: Legacy internal payload requires architectural typing
-// eslint-disable-next-line @typescript-eslint/no-explicit-any -- S2 Residual Debt: Legacy internal payload requires architectural typing
+  
+  const [sourceSetter, setSourceSetter] = useState<React.Dispatch<React.SetStateAction<DealKanbanRow[]>> | null>(null);
+
+
 
   // Modal State
   const [lostModalOpen, setLostModalOpen] = useState(false);
   const [lostTargetStage, setLostTargetStage] = useState<string>('');
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any -- S2 Residual Debt: Legacy internal payload requires architectural typing
-  const [lostTargetSetter, setLostTargetSetter] = useState<any>(null);
+  
+  const [lostTargetSetter, setLostTargetSetter] = useState<React.Dispatch<React.SetStateAction<DealKanbanRow[]>> | null>(null);
   const [lostData, setLostData] = useState({ reason: '', competitor: '', notes: '' });
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any -- S2 Residual Debt: Legacy internal payload requires architectural typing
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any -- S2 Residual Debt: Legacy internal payload requires architectural typing
-  const handleDragStart = (e: React.DragEvent, deal: any, setDeals: any) => {
+  
+  
+  const handleDragStart = (e: React.DragEvent, deal: any, setDeals: React.Dispatch<React.SetStateAction<DealKanbanRow[]>>) => {
     e.dataTransfer.setData('dealId', deal.id);
     setDraggedDeal(deal);
     setSourceSetter(() => setDeals);
   };
-// eslint-disable-next-line @typescript-eslint/no-explicit-any -- S2 Residual Debt: Legacy internal payload requires architectural typing
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any -- S2 Residual Debt: Legacy internal payload requires architectural typing
+
+  
   const handleDragOver = (e: React.DragEvent) => {
     e.preventDefault();
   };
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any -- S2 Residual Debt: Legacy internal payload requires architectural typing
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any -- S2 Residual Debt: Legacy internal payload requires architectural typing
-  const executeDrop = async (stageId: string, targetSetter: any, lostInfo?: any) => {
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any -- S2 Residual Debt: Legacy internal payload requires architectural typing
+  
+  
+  const executeDrop = async (stageId: string, targetSetter: React.Dispatch<React.SetStateAction<DealKanbanRow[]>>, lostInfo?: any) => {
+    
     if (!draggedDeal) return;
     const dealId = draggedDeal.id;
 
     // Optimistic Update: remove from source, add to target
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any -- S2 Residual Debt: Legacy internal payload requires architectural typing
-    sourceSetter((prev: any[]) => prev.filter(d => d.id !== dealId));
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any -- S2 Residual Debt: Legacy internal payload requires architectural typing
-    targetSetter((prev: any[]) => [{ ...draggedDeal, stageId }, ...prev]);
+    
+    if (sourceSetter) sourceSetter((prev: DealKanbanRow[]) => prev.filter(d => d.id !== dealId));
+    
+    if (targetSetter) targetSetter((prev: DealKanbanRow[]) => [{ ...draggedDeal, stageId }, ...prev]);
 
     const res = await moveDealStageAction(dealId, stageId, lostInfo?.reason, lostInfo?.competitor, lostInfo?.notes);
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any -- S2 Residual Debt: Legacy internal payload requires architectural typing
+    
     if (!res.success) {
       toast.error(res.error || 'Failed to move deal');
       // Rollback
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any -- S2 Residual Debt: Legacy internal payload requires architectural typing
-      targetSetter((prev: any[]) => prev.filter(d => d.id !== dealId));
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any -- S2 Residual Debt: Legacy internal payload requires architectural typing
-      sourceSetter((prev: any[]) => [draggedDeal, ...prev]);
+      
+      if (targetSetter) targetSetter((prev: DealKanbanRow[]) => prev.filter(d => d.id !== dealId));
+      
+      if (sourceSetter) sourceSetter((prev: DealKanbanRow[]) => [draggedDeal, ...prev]);
     } else {
       toast.success('Deal moved');
       router.refresh();
@@ -203,15 +205,15 @@ export function DealKanbanBoard({ pipeline }: { pipeline: any }) {
     setSourceSetter(null);
   };
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any -- S2 Residual Debt: Legacy internal payload requires architectural typing
-  const handleDrop = (e: React.DragEvent, stageId: string, isLost: boolean, targetSetter: any) => {
+  
+  const handleDrop = (e: React.DragEvent, stageId: string, isLost: boolean, targetSetter: React.Dispatch<React.SetStateAction<DealKanbanRow[]>>) => {
     e.preventDefault();
     if (!draggedDeal || draggedDeal.stageId === stageId) return;
 
     if (isLost) {
       setLostTargetStage(stageId);
       setLostTargetSetter(() => targetSetter);
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any -- S2 Residual Debt: Legacy internal payload requires architectural typing
+      
       setLostData({ reason: '', competitor: '', notes: '' });
       setLostModalOpen(true);
       return;
@@ -223,13 +225,13 @@ export function DealKanbanBoard({ pipeline }: { pipeline: any }) {
   const submitLostDeal = () => {
     if (!lostData.reason.trim()) return toast.error('Lost reason is required');
     setLostModalOpen(false);
-    executeDrop(lostTargetStage, lostTargetSetter, lostData);
+    executeDrop(lostTargetStage, lostTargetSetter!, lostData);
   };
 
   return (
     <>
       <div className="flex gap-4 h-full overflow-x-auto pb-4 snap-x">
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any -- S2 Residual Debt: Legacy internal payload requires architectural typing
+        
         {pipeline.stages.map((stage: any) => (
           <KanbanColumn
             key={stage.id}

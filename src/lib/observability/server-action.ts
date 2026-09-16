@@ -9,7 +9,7 @@ const isValidId = (id: string) => /^[a-zA-Z0-9-]{1,64}$/.test(id);
  * It will parse the incoming correlation ID or generate a new one.
  * Tenant ID is NOT established here; it is established securely by `requireTenant()`.
  */
-// eslint-disable-next-line @typescript-eslint/no-explicit-any -- S2 Residual Debt: Legacy internal payload requires architectural typing
+ 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any -- Intentional dynamic record for generic context
 export function withServerActionContext<Args extends any[], Ret>(
   action: (...args: Args) => Promise<Ret>

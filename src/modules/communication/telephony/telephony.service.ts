@@ -12,7 +12,7 @@ export async function createCall(input: CreateCallInput) {
   await requirePermission('COMMUNICATION', 'CREATE');
   const user = await getCurrentUserContext();
   
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars -- S2 Residual Debt: Legacy unused local
+   
   // eslint-disable-next-line @typescript-eslint/no-unused-vars -- S2 Residual Debt: Legacy unused local
   const prisma = withTenant(tenantId);
   const provider = ProviderFactory.getTelephonyProvider();
@@ -21,9 +21,9 @@ export async function createCall(input: CreateCallInput) {
   if (!response.success) {
     throw new Error(response.error || 'Telephony provider failed');
   }
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any -- S2 Residual Debt: Legacy internal payload requires architectural typing
+   
   
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any -- S2 Residual Debt: Legacy internal payload requires architectural typing
+   
   return await globalPrisma.$transaction(async (baseTx) => {
     const tx = await withTenantTransaction(baseTx, tenantId);
     // We log the call directly without participant models
@@ -85,10 +85,10 @@ export async function processCallRecording(callId: string, storageUrl: string, d
   const user = await getCurrentUserContext();
 
   const callLog = await prisma.callLog.findFirst({ where: { id: callId, tenantId } });
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any -- S2 Residual Debt: Legacy internal payload requires architectural typing
+   
   if (!callLog) throw new Error("Related entity does not belong to this tenant: Call");
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any -- S2 Residual Debt: Legacy internal payload requires architectural typing
+   
   return await globalPrisma.$transaction(async (baseTx) => {
     const tx = await withTenantTransaction(baseTx, tenantId);
     // Map to CommunicationAttachment
@@ -124,7 +124,7 @@ export async function requestAITranscript(callId: string) {
   
   const call = await prisma.callLog.findFirst({ where: { id: callId, tenantId } });
   if (!call) throw new Error("Related entity does not belong to this tenant: Call");
-// eslint-disable-next-line @typescript-eslint/no-explicit-any -- S2 Residual Debt: Legacy internal payload requires architectural typing
+ 
 
   return await prisma.callLog.update({
     where: { id: callId },
@@ -141,7 +141,7 @@ export async function completeAITranscript(callId: string, content: string) {
 
   // Requirement: Do not store large transcripts inside CallLog.metadata. Store references/URLs/provider IDs only.
   // Mocking a reference url instead of storing the content.
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any -- S2 Residual Debt: Legacy internal payload requires architectural typing
+   
   const transcriptRefUrl = `s3://transcripts/${callId}.txt`;
   
   const call = await prisma.callLog.findFirst({ where: { id: callId, tenantId } });
@@ -156,7 +156,7 @@ export async function requestAISummary(callId: string) {
   await requireAuth();
   const tenantId = await requireTenant();
   const prisma = withTenant(tenantId);
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any -- S2 Residual Debt: Legacy internal payload requires architectural typing
+   
   
   const call = await prisma.callLog.findFirst({ where: { id: callId, tenantId } });
   if (!call) throw new Error("Related entity does not belong to this tenant: Call");
@@ -169,7 +169,7 @@ export async function requestAISummary(callId: string) {
 }
 
 export async function completeAISummary(callId: string, summary: string, sentiment: string) {
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any -- S2 Residual Debt: Legacy internal payload requires architectural typing
+   
   await requireAuth();
   const tenantId = await requireTenant();
   const prisma = withTenant(tenantId);

@@ -3,9 +3,9 @@ import { Badge } from '@/components/ui/Badge';
 import { Target, CheckSquare } from 'lucide-react';
 import Link from 'next/link';
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any -- S2 Residual Debt: Legacy internal payload requires architectural typing
-// eslint-disable-next-line @typescript-eslint/no-explicit-any -- S2 Residual Debt: Legacy internal payload requires architectural typing
-// eslint-disable-next-line @typescript-eslint/no-explicit-any -- S2 Residual Debt: Legacy internal payload requires architectural typing
+ 
+ 
+ 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any -- S2 Residual Debt: Legacy internal payload requires architectural typing
 export function CustomerRelatedItems({ tasks, leads }: { tasks: any[], leads: any[] }) {
   return (

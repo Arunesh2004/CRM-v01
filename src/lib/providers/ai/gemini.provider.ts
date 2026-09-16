@@ -23,7 +23,7 @@ export class GeminiProvider implements AIProvider {
       providerName: 'GeminiProvider',
       criticality: 'CRITICAL',
       reason: this.isConfigured ? undefined : 'GEMINI_API_KEY is not defined'
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any -- S2 Residual Debt: External provider boundary lacks strict types
+     
     // eslint-disable-next-line @typescript-eslint/no-explicit-any -- S2 Residual Debt: External provider boundary lacks strict types
     } as any; // Cast as any to bypass strict typing if imported ProviderHealth differs
   }
@@ -94,12 +94,12 @@ export class GeminiProvider implements AIProvider {
   }
 
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any -- S2 Residual Debt: External provider boundary lacks strict types
-// eslint-disable-next-line @typescript-eslint/no-explicit-any -- S2 Residual Debt: External provider boundary lacks strict types
-// eslint-disable-next-line @typescript-eslint/no-explicit-any -- S2 Residual Debt: External provider boundary lacks strict types
+ 
+ 
+ 
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any -- S2 Residual Debt: External provider boundary lacks strict types
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any -- S2 Residual Debt: External provider boundary lacks strict types
+   
+   
   // eslint-disable-next-line @typescript-eslint/no-explicit-any -- S2 Residual Debt: External provider boundary lacks strict types
   private async sendMessageWithRetry(chat: any, payload: any, startTime: number, requestId?: string, signal?: AbortSignal): Promise<any> {
     let attempt = 0;
@@ -111,13 +111,13 @@ export class GeminiProvider implements AIProvider {
           payload.config = { ...payload.config, abortSignal: signal };
         }
         return await chat.sendMessage(payload);
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any -- S2 Residual Debt: External provider boundary lacks strict types
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any -- S2 Residual Debt: External provider boundary lacks strict types
+       
+       
       } catch (errRaw: unknown) {
         const err = errRaw instanceof Error ? errRaw : new Error(String(errRaw));
         attempt++;
         const msg = err.message || '';
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any -- S2 Residual Debt: External provider boundary lacks strict types
+         
         // eslint-disable-next-line @typescript-eslint/no-explicit-any -- S2 Residual Debt: External provider boundary lacks strict types
         const status = (err as any)?.status || (err as any)?.response?.status;
 
@@ -178,7 +178,7 @@ export class GeminiProvider implements AIProvider {
         role: h.role === 'assistant' ? 'model' : 'user',
         parts: [{ text: h.content }]
       }));
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any -- S2 Residual Debt: External provider boundary lacks strict types
+     
     }
 
     const chat = this.ai!.chats.create({
@@ -196,7 +196,7 @@ export class GeminiProvider implements AIProvider {
     let totalContextBytes = prompt.length + historyBytes;
 
     if (totalContextBytes > AIConfig.MAX_CONTEXT_BYTES) {
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any -- S2 Residual Debt: External provider boundary lacks strict types
+       
       throw new Error('CONTEXT_LIMIT');
     }
 
@@ -206,7 +206,7 @@ export class GeminiProvider implements AIProvider {
       if (response.functionCalls && response.functionCalls.length > 0) {
         // eslint-disable-next-line @typescript-eslint/no-explicit-any -- S2 Residual Debt: External provider boundary lacks strict types
         const requestedNames = response.functionCalls.map((fc: any) => fc.name || '').filter(Boolean);
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any -- S2 Residual Debt: External provider boundary lacks strict types
+         
         t.toolsRequested.push(...requestedNames);
 
         t.totalToolCalls += response.functionCalls.length;
@@ -215,7 +215,7 @@ export class GeminiProvider implements AIProvider {
           throw new Error('TOOL_LIMIT');
         }
 
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any -- S2 Residual Debt: External provider boundary lacks strict types
+         
         // eslint-disable-next-line @typescript-eslint/no-explicit-any -- S2 Residual Debt: External provider boundary lacks strict types
         const functionResponses: {name: string, response: any}[] = [];
 
@@ -236,7 +236,7 @@ export class GeminiProvider implements AIProvider {
             let result;
 
             if (!tool) {
-              // eslint-disable-next-line @typescript-eslint/no-unused-vars -- Intentional unused destructuring exclusion
+               
               result = { error: `Tool ${toolName} not found or not authorized.` };
             } else {
               try {
@@ -281,7 +281,7 @@ export class GeminiProvider implements AIProvider {
             }
 
             return { name: toolName, response: result };
-          // eslint-disable-next-line @typescript-eslint/no-explicit-any -- S2 Residual Debt: External provider boundary lacks strict types
+           
           }));
 
           functionResponses.push(...chunkResponses);
@@ -311,7 +311,7 @@ export class GeminiProvider implements AIProvider {
         };
       }
     }
-// eslint-disable-next-line @typescript-eslint/no-unused-vars -- S2 Residual Debt: Legacy unused local
+ 
 
     throw new Error('Maximum tool iterations exceeded');
   }
@@ -344,7 +344,7 @@ You must output a raw JSON object (and nothing else) matching exactly this schem
         model: this.modelName,
         config: {
           systemInstruction: systemPrompt,
-          // eslint-disable-next-line @typescript-eslint/no-unused-vars -- S2 Residual Debt: Legacy unused local
+           
           temperature: 0.2,
           responseMimeType: 'application/json'
         },
@@ -354,7 +354,7 @@ You must output a raw JSON object (and nothing else) matching exactly this schem
           { text: prompt }
         ]
       });
-// eslint-disable-next-line @typescript-eslint/no-unused-vars -- S2 Residual Debt: Legacy unused local
+ 
 
       const text = response.text || '{}';
       let parsed;

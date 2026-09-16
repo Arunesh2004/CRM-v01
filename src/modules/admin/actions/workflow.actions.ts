@@ -16,10 +16,17 @@ async function _getWorkflowsAction() {
     
     const workflows = await prisma.workflow.findMany({
       where: { tenantId },
+      include: { triggers: true },
       orderBy: { name: 'asc' }
     });
 
-    return { success: true, data: workflows };
+    const data = workflows.map(wf => ({
+      ...wf,
+      triggerType: wf.triggers[0]?.eventType || 'Manual',
+      isActive: wf.status === 'ACTIVE'
+    }));
+
+    return { success: true, data };
   } catch (errorRaw: unknown) {
     const error = errorRaw instanceof Error ? errorRaw : new Error(String(errorRaw));
     return { success: false, error: sanitizeClientError(error) };

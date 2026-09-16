@@ -8,15 +8,15 @@ export class SecurityEventService {
   /**
    * Deeply sanitizes metadata to strip sensitive fields.
    */
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any -- S2 Residual Debt: Legacy internal payload requires architectural typing
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any -- S2 Residual Debt: Legacy internal payload requires architectural typing
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any -- S2 Residual Debt: Legacy internal payload requires architectural typing
+   
+   
+   
   // eslint-disable-next-line @typescript-eslint/no-explicit-any -- Intentional dynamic record for generic context
   private static sanitizeMetadata(metadata?: Record<string, any>): Record<string, any> | undefined {
     if (!metadata) return undefined;
     
     const sanitized = JSON.parse(JSON.stringify(metadata));
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any -- S2 Residual Debt: Legacy internal payload requires architectural typing
+     
     const sensitiveKeys = ['password', 'token', 'apikey', 'api_key', 'secret', 'authorization', 'cookie'];
 
     // eslint-disable-next-line @typescript-eslint/no-explicit-any -- S2 Residual Debt: Legacy internal payload requires architectural typing
@@ -46,11 +46,11 @@ export class SecurityEventService {
     input: CreateSecurityEventInput,
     actorType: ActorType = 'SYSTEM',
     actorId?: string
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any -- S2 Residual Debt: Legacy internal payload requires architectural typing
+   
   ): Promise<SecurityEvent> {
     const sanitizedMetadata = this.sanitizeMetadata(input.metadata);
 
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any -- S2 Residual Debt: Legacy internal payload requires architectural typing
+     
     return await globalPrisma.$transaction(async (baseTx) => {
       const tx = await withTenantTransaction(baseTx, tenantId);
 
@@ -106,12 +106,12 @@ export class SecurityEventService {
 
     // RBAC: Check if user has administrative rights for HIGH/CRITICAL events
     // Assuming 'UPDATE' permission on SECURITY_EVENT implies higher clearance.
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars -- S2 Residual Debt: Legacy unused local
+     
     // If they only have READ, restrict severity to LOW/MEDIUM.
     let canViewHighCritical = false;
     try {
        await requirePermission('SECURITY_EVENT', 'UPDATE');
-       // eslint-disable-next-line @typescript-eslint/no-explicit-any -- S2 Residual Debt: Legacy internal payload requires architectural typing
+        
        canViewHighCritical = true;
     // eslint-disable-next-line @typescript-eslint/no-unused-vars -- Intentional callback/interface parameter
     } catch (e) {

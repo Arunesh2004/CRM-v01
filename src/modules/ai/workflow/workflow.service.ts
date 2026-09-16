@@ -9,7 +9,7 @@ import { TicketService } from '../../support/ticket.service';
 import { createIncident } from '../../incident/incident.service';
 
 export class WorkflowService {
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any -- S2 Residual Debt: Legacy internal payload requires architectural typing
+   
   // eslint-disable-next-line @typescript-eslint/no-explicit-any -- S2 Residual Debt: Legacy internal payload requires architectural typing
   static async createWorkflow(tenantId: string, userId: string, data: any) {
     if (!tenantId || !userId) throw new Error('401: Unauthorized request context');
@@ -99,7 +99,7 @@ export class WorkflowService {
       where: { workflowId, tenantId },
       orderBy: { orderIndex: 'asc' }
     });
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any -- S2 Residual Debt: Legacy internal payload requires architectural typing
+   
   }
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any -- S2 Residual Debt: Legacy internal payload requires architectural typing
@@ -144,7 +144,7 @@ export class WorkflowService {
     }
 
     if (step.status === 'COMPLETED' || step.status === 'FAILED') {
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any -- S2 Residual Debt: Legacy internal payload requires architectural typing
+       
       return { success: true, message: 'Already processed' };
     }
 
@@ -197,12 +197,12 @@ export class WorkflowService {
     //
     // Correct: derive from executionId + action.id — both are known before step creation,
     // are stable, and are identical for all concurrent workers for the same logical operation.
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any -- S2 Residual Debt: Legacy internal payload requires architectural typing
+     
     // The unique constraint on [tenantId, key] then correctly arbitrates the race.
     const idempotencyKeyStr = `wf_exec_${executionId}_action_${action.id}`;
 
     try {
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any -- S2 Residual Debt: Legacy internal payload requires architectural typing
+       
       const result = await globalPrisma.$transaction(async (baseTx) => {
         // Set tenant context on the raw transaction client.
         // withTenantTransaction returns baseTx after calling set_config — the tenant RLS
@@ -232,7 +232,7 @@ export class WorkflowService {
         //    idempotency transaction and become durable even if the IdempotencyKey INSERT
         //    later fails due to a concurrent race.
         //
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any -- S2 Residual Debt: Legacy internal payload requires architectural typing
+         
         //    Tenant isolation is enforced because set_config('app.current_tenant_id') has
         //    already been called on baseTx by withTenantTransaction above.
         let dispatchResult;
@@ -249,7 +249,7 @@ export class WorkflowService {
               config.subject,
               config.description,
               config.priority || 'MEDIUM',
-              // eslint-disable-next-line @typescript-eslint/no-explicit-any -- S2 Residual Debt: Legacy internal payload requires architectural typing
+               
               baseTx
             );
             break;
@@ -291,9 +291,9 @@ export class WorkflowService {
 
       return { success: true, waitingApproval: false, result };
     } catch (errorRaw: unknown) {
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any -- S2 Residual Debt: Legacy internal payload requires architectural typing
+       
       const error = errorRaw instanceof Error ? errorRaw : new Error(String(errorRaw));
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any -- S2 Residual Debt: Legacy internal payload requires architectural typing
+       
       // Narrow P2002 discrimination: ONLY treat a P2002 from the IdempotencyKey model
       // as a concurrency collision. A P2002 from any other model (e.g. Incident.aiEventId
       // @unique) must propagate as a real business error, not be silently swallowed.
@@ -322,7 +322,7 @@ export class WorkflowService {
       await this.markExecutionFailed(tenantId, executionId, (error as Error).message);
       throw error;
     }
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars -- S2 Residual Debt: Legacy unused local
+   
   }
 
   static async markExecutionCompleted(tenantId: string, executionId: string) {

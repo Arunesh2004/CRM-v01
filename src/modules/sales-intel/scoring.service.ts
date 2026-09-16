@@ -6,7 +6,7 @@ export class ScoringService {
    * Securely update a Lead's AI score.
    * This MUST be called by an automation actor, not directly by a client endpoint.
    */
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any -- S2 Residual Debt: Legacy internal payload requires architectural typing
+   
   // eslint-disable-next-line @typescript-eslint/no-explicit-any -- S2 Residual Debt: Legacy internal payload requires architectural typing
   static async updateLeadScore(tenantId: string, leadId: string, actorId: string, actorType: string, score: number, scoreFactors: any) {
     if (actorType !== 'AI' && actorType !== 'AUTOMATION' && actorType !== 'SYSTEM') {
@@ -27,7 +27,7 @@ export class ScoringService {
       await tx.auditLog.create({
         data: {
           tenantId,
-          // eslint-disable-next-line @typescript-eslint/no-explicit-any -- S2 Residual Debt: Legacy internal payload requires architectural typing
+           
           actorId,
           // eslint-disable-next-line @typescript-eslint/no-explicit-any -- S2 Residual Debt: Legacy internal payload requires architectural typing
           actorType: actorType as any,
@@ -54,7 +54,7 @@ export class ScoringService {
     return prisma.$transaction(async (baseTx) => {
       const tx = await withTenantTransaction(baseTx, tenantId);
 
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any -- S2 Residual Debt: Legacy internal payload requires architectural typing
+       
       const deal = await tx.deal.findUnique({ where: { id: dealId } });
       if (!deal || deal.tenantId !== tenantId) throw new Error('Deal not found');
 
@@ -69,7 +69,7 @@ export class ScoringService {
         data: updateData,
       });
 
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any -- S2 Residual Debt: Legacy internal payload requires architectural typing
+       
       await tx.auditLog.create({
         data: {
           tenantId,

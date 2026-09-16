@@ -13,6 +13,8 @@ export default async function AdminAuditPage() {
   const result = await getAuditLogsAction();
   const logs = result.success ? result.data : [];
 
+  type AuditLogDTO = NonNullable<typeof result.data>[number];
+
   return (
     <div className="space-y-6 animate-in fade-in duration-500 pb-10">
       <div className="glass-panel rounded-[1.25rem] p-5 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
@@ -36,12 +38,10 @@ export default async function AdminAuditPage() {
               </tr>
             </thead>
             <tbody className="divide-y divide-white/[.04]">
-              // eslint-disable-next-line @typescript-eslint/no-explicit-any -- S2 Residual Debt: Legacy internal payload requires architectural typing
-              // eslint-disable-next-line @typescript-eslint/no-explicit-any -- S2 Residual Debt: Legacy internal payload requires architectural typing
-              {logs?.map((log: any) => (
+              {logs?.map((log: AuditLogDTO) => (
                 <tr key={log.id} className="hover:bg-white/[.02] transition-colors group">
                   <td className="px-6 py-4 text-[#8891B0]">
-                    {new Date(log.createdAt).toLocaleString()}
+                    {new Date(log.timestamp).toLocaleString()}
                   </td>
                   <td className="px-6 py-4 font-medium text-white">
                     {log.actorType === 'SYSTEM' ? 'SYSTEM' : log.actorUser?.email || log.actorId}

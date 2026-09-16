@@ -118,9 +118,8 @@ export default async function CustomersPage(props: {
                     </td>
                   </tr>
                 )}
-                // eslint-disable-next-line @typescript-eslint/no-explicit-any -- S2 Residual Debt: Legacy internal payload requires architectural typing
-                // eslint-disable-next-line @typescript-eslint/no-explicit-any -- S2 Residual Debt: Legacy internal payload requires architectural typing
-                {customers.map((customer: any) => (
+
+                {customers.map((customer) => (
                   <tr
                     key={customer.id}
                     className="border-b border-white/[.05] last:border-0 group"

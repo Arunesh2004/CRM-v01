@@ -13,7 +13,7 @@ export const aiScoringWorker = inngest.createFunction(
     },
     onFailure: async ({ event, error }) => {
       const { getFailureEventIdSafe, sendToDeadLetterQueue } = await import('../worker');
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any -- S2 Residual Debt: Legacy internal payload requires architectural typing
+       
       // eslint-disable-next-line @typescript-eslint/no-explicit-any -- S2 Residual Debt: Legacy internal payload requires architectural typing
       const safeEvent = event as { data: { event: { data: any, attemptCount?: number } } };
       const originalEvent = safeEvent.data.event;
@@ -23,7 +23,7 @@ export const aiScoringWorker = inngest.createFunction(
         await sendToDeadLetterQueue(envelope, new Error(error.message), originalEvent.attemptCount ?? 1, eventId);
       }
     },
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any -- S2 Residual Debt: Legacy internal payload requires architectural typing
+   
   },
   // eslint-disable-next-line @typescript-eslint/no-explicit-any -- S2 Residual Debt: Legacy internal payload requires architectural typing
   async ({ event, step }: { event: { data: SecureJobEnvelope<{ entityId: string, entityType: 'LEAD' | 'DEAL' }> }, step: any }) => {

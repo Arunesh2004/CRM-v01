@@ -6,7 +6,7 @@ export interface SendWhatsAppPayload {
   mediaId?: string; // used for pre-uploaded media
   templateName?: string;
   templateLanguage?: string;
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any -- S2 Residual Debt: External provider boundary lacks strict types
+   
   // eslint-disable-next-line @typescript-eslint/no-explicit-any -- S2 Residual Debt: External provider boundary lacks strict types
   templateComponents?: any[];
 }

@@ -196,9 +196,7 @@ export default async function DashboardPage() {
               />
             ) : (
               <div className="space-y-1 flex-1 overflow-y-auto">
-                // eslint-disable-next-line @typescript-eslint/no-explicit-any -- S2 Residual Debt: Legacy internal payload requires architectural typing
-                // eslint-disable-next-line @typescript-eslint/no-explicit-any -- S2 Residual Debt: Legacy internal payload requires architectural typing
-                {recentActivities.map((activity: any, idx: number) => {
+                {recentActivities.map((activity, idx: number) => {
                   const colors = [colorMap.violet, colorMap.cyan, colorMap.emerald, colorMap.amber, colorMap.rose];
                   const hex = colors[idx % colors.length];
                   return (

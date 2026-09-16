@@ -7,11 +7,14 @@ import { toast } from 'sonner';
 import { Button } from '../ui/button';
 import { Loader2, X } from 'lucide-react';
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any -- S2 Residual Debt: Legacy internal payload requires architectural typing
-// eslint-disable-next-line @typescript-eslint/no-explicit-any -- S2 Residual Debt: Legacy internal payload requires architectural typing
-// eslint-disable-next-line @typescript-eslint/no-explicit-any -- S2 Residual Debt: Legacy internal payload requires architectural typing
-// eslint-disable-next-line @typescript-eslint/no-explicit-any -- S2 Residual Debt: Legacy internal payload requires architectural typing
-export function DealForm({ pipelines, assignableUsers = [] }: { pipelines: any[], assignableUsers?: any[] }) {
+ 
+ 
+ 
+import type { Pipeline, PipelineStage, User } from '@prisma/client';
+
+export type DealFormPipeline = Pipeline & { stages: PipelineStage[] };
+
+export function DealForm({ pipelines, assignableUsers = [] }: { pipelines: DealFormPipeline[], assignableUsers?: Pick<User, 'id' | 'email'>[] }) {
   const [isOpen, setIsOpen] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState('');
@@ -163,11 +166,10 @@ export function DealForm({ pipelines, assignableUsers = [] }: { pipelines: any[]
                       padding: '.6rem 1rem',
                       color: '#E7EAF5',
                       outline: 'none',
-                    // eslint-disable-next-line @typescript-eslint/no-explicit-any -- S2 Residual Debt: Legacy internal payload requires architectural typing
+                     
                     }}
                   >
-                    // eslint-disable-next-line @typescript-eslint/no-explicit-any -- S2 Residual Debt: Legacy internal payload requires architectural typing
-                    {stages.map((s: any) => (
+                    {stages.map((s) => (
                       <option key={s.id} value={s.id} className="bg-[#0D1326]">{s.name}</option>
                     ))}
                   </select>
@@ -185,12 +187,11 @@ export function DealForm({ pipelines, assignableUsers = [] }: { pipelines: any[]
                     border: '1px solid rgba(255,255,255,.08)',
                     borderRadius: '.7rem',
                     padding: '.6rem 1rem',
-                  // eslint-disable-next-line @typescript-eslint/no-explicit-any -- S2 Residual Debt: Legacy internal payload requires architectural typing
+                   
                   }}
                 >
                   <option value="" disabled selected>Select assignee</option>
-                  // eslint-disable-next-line @typescript-eslint/no-explicit-any -- S2 Residual Debt: Legacy internal payload requires architectural typing
-                  {assignableUsers.map((user: any) => (
+                  {assignableUsers.map((user) => (
                     <option key={user.id} value={user.id}>
                       {user.email}
                     </option>

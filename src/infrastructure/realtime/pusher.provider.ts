@@ -10,7 +10,7 @@ export class PusherProvider implements RealtimeProvider {
   private secret = process.env.PUSHER_SECRET || '';
   private cluster = process.env.PUSHER_CLUSTER || 'us2';
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any -- S2 Residual Debt: Legacy internal payload requires architectural typing
+   
   // eslint-disable-next-line @typescript-eslint/no-explicit-any -- S2 Residual Debt: Legacy internal payload requires architectural typing
   async sendToUser(userId: string, event: string, payload: any): Promise<void> {
     await this.broadcast(`private-user-${userId}`, event, payload);
@@ -19,12 +19,12 @@ export class PusherProvider implements RealtimeProvider {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any -- S2 Residual Debt: Legacy internal payload requires architectural typing
   async sendToConversation(conversationId: string, event: string, payload: any): Promise<void> {
     await this.broadcast(`private-conversation-${conversationId}`, event, payload);
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any -- S2 Residual Debt: Legacy internal payload requires architectural typing
+   
   }
   
   // eslint-disable-next-line @typescript-eslint/no-explicit-any -- S2 Residual Debt: Legacy internal payload requires architectural typing
   async sendToTenant(tenantId: string, event: string, payload: any): Promise<void> {
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any -- S2 Residual Debt: Legacy internal payload requires architectural typing
+     
     await this.broadcast(`private-tenant-${tenantId}`, event, payload);
   }
 

@@ -47,7 +47,7 @@ export async function POST(req: Request) {
     logger.info('Twilio Webhook: Received status update', { callSid, tenantId, callStatus });
 
     // Entering tenant context to securely update the CallLog
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars -- S2 Residual Debt: Legacy unused local
+     
     // eslint-disable-next-line @typescript-eslint/no-unused-vars -- S2 Residual Debt: Legacy unused local
     const prisma = withTenant(tenantId);
     // await prisma.callLog.update({

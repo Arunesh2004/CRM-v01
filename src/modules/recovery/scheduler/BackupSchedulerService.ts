@@ -23,13 +23,13 @@ export class BackupSchedulerService {
   /**
    * Prevents duplicate generation through Postgres transaction constraints.
    */
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any -- S2 Residual Debt: Legacy internal payload requires architectural typing
+   
   // eslint-disable-next-line @typescript-eslint/no-explicit-any -- S2 Residual Debt: Legacy internal payload requires architectural typing
   async triggerTenantBackup(tenantId: string, requestedBy: string): Promise<any> {
     try {
       // Idempotency constraint using raw SQL to prevent concurrency race conditions.
       // If Worker A and B hit this simultaneously, only one will insert successfully.
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any -- S2 Residual Debt: Legacy internal payload requires architectural typing
+       
       const newJobId = crypto.randomUUID();
       // eslint-disable-next-line @typescript-eslint/no-explicit-any -- S2 Residual Debt: Legacy internal payload requires architectural typing
       const insertResult: any[] = await executeAsSystem(SystemOperation.PLATFORM_CRON, async (tx) => {

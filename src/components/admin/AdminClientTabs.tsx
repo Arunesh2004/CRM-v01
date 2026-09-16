@@ -10,10 +10,10 @@ export function AdminClientTabs({
   users, 
   roles
 }: { 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any -- S2 Residual Debt: Legacy internal payload requires architectural typing
+   
   // eslint-disable-next-line @typescript-eslint/no-explicit-any -- S2 Residual Debt: Legacy internal payload requires architectural typing
   tenant: any, 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any -- S2 Residual Debt: Legacy internal payload requires architectural typing
+   
   // eslint-disable-next-line @typescript-eslint/no-explicit-any -- S2 Residual Debt: Legacy internal payload requires architectural typing
   users: any[], 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any -- S2 Residual Debt: Legacy internal payload requires architectural typing
@@ -63,8 +63,7 @@ export function AdminClientTabs({
           <div className="space-y-8">
             <div className="border-b border-white/[.04] pb-4">
               <h2 className="text-xl font-display font-bold text-white tracking-tight">Organization Profile</h2>
-              // eslint-disable-next-line react/no-unescaped-entities -- Cosmetic unescaped entity safely ignored.
-              <p className="text-sm text-[#8891B0] mt-1">Manage your company's core identity and details on the platform.</p>
+              <p className="text-sm text-[#8891B0] mt-1">Manage your company&apos;s core identity and details on the platform.</p>
             </div>
             
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">

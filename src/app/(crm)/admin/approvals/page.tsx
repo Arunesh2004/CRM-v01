@@ -1,6 +1,6 @@
 import { ApprovalService } from '@/modules/approvals/approval.service';
 import { requireAuth, requireTenant, requirePermission } from '@/lib/auth';
-import { Resource, Action } from '@prisma/client';
+import { Resource, Action, ApprovalRequest } from '@prisma/client';
 
 export const dynamic = 'force-dynamic';
 
@@ -27,9 +27,7 @@ export default async function ApprovalsPage() {
             </tr>
           </thead>
           <tbody className="divide-y divide-gray-200">
-            // eslint-disable-next-line @typescript-eslint/no-explicit-any -- S2 Residual Debt: Legacy internal payload requires architectural typing
-            // eslint-disable-next-line @typescript-eslint/no-explicit-any -- S2 Residual Debt: Legacy internal payload requires architectural typing
-            {approvals.map((approval: any) => (
+            {approvals.map((approval: ApprovalRequest) => (
               <tr key={approval.id}>
                 <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">{approval.resource}</td>
                 <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{approval.resourceId}</td>

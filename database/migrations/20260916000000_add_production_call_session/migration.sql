@@ -1,9 +1,11 @@
--- S14-B2: Add CallSession for internal WebRTC calling
--- Migration: 20260913000000_add_call_session
--- Created: 2026-09-13
--- Safe to apply: local/E2E only. Do NOT apply to Production.
+-- Phase 15B: Production CallSession DDL with strict RLS
+-- Migration: 20260916000000_add_production_call_session
+-- Created: 2026-09-16
+-- Applies: CallSession table, enum, FKs, CallLog index, and RLS
 
--- CreateEnum: CallSessionStatus
+BEGIN;
+
+-- 1. CreateEnum: CallSessionStatus
 CREATE TYPE "CallSessionStatus" AS ENUM (
   'RINGING',
   'ACCEPTED',
@@ -15,7 +17,7 @@ CREATE TYPE "CallSessionStatus" AS ENUM (
   'EXPIRED'
 );
 
--- CreateTable: CallSession
+-- 2. CreateTable: CallSession
 CREATE TABLE "CallSession" (
     "id"            TEXT NOT NULL,
     "tenantId"      TEXT NOT NULL,
@@ -34,32 +36,38 @@ CREATE TABLE "CallSession" (
     CONSTRAINT "CallSession_pkey" PRIMARY KEY ("id")
 );
 
--- AddForeignKey: tenantId → Tenant
+-- 3. AddForeignKey: tenantId → Tenant
 ALTER TABLE "CallSession" ADD CONSTRAINT "CallSession_tenantId_fkey"
     FOREIGN KEY ("tenantId") REFERENCES "Tenant"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
 
--- AddForeignKey: callerId → User (caller)
+-- 4. AddForeignKey: callerId → User (caller)
 ALTER TABLE "CallSession" ADD CONSTRAINT "CallSession_callerId_fkey"
     FOREIGN KEY ("callerId") REFERENCES "User"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
 
--- AddForeignKey: recipientId → User (recipient)
+-- 5. AddForeignKey: recipientId → User (recipient)
 ALTER TABLE "CallSession" ADD CONSTRAINT "CallSession_recipientId_fkey"
     FOREIGN KEY ("recipientId") REFERENCES "User"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
 
--- CreateIndex: tenant+status queries (active call lookups)
+-- 6. CreateIndex: tenant+status queries
 CREATE INDEX "CallSession_tenantId_status_idx" ON "CallSession"("tenantId", "status");
 
--- CreateIndex: caller active-call lookups
+-- 7. CreateIndex: caller active-call lookups
 CREATE INDEX "CallSession_callerId_status_idx" ON "CallSession"("callerId", "status");
 
--- CreateIndex: recipient active-call lookups
+-- 8. CreateIndex: recipient active-call lookups
 CREATE INDEX "CallSession_recipientId_status_idx" ON "CallSession"("recipientId", "status");
 
--- AddUniqueConstraint to CallLog: allows idempotent upsert by (tenantId, providerCallId).
--- providerCallId is nullable. In PostgreSQL, NULL values are NOT equal in unique indexes,
--- so multiple rows with providerCallId = NULL are permitted. This means:
---   - External Twilio records without a SID (providerCallId = NULL): no constraint conflict.
---   - Internal WebRTC calls using CallSession.id as providerCallId: enforced unique per tenant.
---   - Twilio SIDs are CA-prefixed; internal IDs are UUIDs — no collision risk.
+-- 9. AddUniqueConstraint to CallLog for Idempotent Sync
+-- Missing in production, but strictly required by Phase 15B WebRTC upsert logic.
 CREATE UNIQUE INDEX "CallLog_tenantId_providerCallId_key"
     ON "CallLog"("tenantId", "providerCallId");
+
+-- 10. ENABLE STRICT TENANT ISOLATION (RLS)
+ALTER TABLE "CallSession" ENABLE ROW LEVEL SECURITY;
+ALTER TABLE "CallSession" FORCE ROW LEVEL SECURITY;
+
+CREATE POLICY "tenant_isolation_CallSession" ON "CallSession"
+    FOR ALL
+    USING ("tenantId" = current_setting('app.current_tenant_id', true));
+
+COMMIT;

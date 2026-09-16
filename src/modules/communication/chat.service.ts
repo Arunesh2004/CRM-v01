@@ -58,11 +58,59 @@ export class ChatService {
   }
 
   /**
+   * Get all conversations for a user
+   */
+  static async getConversations(tenantId: string, userId: string) {
+    const prisma = withTenant(tenantId);
+    
+    // RLS will ensure we only see tenant conversations
+    const conversations = await prisma.chatConversation.findMany({
+      where: {
+        participants: {
+          some: { userId }
+        }
+      },
+      include: {
+        participants: {
+          include: {
+            user: {
+              select: { id: true, email: true, firstName: true, lastName: true }
+            }
+          }
+        }
+      },
+      orderBy: { updatedAt: 'desc' }
+    });
+
+    // We can infer a nice name if it's a DIRECT chat without a name
+    return conversations.map(c => {
+      let computedName = c.name;
+      let targetUserId: string | undefined;
+      
+      if (!computedName && c.type === 'DIRECT') {
+        const other = c.participants.find(p => p.userId !== userId);
+        if (other?.user) {
+          computedName = `${other.user.firstName || ''} ${other.user.lastName || ''}`.trim() || other.user.email;
+          targetUserId = other.user.id;
+        }
+      }
+      
+      return {
+        id: c.id,
+        type: c.type,
+        name: computedName || 'Chat',
+        participants: c.participants.map(p => p.userId),
+        targetUserId // expose the other participant's ID for WebRTC initiation
+      };
+    });
+  }
+
+  /**
    * Send a message to a chat.
    * Verifies the sender is a participant in the conversation before creating the message.
    * All queries use withTenant(tenantId) to enforce RLS at the database level.
    */
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any -- S2 Residual Debt: Legacy internal payload requires architectural typing
+   
   // eslint-disable-next-line @typescript-eslint/no-explicit-any -- S2 Residual Debt: Legacy internal payload requires architectural typing
   static async sendMessage(tenantId: string, conversationId: string, senderId: string, content: string, metadata?: any) {
     const prisma = withTenant(tenantId);

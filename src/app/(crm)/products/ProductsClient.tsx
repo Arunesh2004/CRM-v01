@@ -5,10 +5,8 @@ import { Badge } from '@/components/ui/Badge';
 import { Button } from '@/components/ui/button';
 import { createProductAction, updateProductAction, deactivateProductAction } from '@/modules/revenue/actions/product.actions';
 import { toast } from 'sonner';
-
-// eslint-disable-next-line @typescript-eslint/no-explicit-any -- S2 Residual Debt: Legacy internal payload requires architectural typing
-// eslint-disable-next-line @typescript-eslint/no-explicit-any -- S2 Residual Debt: Legacy internal payload requires architectural typing
-export function ProductsClient({ products, canManage }: { products: any[], canManage: boolean }) {
+import type { Product } from '@prisma/client';
+export function ProductsClient({ products, canManage }: { products: Product[], canManage: boolean }) {
   const [isPending, startTransition] = useTransition();
   const [isAdding, setIsAdding] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
@@ -114,10 +112,8 @@ export function ProductsClient({ products, canManage }: { products: any[], canMa
               {canManage && <th className="px-6 py-4 font-semibold text-[#8891B0] uppercase tracking-wider text-[10px] text-right">Actions</th>}
             </tr>
           </thead>
-          // eslint-disable-next-line @typescript-eslint/no-explicit-any -- S2 Residual Debt: Legacy internal payload requires architectural typing
           <tbody className="divide-y divide-white/[.04]">
-            // eslint-disable-next-line @typescript-eslint/no-explicit-any -- S2 Residual Debt: Legacy internal payload requires architectural typing
-            {products?.map((product: any) => (
+            {products?.map((product) => (
               <tr key={product.id} className="hover:bg-white/[.02] transition-colors group">
                 <td className="px-6 py-4">
                   <div className="flex items-center gap-3">

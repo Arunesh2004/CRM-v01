@@ -56,7 +56,7 @@ export class ProductService {
       return tx.product.create({
         data: {
           tenantId,
-          // eslint-disable-next-line @typescript-eslint/no-explicit-any -- S2 Residual Debt: Legacy internal payload requires architectural typing
+           
           // eslint-disable-next-line @typescript-eslint/no-explicit-any -- S2 Residual Debt: Legacy internal payload requires architectural typing
           ...(validData as any),
         },
@@ -80,7 +80,7 @@ export class ProductService {
       }
 
       return tx.product.update({
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any -- S2 Residual Debt: Legacy internal payload requires architectural typing
+         
         where: { id: productId },
         // eslint-disable-next-line @typescript-eslint/no-explicit-any -- S2 Residual Debt: Legacy internal payload requires architectural typing
         data: validData as any,

@@ -1279,6 +1279,8 @@ model ChatMessage {
   deletedAt      DateTime?
   editedAt       DateTime?
   metadata       Json?
+  referenceType  String?   @db.VarChar(50) // e.g. "DEAL", "QUOTE", "CUSTOMER"
+  referenceId    String?   @db.Uuid
   createdAt      DateTime  @default(now())
   updatedAt      DateTime  @updatedAt
 
@@ -1348,6 +1350,8 @@ model MailMessage {
   bodyHtml  String?
   bodyText  String?
   metadata  Json?
+  referenceType  String?   @db.VarChar(50) // e.g. "DEAL", "QUOTE", "CUSTOMER"
+  referenceId    String?   @db.Uuid
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 

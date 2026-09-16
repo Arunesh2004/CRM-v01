@@ -24,7 +24,7 @@ type AIErrorCategory =
   | 'DATABASE_ERROR'
   | 'UNKNOWN';
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any -- S2 Residual Debt: Legacy internal payload requires architectural typing
+ 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any -- S2 Residual Debt: Legacy internal payload requires architectural typing
 function classifyError(err: any): AIErrorCategory {
   const msg: string = err?.message || '';
@@ -96,7 +96,7 @@ function logAiAudit(params: {
           ipAddress:  null,
           metadata,
         }
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any -- S2 Residual Debt: Legacy internal payload requires architectural typing
+       
       });
     // eslint-disable-next-line @typescript-eslint/no-explicit-any -- S2 Residual Debt: Legacy internal payload requires architectural typing
     } catch (dbErr: any) {
@@ -207,7 +207,7 @@ ENTITY RESOLUTION & ANTI-HALLUCINATION RULES:
 
       while (rounds < AIConfig.MAX_TOOL_ROUNDS) {
          const turnResult = await session.processTurn(turnContext);
-         // eslint-disable-next-line @typescript-eslint/no-explicit-any -- S2 Residual Debt: Legacy internal payload requires architectural typing
+          
          
          if (turnResult.toolRequests && turnResult.toolRequests.length > 0) {
             // eslint-disable-next-line @typescript-eslint/no-explicit-any -- S2 Residual Debt: Legacy internal payload requires architectural typing
@@ -223,7 +223,7 @@ ENTITY RESOLUTION & ANTI-HALLUCINATION RULES:
                     throw new Error("Security Violation: Tool arguments cannot override identity context.");
                   }
                 }
-                // eslint-disable-next-line @typescript-eslint/no-explicit-any -- S2 Residual Debt: Legacy internal payload requires architectural typing
+                 
                 const result = await ToolRegistry.executeTool(req.name, req.args, aiContext);
                 toolResults.push({ toolCallId: req.id, result });
                 aiResponse.toolsExecuted.push(req.name);
@@ -254,7 +254,7 @@ ENTITY RESOLUTION & ANTI-HALLUCINATION RULES:
       // The provider returns a structured AIResponse (text + telemetry).
       // Execution budgets (AI.3.1) are enforced inside the provider.
       aiResponse = await provider.generateResponse(prompt, authorizedTools, systemInstruction, requestId, history);
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any -- S2 Residual Debt: Legacy internal payload requires architectural typing
+     
     }
 
     return aiResponse.text;
@@ -302,7 +302,7 @@ ENTITY RESOLUTION & ANTI-HALLUCINATION RULES:
 
 // ---------------------------------------------------------------------------
 // askAssistantStream — streaming orchestrator
-// eslint-disable-next-line @typescript-eslint/no-explicit-any -- S2 Residual Debt: Legacy internal payload requires architectural typing
+ 
 // ---------------------------------------------------------------------------
 export async function* askAssistantStream(
   prompt: string,
@@ -377,7 +377,7 @@ ENTITY RESOLUTION & ANTI-HALLUCINATION RULES:
     while (rounds < AIConfig.MAX_TOOL_ROUNDS) {
       const turnResult = await session.processTurn(turnContext);
       
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any -- S2 Residual Debt: Legacy internal payload requires architectural typing
+       
       if (turnResult.text) {
          yield { type: 'text', content: turnResult.text };
       }
@@ -399,7 +399,7 @@ ENTITY RESOLUTION & ANTI-HALLUCINATION RULES:
              const result = await ToolRegistry.executeTool(req.name, req.args, aiContext);
              if (result && typeof result === 'object' && result._type === 'PENDING_CONFIRMATION') {
                yield { type: 'pending_confirmation', executionId: result.executionId, tool: req.name };
-               // eslint-disable-next-line @typescript-eslint/no-explicit-any -- S2 Residual Debt: Legacy internal payload requires architectural typing
+                
                aiResponse.terminationReason = 'ERROR'; // Using ERROR to signify incomplete due to pending
                return; 
              }
@@ -417,7 +417,7 @@ ENTITY RESOLUTION & ANTI-HALLUCINATION RULES:
          const nextTurn = await session.submitToolResults(toolResults);
          if (nextTurn.text) {
            yield { type: 'text', content: nextTurn.text };
-           // eslint-disable-next-line @typescript-eslint/no-explicit-any -- S2 Residual Debt: Legacy internal payload requires architectural typing
+            
            aiResponse.text += nextTurn.text;
            break;
          }

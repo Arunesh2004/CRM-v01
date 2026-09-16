@@ -56,9 +56,8 @@ export default async function QuotesPage() {
               </tr>
             </thead>
             <tbody className="divide-y divide-white/[.04]">
-              // eslint-disable-next-line @typescript-eslint/no-explicit-any -- S2 Residual Debt: Legacy internal payload requires architectural typing
-              // eslint-disable-next-line @typescript-eslint/no-explicit-any -- S2 Residual Debt: Legacy internal payload requires architectural typing
-              {quotes?.map((quote: any) => (
+
+              {quotes?.map((quote: import('@prisma/client').Quote & { customer: import('@prisma/client').Customer | null, deal: import('@prisma/client').Deal | null }) => (
                 <tr key={quote.id} className="hover:bg-white/[.02] transition-colors group">
                   <td className="px-6 py-4 font-medium text-white">
                     <span className="font-mono text-xs">{quote.id.split('-')[0]}</span>
@@ -79,7 +78,7 @@ export default async function QuotesPage() {
                   </td>
                   <td className="px-6 py-4">{getStatusBadge(quote.status)}</td>
                   <td className="px-6 py-4 font-semibold text-white">
-                    ${(quote.grandTotal || 0).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                    ${(quote.grandTotal || 0).toNumber().toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                   </td>
                   <td className="px-6 py-4 text-[#8891B0]">{new Date(quote.createdAt).toLocaleDateString()}</td>
                 </tr>

@@ -52,7 +52,7 @@ const prismaClientSingleton = (baseClient: PrismaClient) => {
         async $allOperations({ model, operation, args, query }) {
           if (softDeleteModels.includes(model as string)) {
              if (['findMany', 'findFirst', 'findFirstOrThrow', 'count', 'aggregate'].includes(operation)) {
-              let mutableArgs = (args as any) || {};
+              const mutableArgs = (args as any) || {};
               if (!mutableArgs.where) mutableArgs.where = {};
               mutableArgs.where.deletedAt = null;
               
