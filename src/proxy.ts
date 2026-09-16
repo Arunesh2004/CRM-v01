@@ -1,6 +1,6 @@
 import { clerkMiddleware, createRouteMatcher } from '@clerk/nextjs/server';
 import { NextResponse } from 'next/server';
-import type { NextRequest } from 'next/server';
+import type { NextRequest, NextFetchEvent } from 'next/server';
 import { rateLimiters } from '@/lib/cache/redis.client';
 
 /**
@@ -81,13 +81,25 @@ const handleRateLimiting = async (request: NextRequest, ip: string) => {
   let isHighRisk = false;
 
   const pathname = request.nextUrl.pathname;
+
+  // Clerk authentication pages (/sign-in, /sign-up, /__clerk proxy) must NOT be
+  // application rate-limited. Clerk's sign-in page makes multiple sub-requests
+  // during initialization (JS chunks, Clerk API calls) and a 10 req/min bucket
+  // would exhaust before the page renders, producing a 429 for the end user.
+  // Clerk's own platform-level DDoS protection applies to these endpoints.
+  if (
+    pathname.startsWith('/sign-in') ||
+    pathname.startsWith('/sign-up') ||
+    pathname.startsWith('/__clerk')
+  ) {
+    return null; // No application rate limiting — let Clerk handle it
+  }
+
   if (pathname.startsWith('/api/webhooks/')) {
     limiter = rateLimiters.webhook;
   } else if (pathname.startsWith('/api/ai') || pathname.startsWith('/assistant')) {
     limiter = rateLimiters.ai;
     isHighRisk = true;
-  } else if (pathname.startsWith('/sign-in') || pathname.startsWith('/sign-up')) {
-    limiter = rateLimiters.auth;
   } else if (pathname.startsWith('/billing') || pathname.startsWith('/api/billing')) {
     limiter = rateLimiters.api;
     // Mutative operations (POST/Server Actions) on billing are high risk (fail-closed)
@@ -191,7 +203,7 @@ const baseMiddleware = hasClerkKeys
       );
     };
 
-export default async function middleware(request: NextRequest, event: any) {
+export default async function proxy(request: NextRequest, event: NextFetchEvent) {
   if (isLoadTestRequest(request)) {
     // Completely bypass Clerk for load tests to prevent handshake redirect crashes
     const response = NextResponse.next();
