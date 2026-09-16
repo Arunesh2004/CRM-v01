@@ -14,7 +14,9 @@ export default async function CRMLayout({ children }: { children: ReactNode }) {
     // requireAuth() throws 'Unauthorized' when the Clerk session has no corresponding
     // CRM database identity (e.g. unprovisioned account, inactive account).
     // In a Server Component we redirect cleanly rather than crash into Error #441.
-    redirect('/sign-in?reason=unauthorized');
+    // We redirect to /unauthorized instead of /sign-in to prevent an infinite redirect loop 
+    // where Clerk's <SignIn /> automatically redirects already-authenticated users back to /.
+    redirect('/unauthorized');
   }
   
   if (user.onboardingStatus === 'PENDING') {
