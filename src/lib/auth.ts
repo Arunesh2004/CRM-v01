@@ -187,8 +187,8 @@ export const getCurrentUser = cache(async function getCurrentUser(): Promise<Aut
             version() as version
         `;
         logger.info('[AUTH_DIAGNOSTIC] Extended DB Connection Info:', { meta });
-      } catch (dbErr: any) {
-        logger.error('[AUTH_DIAGNOSTIC] Extended DB Connection Error:', undefined, { errorMessage: dbErr.message });
+      } catch (dbErr: unknown) {
+        logger.error('[AUTH_DIAGNOSTIC] Extended DB Connection Error:', undefined, { errorMessage: (dbErr as Error).message });
       }
 
       try {
@@ -198,8 +198,8 @@ export const getCurrentUser = cache(async function getCurrentUser(): Promise<Aut
           WHERE relname = 'User'
         `;
         logger.info('[AUTH_DIAGNOSTIC] RLS status:', { rlsMeta });
-      } catch (rlsErr: any) {
-        logger.error('[AUTH_DIAGNOSTIC] RLS status error:', undefined, { errorMessage: rlsErr.message });
+      } catch (rlsErr: unknown) {
+        logger.error('[AUTH_DIAGNOSTIC] RLS status error:', undefined, { errorMessage: (rlsErr as Error).message });
       }
 
       try {
@@ -209,8 +209,8 @@ export const getCurrentUser = cache(async function getCurrentUser(): Promise<Aut
           WHERE tablename = 'User'
         `;
         logger.info('[AUTH_DIAGNOSTIC] RLS policies:', { policies });
-      } catch (polErr: any) {
-        logger.error('[AUTH_DIAGNOSTIC] RLS policies error:', undefined, { errorMessage: polErr.message });
+      } catch (polErr: unknown) {
+        logger.error('[AUTH_DIAGNOSTIC] RLS policies error:', undefined, { errorMessage: (polErr as Error).message });
       }
 
       try {
@@ -221,8 +221,8 @@ export const getCurrentUser = cache(async function getCurrentUser(): Promise<Aut
           LIMIT 1
         `;
         logger.info('[AUTH_DIAGNOSTIC] raw SQL User lookup by clerkId:', { rawUserById });
-      } catch (rawErr: any) {
-        logger.error('[AUTH_DIAGNOSTIC] raw SQL clerkId error:', undefined, { errorMessage: rawErr.message });
+      } catch (rawErr: unknown) {
+        logger.error('[AUTH_DIAGNOSTIC] raw SQL clerkId error:', undefined, { errorMessage: (rawErr as Error).message });
       }
 
       try {
@@ -233,8 +233,8 @@ export const getCurrentUser = cache(async function getCurrentUser(): Promise<Aut
           LIMIT 1
         `;
         logger.info('[AUTH_DIAGNOSTIC] raw SQL User lookup by email:', { rawUserByEmail });
-      } catch (rawEmailErr: any) {
-        logger.error('[AUTH_DIAGNOSTIC] raw SQL email error:', undefined, { errorMessage: rawEmailErr.message });
+      } catch (rawEmailErr: unknown) {
+        logger.error('[AUTH_DIAGNOSTIC] raw SQL email error:', undefined, { errorMessage: (rawEmailErr as Error).message });
       }
 
       try {
@@ -245,8 +245,8 @@ export const getCurrentUser = cache(async function getCurrentUser(): Promise<Aut
            result: prismaUserByEmail ? 'FOUND' : 'NOT_FOUND',
            id: prismaUserByEmail?.id
         });
-      } catch (prismaEmailErr: any) {
-        logger.error('[AUTH_DIAGNOSTIC] Prisma email error:', undefined, { errorMessage: prismaEmailErr.message });
+      } catch (prismaEmailErr: unknown) {
+        logger.error('[AUTH_DIAGNOSTIC] Prisma email error:', undefined, { errorMessage: (prismaEmailErr as Error).message });
       }
 
       return tx.user.findFirst({
