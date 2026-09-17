@@ -159,15 +159,96 @@ export const getCurrentUser = cache(async function getCurrentUser(): Promise<Aut
     }
   }
 
+  // Diagnostic: Check environment DB URLs safely
+  const parseSafeUrl = (url: string | undefined) => {
+    if (!url) return 'MISSING';
+    try {
+      const u = new URL(url);
+      return { host: u.hostname, db: u.pathname };
+    } catch { return 'INVALID'; }
+  };
+  logger.info('[AUTH_DIAGNOSTIC] Env DB URLs:', {
+    DATABASE_URL: parseSafeUrl(process.env.DATABASE_URL),
+    ADMIN_DATABASE_URL: parseSafeUrl(process.env.ADMIN_DATABASE_URL)
+  });
+
   let user;
   try {
     user = await executeAsSystem(SystemOperation.AUTH_BOOTSTRAP, async (tx) => {
       try {
-        const meta = await tx.$queryRaw`SELECT current_database() as db, current_user as usr`;
-        logger.info('[AUTH_DIAGNOSTIC] DB Connection Info:', { meta });
+        const meta = await tx.$queryRaw`
+          SELECT
+            current_database() as db,
+            current_user as usr,
+            current_schema() as schema,
+            current_setting('search_path') as search_path,
+            inet_server_addr() as server_addr,
+            inet_server_port() as server_port,
+            version() as version
+        `;
+        logger.info('[AUTH_DIAGNOSTIC] Extended DB Connection Info:', { meta });
       } catch (dbErr: any) {
-        logger.error('[AUTH_DIAGNOSTIC] DB Connection Error:', undefined, { errorMessage: dbErr.message });
+        logger.error('[AUTH_DIAGNOSTIC] Extended DB Connection Error:', undefined, { errorMessage: dbErr.message });
       }
+
+      try {
+        const rlsMeta = await tx.$queryRaw`
+          SELECT relrowsecurity, relforcerowsecurity
+          FROM pg_class
+          WHERE relname = 'User'
+        `;
+        logger.info('[AUTH_DIAGNOSTIC] RLS status:', { rlsMeta });
+      } catch (rlsErr: any) {
+        logger.error('[AUTH_DIAGNOSTIC] RLS status error:', undefined, { errorMessage: rlsErr.message });
+      }
+
+      try {
+        const policies = await tx.$queryRaw`
+          SELECT policyname, cmd, roles, qual::text as using_expr, with_check::text as check_expr
+          FROM pg_policies
+          WHERE tablename = 'User'
+        `;
+        logger.info('[AUTH_DIAGNOSTIC] RLS policies:', { policies });
+      } catch (polErr: any) {
+        logger.error('[AUTH_DIAGNOSTIC] RLS policies error:', undefined, { errorMessage: polErr.message });
+      }
+
+      try {
+        const rawUserById = await tx.$queryRaw`
+          SELECT id, "clerkId", email, status, "tenantId"
+          FROM "User"
+          WHERE "clerkId" = ${clerkId}
+          LIMIT 1
+        `;
+        logger.info('[AUTH_DIAGNOSTIC] raw SQL User lookup by clerkId:', { rawUserById });
+      } catch (rawErr: any) {
+        logger.error('[AUTH_DIAGNOSTIC] raw SQL clerkId error:', undefined, { errorMessage: rawErr.message });
+      }
+
+      try {
+        const rawUserByEmail = await tx.$queryRaw`
+          SELECT id, "clerkId", email, status, "tenantId"
+          FROM "User"
+          WHERE email = 'vasudevrathore126@gmail.com'
+          LIMIT 1
+        `;
+        logger.info('[AUTH_DIAGNOSTIC] raw SQL User lookup by email:', { rawUserByEmail });
+      } catch (rawEmailErr: any) {
+        logger.error('[AUTH_DIAGNOSTIC] raw SQL email error:', undefined, { errorMessage: rawEmailErr.message });
+      }
+
+      try {
+        const prismaUserByEmail = await tx.user.findFirst({
+          where: { email: 'vasudevrathore126@gmail.com' }
+        });
+        logger.info('[AUTH_DIAGNOSTIC] Prisma User lookup by email:', {
+           result: prismaUserByEmail ? 'FOUND' : 'NOT_FOUND',
+           id: prismaUserByEmail?.id
+        });
+      } catch (prismaEmailErr: any) {
+        logger.error('[AUTH_DIAGNOSTIC] Prisma email error:', undefined, { errorMessage: prismaEmailErr.message });
+      }
+
       return tx.user.findFirst({
         where: { clerkId },
         include: {
