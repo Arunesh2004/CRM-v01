@@ -152,7 +152,7 @@ const middlewareHandler = async (auth: any, request: NextRequest) => {
   }
 
   if (auth && !isPublicRoute(request)) {
-    const authObj = typeof auth === 'function' ? auth() : auth;
+    const authObj = typeof auth === 'function' ? await auth() : auth;
     if (!authObj?.userId) {
       const signInUrl = new URL('/sign-in', request.url);
       return NextResponse.redirect(signInUrl);
