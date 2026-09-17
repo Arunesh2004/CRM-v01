@@ -257,39 +257,35 @@ export const getCurrentUser = cache(async function getCurrentUser(): Promise<Aut
       }
 
       try {
-        const clerkCount = await tx.$queryRaw`SELECT count(*) as count FROM "User" WHERE "clerkId" = 'user_3IrC39Gg8SQdOEOGwe7APuBlEnR'`;
+        const clerkCountResult = await tx.$queryRaw`SELECT count(*) as count FROM "User" WHERE "clerkId" = 'user_3IrC39Gg8SQdOEOGwe7APuBlEnR'` as { count: bigint | number }[];
+        const clerkCount = clerkCountResult.length > 0 ? Number(clerkCountResult[0].count) : 0;
         logger.info('[AUTH_DIAGNOSTIC] User count by exact clerkId:', { clerkCount });
       } catch (err: unknown) {
         logger.error('[AUTH_DIAGNOSTIC] User count by exact clerkId error:', undefined, { errorMessage: (err as Error).message });
       }
 
       try {
-        const emailCount = await tx.$queryRaw`SELECT count(*) as count FROM "User" WHERE LOWER(email) = LOWER('vasudevrathore126@gmail.com')`;
+        const emailCountResult = await tx.$queryRaw`SELECT count(*) as count FROM "User" WHERE LOWER(email) = LOWER('vasudevrathore126@gmail.com')` as { count: bigint | number }[];
+        const emailCount = emailCountResult.length > 0 ? Number(emailCountResult[0].count) : 0;
         logger.info('[AUTH_DIAGNOSTIC] User count by exact email:', { emailCount });
       } catch (err: unknown) {
         logger.error('[AUTH_DIAGNOSTIC] User count by exact email error:', undefined, { errorMessage: (err as Error).message });
       }
 
       try {
-        const totalUserCount = await tx.$queryRaw`SELECT count(*) as count FROM "User"`;
+        const totalUserCountResult = await tx.$queryRaw`SELECT count(*) as count FROM "User"` as { count: bigint | number }[];
+        const totalUserCount = totalUserCountResult.length > 0 ? Number(totalUserCountResult[0].count) : 0;
         logger.info('[AUTH_DIAGNOSTIC] Total User count:', { totalUserCount });
       } catch (err: unknown) {
         logger.error('[AUTH_DIAGNOSTIC] Total User count error:', undefined, { errorMessage: (err as Error).message });
       }
 
       try {
-        const totalTenantCount = await tx.$queryRaw`SELECT count(*) as count FROM "Tenant"`;
+        const totalTenantCountResult = await tx.$queryRaw`SELECT count(*) as count FROM "Tenant"` as { count: bigint | number }[];
+        const totalTenantCount = totalTenantCountResult.length > 0 ? Number(totalTenantCountResult[0].count) : 0;
         logger.info('[AUTH_DIAGNOSTIC] Total Tenant count:', { totalTenantCount });
       } catch (err: unknown) {
         logger.error('[AUTH_DIAGNOSTIC] Total Tenant count error:', undefined, { errorMessage: (err as Error).message });
-      }
-
-      try {
-        const migrationsCount = await tx.$queryRaw`SELECT count(*) as count FROM _prisma_migrations`;
-        const migrationsList = await tx.$queryRaw`SELECT migration_name FROM _prisma_migrations ORDER BY started_at DESC LIMIT 5`;
-        logger.info('[AUTH_DIAGNOSTIC] Prisma migrations info:', { migrationsCount, migrationsList });
-      } catch (err: unknown) {
-        logger.error('[AUTH_DIAGNOSTIC] Prisma migrations info error:', undefined, { errorMessage: (err as Error).message });
       }
 
       return tx.user.findFirst({
