@@ -3,6 +3,7 @@ import { requireAuth } from "@/lib/auth";
 import CRMLayoutClient from "./CRMLayoutClient";
 import { redirect } from "next/navigation";
 import WebRTCCallManager from "@/components/communication/WebRTCCallManager";
+import { Logger } from "@/lib/observability/logger";
 
 export const dynamic = 'force-dynamic';
 
@@ -10,7 +11,13 @@ export default async function CRMLayout({ children }: { children: ReactNode }) {
   let user;
   try {
     user = await requireAuth();
-  } catch {
+  } catch (err: unknown) {
+    const logger = new Logger();
+    const errorObj = err as Error;
+    logger.error('[AUTH_DIAGNOSTIC] CRMLayout auth failure:', undefined, {
+      errorType: errorObj?.name,
+      errorMessage: errorObj?.message
+    });
     // requireAuth() throws 'Unauthorized' when the Clerk session has no corresponding
     // CRM database identity (e.g. unprovisioned account, inactive account).
     // In a Server Component we redirect cleanly rather than crash into Error #441.

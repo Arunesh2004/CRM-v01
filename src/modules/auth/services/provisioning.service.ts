@@ -37,27 +37,38 @@ export async function synchronizeClerkIdentity(clerkId: string, emailStr: string
     });
   });
 
+  // Log identity sync context
+  Logger.info('[AUTH_DIAGNOSTIC] identity synchronization:', {
+    email_lookup: user ? 'FOUND' : 'NOT_FOUND',
+    stored_clerk_id_match: user ? (user.clerkId === clerkId ? 'YES' : 'NO') : 'N/A',
+    stored_clerk_id_null: user ? (user.clerkId === null ? 'YES' : 'NO') : 'N/A'
+  });
+
   // 2. Reject unknown accounts
   if (!user) {
     Logger.warn('[Provisioning] Unknown account login denied', { email: email.replace(/(?<=.).(?=.*@)/g, '*') });
+    Logger.info('[AUTH_DIAGNOSTIC] identity synchronization result:', { result: 'NOT_FOUND' });
     return null; // Deny entry
   }
 
   // 3. User exists. Check status
   if (user.status === 'INACTIVE') {
      Logger.warn('[Provisioning] Inactive user login denied', { email: email.replace(/(?<=.).(?=.*@)/g, '*') });
+     Logger.info('[AUTH_DIAGNOSTIC] identity synchronization result:', { result: 'REJECTED' });
      return null;
   }
 
   // 4. If status is INVITED, deny entry. They MUST use the token flow.
   if (user.status === 'INVITED') {
      Logger.warn('[Provisioning] Unredeemed invited user linking denied', { email: email.replace(/(?<=.).(?=.*@)/g, '*') });
+     Logger.info('[AUTH_DIAGNOSTIC] identity synchronization result:', { result: 'REJECTED' });
      return null;
   }
 
   // 5. If status is ACTIVE, verify identity matches
   if (user.status === 'ACTIVE') {
      if (user.clerkId === clerkId) {
+        Logger.info('[AUTH_DIAGNOSTIC] identity synchronization result:', { result: 'MATCHED' });
         return user;
      } else if (user.clerkId === null) {
         // Bind the identity for pre-provisioned/seeded users
@@ -68,12 +79,15 @@ export async function synchronizeClerkIdentity(clerkId: string, emailStr: string
           });
         });
         Logger.info(`[Provisioning] Bound clerkId ${clerkId} to pre-provisioned user ${user.id}`);
+        Logger.info('[AUTH_DIAGNOSTIC] identity synchronization result:', { result: 'BOUND' });
         return { ...user, clerkId };
      } else {
         Logger.warn(`[Provisioning] Identity Reassignment Denied`, { expected: user.clerkId, got: clerkId });
+        Logger.info('[AUTH_DIAGNOSTIC] identity synchronization result:', { result: 'REJECTED' });
         return null;
      }
   }
 
+  Logger.info('[AUTH_DIAGNOSTIC] identity synchronization result:', { result: 'ERROR' });
   return null;
 }

@@ -126,35 +126,95 @@ export const getCurrentUser = cache(async function getCurrentUser(): Promise<Aut
   const loadTestUser = await tryLoadTestIdentity();
   if (loadTestUser) return loadTestUser;
 
-
-
-  const clerkAuth = await auth();
+  let clerkAuth;
+  try {
+    clerkAuth = await auth();
+    logger.info('[AUTH_DIAGNOSTIC] getCurrentUser auth result:', {
+      authenticated: !!clerkAuth.userId,
+      hasUserId: !!clerkAuth.userId,
+      userId: clerkAuth.userId || 'NONE'
+    });
+  } catch (err: unknown) {
+    const errorObj = err as Error;
+    logger.error('[AUTH_DIAGNOSTIC] getCurrentUser auth threw:', undefined, {
+      errorName: errorObj?.name,
+      errorMessage: errorObj?.message
+    });
+    throw err;
+  }
+  
   const clerkId = clerkAuth.userId;
 
   if (!clerkId) {
+    logger.info('[AUTH_DIAGNOSTIC] getCurrentUser result:', { result: 'NULL' });
     return null;
   }
 
   if (redis) {
     const cached = await redis.get(`user:${clerkId}`);
     // Cache is written via JSON.stringify(user); Upstash Redis deserializes automatically on get().
-    if (cached) return cached as unknown as AuthUser;
+    if (cached) {
+       logger.info('[AUTH_DIAGNOSTIC] getCurrentUser result:', { result: 'FOUND_IN_CACHE' });
+       return cached as unknown as AuthUser;
+    }
   }
 
-  let user = await executeAsSystem(SystemOperation.AUTH_BOOTSTRAP, async (tx) => {
-    return tx.user.findFirst({
-      where: { clerkId },
-      include: {
-        tenant: true,
-        userRoles: {
-          include: { role: { include: { permissions: { include: { permission: true } } } } }
-        }
+  let user;
+  try {
+    user = await executeAsSystem(SystemOperation.AUTH_BOOTSTRAP, async (tx) => {
+      try {
+        const meta = await tx.$queryRaw`SELECT current_database() as db, current_user as usr`;
+        logger.info('[AUTH_DIAGNOSTIC] DB Connection Info:', { meta });
+      } catch (dbErr: any) {
+        logger.error('[AUTH_DIAGNOSTIC] DB Connection Error:', undefined, { errorMessage: dbErr.message });
       }
+      return tx.user.findFirst({
+        where: { clerkId },
+        include: {
+          tenant: true,
+          userRoles: {
+            include: { role: { include: { permissions: { include: { permission: true } } } } }
+          }
+        }
+      });
     });
-  });
+
+    if (user) {
+      logger.info('[AUTH_DIAGNOSTIC] CRM clerkId lookup:', {
+        result: 'FOUND',
+        userId: user.id,
+        status: user.status,
+        tenantId: user.tenantId
+      });
+    } else {
+      logger.info('[AUTH_DIAGNOSTIC] CRM clerkId lookup:', { result: 'NOT_FOUND' });
+    }
+  } catch (err: unknown) {
+    const errorObj = err as Error;
+    logger.error('[AUTH_DIAGNOSTIC] CRM clerkId lookup error:', undefined, {
+      result: 'ERROR',
+      errorName: errorObj?.name,
+      errorMessage: errorObj?.message
+    });
+    throw err;
+  }
 
   if (!user) {
-    const syncedUser = await ensureUserProvisionedFromClerk(clerkId);
+    logger.info('[AUTH_DIAGNOSTIC] entering Clerk identity provisioning fallback');
+    let syncedUser;
+    try {
+      syncedUser = await ensureUserProvisionedFromClerk(clerkId);
+      logger.info('[AUTH_DIAGNOSTIC] provisioning result:', { result: syncedUser ? 'FOUND' : 'NOT_FOUND' });
+    } catch (err: unknown) {
+      const errorObj = err as Error;
+      logger.error('[AUTH_DIAGNOSTIC] provisioning result error:', undefined, {
+        result: 'ERROR',
+        errorName: errorObj?.name,
+        errorMessage: errorObj?.message
+      });
+      // Do not swallow if the function wasn't catching it, but ensureUserProvisionedFromClerk does catch internally.
+    }
+    
     if (syncedUser) {
       user = await executeAsSystem(SystemOperation.AUTH_BOOTSTRAP, async (tx) => {
         return tx.user.findFirst({
@@ -172,6 +232,18 @@ export const getCurrentUser = cache(async function getCurrentUser(): Promise<Aut
 
   if (redis && user) {
     await redis.set(`user:${clerkId}`, JSON.stringify(user), { ex: 3600 });
+  }
+
+  if (user) {
+    logger.info('[AUTH_DIAGNOSTIC] getCurrentUser result:', {
+      result: 'FOUND',
+      userId: user.id,
+      status: user.status,
+      tenantId: user.tenantId,
+      role: user.userRoles?.[0]?.role?.name
+    });
+  } else {
+    logger.info('[AUTH_DIAGNOSTIC] getCurrentUser result:', { result: 'NULL' });
   }
 
   return user;
