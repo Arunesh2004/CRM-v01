@@ -53,8 +53,7 @@ const NAV_GROUPS = [
     items: [
       { name: "Tasks", href: "/tasks", icon: CheckSquare },
       { name: "Tickets", href: "/tickets", icon: MessageSquare },
-      { name: "Chat", href: "/chat", icon: MessageSquare },
-      { name: "Communications", href: "/communications", icon: Phone },
+      { name: "Chat", href: "/communication/chat", icon: MessageSquare },
     ],
   },
   {
@@ -77,7 +76,7 @@ const NAV_GROUPS = [
     section: "System",
     items: [
       { name: "Approvals", href: "/admin/approvals", icon: Shield },
-      { name: "Settings", href: "/settings/employees", icon: Settings },
+      { name: "Settings", href: "/employees", icon: Settings },
       { name: "Admin", href: "/admin", icon: Shield, adminOnly: true },
     ],
   },

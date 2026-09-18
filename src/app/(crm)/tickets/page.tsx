@@ -65,8 +65,7 @@ export default async function TicketsPage() {
               </tr>
             </thead>
             <tbody className="divide-y divide-white/[.04]">
-              // eslint-disable-next-line @typescript-eslint/no-explicit-any -- S2 Residual Debt: Legacy internal payload requires architectural typing
-              // eslint-disable-next-line @typescript-eslint/no-explicit-any -- S2 Residual Debt: Legacy internal payload requires architectural typing
+              {/* eslint-disable-next-line @typescript-eslint/no-explicit-any */}
               {tickets?.map((ticket: any) => (
                 <tr key={ticket.id} className="hover:bg-white/[.02] transition-colors group">
                   <td className="px-6 py-4 font-medium text-white">

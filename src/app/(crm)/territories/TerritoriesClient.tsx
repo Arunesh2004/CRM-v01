@@ -175,10 +175,9 @@ export function TerritoriesClient({ territories, canManage }: { territories: any
               <th className="px-6 py-4 font-semibold text-[#8891B0] uppercase tracking-wider text-[10px]">Parent</th>
               {canManage && <th className="px-6 py-4 font-semibold text-[#8891B0] uppercase tracking-wider text-[10px] text-right">Actions</th>}
             </tr>
-          // eslint-disable-next-line @typescript-eslint/no-explicit-any -- S2 Residual Debt: Legacy internal payload requires architectural typing
           </thead>
           <tbody className="divide-y divide-white/[.04]">
-            // eslint-disable-next-line @typescript-eslint/no-explicit-any -- S2 Residual Debt: Legacy internal payload requires architectural typing
+            {/* eslint-disable-next-line @typescript-eslint/no-explicit-any */}
             {territories?.map((territory: any) => (
               <tr key={territory.id} className="hover:bg-white/[.02] transition-colors group">
                 <td className="px-6 py-4">
