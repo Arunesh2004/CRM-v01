@@ -222,6 +222,7 @@ export default async function DashboardPage() {
                           {new Date(activity.createdAt).toLocaleTimeString("en-IN", {
                             hour: "2-digit",
                             minute: "2-digit",
+                            timeZone: "UTC"
                           })}
                         </p>
                       </div>
