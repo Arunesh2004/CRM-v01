@@ -160,16 +160,57 @@ export const getCurrentUser = cache(async function getCurrentUser(): Promise<Aut
   }
 
   // Diagnostic: Check environment DB URLs safely
-  const parseSafeUrl = (url: string | undefined) => {
+  const parseSafeUrlDetailed = (url: string | undefined) => {
     if (!url) return 'MISSING';
     try {
       const u = new URL(url);
-      return { host: u.hostname, db: u.pathname };
+      const username = u.username;
+      const hasDot = username.includes('.');
+      const projectRef = hasDot ? username.split('.')[1] : 'NONE';
+      const pgbouncer = u.searchParams.get('pgbouncer') || 'none';
+      const connectionLimit = u.searchParams.get('connection_limit') || 'none';
+      const otherParams = Array.from(u.searchParams.keys())
+        .filter((k) => k !== 'pgbouncer' && k !== 'connection_limit')
+        .join(',') || 'none';
+
+      return {
+        protocol: u.protocol,
+        hostname: u.hostname,
+        port: u.port || 'default',
+        database: u.pathname,
+        username,
+        hasProjectRefDot: hasDot,
+        projectRef,
+        pgbouncer,
+        connectionLimit,
+        otherParams,
+      };
     } catch { return 'INVALID'; }
   };
-  logger.info('[AUTH_DIAGNOSTIC] Env DB URLs:', {
-    DATABASE_URL: parseSafeUrl(process.env.DATABASE_URL),
-    ADMIN_DATABASE_URL: parseSafeUrl(process.env.ADMIN_DATABASE_URL)
+
+  const adminMeta = parseSafeUrlDetailed(process.env.ADMIN_DATABASE_URL);
+  const dbMeta = parseSafeUrlDetailed(process.env.DATABASE_URL);
+
+  logger.info('[AUTH_DIAGNOSTIC] Runtime ADMIN_DATABASE_URL metadata:', {
+    hostname: typeof adminMeta === 'string' ? adminMeta : adminMeta.hostname,
+    port: typeof adminMeta === 'string' ? adminMeta : adminMeta.port,
+    database: typeof adminMeta === 'string' ? adminMeta : adminMeta.database,
+    username: typeof adminMeta === 'string' ? adminMeta : adminMeta.username,
+    projectRef: typeof adminMeta === 'string' ? adminMeta : adminMeta.projectRef,
+    pgbouncer: typeof adminMeta === 'string' ? adminMeta : adminMeta.pgbouncer,
+    connectionLimit: typeof adminMeta === 'string' ? adminMeta : adminMeta.connectionLimit,
+    otherParams: typeof adminMeta === 'string' ? adminMeta : adminMeta.otherParams,
+  });
+
+  logger.info('[AUTH_DIAGNOSTIC] Runtime DATABASE_URL metadata:', {
+    hostname: typeof dbMeta === 'string' ? dbMeta : dbMeta.hostname,
+    port: typeof dbMeta === 'string' ? dbMeta : dbMeta.port,
+    database: typeof dbMeta === 'string' ? dbMeta : dbMeta.database,
+    username: typeof dbMeta === 'string' ? dbMeta : dbMeta.username,
+    projectRef: typeof dbMeta === 'string' ? dbMeta : dbMeta.projectRef,
+    pgbouncer: typeof dbMeta === 'string' ? dbMeta : dbMeta.pgbouncer,
+    connectionLimit: typeof dbMeta === 'string' ? dbMeta : dbMeta.connectionLimit,
+    otherParams: typeof dbMeta === 'string' ? dbMeta : dbMeta.otherParams,
   });
 
   let user;
@@ -187,6 +228,13 @@ export const getCurrentUser = cache(async function getCurrentUser(): Promise<Aut
             version() as version
         `;
         logger.info('[AUTH_DIAGNOSTIC] Extended DB Connection Info:', { meta });
+        
+        logger.info('[AUTH_DIAGNOSTIC] ADMIN_DATABASE_URL env projectRef:', {
+          projectRef: typeof adminMeta === 'string' ? adminMeta : adminMeta.projectRef
+        });
+        const currentUserStr = Array.isArray(meta) && meta.length > 0 ? (meta as Record<string, unknown>[])[0].usr : 'UNKNOWN';
+        logger.info('[AUTH_DIAGNOSTIC] PostgreSQL current_user:', { currentUser: currentUserStr });
+
       } catch (dbErr: unknown) {
         logger.error('[AUTH_DIAGNOSTIC] Extended DB Connection Error:', undefined, { errorMessage: (dbErr as Error).message });
       }
