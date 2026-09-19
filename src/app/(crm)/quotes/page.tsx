@@ -56,11 +56,12 @@ export default async function QuotesPage() {
               </tr>
             </thead>
             <tbody className="divide-y divide-white/[.04]">
-
               {quotes?.map((quote: import('@prisma/client').Quote & { customer: import('@prisma/client').Customer | null, deal: import('@prisma/client').Deal | null }) => (
                 <tr key={quote.id} className="hover:bg-white/[.02] transition-colors group">
                   <td className="px-6 py-4 font-medium text-white">
-                    <span className="font-mono text-xs">{quote.id.split('-')[0]}</span>
+                    <Link href={`/quotes/${quote.id}`}>
+                      <span className="font-mono text-xs hover:text-cyan-400 transition-colors">{quote.id.split('-')[0]}</span>
+                    </Link>
                   </td>
                   <td className="px-6 py-4 text-[#8891B0]">
                     {quote.customer ? (
@@ -78,7 +79,8 @@ export default async function QuotesPage() {
                   </td>
                   <td className="px-6 py-4">{getStatusBadge(quote.status)}</td>
                   <td className="px-6 py-4 font-semibold text-white">
-                    ${(quote.grandTotal || 0).toNumber().toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                    {/* grandTotal arrives as a string from serializeDecimal(); Number() handles both string and numeric forms safely */}
+                    ${Number(quote.grandTotal ?? 0).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                   </td>
                   <td className="px-6 py-4 text-[#8891B0]">{new Date(quote.createdAt).toLocaleDateString()}</td>
                 </tr>

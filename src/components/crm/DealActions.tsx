@@ -12,11 +12,13 @@ import { EditDealForm } from './EditDealForm';
 export function DealActions({ 
   deal, 
   pipelines, 
-  assignableUsers = [] 
+  assignableUsers = [],
+  customers = []
 }: { 
   deal: Deal & { stage: PipelineStage };
   pipelines: (Pipeline & { stages: PipelineStage[] })[];
   assignableUsers?: { id: string; email: string }[];
+  customers?: { id: string; name: string }[];
 }) {
   const router = useRouter();
 
@@ -32,7 +34,7 @@ export function DealActions({
 
   return (
     <div className="flex space-x-2 mt-4">
-      <EditDealForm deal={deal} pipelines={pipelines} assignableUsers={assignableUsers} />
+      <EditDealForm deal={deal} pipelines={pipelines} assignableUsers={assignableUsers} customers={customers} />
       
       <ConfirmDialog
         title="Archive Deal"

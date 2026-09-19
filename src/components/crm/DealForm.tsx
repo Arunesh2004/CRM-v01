@@ -14,7 +14,7 @@ import type { Pipeline, PipelineStage, User } from '@prisma/client';
 
 export type DealFormPipeline = Pipeline & { stages: PipelineStage[] };
 
-export function DealForm({ pipelines, assignableUsers = [] }: { pipelines: DealFormPipeline[], assignableUsers?: Pick<User, 'id' | 'email'>[] }) {
+export function DealForm({ pipelines, assignableUsers = [], customers = [] }: { pipelines: DealFormPipeline[], assignableUsers?: Pick<User, 'id' | 'email'>[], customers?: { id: string; name: string }[] }) {
   const [isOpen, setIsOpen] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState('');
@@ -37,6 +37,7 @@ export function DealForm({ pipelines, assignableUsers = [] }: { pipelines: DealF
       stageId: formData.get('stageId') as string,
       assignedUserId: formData.get('assignedUserId') as string,
       description: formData.get('description') as string,
+      customerId: (formData.get('customerId') as string) || undefined,
     };
 
     const res = await createDealAction(data);
@@ -216,6 +217,29 @@ export function DealForm({ pipelines, assignableUsers = [] }: { pipelines: DealF
                   placeholder="Any additional details..."
                 />
               </div>
+
+              {customers.length > 0 && (
+                <div>
+                  <label className="block text-sm font-medium text-[#8891B0] mb-1.5">Customer</label>
+                  <select
+                    name="customerId"
+                    className="w-full text-sm transition-all focus:ring-2 focus:ring-[#7C5CFC] focus:border-transparent"
+                    style={{
+                      background: 'rgba(20,27,51,.55)',
+                      border: '1px solid rgba(255,255,255,.08)',
+                      borderRadius: '.7rem',
+                      padding: '.6rem 1rem',
+                      color: '#E7EAF5',
+                      outline: 'none',
+                    }}
+                  >
+                    <option value="">No customer (optional)</option>
+                    {customers.map(c => (
+                      <option key={c.id} value={c.id} className="bg-[#0D1326]">{c.name}</option>
+                    ))}
+                  </select>
+                </div>
+              )}
 
               <div className="flex justify-end space-x-3 pt-6 border-t border-white/[.06] mt-6">
                 <Button 

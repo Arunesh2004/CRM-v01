@@ -8,8 +8,11 @@ import { Briefcase, Target, User, ArrowLeft, Clock } from 'lucide-react';
 import { DealTimeline } from '@/components/crm/DealTimeline';
 import { CRMCommentSection } from '@/components/crm/CRMCommentSection';
 import Link from 'next/link';
+import { requireTenant } from '@/lib/auth';
+import { withTenant } from '@db/utils/prisma-tenant';
 
 export default async function DealDetailPage({ params }: { params: Promise<{ id: string } > }) {
+  const tenantId = await requireTenant();
   const [dealRes, pipelinesRes, usersRes] = await Promise.all([
     getDealByIdAction((await params).id),
     getPipelinesAction(),
@@ -22,6 +25,14 @@ export default async function DealDetailPage({ params }: { params: Promise<{ id:
   if (!dealRes.data) return notFound();
 
   const deal = dealRes.data;
+
+  // Fetch tenant customers for the Edit Deal Customer selector
+  const prisma = withTenant(tenantId);
+  const customers = await prisma.customer.findMany({
+    where: { status: 'ACTIVE' },
+    select: { id: true, name: true },
+    orderBy: { name: 'asc' },
+  });
 
   return (
     <div className="flex flex-col gap-6 max-w-6xl mx-auto py-8 px-4 sm:px-6 lg:px-8">
@@ -72,6 +83,7 @@ export default async function DealDetailPage({ params }: { params: Promise<{ id:
                 deal={deal}
                 pipelines={pipelinesRes.data || []}
                 assignableUsers={usersRes.data || []}
+                customers={customers}
               />
             </div>
           </div>

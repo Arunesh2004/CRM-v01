@@ -6,6 +6,7 @@ import {
   getAssignableUsersAction,
 } from "@/modules/crm/actions/deal.actions";
 import { requireTenant } from "@/lib/auth";
+import { withTenant } from "@db/utils/prisma-tenant";
 import { DealKanbanBoardClientWrapper as DealKanbanBoard } from "./DealKanbanBoardClientWrapper";
 import { DollarSign, Percent, TrendingUp } from "lucide-react";
 import { DealForm } from "@/components/crm/DealForm";
@@ -44,6 +45,14 @@ export default async function DealsPage(props: {
   const usersRes = await getAssignableUsersAction();
   const assignableUsers = usersRes.success && usersRes.data ? usersRes.data : [];
 
+  // Fetch tenant customers (tenant-scoped via withTenant) for Deal Customer selector
+  const prisma = withTenant(_tenantId);
+  const customers = await prisma.customer.findMany({
+    where: { status: 'ACTIVE' },
+    select: { id: true, name: true },
+    orderBy: { name: 'asc' },
+  });
+
   return (
     <div className="flex flex-col gap-6 h-[calc(100vh-6rem)]">
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
@@ -66,7 +75,7 @@ export default async function DealsPage(props: {
               </option>
             ))}
           </select>
-          <DealForm pipelines={pipelines} assignableUsers={assignableUsers} />
+          <DealForm pipelines={pipelines} assignableUsers={assignableUsers} customers={customers} />
         </div>
       </div>
 

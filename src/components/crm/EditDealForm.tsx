@@ -12,11 +12,13 @@ import { format } from 'date-fns';
 export function EditDealForm({ 
   deal, 
   pipelines, 
-  assignableUsers = [] 
+  assignableUsers = [],
+  customers = []
 }: { 
   deal: Deal & { stage?: PipelineStage | null };
   pipelines: (Pipeline & { stages: PipelineStage[] })[];
   assignableUsers?: { id: string; email: string }[]; 
+  customers?: { id: string; name: string }[];
 }) {
   const [isOpen, setIsOpen] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
@@ -50,6 +52,8 @@ export function EditDealForm({
       description: formData.get('description') as string,
       expectedCloseDate: parsedDate,
       source: formData.get('source') as string,
+      // customerId: empty string means "clear", a UUID means "set", absent means "don't change"
+      customerId: (formData.get('customerId') as string) || null,
     };
 
       const res = await updateDealAction(deal.id, data);
@@ -273,6 +277,30 @@ export function EditDealForm({
                     }}
                   />
                 </div>
+
+                {customers.length > 0 && (
+                  <div>
+                    <label className="block text-sm font-medium text-[#8891B0] mb-1.5">Customer</label>
+                    <select
+                      name="customerId"
+                      defaultValue={deal.customerId || ''}
+                      className="w-full text-sm transition-all focus:ring-2 focus:ring-[#7C5CFC] focus:border-transparent"
+                      style={{
+                        background: 'rgba(20,27,51,.55)',
+                        border: '1px solid rgba(255,255,255,.08)',
+                        borderRadius: '.7rem',
+                        padding: '.6rem 1rem',
+                        color: '#E7EAF5',
+                        outline: 'none',
+                      }}
+                    >
+                      <option value="">No customer (clear)</option>
+                      {customers.map(c => (
+                        <option key={c.id} value={c.id} className="bg-[#0D1326]">{c.name}</option>
+                      ))}
+                    </select>
+                  </div>
+                )}
 
                 <div className="flex justify-end space-x-3 pt-6 border-t border-white/[.06] mt-6">
                   <Button 
