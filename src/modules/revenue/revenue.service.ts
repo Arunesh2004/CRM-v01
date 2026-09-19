@@ -468,4 +468,98 @@ export class RevenueService {
         return updated;
      });
   }
+  static async addQuoteLineItem(tenantId: string, userId: string, quoteId: string, priceBookEntryId: string, quantity: number, discount: number) {
+    const hasUpdate = await checkPermissionFast(userId, 'REVENUE', 'UPDATE');
+    if (!hasUpdate) {
+      await SecurityEventService.logEvent(tenantId, { eventType: 'SUSPICIOUS_ACTIVITY', severity: 'HIGH', source: 'RevenueService', metadata: { action: 'addQuoteLineItem' } }, 'USER', userId);
+      throw new Error('Unauthorized');
+    }
+
+    if (quantity <= 0) throw new Error('Invalid quantity');
+    if (discount < 0 || discount > 100) throw new Error('Invalid discount');
+
+    const tenantPrisma = withTenant(tenantId);
+
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any -- S2 Residual Debt: Legacy internal payload requires architectural typing
+    return tenantPrisma.$transaction(async (tx: any) => {
+      // Lock the Quote
+      await tx.$queryRaw`SELECT id FROM "Quote" WHERE id = ${quoteId} AND "tenantId" = ${tenantId} FOR UPDATE`;
+
+      const quote = await tx.quote.findFirst({ where: { id: quoteId, tenantId } });
+      if (!quote) throw new Error('Quote not found');
+      if (quote.status !== 'DRAFT') throw new Error('Can only modify DRAFT quotes');
+
+      const pbe = await tx.priceBookEntry.findFirst({ where: { id: priceBookEntryId, tenantId, priceBookId: quote.priceBookId, isActive: true } });
+      if (!pbe) throw new Error('Active PriceBookEntry not found or cross-tenant access denied');
+
+      const quantityDec = new Prisma.Decimal(quantity);
+      const itemSubtotal = pbe.unitPrice.mul(quantityDec).toDecimalPlaces(4, Prisma.Decimal.ROUND_HALF_UP);
+      
+      const discountDec = new Prisma.Decimal(discount.toString());
+      const discountRate = discountDec.div(100);
+      const itemDiscountTotal = itemSubtotal.mul(discountRate).toDecimalPlaces(4, Prisma.Decimal.ROUND_HALF_UP);
+
+      await tx.quoteLineItem.create({
+        data: {
+          tenantId,
+          quoteId: quote.id,
+          priceBookEntryId: pbe.id,
+          productId: pbe.productId,
+          quantity,
+          unitPrice: pbe.unitPrice,
+          discount,
+          subtotal: itemSubtotal.sub(itemDiscountTotal)
+        }
+      });
+
+      const allItems = await tx.quoteLineItem.findMany({ where: { quoteId: quote.id, tenantId } });
+      let quoteSubtotal = new Prisma.Decimal(0);
+      let quoteDiscountTotal = new Prisma.Decimal(0);
+
+      for (const item of allItems) {
+        const qDec = new Prisma.Decimal(item.quantity);
+        const sub = item.unitPrice.mul(qDec).toDecimalPlaces(4, Prisma.Decimal.ROUND_HALF_UP);
+        const dDec = new Prisma.Decimal(item.discount.toString());
+        const dRate = dDec.div(100);
+        const disc = sub.mul(dRate).toDecimalPlaces(4, Prisma.Decimal.ROUND_HALF_UP);
+        
+        quoteSubtotal = quoteSubtotal.add(sub);
+        quoteDiscountTotal = quoteDiscountTotal.add(disc);
+      }
+
+      const quoteGrandTotal = quoteSubtotal.sub(quoteDiscountTotal);
+
+      const updatedQuote = await tx.quote.update({
+        where: { id: quote.id },
+        data: {
+          subtotal: quoteSubtotal,
+          discountTotal: quoteDiscountTotal,
+          grandTotal: quoteGrandTotal
+        }
+      });
+
+      await tx.auditLog.create({
+        data: {
+          tenantId,
+          actorId: userId,
+          actorType: 'USER',
+          action: 'QUOTE_UPDATED',
+          resource: 'Quote',
+          resourceId: quote.id,
+          metadata: { subtotal: quoteSubtotal, grandTotal: quoteGrandTotal }
+        }
+      });
+
+      await tx.eventOutbox.create({
+        data: {
+          eventId: crypto.randomUUID(),
+          tenantId,
+          eventType: 'QUOTE_UPDATED',
+          payload: { actorId: userId, resource: 'QUOTE', action: 'UPDATE', metadata: { quoteId: quote.id } }
+        }
+      });
+
+      return updatedQuote;
+    });
+  }
 }

@@ -123,3 +123,37 @@ async function _createQuoteRevisionAction(quoteId: string) {
 }
 
 export const createQuoteRevisionAction = withServerActionContext(_createQuoteRevisionAction);
+
+import { z } from 'zod';
+
+const AddQuoteLineItemSchema = z.object({
+  quoteId: z.string().uuid(),
+  priceBookEntryId: z.string().uuid(),
+  quantity: z.number().int().min(1),
+  discount: z.number().min(0).max(100),
+});
+
+async function _addQuoteLineItemAction(payload: z.infer<typeof AddQuoteLineItemSchema>) {
+  try {
+    const validated = AddQuoteLineItemSchema.parse(payload);
+    const tenantId = await requireTenant();
+    const session = await requireAuth();
+    
+    const result = await RevenueService.addQuoteLineItem(
+      tenantId,
+      session.id,
+      validated.quoteId,
+      validated.priceBookEntryId,
+      validated.quantity,
+      validated.discount
+    );
+    
+    revalidatePath(`/quotes/${validated.quoteId}`);
+    return { success: true, data: serializeDecimal(result) };
+  } catch (errorRaw: unknown) {
+    const error = errorRaw instanceof Error ? errorRaw : new Error(String(errorRaw));
+    return { success: false, error: sanitizeClientError(error) };
+  }
+}
+
+export const addQuoteLineItemAction = withServerActionContext(_addQuoteLineItemAction);

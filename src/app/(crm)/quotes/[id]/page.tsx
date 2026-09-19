@@ -6,6 +6,7 @@ import { Badge } from '@/components/ui/Badge';
 import { Card } from '@/components/ui/Card';
 import { FileText, CheckCircle2, Clock, AlertCircle, ArrowLeft } from 'lucide-react';
 import { QuoteDetailControls } from '@/components/revenue/QuoteDetailControls';
+import { QuoteLineItemForm } from '@/components/revenue/QuoteLineItemForm';
 
 export default async function QuoteDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const resolvedParams = await params;
@@ -28,6 +29,11 @@ export default async function QuoteDetailPage({ params }: { params: Promise<{ id
   });
 
   if (!quote) return notFound();
+
+  const priceBookEntries = await prisma.priceBookEntry.findMany({
+    where: { priceBookId: quote.priceBookId, tenantId, isActive: true },
+    include: { product: true }
+  });
 
   // Simple permissions check for UI display
   // Real security is handled in the server actions calling RevenueService
@@ -114,6 +120,10 @@ export default async function QuoteDetailPage({ params }: { params: Promise<{ id
               </div>
             </div>
           </Card>
+          
+          {quote.status === 'DRAFT' && (
+            <QuoteLineItemForm quoteId={quote.id} priceBookEntries={priceBookEntries} />
+          )}
         </div>
 
         <div className="space-y-6">
