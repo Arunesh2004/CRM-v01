@@ -44,6 +44,7 @@ const NAV_GROUPS = [
       { name: "Customers", href: "/customers", icon: Users },
       { name: "Deals", href: "/deals", icon: BarChart3 },
       { name: "Quotes", href: "/quotes", icon: BarChart3 },
+      { name: "Price Books", href: "/price-books", icon: BarChart3 },
       { name: "Territories", href: "/territories", icon: MapPin },
       { name: "Locations", href: "/locations", icon: MapPin },
     ],
@@ -320,6 +321,7 @@ function getPageTitle(pathname: string): string {
     users: "Users",
     workload: "Task Workload",
     inbox: "Inbox",
+    'price-books': "Price Books",
   };
   return titles[segment] || segment.charAt(0).toUpperCase() + segment.slice(1);
 }
