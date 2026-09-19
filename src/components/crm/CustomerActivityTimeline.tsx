@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Activity, Mail, Phone, PenSquare, Clock, CheckSquare, MessageSquare, ShieldAlert } from 'lucide-react';
 import { format } from 'date-fns';
 import { UnifiedTimelineItem, UnifiedTimelineType } from '@/modules/crm/crm.types';
@@ -9,6 +9,12 @@ import Link from 'next/link';
 
 export function CustomerActivityTimeline({ activities }: { activities: UnifiedTimelineItem[] }) {
   const [filter, setFilter] = useState<UnifiedTimelineType | 'ALL'>('ALL');
+  const [isMounted, setIsMounted] = useState(false);
+
+  useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    setIsMounted(true);
+  }, []);
 
   if (!activities || activities.length === 0) {
     return (
@@ -76,7 +82,7 @@ export function CustomerActivityTimeline({ activities }: { activities: UnifiedTi
                   <h4 className="text-sm font-semibold text-foreground">{activity.title}</h4>
                   <div className="flex items-center gap-1.5 text-xs text-muted-foreground shrink-0 whitespace-nowrap">
                     <Clock className="w-3 h-3" />
-                    {format(new Date(activity.timestamp), 'MMM d, h:mm a')}
+                    {isMounted ? format(new Date(activity.timestamp), 'MMM d, h:mm a') : activity.timestamp.slice(0, 10)}
                   </div>
                 </div>
                 <div className="text-sm text-muted-foreground leading-relaxed line-clamp-3">
