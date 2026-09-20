@@ -98,7 +98,7 @@ export default function CRMLayoutClient({
   userRole,
 }: CRMLayoutClientProps) {
   const pathname = usePathname();
-  const { user } = useUser();
+  const { user, isLoaded } = useUser();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
   const isAdmin = ADMIN_ROLES.includes(userRole?.toUpperCase());
@@ -203,11 +203,11 @@ export default function CRMLayoutClient({
             className="glass-panel rounded-xl p-3 flex items-center gap-2.5"
           >
             <div className="w-8 h-8 rounded-full grad-primary flex items-center justify-center text-white text-xs font-bold shrink-0">
-              {(user?.firstName?.[0] || user?.primaryEmailAddress?.emailAddress?.[0] || "U").toUpperCase()}
+              {isLoaded ? (user?.firstName?.[0] || user?.primaryEmailAddress?.emailAddress?.[0] || "U").toUpperCase() : ""}
             </div>
             <div className="flex-1 min-w-0">
               <p className="text-[11px] font-semibold truncate text-white">
-                {user?.fullName || user?.primaryEmailAddress?.emailAddress || "User"}
+                {isLoaded ? (user?.fullName || user?.primaryEmailAddress?.emailAddress || "User") : ""}
               </p>
               <p className="text-[10px] capitalize" style={{ color: "#8891B0" }}>
                 {userRole.toLowerCase().replace(/_/g, " ")}
@@ -268,11 +268,11 @@ export default function CRMLayoutClient({
             {/* User profile */}
             <div className="flex items-center gap-2 pl-1 pr-2 py-1 rounded-lg glass card-hover cursor-pointer">
               <div className="w-7 h-7 rounded-full grad-primary flex items-center justify-center text-white text-[10px] font-bold ring-glow">
-                {(user?.firstName?.[0] || "U").toUpperCase()}
+                {isLoaded ? (user?.firstName?.[0] || "U").toUpperCase() : ""}
               </div>
               <span className="hidden lg:block text-left">
                 <span className="block text-xs font-semibold leading-none text-white">
-                  {user?.firstName || "User"}
+                  {isLoaded ? (user?.firstName || "User") : ""}
                 </span>
               </span>
               {userRole?.toUpperCase() !== 'DEMO_USER' && <UserButton />}
