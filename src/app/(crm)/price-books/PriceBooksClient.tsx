@@ -6,6 +6,7 @@ import { Button } from '@/components/ui/button';
 import { createPriceBookAction, updatePriceBookAction, deactivatePriceBookAction } from '@/modules/revenue/actions/price-book.actions';
 import { toast } from 'sonner';
 import type { PriceBook } from '@prisma/client';
+import Link from 'next/link';
 
 export function PriceBooksClient({ priceBooks, canManage }: { priceBooks: PriceBook[], canManage: boolean }) {
   const [isPending, startTransition] = useTransition();
@@ -126,7 +127,7 @@ export function PriceBooksClient({ priceBooks, canManage }: { priceBooks: PriceB
                       <BookOpen className="w-4 h-4 text-emerald-400" />
                     </div>
                     <div>
-                      <p className="font-medium text-white">{pb.name}</p>
+                      <Link href={`/price-books/${pb.id}`} className="font-medium text-white hover:underline">{pb.name}</Link>
                       <p className="text-xs text-[#8891B0] truncate max-w-[200px]">{pb.description}</p>
                     </div>
                   </div>
@@ -142,6 +143,15 @@ export function PriceBooksClient({ priceBooks, canManage }: { priceBooks: PriceB
                 {canManage && (
                   <td className="px-6 py-4 text-right">
                     <div className="flex justify-end gap-2">
+                        <Button 
+                            variant="ghost" 
+                            size="sm" 
+                            onClick={() => { window.location.href = `/price-books/${pb.id}`; }}
+                            disabled={isPending}
+                            title="Manage Entries"
+                        >
+                            <BookOpen className="w-4 h-4 text-[#8891B0]" />
+                        </Button>
                         <Button 
                             variant="ghost" 
                             size="sm" 
