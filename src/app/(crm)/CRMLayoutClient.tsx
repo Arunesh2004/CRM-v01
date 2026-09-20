@@ -12,7 +12,6 @@ import {
   CheckSquare,
   Menu,
   MessageSquare,
-  Phone,
   Camera,
   AlertTriangle,
   BarChart3,
