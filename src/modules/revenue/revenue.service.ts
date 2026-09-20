@@ -229,6 +229,7 @@ export class RevenueService {
         if (workflow) {
           await tx.workflowExecution.create({
             data: {
+              tenantId,
               workflowId: workflow.id,
               status: 'PENDING',
               context: { quoteId: quote.id, requestedBy: userId }
