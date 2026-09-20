@@ -14,7 +14,7 @@ export default async function QuotesPage() {
   const tenantId = await requireTenant();
   const prisma = withTenant(tenantId);
   const customers = await prisma.customer.findMany({ select: { id: true, name: true } });
-  const deals = await prisma.deal.findMany({ select: { id: true, title: true } });
+  const deals = await prisma.deal.findMany({ select: { id: true, title: true, customerId: true } });
   const priceBooks = await prisma.priceBook.findMany({ select: { id: true, name: true } });
 
   const getStatusBadge = (s: string) => {
