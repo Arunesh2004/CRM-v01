@@ -1,9 +1,11 @@
-import { requireAuth, requireTenant } from '@/lib/auth';
+import { requireAuth, requireTenant, requirePermission } from '@/lib/auth';
 import prisma from '@db/utils/prisma';
 import { AdminClientTabs } from '@/components/admin/AdminClientTabs';
+import { Resource, Action } from '@prisma/client';
 
 export default async function AdminDashboardPage() {
   await requireAuth();
+  await requirePermission(Resource.SYSTEM, Action.READ);
   const tenantId = await requireTenant();
   
   // Fetch everything securely isolated by tenantId
