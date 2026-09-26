@@ -57,4 +57,26 @@ describe('S15.2 FND-15-05: Rate Limiter Resilience', () => {
     expect(result.allowed).toBe(true);
     expect(result.remaining).toBeGreaterThan(0);
   });
+
+  it('STRONG: MUST correctly namespace rate limits by both IP and User ID if both are provided', async () => {
+    // Use reflection to test private generateKey method for regression
+    const generateKey = DistributedRateLimiter['generateKey'].bind(DistributedRateLimiter);
+    
+    const keyWithOnlyIp = generateKey('sys', 'auth', 'login', '1.1.1.1', undefined);
+    expect(keyWithOnlyIp).toContain('ip:1.1.1.1');
+    expect(keyWithOnlyIp).not.toContain('user:');
+
+    const keyWithOnlyUser = generateKey('sys', 'auth', 'login', undefined, 'user_xyz');
+    expect(keyWithOnlyUser).toContain('user:user_xyz');
+    expect(keyWithOnlyUser).not.toContain('ip:');
+
+    const keyWithBoth = generateKey('sys', 'auth', 'login', '1.1.1.1', 'user_xyz');
+    expect(keyWithBoth).toContain('ip:1.1.1.1:user:user_xyz');
+
+    const keyWithBothAnotherUser = generateKey('sys', 'auth', 'login', '1.1.1.1', 'user_abc');
+    expect(keyWithBoth).not.toEqual(keyWithBothAnotherUser);
+
+    const keyWithBothSameUser = generateKey('sys', 'auth', 'login', '1.1.1.1', 'user_xyz');
+    expect(keyWithBoth).toEqual(keyWithBothSameUser);
+  });
 });

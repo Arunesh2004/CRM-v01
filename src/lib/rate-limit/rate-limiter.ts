@@ -13,7 +13,16 @@ export class DistributedRateLimiter {
    */
   private static generateKey(tenantId: string, resource: string, action: string, ip?: string, userId?: string): string {
     const env = process.env.VERCEL_ENV || process.env.NODE_ENV || 'development';
-    const scope = ip ? `ip:${ip}` : (userId ? `user:${userId}` : `tenant:${tenantId}`);
+    let scope = '';
+    if (ip && userId) {
+      scope = `ip:${ip}:user:${userId}`;
+    } else if (ip) {
+      scope = `ip:${ip}`;
+    } else if (userId) {
+      scope = `user:${userId}`;
+    } else {
+      scope = `tenant:${tenantId}`;
+    }
     return `ratelimit:${env}:${scope}:${resource}:${action}`;
   }
 
