@@ -1,0 +1,8 @@
+-- AlterEnum
+ALTER TYPE "SecurityEventType" ADD VALUE 'SUCCESSFUL_LOGIN';
+ALTER TYPE "SecurityEventType" ADD VALUE 'LOGOUT';
+ALTER TYPE "SecurityEventType" ADD VALUE 'SESSION_REVOKED';
+ALTER TYPE "SecurityEventType" ADD VALUE 'PASSWORD_CHANGED';
+
+-- AlterEnum
+ALTER TYPE "SecurityEventSeverity" ADD VALUE 'INFO';

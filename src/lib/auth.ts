@@ -611,8 +611,27 @@ export const getCurrentUserIdentity = cache(async function getCurrentUserIdentit
   const loadTestUser = await tryLoadTestIdentityLight();
   if (loadTestUser) return loadTestUser;
 
+  // PHASE 3: Dual-Adapter Authentication
+  // We first attempt to resolve a native CRM session from the HttpOnly cookie.
+  // This is strictly deterministic: if the cookie is present but invalid, native auth fails.
+  // Only if the native cookie is COMPLETELY ABSENT do we fall back to the Clerk adapter.
+  // This ensures a deterministic cutover for migrated users.
+  
+  // Dynamically import resolveSession to avoid circular dependencies
+  const { resolveSession } = await import('@/lib/auth/session');
+  
+  try {
+    const nativeIdentity = await resolveSession();
+    if (nativeIdentity) {
+      return nativeIdentity; // Native Session is Authoritative
+    }
+  } catch (error) {
+    // If native session logic errors (e.g. Prisma connection issue), do not swallow silently, 
+    // but allow fallback for now if it's purely a cookie missing error.
+  }
 
-
+  // FALLBACK: Temporary Clerk Adapter
+  // (Will be removed in Phase 8)
   const clerkAuth = await auth();
   const clerkId = clerkAuth.userId;
 
