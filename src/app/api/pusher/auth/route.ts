@@ -2,27 +2,16 @@ import { withApiContext } from '@/lib/observability/context';
 import { Logger } from '@/lib/logger/logger';
 import { NextRequest, NextResponse } from 'next/server';
 import crypto from 'crypto';
-import { auth } from '@clerk/nextjs/server';
+import { getCurrentUserIdentity } from '@/lib/auth';
 import { executeAsSystem, SystemOperation } from '@db/utils/prisma-system';
 
 const original_POST = async function (req: NextRequest) {
   try {
-    const { userId } = await auth();
-    if (!userId) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-    }
-
-    // Look up the user's tenantId from the database using their Clerk ID
-    // We must bypass RLS because we don't know the tenant ID yet
-    const user = await executeAsSystem(SystemOperation.CLERK_PROVISIONING, async (tx) => {
-      return tx.user.findFirst({
-        where: { clerkId: userId },
-        select: { id: true, tenantId: true },
-      });
-    });
+    const user = await getCurrentUserIdentity();
     if (!user) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
+
 
     const formData = await req.formData();
     const socketId = formData.get('socket_id') as string;

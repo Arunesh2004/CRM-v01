@@ -97,12 +97,17 @@ enum SecurityEventType {
   AI_BLOCKED_ACTION
   AI_PERMISSION_FAILURE
   FAILED_LOGIN
+  SUCCESSFUL_LOGIN
+  LOGOUT
+  SESSION_REVOKED
+  PASSWORD_CHANGED
   SUSPICIOUS_ACTIVITY
   WEBHOOK_SIGNATURE_FAILURE
   RATE_LIMIT_TRIGGERED
 }
 
 enum SecurityEventSeverity {
+  INFO
   LOW
   MEDIUM
   HIGH
@@ -269,20 +274,20 @@ model Tenant {
   slaConfigurations SLAConfiguration[]
   slaEvents         SLAEvent[]
 
-  idempotencyKeys        IdempotencyKey[]
-  deadLetterQueues       DeadLetterQueue[]
-  subscriptions          Subscription[]
-  invoices               Invoice[]
-  documentPermissions    DocumentPermission[]
-  workflowTriggers       WorkflowTrigger[]
-  workflowActions        WorkflowAction[]
-  workflowExecutions     WorkflowExecution[]
-  workflowExecutionSteps WorkflowExecutionStep[]
-  rolePermissions        RolePermission[]
-  userRoles              UserRole[]
-  userInvitations        UserInvitation[]
+  idempotencyKeys           IdempotencyKey[]
+  deadLetterQueues          DeadLetterQueue[]
+  subscriptions             Subscription[]
+  invoices                  Invoice[]
+  documentPermissions       DocumentPermission[]
+  workflowTriggers          WorkflowTrigger[]
+  workflowActions           WorkflowAction[]
+  workflowExecutions        WorkflowExecution[]
+  workflowExecutionSteps    WorkflowExecutionStep[]
+  rolePermissions           RolePermission[]
+  userRoles                 UserRole[]
+  userInvitations           UserInvitation[]
   cameraStreamInvalidations CameraStreamInvalidation[]
-  aiAnalysisJobs         AIAnalysisJob[]
+  aiAnalysisJobs            AIAnalysisJob[]
 }
 
 model TenantBootstrap {
@@ -335,21 +340,24 @@ model Department {
 }
 
 model User {
-  id               String           @id @default(uuid())
-  clerkId          String?
-  email            String
-  employeeId       String?
-  firstName        String?
-  lastName         String?
-  phone            String?
-  designation      String?
-  profilePhotoUrl  String?
-  tenantId         String
-  departmentId     String?
-  status           UserStatus       @default(INVITED)
-  onboardingStatus OnboardingStatus @default(PENDING)
-  createdAt        DateTime         @default(now())
-  updatedAt        DateTime         @updatedAt
+  id                String           @id @default(uuid())
+  clerkId           String?
+  email             String
+  employeeId        String?
+  firstName         String?
+  lastName          String?
+  phone             String?
+  designation       String?
+  profilePhotoUrl   String?
+  tenantId          String
+  departmentId      String?
+  status            UserStatus       @default(INVITED)
+  onboardingStatus  OnboardingStatus @default(PENDING)
+  passwordHash      String?
+  passwordChangedAt DateTime?
+  emailVerifiedAt   DateTime?
+  createdAt         DateTime         @default(now())
+  updatedAt         DateTime         @updatedAt
 
   tenant            Tenant             @relation(fields: [tenantId], references: [id])
   ownedTenant       Tenant?            @relation("TenantOwner")
@@ -403,6 +411,11 @@ model User {
   sentInvitations     UserInvitation[]
   createdWorkflows    Workflow[]          @relation("WorkflowCreatedBy")
   initiatedExecutions WorkflowExecution[] @relation("WorkflowExecutionInitiator")
+
+  authSessions  AuthSession[]
+  authTokens    AuthToken[]
+  mfaFactors    MfaFactor[]
+  recoveryCodes RecoveryCode[]
 
   @@unique([tenantId, email])
   @@unique([tenantId, employeeId])
@@ -971,14 +984,14 @@ model Camera {
   tenant   Tenant    @relation(fields: [tenantId], references: [id])
   location Location? @relation(fields: [locationId], references: [id], onDelete: SetNull)
 
-  credential CameraCredential?
-  stream     CameraStream?
+  credential                CameraCredential?
+  stream                    CameraStream?
   cameraStreamInvalidations CameraStreamInvalidation[]
-  recordings Recording[]
-  events     CameraEvent[]
-  aiEvents   AIEvent[]
-  incidents  Incident[]
-  deletedAt  DateTime?
+  recordings                Recording[]
+  events                    CameraEvent[]
+  aiEvents                  AIEvent[]
+  incidents                 Incident[]
+  deletedAt                 DateTime?
 
   @@index([tenantId, locationId])
   @@index([tenantId, status])
@@ -1087,8 +1100,8 @@ model CameraStreamInvalidation {
   updatedAt     DateTime                       @updatedAt
   completedAt   DateTime?
 
-  camera        Camera    @relation(fields: [cameraId], references: [id], onDelete: Cascade)
-  tenant        Tenant    @relation(fields: [tenantId], references: [id])
+  camera Camera @relation(fields: [cameraId], references: [id], onDelete: Cascade)
+  tenant Tenant @relation(fields: [tenantId], references: [id])
 
   @@unique([cameraId, streamVersion])
   @@index([cameraId])
@@ -1163,8 +1176,8 @@ model AIAnalysisJob {
   createdAt      DateTime  @default(now())
   updatedAt      DateTime  @updatedAt
 
-  tenant         Tenant    @relation(fields: [tenantId], references: [id])
-  recording      Recording @relation(fields: [recordingId], references: [id], onDelete: Cascade)
+  tenant    Tenant    @relation(fields: [tenantId], references: [id])
+  recording Recording @relation(fields: [recordingId], references: [id], onDelete: Cascade)
 
   @@index([tenantId])
   @@index([status, leaseExpiresAt])
@@ -1343,17 +1356,17 @@ model MailRecipient {
 }
 
 model MailMessage {
-  id        String   @id @default(uuid())
-  tenantId  String
-  threadId  String
-  senderId  String
-  bodyHtml  String?
-  bodyText  String?
-  metadata  Json?
-  referenceType  String?   @db.VarChar(50) // e.g. "DEAL", "QUOTE", "CUSTOMER"
-  referenceId    String?   @db.Uuid
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  id            String   @id @default(uuid())
+  tenantId      String
+  threadId      String
+  senderId      String
+  bodyHtml      String?
+  bodyText      String?
+  metadata      Json?
+  referenceType String?  @db.VarChar(50) // e.g. "DEAL", "QUOTE", "CUSTOMER"
+  referenceId   String?  @db.Uuid
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
 
   tenant     Tenant          @relation(fields: [tenantId], references: [id])
   thread     MailThread      @relation(fields: [threadId], references: [id], onDelete: Cascade)
@@ -2231,6 +2244,7 @@ model PriceBookEntry {
   priceBook      PriceBook       @relation(fields: [priceBookId], references: [id], onDelete: Cascade)
   quoteLineItems QuoteLineItem[]
 
+  @@unique([tenantId, priceBookId, productId])
   @@index([tenantId, priceBookId, productId])
   @@index([tenantId, productId])
 }
@@ -2606,4 +2620,67 @@ model Invoice {
   tenant Tenant @relation(fields: [tenantId], references: [id], onDelete: Cascade)
 
   @@index([tenantId])
+}
+
+// -----------------------------------------------------------------------------
+// NATIVE AUTHENTICATION MODELS
+// -----------------------------------------------------------------------------
+
+model AuthSession {
+  id         String    @id @default(uuid())
+  userId     String
+  tokenHash  String    @unique
+  createdAt  DateTime  @default(now())
+  expiresAt  DateTime
+  revokedAt  DateTime?
+  lastSeenAt DateTime?
+  ipAddress  String?
+  userAgent  String?
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([tokenHash])
+}
+
+model AuthToken {
+  id         String    @id @default(uuid())
+  userId     String
+  tokenHash  String    @unique
+  purpose    String
+  createdAt  DateTime  @default(now())
+  expiresAt  DateTime
+  consumedAt DateTime?
+  revokedAt  DateTime?
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([tokenHash])
+}
+
+model MfaFactor {
+  id        String   @id @default(uuid())
+  userId    String
+  type      String
+  secret    String?
+  isActive  Boolean  @default(false)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+}
+
+model RecoveryCode {
+  id        String    @id @default(uuid())
+  userId    String
+  codeHash  String
+  usedAt    DateTime?
+  createdAt DateTime  @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
 }
