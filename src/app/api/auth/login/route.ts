@@ -29,6 +29,7 @@ export async function POST(req: Request) {
   // 2. Global IP Rate Limiting (Abuse Protection)
   const ipLimit = await DistributedRateLimiter.checkLimit('system', 'auth', 'login_ip', 20, 60, ip);
   if (!ipLimit.allowed) {
+    await logSecurityEvent('RATE_LIMIT_TRIGGERED', 'HIGH', 'Global IP lockout triggered', ip);
     return NextResponse.json({ error: 'Too many attempts. Please try again later.' }, { status: 429 });
   }
 
@@ -42,20 +43,20 @@ export async function POST(req: Request) {
 
     const normalizedEmail = email.toLowerCase().trim();
 
-    // 3. Account-Level Rate Limiting (Temporary Lockout)
-    // 5 attempts per 5 minutes per email
-    const emailLimit = await DistributedRateLimiter.checkLimit('system', 'auth', 'login_email', 5, 300, ip, normalizedEmail);
-    if (!emailLimit.allowed) {
-      await logSecurityEvent('RATE_LIMIT_TRIGGERED', 'MEDIUM', 'Login lockout triggered', ip, normalizedEmail);
-      return NextResponse.json({ error: 'Account temporarily locked due to too many failed attempts. Please try again later.' }, { status: 429 });
-    }
-
     const user = await executeAsSystem(SystemOperation.AUTH_BOOTSTRAP, async (tx) => {
       return tx.user.findFirst({
         where: { email: normalizedEmail },
         select: { id: true, status: true, passwordHash: true, tenantId: true }
       });
     });
+
+    // 3. Account-Level Rate Limiting (Temporary Lockout)
+    // 5 attempts per 5 minutes per email
+    const emailLimit = await DistributedRateLimiter.checkLimit('system', 'auth', 'login_email', 5, 300, ip, normalizedEmail);
+    if (!emailLimit.allowed) {
+      await logSecurityEvent('RATE_LIMIT_TRIGGERED', 'MEDIUM', 'Login lockout triggered', ip, user?.id, user?.tenantId);
+      return NextResponse.json({ error: 'Account temporarily locked due to too many failed attempts. Please try again later.' }, { status: 429 });
+    }
 
     let isValid = false;
     let timingMitigated = false;
