@@ -23,9 +23,9 @@ const isPublicRoute = createRouteMatcher([
   '/api/ready(.*)',
   '/api/webhooks/(.*)',
   '/api/inngest',
-  '/__clerk(.*)',  // Clerk Frontend API proxy — must be public to avoid sign-in redirect loop
+  '/api/auth/(.*)', // Native Auth Endpoints
+  '/__clerk(.*)',  // Clerk Frontend API proxy
 ]);
-
 
 function isLoadTestAuthEnabled(): boolean {
   console.log('[MIDDLEWARE] NODE_ENV:', process.env.NODE_ENV);
@@ -83,17 +83,13 @@ const handleRateLimiting = async (request: NextRequest, ip: string) => {
 
   const pathname = request.nextUrl.pathname;
 
-  // Clerk authentication pages (/sign-in, /sign-up, /__clerk proxy) must NOT be
-  // application rate-limited. Clerk's sign-in page makes multiple sub-requests
-  // during initialization (JS chunks, Clerk API calls) and a 10 req/min bucket
-  // would exhaust before the page renders, producing a 429 for the end user.
-  // Clerk's own platform-level DDoS protection applies to these endpoints.
   if (
     pathname.startsWith('/sign-in') ||
     pathname.startsWith('/sign-up') ||
-    pathname.startsWith('/__clerk')
+    pathname.startsWith('/__clerk') ||
+    pathname.startsWith('/api/auth') // Native Auth handles its own Application Rate Limiting
   ) {
-    return null; // No application rate limiting — let Clerk handle it
+    return null;
   }
 
   if (pathname.startsWith('/api/webhooks/')) {
@@ -103,7 +99,6 @@ const handleRateLimiting = async (request: NextRequest, ip: string) => {
     isHighRisk = true;
   } else if (pathname.startsWith('/billing') || pathname.startsWith('/api/billing')) {
     limiter = rateLimiters.api;
-    // Mutative operations (POST/Server Actions) on billing are high risk (fail-closed)
     if (request.method === 'POST') {
       isHighRisk = true;
     }
@@ -117,8 +112,6 @@ const handleRateLimiting = async (request: NextRequest, ip: string) => {
   }
 
   if (isHighRisk && !limiter) {
-    // If Redis is not configured, we must fail closed for high-risk endpoints.
-    // Edge middleware memory fallback is effectively useless due to short-lived isolates.
     return new NextResponse('Service Unavailable (Rate Limiting Offline)', { status: 503 });
   }
 
@@ -128,9 +121,7 @@ const handleRateLimiting = async (request: NextRequest, ip: string) => {
       if (!success) {
         return new NextResponse('Too Many Requests', { status: 429 });
       }
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars -- Intentional callback/interface parameter
     } catch (error) {
-      // On Redis failure, high-risk fails closed, low-risk degrades (fails open)
       if (isHighRisk) {
         return new NextResponse('Service Unavailable', { status: 503 });
       }
@@ -139,7 +130,7 @@ const handleRateLimiting = async (request: NextRequest, ip: string) => {
   return null;
 };
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any -- S2 Residual Debt: Legacy internal payload — typed Prisma/API result shape requires architectural schema work deferred to S3
+// eslint-disable-next-line @typescript-eslint/no-explicit-any -- S2 Residual Debt: Legacy internal payload
 const middlewareHandler = async (auth: any, request: NextRequest) => {
   const ip = request.headers.get('x-forwarded-for') || '127.0.0.1';
   
@@ -152,14 +143,21 @@ const middlewareHandler = async (auth: any, request: NextRequest) => {
   }
 
   if (auth && !isPublicRoute(request)) {
-    const authObj = typeof auth === 'function' ? await auth() : auth;
-    if (!authObj?.userId) {
-      const signInUrl = new URL('/sign-in', request.url);
-      return NextResponse.redirect(signInUrl);
-    }
-    // Only call protect() if they are logged in, to enforce roles if any (none currently)
-    if (typeof authObj.protect === 'function') {
-      authObj.protect();
+    // If a native session cookie exists, allow the request to pass through Edge Middleware.
+    // The server-side runtime handler (via requireAuth) is solely responsible for strictly validating
+    // the cryptographic hash, expiry, and revocation state before authorizing access.
+    // We do NOT blindly trust the cookie's existence here.
+    const hasNativeSessionCookie = request.cookies.has('crm_session');
+
+    if (!hasNativeSessionCookie) {
+      const authObj = typeof auth === 'function' ? await auth() : auth;
+      if (!authObj?.userId) {
+        const signInUrl = new URL('/sign-in', request.url);
+        return NextResponse.redirect(signInUrl);
+      }
+      if (typeof authObj.protect === 'function') {
+        authObj.protect();
+      }
     }
   }
 
