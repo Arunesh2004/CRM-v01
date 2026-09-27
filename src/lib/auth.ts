@@ -1,6 +1,4 @@
-import { auth, clerkClient } from '@clerk/nextjs/server';
 import { Action, Resource, Prisma } from '@prisma/client';
-import { synchronizeClerkIdentity } from '@/modules/auth/services/provisioning.service';
 import { Logger } from '@/lib/observability/logger';
 import { headers } from 'next/headers';
 import jwt from 'jsonwebtoken';
@@ -126,300 +124,27 @@ export const getCurrentUser = cache(async function getCurrentUser(): Promise<Aut
   const loadTestUser = await tryLoadTestIdentity();
   if (loadTestUser) return loadTestUser;
 
-  let clerkAuth;
-  try {
-    clerkAuth = await auth();
-    logger.info('[AUTH_DIAGNOSTIC] getCurrentUser auth result:', {
-      authenticated: !!clerkAuth.userId,
-      hasUserId: !!clerkAuth.userId,
-      userId: clerkAuth.userId || 'NONE'
-    });
-  } catch (err: unknown) {
-    const errorObj = err as Error;
-    logger.error('[AUTH_DIAGNOSTIC] getCurrentUser auth threw:', undefined, {
-      errorName: errorObj?.name,
-      errorMessage: errorObj?.message
-    });
-    throw err;
-  }
+  const { resolveSession } = await import('@/lib/auth/session');
   
-  const clerkId = clerkAuth.userId;
-
-  if (!clerkId) {
-    logger.info('[AUTH_DIAGNOSTIC] getCurrentUser result:', { result: 'NULL' });
-    return null;
-  }
-
-  if (redis) {
-    const cached = await redis.get(`user:${clerkId}`);
-    // Cache is written via JSON.stringify(user); Upstash Redis deserializes automatically on get().
-    if (cached) {
-       logger.info('[AUTH_DIAGNOSTIC] getCurrentUser result:', { result: 'FOUND_IN_CACHE' });
-       return cached as unknown as AuthUser;
-    }
-  }
-
-  // Diagnostic: Check environment DB URLs safely
-  const parseSafeUrlDetailed = (url: string | undefined) => {
-    if (!url) return 'MISSING';
-    try {
-      const u = new URL(url);
-      const username = u.username;
-      const hasDot = username.includes('.');
-      const projectRef = hasDot ? username.split('.')[1] : 'NONE';
-      const pgbouncer = u.searchParams.get('pgbouncer') || 'none';
-      const connectionLimit = u.searchParams.get('connection_limit') || 'none';
-      const otherParams = Array.from(u.searchParams.keys())
-        .filter((k) => k !== 'pgbouncer' && k !== 'connection_limit')
-        .join(',') || 'none';
-
-      return {
-        protocol: u.protocol,
-        hostname: u.hostname,
-        port: u.port || 'default',
-        database: u.pathname,
-        username,
-        hasProjectRefDot: hasDot,
-        projectRef,
-        pgbouncer,
-        connectionLimit,
-        otherParams,
-      };
-    } catch { return 'INVALID'; }
-  };
-
-  const adminMeta = parseSafeUrlDetailed(process.env.ADMIN_DATABASE_URL);
-  const dbMeta = parseSafeUrlDetailed(process.env.DATABASE_URL);
-
-  logger.info('[AUTH_DIAGNOSTIC] Runtime ADMIN_DATABASE_URL metadata:', {
-    hostname: typeof adminMeta === 'string' ? adminMeta : adminMeta.hostname,
-    port: typeof adminMeta === 'string' ? adminMeta : adminMeta.port,
-    database: typeof adminMeta === 'string' ? adminMeta : adminMeta.database,
-    username: typeof adminMeta === 'string' ? adminMeta : adminMeta.username,
-    projectRef: typeof adminMeta === 'string' ? adminMeta : adminMeta.projectRef,
-    pgbouncer: typeof adminMeta === 'string' ? adminMeta : adminMeta.pgbouncer,
-    connectionLimit: typeof adminMeta === 'string' ? adminMeta : adminMeta.connectionLimit,
-    otherParams: typeof adminMeta === 'string' ? adminMeta : adminMeta.otherParams,
-  });
-
-  logger.info('[AUTH_DIAGNOSTIC] Runtime DATABASE_URL metadata:', {
-    hostname: typeof dbMeta === 'string' ? dbMeta : dbMeta.hostname,
-    port: typeof dbMeta === 'string' ? dbMeta : dbMeta.port,
-    database: typeof dbMeta === 'string' ? dbMeta : dbMeta.database,
-    username: typeof dbMeta === 'string' ? dbMeta : dbMeta.username,
-    projectRef: typeof dbMeta === 'string' ? dbMeta : dbMeta.projectRef,
-    pgbouncer: typeof dbMeta === 'string' ? dbMeta : dbMeta.pgbouncer,
-    connectionLimit: typeof dbMeta === 'string' ? dbMeta : dbMeta.connectionLimit,
-    otherParams: typeof dbMeta === 'string' ? dbMeta : dbMeta.otherParams,
-  });
-
-  let user;
   try {
-    user = await executeAsSystem(SystemOperation.AUTH_BOOTSTRAP, async (tx) => {
-      try {
-        const meta = await tx.$queryRaw`
-          SELECT
-            current_database() as db,
-            current_user as usr,
-            current_schema() as schema,
-            current_setting('search_path') as search_path,
-            inet_server_addr() as server_addr,
-            inet_server_port() as server_port,
-            version() as version
-        `;
-        logger.info('[AUTH_DIAGNOSTIC] Extended DB Connection Info:', { meta });
-        
-        logger.info('[AUTH_DIAGNOSTIC] ADMIN_DATABASE_URL env projectRef:', {
-          projectRef: typeof adminMeta === 'string' ? adminMeta : adminMeta.projectRef
-        });
-        const currentUserStr = Array.isArray(meta) && meta.length > 0 ? (meta as Record<string, unknown>[])[0].usr : 'UNKNOWN';
-        logger.info('[AUTH_DIAGNOSTIC] PostgreSQL current_user:', { currentUser: currentUserStr });
-
-      } catch (dbErr: unknown) {
-        logger.error('[AUTH_DIAGNOSTIC] Extended DB Connection Error:', undefined, { errorMessage: (dbErr as Error).message });
+    const nativeIdentity = await resolveSession();
+    if (nativeIdentity) {
+      if (redis) {
+        // Cache could be maintained, but session resolution is fast and DB cached if pooler used.
+        // We'll skip setting it in redis for now to keep it completely native-session truth.
       }
-
-      try {
-        const rlsMeta = await tx.$queryRaw`
-          SELECT relrowsecurity, relforcerowsecurity
-          FROM pg_class
-          WHERE relname = 'User'
-        `;
-        logger.info('[AUTH_DIAGNOSTIC] RLS status:', { rlsMeta });
-      } catch (rlsErr: unknown) {
-        logger.error('[AUTH_DIAGNOSTIC] RLS status error:', undefined, { errorMessage: (rlsErr as Error).message });
-      }
-
-      try {
-        const policies = await tx.$queryRaw`
-          SELECT policyname, cmd, roles, qual::text as using_expr, with_check::text as check_expr
-          FROM pg_policies
-          WHERE tablename = 'User'
-        `;
-        logger.info('[AUTH_DIAGNOSTIC] RLS policies:', { policies });
-      } catch (polErr: unknown) {
-        logger.error('[AUTH_DIAGNOSTIC] RLS policies error:', undefined, { errorMessage: (polErr as Error).message });
-      }
-
-      try {
-        const rawUserById = await tx.$queryRaw`
-          SELECT id, "clerkId", email, status, "tenantId"
-          FROM "User"
-          WHERE "clerkId" = ${clerkId}
-          LIMIT 1
-        `;
-        logger.info('[AUTH_DIAGNOSTIC] raw SQL User lookup by clerkId:', { rawUserById });
-      } catch (rawErr: unknown) {
-        logger.error('[AUTH_DIAGNOSTIC] raw SQL clerkId error:', undefined, { errorMessage: (rawErr as Error).message });
-      }
-
-      try {
-        const rawUserByEmail = await tx.$queryRaw`
-          SELECT id, "clerkId", email, status, "tenantId"
-          FROM "User"
-          WHERE email = 'vasudevrathore126@gmail.com'
-          LIMIT 1
-        `;
-        logger.info('[AUTH_DIAGNOSTIC] raw SQL User lookup by email:', { rawUserByEmail });
-      } catch (rawEmailErr: unknown) {
-        logger.error('[AUTH_DIAGNOSTIC] raw SQL email error:', undefined, { errorMessage: (rawEmailErr as Error).message });
-      }
-
-      try {
-        const prismaUserByEmail = await tx.user.findFirst({
-          where: { email: 'vasudevrathore126@gmail.com' }
-        });
-        logger.info('[AUTH_DIAGNOSTIC] Prisma User lookup by email:', {
-           result: prismaUserByEmail ? 'FOUND' : 'NOT_FOUND',
-           id: prismaUserByEmail?.id
-        });
-      } catch (prismaEmailErr: unknown) {
-        logger.error('[AUTH_DIAGNOSTIC] Prisma email error:', undefined, { errorMessage: (prismaEmailErr as Error).message });
-      }
-
-      try {
-        const clusterName = await tx.$queryRaw`SELECT current_setting('cluster_name', true) as cluster_name`;
-        logger.info('[AUTH_DIAGNOSTIC] DB Cluster Name:', { clusterName });
-      } catch (clusterErr: unknown) {
-        logger.error('[AUTH_DIAGNOSTIC] DB Cluster Name Error:', undefined, { errorMessage: (clusterErr as Error).message });
-      }
-
-      try {
-        const clerkCountResult = await tx.$queryRaw`SELECT count(*) as count FROM "User" WHERE "clerkId" = 'user_3IrC39Gg8SQdOEOGwe7APuBlEnR'` as { count: bigint | number }[];
-        const clerkCount = clerkCountResult.length > 0 ? Number(clerkCountResult[0].count) : 0;
-        logger.info('[AUTH_DIAGNOSTIC] User count by exact clerkId:', { clerkCount });
-      } catch (err: unknown) {
-        logger.error('[AUTH_DIAGNOSTIC] User count by exact clerkId error:', undefined, { errorMessage: (err as Error).message });
-      }
-
-      try {
-        const emailCountResult = await tx.$queryRaw`SELECT count(*) as count FROM "User" WHERE LOWER(email) = LOWER('vasudevrathore126@gmail.com')` as { count: bigint | number }[];
-        const emailCount = emailCountResult.length > 0 ? Number(emailCountResult[0].count) : 0;
-        logger.info('[AUTH_DIAGNOSTIC] User count by exact email:', { emailCount });
-      } catch (err: unknown) {
-        logger.error('[AUTH_DIAGNOSTIC] User count by exact email error:', undefined, { errorMessage: (err as Error).message });
-      }
-
-      try {
-        const totalUserCountResult = await tx.$queryRaw`SELECT count(*) as count FROM "User"` as { count: bigint | number }[];
-        const totalUserCount = totalUserCountResult.length > 0 ? Number(totalUserCountResult[0].count) : 0;
-        logger.info('[AUTH_DIAGNOSTIC] Total User count:', { totalUserCount });
-      } catch (err: unknown) {
-        logger.error('[AUTH_DIAGNOSTIC] Total User count error:', undefined, { errorMessage: (err as Error).message });
-      }
-
-      try {
-        const totalTenantCountResult = await tx.$queryRaw`SELECT count(*) as count FROM "Tenant"` as { count: bigint | number }[];
-        const totalTenantCount = totalTenantCountResult.length > 0 ? Number(totalTenantCountResult[0].count) : 0;
-        logger.info('[AUTH_DIAGNOSTIC] Total Tenant count:', { totalTenantCount });
-      } catch (err: unknown) {
-        logger.error('[AUTH_DIAGNOSTIC] Total Tenant count error:', undefined, { errorMessage: (err as Error).message });
-      }
-
-      return tx.user.findFirst({
-        where: { clerkId },
-        include: {
-          tenant: true,
-          userRoles: {
-            include: { role: { include: { permissions: { include: { permission: true } } } } }
-          }
-        }
-      });
-    });
-
-    if (user) {
-      logger.info('[AUTH_DIAGNOSTIC] CRM clerkId lookup:', {
-        result: 'FOUND',
-        userId: user.id,
-        status: user.status,
-        tenantId: user.tenantId
-      });
-    } else {
-      logger.info('[AUTH_DIAGNOSTIC] CRM clerkId lookup:', { result: 'NOT_FOUND' });
+      return nativeIdentity;
     }
-  } catch (err: unknown) {
-    const errorObj = err as Error;
-    logger.error('[AUTH_DIAGNOSTIC] CRM clerkId lookup error:', undefined, {
-      result: 'ERROR',
-      errorName: errorObj?.name,
-      errorMessage: errorObj?.message
-    });
-    throw err;
+  } catch (error) {
+    logger.error('Native session resolution failed', undefined, { errorMessage: (error as Error).message });
   }
 
-  if (!user) {
-    logger.info('[AUTH_DIAGNOSTIC] entering Clerk identity provisioning fallback');
-    let syncedUser;
-    try {
-      syncedUser = await ensureUserProvisionedFromClerk(clerkId);
-      logger.info('[AUTH_DIAGNOSTIC] provisioning result:', { result: syncedUser ? 'FOUND' : 'NOT_FOUND' });
-    } catch (err: unknown) {
-      const errorObj = err as Error;
-      logger.error('[AUTH_DIAGNOSTIC] provisioning result error:', undefined, {
-        result: 'ERROR',
-        errorName: errorObj?.name,
-        errorMessage: errorObj?.message
-      });
-      // Do not swallow if the function wasn't catching it, but ensureUserProvisionedFromClerk does catch internally.
-    }
-    
-    if (syncedUser) {
-      user = await executeAsSystem(SystemOperation.AUTH_BOOTSTRAP, async (tx) => {
-        return tx.user.findFirst({
-          where: { clerkId },
-          include: {
-            tenant: true,
-            userRoles: {
-              include: { role: { include: { permissions: { include: { permission: true } } } } }
-            }
-          }
-        });
-      });
-    }
-  }
-
-  if (redis && user) {
-    await redis.set(`user:${clerkId}`, JSON.stringify(user), { ex: 3600 });
-  }
-
-  if (user) {
-    logger.info('[AUTH_DIAGNOSTIC] getCurrentUser result:', {
-      result: 'FOUND',
-      userId: user.id,
-      status: user.status,
-      tenantId: user.tenantId,
-      role: user.userRoles?.[0]?.role?.name
-    });
-  } else {
-    logger.info('[AUTH_DIAGNOSTIC] getCurrentUser result:', { result: 'NULL' });
-  }
-
-  return user;
+  return null;
 });
 
-export async function invalidateUserCache(clerkId: string) {
+export async function invalidateUserCache(userId: string) {
   if (redis) {
-    await redis.del(`user:${clerkId}`);
+    await redis.del(`user:${userId}`);
   }
 }
 
@@ -451,22 +176,6 @@ export async function checkPermission(resource: Resource, action: Action) {
   return false;
 }
 
-async function ensureUserProvisionedFromClerk(clerkId: string) {
-  try {
-    const client = await clerkClient();
-    const clerkUser = await client.users.getUser(clerkId);
-    let email = '';
-    if (clerkUser.primaryEmailAddressId && clerkUser.emailAddresses) {
-      const primary = clerkUser.emailAddresses.find(e => e.id === clerkUser.primaryEmailAddressId);
-      if (primary) email = primary.emailAddress;
-    }
-    if (!email) return null;
-    return await synchronizeClerkIdentity(clerkId, email);
-  } catch (err: unknown) {
-    logger.error('Failed to fetch and provision user from Clerk', undefined, { clerkId, name: (err as { name?: string })?.name });
-    return null;
-  }
-}
 
 export async function requireAuth(): Promise<AuthUser> {
   const user = await getCurrentUser();
@@ -611,13 +320,6 @@ export const getCurrentUserIdentity = cache(async function getCurrentUserIdentit
   const loadTestUser = await tryLoadTestIdentityLight();
   if (loadTestUser) return loadTestUser;
 
-  // PHASE 3: Dual-Adapter Authentication
-  // We first attempt to resolve a native CRM session from the HttpOnly cookie.
-  // This is strictly deterministic: if the cookie is present but invalid, native auth fails.
-  // Only if the native cookie is COMPLETELY ABSENT do we fall back to the Clerk adapter.
-  // This ensures a deterministic cutover for migrated users.
-  
-  // Dynamically import resolveSession to avoid circular dependencies
   const { resolveSession } = await import('@/lib/auth/session');
   
   try {
@@ -626,49 +328,15 @@ export const getCurrentUserIdentity = cache(async function getCurrentUserIdentit
       return nativeIdentity; // Native Session is Authoritative
     }
   } catch (error) {
-    // If native session logic errors (e.g. Prisma connection issue), do not swallow silently, 
-    // but allow fallback for now if it's purely a cookie missing error.
   }
 
-  // FALLBACK: Temporary Clerk Adapter
-  // (Will be removed in Phase 8)
-  const clerkAuth = await auth();
-  const clerkId = clerkAuth.userId;
-
-  if (!clerkId) {
-    return null;
-  }
-
-  const user = await executeAsSystem(SystemOperation.AUTH_BOOTSTRAP, async (tx) => {
-    return tx.user.findFirst({
-      where: { clerkId },
-      select: { id: true, tenantId: true, email: true, status: true }
-    });
-  });
-
-  return user;
+  return null;
 });
 
 export async function requireAuthIdentity() {
-  let user = await getCurrentUserIdentity();
+  const user = await getCurrentUserIdentity();
   if (!user) {
-    const clerkAuth = await auth();
-    if (clerkAuth.userId) {
-      const syncedUser = await ensureUserProvisionedFromClerk(clerkAuth.userId);
-      if (syncedUser) {
-        user = await executeAsSystem(SystemOperation.AUTH_BOOTSTRAP, async (tx) => {
-          return tx.user.findFirst({
-            where: { clerkId: clerkAuth.userId },
-            select: { id: true, tenantId: true, email: true, status: true }
-          });
-        });
-      }
-    }
-    if (!user) {
-      // NOTE: Throw an Error — do NOT redirect here.
-      // requireAuthIdentity() is called from API routes which must return HTTP 401.
-      throw new Error('Unauthorized');
-    }
+    throw new Error('Unauthorized');
   }
 
   if (user.status === 'INACTIVE') {
