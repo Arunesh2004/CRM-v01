@@ -3,7 +3,6 @@
 import { Suspense, useEffect, useState } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { useSession } from '@/lib/auth/SessionProvider';
-import Link from 'next/link';
 
 export default function AcceptInvitePage() {
   return (
@@ -14,66 +13,64 @@ export default function AcceptInvitePage() {
 }
 
 function AcceptInviteInner() {
-   
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars -- Intentional unused destructuring exclusion
-  const { isLoaded, isAuthenticated, user } = useSession();
+  const { isLoaded, refresh } = useSession();
   const searchParams = useSearchParams();
   const router = useRouter();
-  const [status, setStatus] = useState<'loading' | 'processing' | 'success' | 'error'>('loading');
+
+  const [status, setStatus] = useState<'initial' | 'processing' | 'success' | 'error'>('initial');
   const [errorMsg, setErrorMsg] = useState('');
+  const [password, setPassword] = useState('');
+  const [confirmPassword, setConfirmPassword] = useState('');
 
   const token = searchParams.get('token');
 
   useEffect(() => {
     if (!isLoaded) return;
-
     if (!token) {
-      // eslint-disable-next-line react-hooks/set-state-in-effect -- State setter inside effect retained for deterministic data fetching flow.
       setStatus('error');
       setErrorMsg('No invitation token provided.');
+    }
+  }, [isLoaded, token]);
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (password !== confirmPassword) {
+      setErrorMsg('Passwords do not match');
+      return;
+    }
+    if (password.length < 8) {
+      setErrorMsg('Password must be at least 8 characters');
       return;
     }
 
-    if (!isAuthenticated) {
-      // User needs to sign in or sign up first
-      setStatus('error');
-      setErrorMsg('Please sign in or create an account with your invited email to accept the invitation.');
-      return;
-    }
+    setStatus('processing');
+    setErrorMsg('');
 
-    const processInvite = async () => {
-      setStatus('processing');
-      try {
-        const res = await fetch('/api/auth/accept-invite', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ token }),
-        });
+    try {
+      const res = await fetch('/api/auth/accept-invite', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ token, password }),
+      });
 
-        const data = await res.json();
-        if (res.ok) {
-          setStatus('success');
-          // Redirect to onboarding after a short delay
-          setTimeout(() => {
-            router.push('/onboarding');
-          }, 2000);
-        } else {
-          setStatus('error');
-          setErrorMsg(data.error || 'Failed to accept invitation.');
-        }
-       
-      } catch (errRaw: unknown) {
-        // eslint-disable-next-line @typescript-eslint/no-unused-vars -- S2 Residual Debt: Legacy unused local
-        const err = errRaw instanceof Error ? errRaw : new Error(String(errRaw));
+      const data = await res.json();
+      if (res.ok) {
+        setStatus('success');
+        await refresh();
+        setTimeout(() => {
+          router.push('/dashboard');
+        }, 1500);
+      } else {
         setStatus('error');
-        setErrorMsg('An unexpected error occurred. Please try again.');
+        setErrorMsg(data.error || 'Failed to accept invitation.');
       }
-    };
+    } catch (err) {
+      setStatus('error');
+      setErrorMsg('An unexpected error occurred. Please try again.');
+    }
+  };
 
-    processInvite();
-  }, [isLoaded, isAuthenticated, token, router]);
-
-  if (!isLoaded || status === 'loading') {
+  if (!isLoaded || status === 'initial' && !token) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gray-50">
         <div className="text-gray-500">Loading...</div>
@@ -85,12 +82,12 @@ function AcceptInviteInner() {
     <div className="min-h-screen bg-gray-50 flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8">
       <div className="max-w-md w-full space-y-8 bg-white p-8 rounded-xl shadow-lg border border-gray-100 text-center">
         <h2 className="mt-6 text-3xl font-extrabold text-gray-900">
-          Invitation
+          Accept Invitation
         </h2>
         
         {status === 'processing' && (
           <div className="mt-2 text-sm text-gray-600">
-            <p>Processing your invitation...</p>
+            <p>Setting up your account...</p>
             <div className="mt-4 flex justify-center">
               <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
             </div>
@@ -100,32 +97,55 @@ function AcceptInviteInner() {
         {status === 'success' && (
           <div className="mt-2 text-sm text-green-600">
             <p>Invitation accepted successfully!</p>
-            <p className="mt-2 text-gray-500">Redirecting you to setup your profile...</p>
+            <p className="mt-2 text-gray-500">Redirecting to your dashboard...</p>
           </div>
         )}
 
         {status === 'error' && (
-          <div className="mt-2">
-            <div className="bg-red-50 text-red-700 p-4 rounded-md text-sm mb-4">
-              {errorMsg}
-            </div>
-            {!isAuthenticated && (
-              <div className="space-y-4">
-                <Link
-                  href={`/sign-in?redirect_url=/accept-invite?token=${token}`}
-                  className="w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
-                >
-                  Sign In
-                </Link>
-                <Link
-                  href={`/sign-up?redirect_url=/accept-invite?token=${token}`}
-                  className="w-full flex justify-center py-2 px-4 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
-                >
-                  Create Account
-                </Link>
-              </div>
-            )}
+          <div className="mt-2 text-sm text-red-600 bg-red-50 p-4 rounded-md">
+            {errorMsg}
           </div>
+        )}
+
+        {(status === 'initial' || status === 'error') && token && (
+          <form className="mt-8 space-y-6" onSubmit={handleSubmit}>
+            <div className="space-y-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 text-left" htmlFor="password">
+                  Create Password
+                </label>
+                <input
+                  id="password"
+                  type="password"
+                  required
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  className="appearance-none rounded-md relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
+                  placeholder="Password"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 text-left" htmlFor="confirm-password">
+                  Confirm Password
+                </label>
+                <input
+                  id="confirm-password"
+                  type="password"
+                  required
+                  value={confirmPassword}
+                  onChange={(e) => setConfirmPassword(e.target.value)}
+                  className="appearance-none rounded-md relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
+                  placeholder="Confirm Password"
+                />
+              </div>
+            </div>
+            <button
+              type="submit"
+              className="group relative w-full flex justify-center py-2 px-4 border border-transparent text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+            >
+              Set Password & Accept
+            </button>
+          </form>
         )}
       </div>
     </div>
