@@ -5,10 +5,11 @@ import { POST } from '@/app/api/pusher/auth/route';
 import { processOutbox } from '@/modules/core/events/outbox.service';
 import { withTenant } from '@db/utils/prisma-tenant';
 
-// Mock Clerk auth
-vi.mock('@clerk/nextjs/server', () => ({
-  auth: vi.fn(),
-  clerkClient: {}
+import { resolveSession } from '@/lib/auth/session';
+
+// Mock Native Auth
+vi.mock('@/lib/auth/session', () => ({
+  resolveSession: vi.fn()
 }));
 
 // Mock Inngest so we don't actually send jobs
@@ -18,7 +19,6 @@ vi.mock('@/lib/queue/inngest.client', () => ({
   }
 }));
 
-import { auth } from '@clerk/nextjs/server';
 import { executeAsSystem } from "@db/utils/prisma-system";
 
 describe('Phase S12 - Realtime Authorization \u0026 Pipeline Tests', () => {
@@ -62,7 +62,7 @@ describe('Phase S12 - Realtime Authorization \u0026 Pipeline Tests', () => {
 
   describe('Pusher Auth Endpoint Verification', () => {
     it('A. \u0026 D. Tenant A -\u003e Tenant A channel (AUTHORIZED)', async () => {
-      (auth as any).mockResolvedValue({ userId: 'clerk_a' });
+      vi.mocked(resolveSession).mockResolvedValue(userA as any);
       const req = await makeAuthRequest('123.456', `private-tenant-${tenantA.id}`);
       
       const res = await POST(req);
@@ -72,7 +72,7 @@ describe('Phase S12 - Realtime Authorization \u0026 Pipeline Tests', () => {
     });
 
     it('B. Missing Authentication', async () => {
-      (auth as any).mockResolvedValue({ userId: null });
+      vi.mocked(resolveSession).mockResolvedValue(null);
       const req = await makeAuthRequest('123.456', `private-tenant-${tenantA.id}`);
       
       const res = await POST(req);
@@ -80,7 +80,7 @@ describe('Phase S12 - Realtime Authorization \u0026 Pipeline Tests', () => {
     });
 
     it('C. Invalid Authentication (user not found)', async () => {
-      (auth as any).mockResolvedValue({ userId: 'invalid_clerk' });
+      vi.mocked(resolveSession).mockResolvedValue(null);
       const req = await makeAuthRequest('123.456', `private-tenant-${tenantA.id}`);
       
       const res = await POST(req);
@@ -88,7 +88,7 @@ describe('Phase S12 - Realtime Authorization \u0026 Pipeline Tests', () => {
     });
 
     it('E. Tenant A -\u003e Tenant B channel (FORBIDDEN)', async () => {
-      (auth as any).mockResolvedValue({ userId: 'clerk_a' });
+      vi.mocked(resolveSession).mockResolvedValue(userA as any);
       const req = await makeAuthRequest('123.456', `private-tenant-${tenantB.id}`);
       
       const res = await POST(req);
@@ -96,7 +96,7 @@ describe('Phase S12 - Realtime Authorization \u0026 Pipeline Tests', () => {
     });
 
     it('F. User A -\u003e User A channel (AUTHORIZED)', async () => {
-      (auth as any).mockResolvedValue({ userId: 'clerk_a' });
+      vi.mocked(resolveSession).mockResolvedValue(userA as any);
       const req = await makeAuthRequest('123.456', `private-user-${userA.id}`);
       
       const res = await POST(req);
@@ -104,7 +104,7 @@ describe('Phase S12 - Realtime Authorization \u0026 Pipeline Tests', () => {
     });
 
     it('G. User A -\u003e User B channel (FORBIDDEN)', async () => {
-      (auth as any).mockResolvedValue({ userId: 'clerk_a' });
+      vi.mocked(resolveSession).mockResolvedValue(userA as any);
       const req = await makeAuthRequest('123.456', `private-user-${userB.id}`);
       
       const res = await POST(req);
@@ -113,7 +113,7 @@ describe('Phase S12 - Realtime Authorization \u0026 Pipeline Tests', () => {
 
     it('H. Conversation channel authorization (FORBIDDEN - Architecture Gap)', async () => {
       // The current implementation strictly rejects this
-      (auth as any).mockResolvedValue({ userId: 'clerk_a' });
+      vi.mocked(resolveSession).mockResolvedValue(userA as any);
       const req = await makeAuthRequest('123.456', `private-conversation-12345`);
       
       const res = await POST(req);
@@ -121,7 +121,7 @@ describe('Phase S12 - Realtime Authorization \u0026 Pipeline Tests', () => {
     });
 
     it('I. \u0026 J. Unknown or Malformed channel authorization', async () => {
-      (auth as any).mockResolvedValue({ userId: 'clerk_a' });
+      vi.mocked(resolveSession).mockResolvedValue(userA as any);
       const req = await makeAuthRequest('123.456', `presence-tenant-${tenantA.id}`); // Not private-
       
       const res = await POST(req);
