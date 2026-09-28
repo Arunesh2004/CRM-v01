@@ -24,7 +24,8 @@ import {
 } from "lucide-react";
 import { NotificationCenter } from "@/components/notifications/NotificationCenter";
 import { CommandPalette } from "@/components/ui/CommandPalette";
-import { UserButton, useUser } from "@clerk/nextjs";
+import { UserButton } from "@clerk/nextjs";
+import { useSession } from "@/lib/auth/SessionProvider";
 import { QuickAddMenu } from "@/components/ui/QuickAddMenu";
 import { AssistantPopup } from "@/components/ai/AssistantPopup";
 
@@ -97,7 +98,7 @@ export default function CRMLayoutClient({
   userRole,
 }: CRMLayoutClientProps) {
   const pathname = usePathname();
-  const { user, isLoaded } = useUser();
+  const { user, isLoaded } = useSession();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
   const isAdmin = ADMIN_ROLES.includes(userRole?.toUpperCase());
@@ -202,11 +203,11 @@ export default function CRMLayoutClient({
             className="glass-panel rounded-xl p-3 flex items-center gap-2.5"
           >
             <div className="w-8 h-8 rounded-full grad-primary flex items-center justify-center text-white text-xs font-bold shrink-0">
-              {isLoaded ? (user?.firstName?.[0] || user?.primaryEmailAddress?.emailAddress?.[0] || "U").toUpperCase() : ""}
+              {isLoaded ? (user?.firstName?.[0] || user?.email?.[0] || "U").toUpperCase() : ""}
             </div>
             <div className="flex-1 min-w-0">
               <p className="text-[11px] font-semibold truncate text-white">
-                {isLoaded ? (user?.fullName || user?.primaryEmailAddress?.emailAddress || "User") : ""}
+                {isLoaded ? ((user?.firstName ? user.firstName + (user.lastName ? ' ' + user.lastName : '') : null) || user?.email || "User") : ""}
               </p>
               <p className="text-[10px] capitalize" style={{ color: "#8891B0" }}>
                 {userRole.toLowerCase().replace(/_/g, " ")}

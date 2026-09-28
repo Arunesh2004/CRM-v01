@@ -1,4 +1,5 @@
 import { ClerkProvider } from '@clerk/nextjs'
+import { SessionProvider } from '@/lib/auth/SessionProvider'
 
 import { Suspense } from 'react'
 import SetupScreen from '@/components/setup/SetupScreen'
@@ -50,7 +51,11 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
       className={`${spaceGrotesk.variable} ${inter.variable} ${ibmPlexMono.variable} h-full antialiased dark`}
     >
       <body className="min-h-full flex flex-col bg-[#070B18] text-[#E7EAF5]">
-        <ClerkProvider>{children}</ClerkProvider>
+        <ClerkProvider>
+          <SessionProvider>
+            {children}
+          </SessionProvider>
+        </ClerkProvider>
       </body>
     </html>
   );

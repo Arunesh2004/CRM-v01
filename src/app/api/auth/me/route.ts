@@ -13,7 +13,10 @@ export async function GET() {
     return NextResponse.json({
       id: user.id,
       tenantId: user.tenantId,
-      status: user.status
+      status: user.status,
+      email: user.email,
+      firstName: user.firstName,
+      lastName: user.lastName
     });
   } catch (error) {
     Logger.error('Error fetching current user profile', error as Error);

@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { Bell, Check, X, ArrowRight } from 'lucide-react';
-import { useUser } from '@clerk/nextjs';
+import { useSession } from '@/lib/auth/SessionProvider';
 import { NotificationType } from '@prisma/client';
 
 interface Notification {
@@ -16,7 +16,7 @@ interface Notification {
 }
 
 export function NotificationCenter() {
-  const { user } = useUser();
+  const { user } = useSession();
   const [notifications, setNotifications] = useState<Notification[]>([]);
   const [isOpen, setIsOpen] = useState(false);
   const [unreadCount, setUnreadCount] = useState(0);

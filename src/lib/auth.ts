@@ -311,7 +311,7 @@ async function tryLoadTestIdentityLight() {
   const user = await executeAsSystem(SystemOperation.AUTH_BOOTSTRAP, async (tx) => {
     return tx.user.findUnique({
       where: { id: userId },
-      select: { id: true, tenantId: true, email: true, status: true }
+      select: { id: true, tenantId: true, email: true, status: true, firstName: true, lastName: true }
     });
   });
 

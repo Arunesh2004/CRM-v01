@@ -35,7 +35,7 @@ export type CommentRowDTO = {
 
 import { EntityType } from '@prisma/client';
 import { format } from 'date-fns';
-import { useUser } from '@clerk/nextjs';
+import { useSession } from '@/lib/auth/SessionProvider';
 import { Loader2, Pencil, Trash2, X, Check } from 'lucide-react';
 
 const PAGE_LIMIT = 50;
@@ -47,8 +47,8 @@ export function CRMCommentSection({
   entityType: EntityType;
   entityId: string;
 }) {
-  const { user } = useUser();
-  const currentUserEmail = user?.primaryEmailAddress?.emailAddress ?? '';
+  const { user } = useSession();
+  const currentUserEmail = user?.email ?? '';
 
    
   const [comments, setComments] = useState<CommentRowDTO[]>([]);

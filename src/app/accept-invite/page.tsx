@@ -2,7 +2,7 @@
 
 import { Suspense, useEffect, useState } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
-import { useUser } from '@clerk/nextjs';
+import { useSession } from '@/lib/auth/SessionProvider';
 import Link from 'next/link';
 
 export default function AcceptInvitePage() {
@@ -16,7 +16,7 @@ export default function AcceptInvitePage() {
 function AcceptInviteInner() {
    
   // eslint-disable-next-line @typescript-eslint/no-unused-vars -- Intentional unused destructuring exclusion
-  const { isLoaded, isSignedIn, user } = useUser();
+  const { isLoaded, isAuthenticated, user } = useSession();
   const searchParams = useSearchParams();
   const router = useRouter();
   const [status, setStatus] = useState<'loading' | 'processing' | 'success' | 'error'>('loading');
@@ -34,7 +34,7 @@ function AcceptInviteInner() {
       return;
     }
 
-    if (!isSignedIn) {
+    if (!isAuthenticated) {
       // User needs to sign in or sign up first
       setStatus('error');
       setErrorMsg('Please sign in or create an account with your invited email to accept the invitation.');
@@ -71,7 +71,7 @@ function AcceptInviteInner() {
     };
 
     processInvite();
-  }, [isLoaded, isSignedIn, token, router]);
+  }, [isLoaded, isAuthenticated, token, router]);
 
   if (!isLoaded || status === 'loading') {
     return (
@@ -109,7 +109,7 @@ function AcceptInviteInner() {
             <div className="bg-red-50 text-red-700 p-4 rounded-md text-sm mb-4">
               {errorMsg}
             </div>
-            {!isSignedIn && (
+            {!isAuthenticated && (
               <div className="space-y-4">
                 <Link
                   href={`/sign-in?redirect_url=/accept-invite?token=${token}`}
