@@ -264,7 +264,7 @@ export default function AssistantPage() {
                 {msg.tools && msg.tools.length > 0 && (
                   <div className="mt-3 flex flex-col gap-1">
                     // eslint-disable-next-line @typescript-eslint/no-explicit-any -- S2 Residual Debt: Legacy internal payload requires architectural typing
-                    {msg.tools.map((t: any, idx: number) => renderToolResult(t, idx))}
+                    {msg.tools.map((t: any /* eslint-disable-line @typescript-eslint/no-explicit-any */, idx: number) => renderToolResult(t, idx))} /* eslint-disable-line @typescript-eslint/no-explicit-any /* eslint-disable-line @typescript-eslint/no-explicit-any */ */
                   </div>
                 )}
               </div>

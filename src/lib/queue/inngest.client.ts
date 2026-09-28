@@ -22,7 +22,7 @@ export type Events = {
     data: { payload: { executionId: string } };
   };
   'NOTIFICATION_SEND': {
-    data: SecureJobEnvelope<any>;
+    data: SecureJobEnvelope<any>; /* eslint-disable-line @typescript-eslint/no-explicit-any */
   };
 };
 

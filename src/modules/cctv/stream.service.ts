@@ -79,10 +79,11 @@ export async function generateStreamToken(cameraId: string) {
       if (!success) {
         throw new Error('Too many stream requests. Please wait before requesting a new stream token.');
       }
-    } catch (e: any) {
-      if (e.message !== 'Too many stream requests. Please wait before requesting a new stream token.') {
+    } catch (e: unknown) {
+      const errorMessage = e instanceof Error ? e.message : String(e);
+      if (errorMessage !== 'Too many stream requests. Please wait before requesting a new stream token.') {
          // Fallback if redis is down: Fail closed for security limits? Wait, the prompt says "Redis/rate-limiter failure behavior must be explicitly determined". We will fail closed to prevent abuse when redis is down.
-         Logger.error('CCTV stream rate limiter failure:', e);
+         Logger.error('CCTV stream rate limiter failure:', e instanceof Error ? e : new Error(String(e)));
          throw new Error('Stream token service temporarily unavailable due to rate limiter outage.');
       }
       throw e;

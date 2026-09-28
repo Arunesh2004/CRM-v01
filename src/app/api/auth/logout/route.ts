@@ -1,4 +1,5 @@
 import { NextResponse } from 'next/server';
+import { SecurityEventType, SecurityEventSeverity } from '@prisma/client';
 import { revokeCurrentSession } from '@/lib/auth/session';
 import { Logger } from '@/lib/logger/logger';
 import { getCurrentUserIdentity } from '@/lib/auth';
@@ -37,8 +38,8 @@ export async function POST(req: Request) {
           data: {
             tenantId: user.tenantId || 'SYSTEM',
             userId: user.id,
-            eventType: 'LOGOUT' as any,
-            severity: 'INFO' as any,
+            eventType: SecurityEventType.LOGOUT,
+            severity: SecurityEventSeverity.INFO,
             source: 'Logout route',
             ipAddress: ip,
             userAgent: reqHeaders.get('user-agent') || 'N/A'

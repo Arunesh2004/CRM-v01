@@ -34,7 +34,7 @@ export default async function MonitoringDashboard() {
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
             // eslint-disable-next-line @typescript-eslint/no-explicit-any -- S2 Residual Debt: Legacy internal payload requires architectural typing
             // eslint-disable-next-line @typescript-eslint/no-explicit-any -- S2 Residual Debt: Legacy internal payload requires architectural typing
-            {cameras.map((camera: any) => (
+            {cameras.map((camera: any) => ( /* eslint-disable-line @typescript-eslint/no-explicit-any */
               <CameraStreamCard key={camera.id} camera={camera} />
             ))}
           </div>

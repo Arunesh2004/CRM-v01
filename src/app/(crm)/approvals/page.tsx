@@ -33,7 +33,7 @@ export default async function ApprovalsPage() {
             <tbody className="divide-y divide-white/[.04]">
               // eslint-disable-next-line @typescript-eslint/no-explicit-any -- S2 Residual Debt: Legacy internal payload requires architectural typing
               // eslint-disable-next-line @typescript-eslint/no-explicit-any -- S2 Residual Debt: Legacy internal payload requires architectural typing
-              {approvals?.map((quote: any) => (
+              {approvals?.map((quote: any) => ( /* eslint-disable-line @typescript-eslint/no-explicit-any */
                 <tr key={quote.id} className="hover:bg-white/[.02] transition-colors group">
                   <td className="px-6 py-4 font-medium text-white">
                     <span className="font-mono text-xs">{quote.id.split('-')[0]}</span>

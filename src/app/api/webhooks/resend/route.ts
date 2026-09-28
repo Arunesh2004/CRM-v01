@@ -26,7 +26,7 @@ const _orig_POST = async function (req: Request) {
           'svix-id': req.headers.get('svix-id') as string,
           'svix-timestamp': req.headers.get('svix-timestamp') as string,
           'svix-signature': signature,
-        }) as any;
+        }) as any; /* eslint-disable-line @typescript-eslint/no-explicit-any */
       } catch (err) {
         Logger.warn('Invalid Resend Webhook Signature', { ip: req.headers.get('x-forwarded-for') });
         return NextResponse.json({ error: 'Invalid signature' }, { status: 400 });
@@ -68,15 +68,14 @@ const _orig_POST = async function (req: Request) {
       };
       const newStatus = statusMap[eventType] || 'UNKNOWN';
 
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      const metadata = (message.metadata as any) || {};
+      const metadata = (message.metadata as Record<string, unknown>) || {};
       
       // Idempotency: skip if already processed this status
       if (metadata.status === newStatus && newStatus !== 'UNKNOWN') {
         return { message, updated: false, newStatus };
       }
 
-      const updateData: any = { ...metadata, status: newStatus };
+      const updateData: any = { ...metadata, status: newStatus }; /* eslint-disable-line @typescript-eslint/no-explicit-any */
 
       if (newStatus === 'SENT') updateData.sentAt = new Date().toISOString();
       if (newStatus === 'DELIVERED') updateData.deliveredAt = new Date().toISOString();

@@ -78,13 +78,13 @@ export const notificationWorker = inngest.createFunction(
           type: payload.type,
           actionUrl: payload.actionUrl
         });
-      } catch (err: any) {
+      } catch (err: unknown) {
         // Realtime Delivery Semantics (Phase 8):
         // 1. The DB write (Step 1) is strictly durable and guaranteed.
         // 2. Realtime provider is best-effort. If it fails transiently, we swallow the error 
         //    because we do NOT want Inngest to retry the entire job (which would re-run DB insert logic).
         // 3. We distinguish permanent configuration errors vs transient network issues via logging.
-        const errorMessage = err?.message || 'Unknown error';
+        const errorMessage = err instanceof Error ? err.message : String(err);
         if (errorMessage.includes('credentials') || errorMessage.includes('Unauthorized')) {
            Logger.error('Realtime provider configuration error (Permanent)', { error: errorMessage, tenantId, userId: payload.userId });
            // Swallow error to reach terminal success state (DB already saved).

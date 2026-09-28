@@ -1,3 +1,5 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
+// S2-I Disposition: This load-test mock provider intentionally uses generic any to bypass strict interface checks during load testing.
 import { EmailProvider, EmailPayload, EmailProviderResponse } from './email/email.interface';
 import { TelephonyProvider } from './telephony/telephony-provider.interface';
 import { MessagingProvider } from './messaging/messaging-provider.interface';

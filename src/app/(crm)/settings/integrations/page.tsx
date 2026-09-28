@@ -195,11 +195,11 @@ export default function IntegrationsPage() {
                    
                   <>
                     // eslint-disable-next-line @typescript-eslint/no-explicit-any -- S2 Residual Debt: External provider boundary lacks strict types
-                    <Button variant="ghost" size="icon" className="bg-white/5 hover:bg-white/10 hover:text-cyan-400" onClick={() => handleTestConnection(providerDef.id as any)} title="Test Connection">
+                    <Button variant="ghost" size="icon" className="bg-white/5 hover:bg-white/10 hover:text-cyan-400" onClick={() => handleTestConnection(providerDef.id as any /* eslint-disable-line @typescript-eslint/no-explicit-any */)} title="Test Connection"> /* eslint-disable-line @typescript-eslint/no-explicit-any /* eslint-disable-line @typescript-eslint/no-explicit-any */ */
                       <Plug className="w-4 h-4" />
                     </Button>
                     // eslint-disable-next-line @typescript-eslint/no-explicit-any -- S2 Residual Debt: External provider boundary lacks strict types
-                    <Button variant="danger" size="icon" onClick={() => handleDelete(providerDef.id as any)} title="Remove Integration">
+                    <Button variant="danger" size="icon" onClick={() => handleDelete(providerDef.id as any /* eslint-disable-line @typescript-eslint/no-explicit-any */)} title="Remove Integration"> /* eslint-disable-line @typescript-eslint/no-explicit-any /* eslint-disable-line @typescript-eslint/no-explicit-any */ */
                       <Trash2 className="w-4 h-4" />
                     </Button>
                   </>

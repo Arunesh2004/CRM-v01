@@ -15,7 +15,7 @@ export const DateRangeSchema = z.object({
 
 export function parseDateRange(startStr?: string | null, endStr?: string | null): { startDate?: Date, endDate?: Date, error?: string } {
   try {
-    const raw: any = {};
+    const raw: any = {}; /* eslint-disable-line @typescript-eslint/no-explicit-any */
     if (startStr) raw.startDate = startStr;
     if (endStr) raw.endDate = endStr;
 

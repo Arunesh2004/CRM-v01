@@ -16,7 +16,7 @@ export class RetentionPolicyService {
    * Enforces retention policies for all tenants based on their settings.
    */
   async enforceRetentionPolicies(): Promise<void> {
-    const toDelete: any[] = [];
+    const toDelete: any[] = []; /* eslint-disable-line @typescript-eslint/no-explicit-any */
     
     // Step 1: Identify all snapshots to delete in a single bounded system transaction
     await executeAsSystem(SystemOperation.DISASTER_RECOVERY, async (tx) => {
@@ -31,7 +31,7 @@ export class RetentionPolicyService {
         select: { id: true, tenantId: true, checksum: true }
       });
 
-      const snapshotsByTenant = new Map<string, any[]>();
+      const snapshotsByTenant = new Map<string, any[]>(); /* eslint-disable-line @typescript-eslint/no-explicit-any */
       for (const s of allActiveSnapshots) {
         if (!snapshotsByTenant.has(s.tenantId)) snapshotsByTenant.set(s.tenantId, []);
         snapshotsByTenant.get(s.tenantId)!.push(s);

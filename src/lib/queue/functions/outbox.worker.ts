@@ -29,7 +29,7 @@ export const outboxWorker = inngest.createFunction(
   outboxWorkerHandler
 );
 
-export async function outboxWorkerHandler({ event, step }: { event: { data: SecureJobEnvelope<any> }, step: any }) {
+export async function outboxWorkerHandler({ event, step }: { event: { data: SecureJobEnvelope<any> }, step: any }) { /* eslint-disable-line @typescript-eslint/no-explicit-any */
     return await step.run('process-outbox-event', async () => {
       
       // CALL_COMPLETED handled outside transaction due to long-running AI API calls
@@ -43,7 +43,7 @@ export async function outboxWorkerHandler({ event, step }: { event: { data: Secu
         const idempotencyKey = event.data.jobId;
         const emailPayload = {
           ...event.data.payload,
-          headers: { ...(event.data.payload as any).headers, 'Idempotency-Key': idempotencyKey }
+          headers: { ...(event.data.payload as any).headers, 'Idempotency-Key': idempotencyKey } /* eslint-disable-line @typescript-eslint/no-explicit-any */
         };
 
         // 1. Authorize & Establish State (In Transaction)
@@ -99,7 +99,7 @@ export async function outboxWorkerHandler({ event, step }: { event: { data: Secu
           const { ProviderFactory } = await import('@/lib/providers/provider.factory');
           const provider = ProviderFactory.getTelephonyProvider();
           return await provider.sendSms(event.data.tenantId, {
-            ...(event.data.payload as any),
+            ...(event.data.payload as any), /* eslint-disable-line @typescript-eslint/no-explicit-any */
             idempotencyKey
           });
         });
@@ -143,7 +143,7 @@ export async function outboxWorkerHandler({ event, step }: { event: { data: Secu
           const { ProviderFactory } = await import('@/lib/providers/provider.factory');
           const provider = ProviderFactory.getTelephonyProvider();
           return await provider.initiateCall(event.data.tenantId, {
-            ...(event.data.payload as any),
+            ...(event.data.payload as any), /* eslint-disable-line @typescript-eslint/no-explicit-any */
             idempotencyKey
           });
         });

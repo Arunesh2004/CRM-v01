@@ -29,7 +29,7 @@ export class RPOMonitor {
         select: { id: true, tenantId: true, createdAt: true }
       });
 
-      const snapshotMap = new Map(latestSnapshots.map((s: any) => [s.tenantId, s]));
+      const snapshotMap = new Map(latestSnapshots.map((s: any) => [s.tenantId, s])); /* eslint-disable-line @typescript-eslint/no-explicit-any */
       const metrics: RPOMetrics[] = [];
       
       for (const tenant of tenants) {

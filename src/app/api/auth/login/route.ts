@@ -1,4 +1,5 @@
 import { NextResponse } from 'next/server';
+import { SecurityEventType, SecurityEventSeverity } from '@prisma/client';
 import { executeAsSystem, SystemOperation } from '@db/utils/prisma-system';
 import { verifyPassword, verifyDummyPassword } from '@/lib/auth/password';
 import { createSession } from '@/lib/auth/session';
@@ -93,15 +94,15 @@ export async function POST(req: Request) {
   }
 }
 
-async function logSecurityEvent(eventType: string, severity: string, source: string, ipAddress: string, userId?: string, tenantId?: string) {
+async function logSecurityEvent(eventType: SecurityEventType, severity: SecurityEventSeverity, source: string, ipAddress: string, userId?: string, tenantId?: string) {
   try {
     await executeAsSystem(SystemOperation.AUTH_BOOTSTRAP, async (tx) => {
       await tx.securityEvent.create({
         data: {
           tenantId: tenantId || 'SYSTEM',
           userId: userId || null,
-          eventType: eventType as any,
-          severity: severity as any,
+          eventType: eventType,
+          severity: severity,
           source,
           ipAddress,
           userAgent: 'N/A'

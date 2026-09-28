@@ -139,9 +139,9 @@ export const getCurrentUser = cache(async function getCurrentUser(): Promise<Aut
     if (
       error instanceof Error &&
       (error.message.includes('Dynamic server usage') ||
-       (error as any).digest?.startsWith('DYNAMIC_SERVER_USAGE') ||
-       (error as any).digest?.startsWith('NEXT_REDIRECT') ||
-       (error as any).digest?.startsWith('NEXT_NOT_FOUND'))
+       (error as Error & { digest?: string }).digest?.startsWith('DYNAMIC_SERVER_USAGE') ||
+       (error as Error & { digest?: string }).digest?.startsWith('NEXT_REDIRECT') ||
+       (error as Error & { digest?: string }).digest?.startsWith('NEXT_NOT_FOUND'))
     ) {
       throw error;
     }

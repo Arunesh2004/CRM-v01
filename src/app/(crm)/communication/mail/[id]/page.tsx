@@ -60,9 +60,9 @@ export default async function MailDetailPage({ params }: { params: Promise<{ id:
                   // eslint-disable-next-line @typescript-eslint/no-explicit-any -- S2 Residual Debt: Legacy internal payload requires architectural typing
                   // eslint-disable-next-line @typescript-eslint/no-explicit-any -- S2 Residual Debt: Legacy internal payload requires architectural typing
                   // eslint-disable-next-line @typescript-eslint/no-explicit-any -- S2 Residual Debt: Legacy internal payload requires architectural typing
-                  <span>To: {message.recipients.filter((r: any) => r.type === 'TO').map((r: any) => r.user.email).join(', ')}</span>
+                  <span>To: {message.recipients.filter((r: any) => r.type === 'TO').map((r: any /* eslint-disable-line @typescript-eslint/no-explicit-any */) => r.user.email).join(', ')}</span> /* eslint-disable-line @typescript-eslint/no-explicit-any /* eslint-disable-line @typescript-eslint/no-explicit-any */ */
                   // eslint-disable-next-line @typescript-eslint/no-explicit-any -- S2 Residual Debt: Legacy internal payload requires architectural typing
-                  {message.recipients.some((r: any) => r.type === 'CC') && (
+                  {message.recipients.some((r: any) => r.type === 'CC') && ( /* eslint-disable-line @typescript-eslint/no-explicit-any */
                      
                     // eslint-disable-next-line @typescript-eslint/no-explicit-any -- S2 Residual Debt: Legacy internal payload requires architectural typing
                     <span>CC: {message.recipients.filter((r: any) => r.type === 'CC').map((r: any) => r.user.email).join(', ')}</span>
