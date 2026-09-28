@@ -136,6 +136,15 @@ export const getCurrentUser = cache(async function getCurrentUser(): Promise<Aut
       return nativeIdentity;
     }
   } catch (error) {
+    if (
+      error instanceof Error &&
+      (error.message.includes('Dynamic server usage') ||
+       (error as any).digest?.startsWith('DYNAMIC_SERVER_USAGE') ||
+       (error as any).digest?.startsWith('NEXT_REDIRECT') ||
+       (error as any).digest?.startsWith('NEXT_NOT_FOUND'))
+    ) {
+      throw error;
+    }
     logger.error('Native session resolution failed', undefined, { errorMessage: (error as Error).message });
   }
 
@@ -322,12 +331,9 @@ export const getCurrentUserIdentity = cache(async function getCurrentUserIdentit
 
   const { resolveSession } = await import('@/lib/auth/session');
   
-  try {
-    const nativeIdentity = await resolveSession();
-    if (nativeIdentity) {
-      return nativeIdentity; // Native Session is Authoritative
-    }
-  } catch (error) {
+  const nativeIdentity = await resolveSession();
+  if (nativeIdentity) {
+    return nativeIdentity; // Native Session is Authoritative
   }
 
   return null;

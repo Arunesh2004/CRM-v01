@@ -1,8 +1,9 @@
-import { describe, it, expect, vi, beforeEach } from 'vitest';
+import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { hashPassword, verifyPassword } from '@/lib/auth/password';
 import { createSession, resolveSession, revokeCurrentSession } from '@/lib/auth/session';
 import { getCurrentUser, requireAuth, checkPermission } from '@/lib/auth';
 import prisma from '@db/utils/prisma';
+import { executeAsSystem, SystemOperation } from '@db/utils/prisma-system';
 import crypto from 'crypto';
 import * as headers from 'next/headers';
 
@@ -24,19 +25,44 @@ describe('Phase 3: Native Authentication Core', () => {
   beforeEach(async () => {
     vi.clearAllMocks();
     (headers.cookies as any)().delete('crm_session');
-    
-    tenant = await prisma.tenant.create({
-      data: { name: `Test Tenant ${crypto.randomUUID()}`, status: 'ACTIVE' }
-    });
 
-    user = await prisma.user.create({
-      data: {
-        email: `native_${crypto.randomUUID()}@test.com`,
-        tenantId: tenant.id,
-        status: 'ACTIVE',
-      }
+    // Fixture creation uses the system path (crm_system_user / BYPASSRLS via ADMIN_DATABASE_URL).
+    // This is necessary because the User table has RLS that requires app.current_tenant_id to be set,
+    // which only exists during real application requests — not during test setup.
+    // The application code-under-test (createSession, resolveSession, requireAuth, etc.)
+    // still runs through the normal prisma client (crm_app_user / NOBYPASSRLS).
+    const result = await executeAsSystem(SystemOperation.AUTH_BOOTSTRAP, async (tx) => {
+      const t = await tx.tenant.create({
+        data: { name: `Test Tenant ${crypto.randomUUID()}`, status: 'ACTIVE' }
+      });
+      const u = await tx.user.create({
+        data: {
+          email: `native_${crypto.randomUUID()}@test.com`,
+          tenantId: t.id,
+          status: 'ACTIVE',
+        }
+      });
+      return { tenant: t, user: u };
     });
+    tenant = result.tenant;
+    user = result.user;
   });
+
+  afterEach(async () => {
+    // Clean up fixtures using the system path so RLS doesn't block cleanup.
+    if (user?.id) {
+      await executeAsSystem(SystemOperation.AUTH_BOOTSTRAP, async (tx) => {
+        await tx.authSession.deleteMany({ where: { userId: user.id } });
+        await tx.user.delete({ where: { id: user.id } });
+      });
+    }
+    if (tenant?.id) {
+      await executeAsSystem(SystemOperation.AUTH_BOOTSTRAP, async (tx) => {
+        await tx.tenant.delete({ where: { id: tenant.id } });
+      });
+    }
+  });
+
 
   describe('Password Hashing', () => {
     it('1. Password hashes are not plaintext', async () => {
