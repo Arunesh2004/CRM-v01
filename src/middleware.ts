@@ -1,4 +1,3 @@
-import { clerkMiddleware, createRouteMatcher } from '@clerk/nextjs/server';
 import { NextResponse } from 'next/server';
 import type { NextRequest, NextFetchEvent } from 'next/server';
 import { rateLimiters } from '@/lib/cache/redis.client';
@@ -6,31 +5,36 @@ import { rateLimiters } from '@/lib/cache/redis.client';
 /**
  * SECURITY MIDDLEWARE
  *
- * Phase 13 remediation for HDR-01 and HDR-02:
+ * Phase 2 Remediation: Native Auth middleware.
  * - Sets all mandatory security headers on every response.
  * - Removes the Vercel-default wildcard CORS header from non-API routes.
- * - Integrates with Clerk authentication for protected routes.
  * - Includes Upstash rate-limiting logic per-route.
+ * - Redirects unauthenticated access to /sign-in using native crm_session cookie presence.
  */
 
-const isPublicRoute = createRouteMatcher([
-  '/',
-  '/sign-in(.*)',
-  '/sign-up(.*)',
-  '/unauthorized(.*)',
-  '/api/health(.*)',
-  '/api/live(.*)',
-  '/api/ready(.*)',
-  '/api/webhooks/(.*)',
-  '/api/inngest',
-  '/api/auth/(.*)', // Native Auth Endpoints
-  '/__clerk(.*)',  // Clerk Frontend API proxy
-]);
+const publicRoutePatterns = [
+  /^\/$/,
+  /^\/sign-in(.*)$/,
+  /^\/sign-up(.*)$/,
+  /^\/unauthorized(.*)$/,
+  /^\/api\/health(.*)$/,
+  /^\/api\/live(.*)$/,
+  /^\/api\/ready(.*)$/,
+  /^\/api\/webhooks\/(.*)$/,
+  /^\/api\/inngest$/,
+  /^\/api\/auth\/(.*)$/, // Native Auth Endpoints
+  /^\/__clerk(.*)$/,  // Clerk Frontend API proxy (retained for Phase 3/5 dependencies)
+];
+
+function isPublicRoute(request: NextRequest) {
+  const pathname = request.nextUrl.pathname;
+  return publicRoutePatterns.some(pattern => pattern.test(pathname));
+}
 
 function isLoadTestAuthEnabled(): boolean {
   console.log('[MIDDLEWARE] NODE_ENV:', process.env.NODE_ENV);
   console.log('[MIDDLEWARE] CRM_LOAD_TEST_AUTH_ENABLED:', process.env.CRM_LOAD_TEST_AUTH_ENABLED);
-  console.log('[MIDDLEWARE] LOAD_TEST_SECRET:', process.env.LOAD_TEST_SECRET);
+  console.log('[MIDDLEWARE] LOAD_TEST_SECRET:', process.env.LOAD_TEST_SECRET ? 'present' : 'missing');
   if (process.env.NODE_ENV === 'production' || process.env.VERCEL_ENV === 'production') return false;
   if (process.env.CRM_LOAD_TEST_AUTH_ENABLED?.trim() !== 'true') return false;
   if (!process.env.LOAD_TEST_SECRET) return false;
@@ -45,7 +49,7 @@ function isLoadTestRequest(req: Request): boolean {
 
 function applySecurityHeaders(response: NextResponse, request: NextRequest): NextResponse {
   const isProduction = process.env.NODE_ENV === 'production' || process.env.VERCEL_ENV === 'production';
-  const scriptSrc = isProduction 
+  const scriptSrc = isProduction
     ? "script-src 'self' 'unsafe-inline' https://clerk.com https://*.clerk.com https://*.clerk.accounts.dev"
     : "script-src 'self' 'unsafe-eval' 'unsafe-inline' https://clerk.com https://*.clerk.com https://*.clerk.accounts.dev";
 
@@ -74,8 +78,6 @@ function applySecurityHeaders(response: NextResponse, request: NextRequest): Nex
 
   return response;
 }
-
-const hasClerkKeys = process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY && !process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY.startsWith('<');
 
 const handleRateLimiting = async (request: NextRequest, ip: string) => {
   let limiter = null;
@@ -130,10 +132,9 @@ const handleRateLimiting = async (request: NextRequest, ip: string) => {
   return null;
 };
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any -- S2 Residual Debt: Legacy internal payload
-const middlewareHandler = async (auth: any, request: NextRequest) => {
+export default async function proxy(request: NextRequest, event: NextFetchEvent) {
   const ip = request.headers.get('x-forwarded-for') || '127.0.0.1';
-  
+
   const rateLimitResponse = await handleRateLimiting(request, ip);
   if (rateLimitResponse) return rateLimitResponse;
 
@@ -142,74 +143,18 @@ const middlewareHandler = async (auth: any, request: NextRequest) => {
     return applySecurityHeaders(response, request);
   }
 
-  if (auth && !isPublicRoute(request)) {
-    // If a native session cookie exists, allow the request to pass through Edge Middleware.
-    // The server-side runtime handler (via requireAuth) is solely responsible for strictly validating
-    // the cryptographic hash, expiry, and revocation state before authorizing access.
-    // We do NOT blindly trust the cookie's existence here.
+  if (!isPublicRoute(request)) {
+    // Check for native crm_session cookie presence
     const hasNativeSessionCookie = request.cookies.has('crm_session');
 
     if (!hasNativeSessionCookie) {
-      const authObj = typeof auth === 'function' ? await auth() : auth;
-      if (!authObj?.userId) {
-        const signInUrl = new URL('/sign-in', request.url);
-        return NextResponse.redirect(signInUrl);
-      }
-      if (typeof authObj.protect === 'function') {
-        authObj.protect();
-      }
+      const signInUrl = new URL('/sign-in', request.url);
+      return NextResponse.redirect(signInUrl);
     }
   }
 
   const response = NextResponse.next();
   return applySecurityHeaders(response, request);
-};
-
-/**
- * G2 REMEDIATION — Clerk configuration absent fallback.
- *
- * When Clerk publishable/secret keys are not present this deployment is
- * misconfigured and MUST NOT allow protected application routes to be
- * accessed without identity verification.
- *
- * Route classification when Clerk is absent:
- *   PUBLIC BY DESIGN      — routes in isPublicRoute() (health, webhooks,
- *                           inngest, sign-in, sign-up, __clerk proxy)
- *   INFRASTRUCTURE BY DESIGN — static assets excluded by config.matcher
- *   AUTHENTICATION REQUIRED  — everything else → fail-closed (503)
- *
- * 503 is chosen over 401/403: the server cannot authenticate because it is
- * misconfigured, not because the caller lacks credentials.
- */
-const baseMiddleware = hasClerkKeys
-  ? clerkMiddleware(middlewareHandler)
-  : async (request: NextRequest) => {
-      const ip = request.headers.get('x-forwarded-for') || '127.0.0.1';
-      const rateLimitResponse = await handleRateLimiting(request, ip);
-      if (rateLimitResponse) return rateLimitResponse;
-
-      if (isPublicRoute(request)) {
-        const response = NextResponse.next();
-        return applySecurityHeaders(response, request);
-      }
-
-      return new NextResponse(
-        JSON.stringify({ error: 'Service Unavailable: Authentication provider not configured.' }),
-        {
-          status: 503,
-          headers: { 'Content-Type': 'application/json' },
-        }
-      );
-    };
-
-export default async function proxy(request: NextRequest, event: NextFetchEvent) {
-  if (isLoadTestRequest(request)) {
-    // Completely bypass Clerk for load tests to prevent handshake redirect crashes
-    const response = NextResponse.next();
-    return applySecurityHeaders(response, request);
-  }
-  
-  return baseMiddleware(request, event);
 }
 
 export const config = {

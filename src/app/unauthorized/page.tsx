@@ -1,8 +1,22 @@
 "use client";
 
-import { SignOutButton } from "@clerk/nextjs";
+import { useRouter } from 'next/navigation';
+import { useSession } from '@/lib/auth/SessionProvider';
 
 export default function UnauthorizedPage() {
+  const router = useRouter();
+  const { refresh } = useSession();
+
+  const handleLogout = async () => {
+    try {
+      await fetch('/api/auth/logout', { method: 'POST' });
+      await refresh();
+      router.push('/sign-in');
+    } catch (e) {
+      console.error('Logout failed', e);
+    }
+  };
+
   return (
     <div className="flex h-screen flex-col items-center justify-center bg-[#070B18] text-[#E7EAF5] p-4 text-center">
       <div className="max-w-md w-full bg-white/5 rounded-xl border border-white/10 p-8 backdrop-blur-md shadow-2xl">
@@ -13,14 +27,15 @@ export default function UnauthorizedPage() {
         </div>
         <h1 className="text-2xl font-bold font-display text-white mb-3">Account Not Provisioned</h1>
         <p className="mb-8 text-[#8891B0] leading-relaxed">
-          Your Clerk account is authenticated, but you do not have an active CRM identity.<br/><br/>
+          Your account is authenticated, but you do not have an active CRM identity.<br/><br/>
           Please use a valid invitation link or contact your administrator to provision your account.
         </p>
-        <SignOutButton>
-          <button className="w-full rounded-lg bg-red-600/90 px-6 py-3 text-sm font-semibold text-white hover:bg-red-500 transition-colors shadow-lg">
-            Sign Out
-          </button>
-        </SignOutButton>
+        <button
+          onClick={handleLogout}
+          className="w-full rounded-lg bg-red-600/90 px-6 py-3 text-sm font-semibold text-white hover:bg-red-500 transition-colors shadow-lg"
+        >
+          Sign Out
+        </button>
       </div>
     </div>
   );

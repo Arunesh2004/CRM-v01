@@ -21,11 +21,12 @@ import {
   Sparkles,
   X,
   Activity,
+  LogOut,
 } from "lucide-react";
 import { NotificationCenter } from "@/components/notifications/NotificationCenter";
 import { CommandPalette } from "@/components/ui/CommandPalette";
-import { UserButton } from "@clerk/nextjs";
 import { useSession } from "@/lib/auth/SessionProvider";
+import { useRouter } from "next/navigation";
 import { QuickAddMenu } from "@/components/ui/QuickAddMenu";
 import { AssistantPopup } from "@/components/ai/AssistantPopup";
 
@@ -98,8 +99,19 @@ export default function CRMLayoutClient({
   userRole,
 }: CRMLayoutClientProps) {
   const pathname = usePathname();
-  const { user, isLoaded } = useSession();
+  const { user, isLoaded, refresh } = useSession();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const router = useRouter();
+
+  const handleLogout = async () => {
+    try {
+      await fetch('/api/auth/logout', { method: 'POST' });
+      await refresh();
+      router.push('/sign-in');
+    } catch (err) {
+      console.error('Logout error', err);
+    }
+  };
 
   const isAdmin = ADMIN_ROLES.includes(userRole?.toUpperCase());
 
@@ -275,7 +287,15 @@ export default function CRMLayoutClient({
                   {isLoaded ? (user?.firstName || "User") : ""}
                 </span>
               </span>
-              {userRole?.toUpperCase() !== 'DEMO_USER' && <UserButton />}
+              {userRole?.toUpperCase() !== 'DEMO_USER' && (
+                <button
+                  onClick={handleLogout}
+                  className="ml-2 p-1.5 text-gray-400 hover:text-white rounded-md hover:bg-white/10 transition-colors"
+                  title="Sign Out"
+                >
+                  <LogOut className="h-4 w-4" />
+                </button>
+              )}
             </div>
           </div>
         </header>
