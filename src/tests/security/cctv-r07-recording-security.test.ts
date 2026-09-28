@@ -4,18 +4,41 @@ import { executeAsSystem, SystemOperation } from '@db/utils/prisma-system';
 import { generateRecordingDownloadUrl } from '@/modules/cctv/recording.service';
 import { auth } from '@clerk/nextjs/server';
 import { requireAuth } from '@/lib/auth';
+import { resolveSession } from '@/lib/auth/session';
 
 vi.mock('@clerk/nextjs/server', () => ({
   auth: vi.fn(),
   clerkClient: {}
 }));
 
+vi.mock('@/lib/auth/session', () => ({
+  resolveSession: vi.fn()
+}));
+
 function setTestAuthContext(userId: string, tenantId: string) {
+  // Mock Clerk for any lingering dependencies
   vi.mocked(auth).mockReturnValue({ userId: `clerk_${userId}`, orgId: tenantId } as any);
+
+  // Mock Native Auth
+  vi.mocked(resolveSession).mockImplementation(async () => {
+    return executeAsSystem(SystemOperation.AUTH_BOOTSTRAP, async (tx) => {
+      const user = await tx.user.findUnique({
+        where: { id: userId },
+        include: {
+          tenant: true,
+          userRoles: {
+            include: { role: { include: { permissions: { include: { permission: true } } } } }
+          }
+        }
+      });
+      return user as any;
+    });
+  });
 }
 
 function clearTestAuthContext() {
   vi.mocked(auth).mockReturnValue({ userId: null, orgId: null } as any);
+  vi.mocked(resolveSession).mockResolvedValue(null);
 }
 describe('R07: Recording Download IDOR', () => {
   let tenantA: string;
@@ -25,7 +48,7 @@ describe('R07: Recording Download IDOR', () => {
   let userA: { id: string, tenantId: string };
   let userB: { id: string, tenantId: string };
   let unauthUser: { id: string, tenantId: string };
-  
+
   beforeAll(async () => {
     tenantA = crypto.randomUUID();
     tenantB = crypto.randomUUID();
@@ -34,7 +57,7 @@ describe('R07: Recording Download IDOR', () => {
     const locA = crypto.randomUUID();
     cameraAId = crypto.randomUUID();
     recordingAId = crypto.randomUUID();
-    
+
     userA = { id: crypto.randomUUID(), tenantId: tenantA };
     userB = { id: crypto.randomUUID(), tenantId: tenantB };
     unauthUser = { id: crypto.randomUUID(), tenantId: tenantA };
@@ -48,7 +71,7 @@ describe('R07: Recording Download IDOR', () => {
         ],
         skipDuplicates: true
       });
-      
+
       // Users
       await tx.user.createMany({
         data: [
@@ -58,7 +81,7 @@ describe('R07: Recording Download IDOR', () => {
         ],
         skipDuplicates: true
       });
-      
+
       // Customers & Locations
       await tx.customer.createMany({
         data: [
@@ -67,14 +90,14 @@ describe('R07: Recording Download IDOR', () => {
         ],
         skipDuplicates: true
       });
-      
+
       await tx.location.createMany({
         data: [
           { id: locA, customerId: custA, tenantId: tenantA, name: 'Loc A' }
         ],
         skipDuplicates: true
       });
-      
+
       // Camera A
       await tx.camera.createMany({
         data: [
@@ -82,11 +105,11 @@ describe('R07: Recording Download IDOR', () => {
         ],
         skipDuplicates: true
       });
-      
+
       // Recording A
       await tx.recording.createMany({
         data: [
-          { id: recordingAId, segmentId: 'seg-1', tenantId: tenantA, cameraId: cameraAId, streamVersion: 1, storageKey: `cctv_recordings/${tenantA}/${cameraAId}/v1/seg-1.mp4`, status: 'COMPLETED', sizeBytes: 1024, startTime: new Date() }
+          { id: recordingAId, segmentId: `seg-${crypto.randomUUID()}`, tenantId: tenantA, cameraId: cameraAId, streamVersion: 1, storageKey: `cctv_recordings/${tenantA}/${cameraAId}/v1/seg-1.mp4`, status: 'COMPLETED', sizeBytes: 1024, startTime: new Date() }
         ],
         skipDuplicates: true
       });
@@ -95,7 +118,7 @@ describe('R07: Recording Download IDOR', () => {
       const roleA = crypto.randomUUID();
       const roleB = crypto.randomUUID();
       const roleUnauth = crypto.randomUUID();
-      
+
       await tx.role.createMany({
         data: [
           { id: roleA, tenantId: tenantA, name: 'Role A' },
@@ -110,7 +133,7 @@ describe('R07: Recording Download IDOR', () => {
         p = await tx.permission.create({ data: { id: crypto.randomUUID(), resource: 'RECORDING', action: 'READ' } });
       }
       const pId = p.id;
-      
+
       await tx.rolePermission.createMany({
         data: [
           { id: crypto.randomUUID(), roleId: roleA, permissionId: pId, tenantId: tenantA },
@@ -118,7 +141,7 @@ describe('R07: Recording Download IDOR', () => {
         ],
         skipDuplicates: true
       });
-      
+
       await tx.userRole.createMany({
         data: [
           { id: crypto.randomUUID(), userId: userA.id, roleId: roleA, tenantId: tenantA },
@@ -138,7 +161,7 @@ describe('R07: Recording Download IDOR', () => {
     console.log('DB CHECK:', dbCheck);
     const userCheck = await requireAuth();
     console.log('USER CHECK:', userCheck?.id, userCheck?.tenantId);
-    
+
     const result = await generateRecordingDownloadUrl(recordingAId);
     expect(result.downloadUrl).toContain(`cctv_recordings/${tenantA}/${cameraAId}/v1/seg-1.mp4`);
   });

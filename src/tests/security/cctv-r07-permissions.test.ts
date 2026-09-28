@@ -4,6 +4,7 @@ import { executeAsSystem, SystemOperation } from '@db/utils/prisma-system';
 import { createCamera, updateCamera, deleteCamera, setCameraCredentials, getCameras } from '@/modules/cctv/camera.service';
 import { getCameraRecordings } from '@/modules/cctv/recording.service';
 import { generateStreamToken } from '@/modules/cctv/stream.service';
+import { resolveSession } from '@/lib/auth/session';
 import { auth } from '@clerk/nextjs/server';
 
 vi.mock('@clerk/nextjs/server', () => ({
@@ -11,12 +12,34 @@ vi.mock('@clerk/nextjs/server', () => ({
   clerkClient: {}
 }));
 
+vi.mock('@/lib/auth/session', () => ({
+  resolveSession: vi.fn()
+}));
+
 function setTestAuthContext(userId: string, tenantId: string) {
+  // Mock Clerk for any lingering dependencies
   vi.mocked(auth).mockReturnValue({ userId: `clerk_${userId}`, orgId: tenantId } as any);
+
+  // Mock Native Auth
+  vi.mocked(resolveSession).mockImplementation(async () => {
+    return executeAsSystem(SystemOperation.AUTH_BOOTSTRAP, async (tx) => {
+      const user = await tx.user.findUnique({
+        where: { id: userId },
+        include: {
+          tenant: true,
+          userRoles: {
+            include: { role: { include: { permissions: { include: { permission: true } } } } }
+          }
+        }
+      });
+      return user as any;
+    });
+  });
 }
 
 function clearTestAuthContext() {
   vi.mocked(auth).mockReturnValue({ userId: null, orgId: null } as any);
+  vi.mocked(resolveSession).mockResolvedValue(null);
 }
 
 
@@ -38,13 +61,13 @@ describe('R07: CCTV Permission Boundary', () => {
 
     await executeAsSystem(SystemOperation.DEMO_SEED, async (tx) => {
       await tx.tenant.createMany({ data: [{ id: tenantId, name: 'Tenant', status: 'ACTIVE' }], skipDuplicates: true });
-      
+
       const custId = crypto.randomUUID();
       await tx.customer.createMany({ data: [{ id: custId, tenantId, name: 'Cust', normalizedName: `c${Date.now()}` }], skipDuplicates: true });
       await tx.location.createMany({ data: [{ id: locId, customerId: custId, tenantId, name: 'Loc' }], skipDuplicates: true });
-      
+
       await tx.camera.createMany({ data: [{ id: cameraId, tenantId, locationId: locId, name: 'Cam', ipAddress: '10.0.0.1', protocol: 'RTSP', authMode: 'NONE', streamVersion: 1 }], skipDuplicates: true });
-      
+
       // Users
       await tx.user.createMany({
         data: [
