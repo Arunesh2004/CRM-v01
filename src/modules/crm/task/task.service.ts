@@ -1,7 +1,6 @@
 import { requireAuth, requireTenant, requirePermission } from '@/lib/auth';
 import { withTenant, withTenantTransaction } from '@db/utils/prisma-tenant';
 import { CreateTaskInput, UpdateTaskInput } from '../crm.types';
-import { EventBus } from '../../core/events/event-bus';
 import { NotificationService } from '../../notifications/notification.service';
 import { NotificationType } from '@prisma/client';
 import { QueryParams, PaginatedResponse } from '../../core/types';

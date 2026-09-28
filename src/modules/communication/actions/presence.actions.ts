@@ -3,7 +3,6 @@
 import { requireAuth } from '@/lib/auth';
 import { withTenant } from '@db/utils/prisma-tenant';
 import { DistributedRateLimiter } from '@/lib/rate-limit/rate-limiter';
-import { realtime } from '../adapter';
 
 export async function heartbeatAction(status: 'ONLINE' | 'AWAY' | 'BUSY' = 'ONLINE') {
   const user = await requireAuth();

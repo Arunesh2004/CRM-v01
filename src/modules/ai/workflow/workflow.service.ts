@@ -3,7 +3,6 @@ import globalPrisma from '../../../../database/utils/prisma';
 import { SecurityEventService } from '../../../../src/modules/security-events/security-event.service';
 import { AIPermissionService } from '../../../modules/ai-permissions/ai-permission.service';
 import { ContextBuilderService } from '../context/context-builder.service';
-import { inngest } from '@/lib/queue/inngest.client';
 import { TaskCore } from '../../crm/task/task.core';
 import { TicketService } from '../../support/ticket.service';
 import { createIncident } from '../../incident/incident.service';

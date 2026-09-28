@@ -48,7 +48,7 @@ export async function outboxWorkerHandler({ event, step }: { event: { data: Secu
 
         // 1. Authorize & Establish State (In Transaction)
         await step.run('authorize-and-record-email', async () => {
-          return await withJobContext(event.data, async (tx) => {
+          return await withJobContext(event.data, async (_tx) => {
             return { success: true };
           });
         });
@@ -90,7 +90,7 @@ export async function outboxWorkerHandler({ event, step }: { event: { data: Secu
         const idempotencyKey = event.data.jobId;
         
         await step.run('authorize-and-record-sms', async () => {
-          return await withJobContext(event.data, async (tx) => {
+          return await withJobContext(event.data, async (_tx) => {
             return { success: true };
           });
         });
@@ -134,7 +134,7 @@ export async function outboxWorkerHandler({ event, step }: { event: { data: Secu
         const idempotencyKey = event.data.jobId;
 
         await step.run('authorize-and-record-call', async () => {
-          return await withJobContext(event.data, async (tx) => {
+          return await withJobContext(event.data, async (_tx) => {
             return { success: true };
           });
         });

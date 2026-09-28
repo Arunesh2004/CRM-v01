@@ -1,7 +1,6 @@
 import { Prisma } from '@prisma/client';
 import { CreateTaskInput } from '../crm.types';
 import { requireRelationOwnership } from '@/lib/auth/relation-auth';
-import { EventBus } from '../../core/events/event-bus';
 import { NotificationService } from '../../notifications/notification.service';
 import { NotificationType } from '@prisma/client';
 

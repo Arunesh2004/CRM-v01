@@ -1,0 +1,1 @@
+const dotenv = require('dotenv'); const fs = require('fs'); const env = dotenv.parse(fs.readFileSync('temp_db_pull/.env')); console.log('PUB:', env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY ? env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY.substring(0, 15) : 'missing');  

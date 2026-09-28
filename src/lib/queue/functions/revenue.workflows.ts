@@ -2,7 +2,6 @@ import { inngest } from '../inngest.client';
 import { withJobContext } from '../worker';
 import { DocumentProviderFactory } from '../../providers/document/document-provider.factory';
 import { uploadFile } from '../../providers/storage/s3.provider';
-import prisma from '../../../../database/utils/prisma';
 import fs from 'fs';
 import path from 'path';
 import os from 'os';

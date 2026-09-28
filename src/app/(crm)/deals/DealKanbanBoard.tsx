@@ -117,8 +117,7 @@ function KanbanColumn({ stage, handleDragStart, handleDragOver, handleDrop, rout
               <div className="text-xs text-muted-foreground mb-2 line-clamp-1">
                 
                 {(deal.customer as any)?.company || deal.customer?.name || 'No Customer'}
-              // eslint-disable-next-line @typescript-eslint/no-explicit-any -- S2 Residual Debt: Legacy internal payload — typed Prisma/API result shape requires architectural schema work deferred to S3
-              </div>
+                </div>
               <div className="flex justify-between items-center text-xs">
                 <span className="font-semibold">${deal.value.toLocaleString()}</span>
                 <Badge variant="outline" className="text-[10px]">{deal.probability ?? stage.probability}%</Badge>

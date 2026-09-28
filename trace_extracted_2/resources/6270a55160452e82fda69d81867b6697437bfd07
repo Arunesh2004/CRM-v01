@@ -1,0 +1,128 @@
+# Instructions
+
+- Following Playwright test failed.
+- Explain why, be concise, respect Playwright best practices.
+- Provide a snippet of code with the fix, if possible.
+
+# Test info
+
+- Name: src\tests\e2e\internal-chat.spec.ts >> Phase 15B: Internal Chat E2E (Dual-Browser) >> Admin sends message -> Employee receives realtime -> Employee replies
+- Location: src\tests\e2e\internal-chat.spec.ts:4:7
+
+# Error details
+
+```
+Error: expect(locator).toBeVisible() failed
+
+Locator: locator('h1').filter({ hasText: 'Internal Chat' }).or(locator('h1').filter({ hasText: 'Inbox' }).or(getByRole('heading'))).first()
+Expected: visible
+Timeout: 15000ms
+Error: element(s) not found
+
+Call log:
+  - Expect "toBeVisible" with timeout 15000ms
+  - waiting for locator('h1').filter({ hasText: 'Internal Chat' }).or(locator('h1').filter({ hasText: 'Inbox' }).or(getByRole('heading'))).first()
+
+```
+
+```yaml
+- navigation:
+  - button "previous" [disabled]:
+    - img "previous"
+  - text: 1/ 1
+  - button "next" [disabled]:
+    - img "next"
+- img
+- text: Next.js 16.3.5 Turbopack
+- dialog "Runtime Error":
+  - text: Runtime Error
+  - button "Copy Error Info":
+    - img
+  - button "No related documentation found" [disabled]:
+    - img
+  - button "Attach Node.js inspector":
+    - img
+  - text: "Clerk: Handshake token verification failed: The provided Clerk Secret Key is invalid. Make sure that your Clerk Secret Key is correct. Contact support@clerk.com (reason=secret-key-invalid, token-carrier=undefined)."
+  - paragraph: Call Stack 10
+  - button "Show 10 ignore-listed frame(s)":
+    - text: Show 10 ignore-listed frame(s)
+    - img
+- contentinfo:
+  - region "Error feedback":
+    - paragraph:
+      - link "Was this helpful?":
+        - /url: https://nextjs.org/telemetry#error-feedback
+    - button "Mark as helpful"
+    - button "Mark as not helpful"
+- button "Open Next.js Dev Tools":
+  - img
+- button "Open issues overlay": 1 Issue
+- button "Collapse issues badge":
+  - img
+- alert
+```
+
+# Test source
+
+```ts
+  1  | import { test, expect } from './fixtures/auth.fixture';
+  2  | 
+  3  | test.describe('Phase 15B: Internal Chat E2E (Dual-Browser)', () => {
+  4  |   test('Admin sends message -> Employee receives realtime -> Employee replies', async ({ adminPage, empAPage }) => {
+  5  |     // Both users navigate to Chat
+  6  |     await adminPage.goto('/communication/chat');
+  7  |     await empAPage.goto('/communication/chat');
+  8  |     
+  9  |     // Wait for the UI to load
+> 10 |     await expect(adminPage.locator('h1', { hasText: 'Internal Chat' }).or(adminPage.locator('h1', { hasText: 'Inbox' }).or(adminPage.getByRole('heading'))).first()).toBeVisible({ timeout: 15000 });
+     |                                                                                                                                                                      ^ Error: expect(locator).toBeVisible() failed
+  11 |     
+  12 |     // Select the seeded conversation (Test MEMBER for Admin, Test TENANT_ADMIN for Emp A)
+  13 |     await adminPage.locator('text=Test MEMBER').click();
+  14 |     await empAPage.locator('text=Test TENANT_ADMIN').click();
+  15 |     
+  16 |     const messageInputAdmin = adminPage.locator('input[type="text"], textarea').last();
+  17 |     
+  18 |     const testMessage = `E2E Test from Admin - ${Date.now()}`;
+  19 |     await messageInputAdmin.waitFor({ state: 'visible', timeout: 10000 });
+  20 |     await messageInputAdmin.fill(testMessage);
+  21 |     await messageInputAdmin.press('Enter');
+  22 | 
+  23 |     // Admin sees message in their own DOM
+  24 |     await expect(adminPage.locator(`text=${testMessage}`).first()).toBeVisible();
+  25 | 
+  26 |     // Employee sees the message in their DOM (with or without refresh depending on realtime)
+  27 |     if (process.env.NEXT_PUBLIC_PUSHER_KEY) {
+  28 |       await expect(empAPage.locator(`text=${testMessage}`).first()).toBeVisible({ timeout: 5000 });
+  29 |     } else {
+  30 |       await empAPage.reload();
+  31 |       // Need to re-select conversation after reload
+  32 |       await empAPage.locator('text=Test TENANT_ADMIN').click();
+  33 |       await expect(empAPage.locator(`text=${testMessage}`).first()).toBeVisible({ timeout: 5000 });
+  34 |     }
+  35 | 
+  36 |     // Employee replies
+  37 |     const replyMessage = `E2E Reply from Employee - ${Date.now()}`;
+  38 |     const messageInputEmp = empAPage.locator('input[type="text"], textarea').last();
+  39 |     await messageInputEmp.fill(replyMessage);
+  40 |     await messageInputEmp.press('Enter');
+  41 | 
+  42 |     // Employee sees their own reply
+  43 |     await expect(empAPage.locator(`text=${replyMessage}`).first()).toBeVisible();
+  44 | 
+  45 |     // Admin sees the reply
+  46 |     if (process.env.NEXT_PUBLIC_PUSHER_KEY) {
+  47 |       await expect(adminPage.locator(`text=${replyMessage}`).first()).toBeVisible({ timeout: 5000 });
+  48 |     } else {
+  49 |       await adminPage.reload();
+  50 |       await adminPage.locator('text=Test MEMBER').click();
+  51 |       await expect(adminPage.locator(`text=${replyMessage}`).first()).toBeVisible({ timeout: 5000 });
+  52 |     }
+  53 |     
+  54 |     // Reload and verify persistence
+  55 |     await adminPage.reload();
+  56 |     await expect(adminPage.locator(`text=${replyMessage}`).first()).toBeVisible({ timeout: 10000 });
+  57 |   });
+  58 | });
+  59 | 
+```

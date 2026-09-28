@@ -4,7 +4,6 @@ import { SecureJobEnvelope } from '../types';
 import { AIProviderFactory } from '../../providers/ai/ai-provider.factory';
 import { CameraEventService } from '@/modules/cctv/camera-event.service';
 import { generateSignedDownloadUrl } from '@/lib/providers/storage/s3.provider';
-import globalPrisma from '@db/utils/prisma';
 import { Logger } from '@/lib/logger/logger';
 
 export const cctvVisionWorker = inngest.createFunction(
@@ -81,7 +80,7 @@ export const cctvVisionWorker = inngest.createFunction(
         try {
           // Short lived URL (e.g., 5 mins)
           signedUrl = await generateSignedDownloadUrl(recording.storageKey, 300);
-        } catch (e) {
+        } catch (_e) {
           Logger.error('[CCTV Vision] Failed to generate signed URL for recording', { recordingId });
           throw new Error('STORAGE_ACCESS_DENIED');
         }

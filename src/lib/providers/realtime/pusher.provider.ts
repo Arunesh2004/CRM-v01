@@ -43,7 +43,7 @@ export class PusherRealtimeAdapter extends RealtimeAdapter {
 
 export class DegradedRealtimeAdapter extends RealtimeAdapter {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  async publishToUser(tenantId: string, userId: string, event: string, payload: any): Promise<void> {
+  async publishToUser(tenantId: string, userId: string, event: string, _payload: any): Promise<void> {
     logger.warn('Realtime delivery skipped: REALTIME_PROVIDER_NOT_CONFIGURED', { tenantId, userId, event });
     // Intentionally no fake success, but we don't throw to prevent breaking DB persistence for chat.
     if (event === 'incoming-call' || event.startsWith('webrtc-')) {
@@ -52,7 +52,7 @@ export class DegradedRealtimeAdapter extends RealtimeAdapter {
   }
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  async publishToChannel(tenantId: string, channelId: string, event: string, payload: any): Promise<void> {
+  async publishToChannel(tenantId: string, channelId: string, event: string, _payload: any): Promise<void> {
     logger.warn('Realtime delivery skipped: REALTIME_PROVIDER_NOT_CONFIGURED', { tenantId, channelId, event });
   }
 }

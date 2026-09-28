@@ -1,0 +1,399 @@
+\next.config.ts:36 - default
+\prisma.config.ts:4 - default
+\src\instrumentation.ts:3 - register
+\src\middleware.ts:170 - default
+\src\middleware.ts:193 - config
+\.next\types\routes.d.ts:122 - ParamsOf
+\.next\types\routes.d.ts:129 - PageRoutes (used in module)
+\.next\types\routes.d.ts:129 - RedirectRoutes (used in module)
+\.next\types\routes.d.ts:129 - RewriteRoutes (used in module)
+\src\app\error.tsx:5 - default
+\src\app\layout.tsx:31 - default
+\src\app\layout.tsx:26 - metadata
+\src\app\loading.tsx:1 - default
+\src\app\not-found.tsx:3 - default
+\src\app\page.tsx:3 - default
+\src\config\features.ts:1 - features
+\src\config\features.ts:9 - ProviderType
+\src\hooks\useMediaMTXWebRTC.ts:12 - WebRTCState (used in module)
+\src\hooks\useRealtimeChat.ts:10 - useRealtimeChat
+\src\hooks\useWebRTCCall.ts:15 - CallState (used in module)
+\src\lib\env.ts:40 - env (used in module)
+\src\lib\idempotency.ts:16 - isIdempotencyKeyConflict (used in module)
+\src\lib\idempotency.ts:42 - canonicalHash (used in module)
+\src\lib\idempotency.ts:14 - IdempotencyOperation (used in module)
+\src\lib\system-user.ts:4 - getSystemUser
+\src\lib\tenant-context.ts:11 - getCurrentTenantContext
+\src\lib\webhook.ts:4 - WebhookSecurity
+\src\workers\cctv-ingestion-daemon.ts:14 - processIngestionJobs (used in module)
+\.next\dev\types\routes.d.ts:122 - ParamsOf
+\.next\dev\types\routes.d.ts:129 - PageRoutes (used in module)
+\.next\dev\types\routes.d.ts:129 - RedirectRoutes (used in module)
+\.next\dev\types\routes.d.ts:129 - RewriteRoutes (used in module)
+\src\app\(crm)\layout.tsx:9 - default
+\src\app\(crm)\layout.tsx:7 - dynamic
+\src\app\(crm)\loading.tsx:1 - default
+\src\app\accept-invite\page.tsx:8 - default
+\src\app\onboarding\page.tsx:5 - default
+\src\components\ai\ChatInterface.tsx:5 - ChatInterface
+\src\components\cctv\CameraForm.tsx:9 - CameraForm
+\src\components\cctv\CameraStreamPlayer.tsx:8 - CameraStreamPlayerProps (used in module)
+\src\components\crm\ActivityTimeline.tsx:5 - default
+\src\components\crm\CallCustomerButton.tsx:11 - CallCustomerButton
+\src\components\crm\CustomerTable.tsx:14 - default
+\src\components\crm\DocumentList.tsx:18 - DocumentInfo (used in module)
+\src\components\crm\LeadTable.tsx:24 - default
+\src\components\crm\TaskBoard.tsx:6 - default
+\src\components\incident\IncidentClientTable.tsx:12 - IncidentClientTable
+\src\components\ui\Badge.tsx:4 - BadgeProps (used in module)
+\src\components\ui\button.tsx:5 - ButtonProps (used in module)
+\src\components\ui\Card.tsx:65 - GlassPanel
+\src\components\ui\dialog.tsx:159 - DialogClose (used in module)
+\src\components\ui\dialog.tsx:164 - DialogOverlay (used in module)
+\src\components\ui\dialog.tsx:165 - DialogPortal (used in module)
+\src\components\ui\dropdown-menu.tsx:253 - DropdownMenuPortal (used in module)
+\src\components\ui\dropdown-menu.tsx:256 - DropdownMenuGroup (used in module)
+\src\components\ui\dropdown-menu.tsx:257 - DropdownMenuLabel (used in module)
+\src\components\ui\dropdown-menu.tsx:259 - DropdownMenuCheckboxItem (used in module)
+\src\components\ui\dropdown-menu.tsx:260 - DropdownMenuRadioGroup (used in module)
+\src\components\ui\dropdown-menu.tsx:261 - DropdownMenuRadioItem (used in module)
+\src\components\ui\dropdown-menu.tsx:262 - DropdownMenuSeparator (used in module)
+\src\components\ui\dropdown-menu.tsx:263 - DropdownMenuShortcut (used in module)
+\src\components\ui\dropdown-menu.tsx:264 - DropdownMenuSub (used in module)
+\src\components\ui\dropdown-menu.tsx:265 - DropdownMenuSubTrigger (used in module)
+\src\components\ui\dropdown-menu.tsx:266 - DropdownMenuSubContent (used in module)
+\src\components\ui\select.tsx:190 - Select (used in module)
+\src\components\ui\select.tsx:191 - SelectContent (used in module)
+\src\components\ui\select.tsx:192 - SelectGroup (used in module)
+\src\components\ui\select.tsx:193 - SelectItem (used in module)
+\src\components\ui\select.tsx:194 - SelectLabel (used in module)
+\src\components\ui\select.tsx:195 - SelectScrollDownButton (used in module)
+\src\components\ui\select.tsx:196 - SelectScrollUpButton (used in module)
+\src\components\ui\select.tsx:197 - SelectSeparator (used in module)
+\src\components\ui\select.tsx:198 - SelectTrigger (used in module)
+\src\components\ui\select.tsx:199 - SelectValue (used in module)
+\src\components\ui\table.tsx:107 - Table (used in module)
+\src\components\ui\table.tsx:108 - TableHeader (used in module)
+\src\components\ui\table.tsx:109 - TableBody (used in module)
+\src\components\ui\table.tsx:110 - TableFooter (used in module)
+\src\components\ui\table.tsx:111 - TableHead (used in module)
+\src\components\ui\table.tsx:112 - TableRow (used in module)
+\src\components\ui\table.tsx:113 - TableCell (used in module)
+\src\components\ui\table.tsx:114 - TableCaption (used in module)
+\src\infrastructure\cache\provider.cache.ts:1 - IProviderCache (used in module)
+\src\infrastructure\calling\call.interface.ts:1 - CallParticipantConfig
+\src\infrastructure\providers\base.interface.ts:1 - ProviderHealthStatus (used in module)
+\src\infrastructure\providers\base.interface.ts:2 - ProviderCriticality (used in module)
+\src\infrastructure\realtime\factory.ts:5 - RealtimeFactory
+\src\lib\auth\relation-auth.ts:7 - TenantScopedModel (used in module)
+\src\lib\cache\redis.client.ts:14 - createRateLimiter (used in module)
+\src\lib\config\observability.ts:28 - captureException
+\src\lib\config\observability.ts:35 - captureMessage
+\src\lib\config\observability.ts:4 - logger (used in module)
+\src\lib\encryption\prisma-extension.ts:11 - withEncryptionContext
+\src\lib\observability\context.ts:4 - RequestContext (used in module)
+\src\lib\observability\error-tracker.ts:4 - ErrorTrackerOptions (used in module)
+\src\lib\observability\error-tracker.ts:14 - ErrorTracker (used in module)
+\src\lib\observability\logger.ts:4 - LogLevel (used in module)
+\src\lib\observability\metrics.ts:3 - MetricName (used in module)
+\src\lib\observability\metrics.ts:11 - MetricTags (used in module)
+\src\lib\observability\metrics.ts:28 - Metrics (used in module)
+\src\lib\observability\metrics.ts:42 - metrics
+\src\lib\observability\ObservabilityProvider.ts:1 - MetricTags (used in module)
+\src\lib\observability\ObservabilityProvider.ts:7 - ObservabilityProvider
+\src\lib\observability\redact.ts:99 - injectContext
+\src\lib\queue\inngest.client.ts:5 - Events (used in module)
+\src\lib\queue\types.ts:3 - SecureJobEnvelopeSchema
+\src\lib\rate-limit\rate-limiter.ts:5 - RateLimitResult (used in module)
+\src\lib\security\concurrency-lock.ts:5 - ConcurrencyLockResult (used in module)
+\src\lib\security\headers.ts:11 - applySecurityHeaders
+\src\lib\security\headers.ts:1 - SECURITY_HEADERS (used in module)
+\src\lib\security\owner-guard.ts:4 - assertTenantOwner
+\src\lib\security\rate-limit.ts:3 - RateLimiter (used in module)
+\src\lib\security\rate-limit.ts:17 - MemoryRateLimiter (used in module)
+\src\lib\security\rate-limit.ts:43 - RedisRateLimiter (used in module)
+\src\lib\security\rate-limit.ts:77 - rateLimiter
+\src\lib\security\sanitization.ts:6 - sanitizeHtml
+\src\lib\security\sanitization.ts:20 - detectSqlInjection
+\src\lib\security\sanitization.ts:28 - checkPayloadLimit
+\src\lib\security\secrets.ts:1 - isSecretExposedToFrontend
+\src\lib\security\secrets.ts:16 - maskSecret
+\src\lib\security\ssrf.ts:27 - isBlockedIPv4 (used in module)
+\src\lib\security\ssrf.ts:76 - isBlockedIPv6 (used in module)
+\src\lib\security\tenant-guard.ts:10 - assertTenantOwnership (used in module)
+\src\lib\security\tenant-guard.ts:31 - assertUserTenant
+\src\lib\security\tenant-guard.ts:38 - assertRelationOwnership
+\src\lib\security\validations.ts:3 - CustomerSchema
+\src\lib\security\validations.ts:10 - LeadSchema
+\src\lib\security\validations.ts:17 - TaskSchema
+\src\lib\security\validations.ts:24 - IncidentSchema
+\src\lib\security\validations.ts:31 - AdminInviteSchema
+\src\lib\security\validations.ts:36 - validatePayload
+\src\lib\storage\index.ts:6 - getStorageProvider
+\src\lib\storage\index.ts:4 - StorageProvider (used in module)
+\src\lib\storage\index.ts:13 - LocalStorageProvider (used in module)
+\src\lib\storage\index.ts:13 - S3CompatibleStorageProvider (used in module)
+\src\lib\telephony\analytics.ts:3 - CallAnalyticsEventType (used in module)
+\src\lib\telephony\analytics.ts:9 - CallAnalytics
+\src\lib\telephony\number-management.ts:4 - TwilioNumberManagement
+\src\lib\telephony\presence.ts:3 - AgentPresenceState (used in module)
+\src\lib\telephony\recording-security.ts:3 - RecordingSecurity
+\src\lib\telephony\routing.ts:4 - RoutingRules (used in module)
+\src\lib\utils\date-range.ts:4 - DateRangeSchema (used in module)
+\src\lib\utils\date-resolver.ts:11 - SemanticTimeframe (used in module)
+\src\lib\utils\date-resolver.ts:22 - DateRange (used in module)
+\src\lib\webhooks\webhook.service.ts:4 - checkDuplicateEvent (used in module)
+\src\lib\webhooks\webhook.service.ts:11 - receiveWebhook
+\src\lib\webhooks\webhook.service.ts:37 - verifyWebhook
+\src\lib\webhooks\webhook.service.ts:57 - markProcessed
+\src\lib\webhooks\webhook.service.ts:67 - markFailed
+\src\modules\ai-events\ai-event.service.ts:38 - ingestAIEventWebhook
+\src\modules\cctv\camera-event.service.ts:7 - VisionOutputSchema (used in module)
+\src\modules\cctv\camera.service.ts:104 - getCameraById
+\src\modules\cctv\stream.service.ts:61 - invalidateStreamAccess
+\src\modules\communication\adapter.ts:9 - MockRealtimeAdapter
+\src\modules\communication\attachment.service.ts:4 - AttachmentService
+\src\modules\communication\call.service.ts:4 - CallService
+\src\modules\communication\communication.types.ts:15 - CreateMessageInput
+\src\modules\communication\communication.types.ts:29 - InternalCommunication
+\src\modules\communication\communication.types.ts:42 - ExternalCommunication
+\src\modules\core\types.ts:1 - PaginationMeta (used in module)
+\src\modules\notifications\notification.service.ts:6 - CreateNotificationParams (used in module)
+\src\modules\recovery\restore.engine.ts:10 - requestRestore
+\src\modules\recovery\restore.engine.ts:89 - approveRestore
+\src\modules\recovery\restore.engine.ts:96 - executeRestore
+\src\modules\recovery\RestoreCoordinator.ts:22 - RestoreCoordinator
+\src\modules\recovery\RestoreWorker.ts:6 - RestoreWorker
+\src\modules\sales-intel\forecast.service.ts:6 - ForecastService
+\src\modules\tenant\tenant-lifecycle.service.ts:5 - requestTenantDeletion
+\src\modules\tenant\tenant.service.ts:5 - getTenantConfig
+\src\app\__clerk\[[...path]]\route.ts:19 - runtime
+\src\app\__clerk\[[...path]]\route.ts:21 - GET
+\src\app\__clerk\[[...path]]\route.ts:21 - POST
+\src\app\__clerk\[[...path]]\route.ts:21 - PUT
+\src\app\__clerk\[[...path]]\route.ts:21 - DELETE
+\src\app\__clerk\[[...path]]\route.ts:21 - PATCH
+\src\app\(crm)\admin\loading.tsx:2 - default
+\src\app\(crm)\admin\page.tsx:5 - default
+\src\app\(crm)\analytics\page.tsx:30 - default
+\src\app\(crm)\approvals\page.tsx:6 - default
+\src\app\(crm)\assistant\page.tsx:7 - default
+\src\app\(crm)\cameras\page.tsx:8 - default
+\src\app\(crm)\customers\loading.tsx:2 - default
+\src\app\(crm)\customers\page.tsx:14 - default
+\src\app\(crm)\dashboard\loading.tsx:2 - default
+\src\app\(crm)\dashboard\page.tsx:69 - default
+\src\app\(crm)\deals\page.tsx:13 - default
+\src\app\(crm)\departments\actions.ts:52 - deleteDepartmentAction
+\src\app\(crm)\departments\page.tsx:5 - default
+\src\app\(crm)\employees\page.tsx:7 - default
+\src\app\(crm)\incidents\loading.tsx:2 - default
+\src\app\(crm)\incidents\page.tsx:5 - default
+\src\app\(crm)\leads\loading.tsx:2 - default
+\src\app\(crm)\leads\page.tsx:15 - default
+\src\app\(crm)\locations\page.tsx:7 - default
+\src\app\(crm)\monitoring\page.tsx:5 - default
+\src\app\(crm)\notifications\actions.ts:23 - getUnreadNotificationsAction
+\src\app\(crm)\notifications\actions.ts:36 - markNotificationAsReadAction
+\src\app\(crm)\notifications\loading.tsx:2 - default
+\src\app\(crm)\notifications\page.tsx:5 - default
+\src\app\(crm)\products\page.tsx:8 - default
+\src\app\(crm)\quotes\page.tsx:10 - default
+\src\app\(crm)\reports\loading.tsx:2 - default
+\src\app\(crm)\reports\page.tsx:10 - default
+\src\app\(crm)\search\page.tsx:8 - default
+\src\app\(crm)\settings\loading.tsx:2 - default
+\src\app\(crm)\tasks\loading.tsx:2 - default
+\src\app\(crm)\tasks\page.tsx:15 - default
+\src\app\(crm)\territories\page.tsx:8 - default
+\src\app\(crm)\tickets\page.tsx:10 - default
+\src\app\api\approvals\route.ts:29 - GET
+\src\app\api\diagnostic\route.ts:110 - GET
+\src\app\api\export\route.ts:149 - GET
+\src\app\api\health\route.ts:34 - GET
+\src\app\api\inngest\route.ts:14 - GET
+\src\app\api\inngest\route.ts:14 - POST
+\src\app\api\inngest\route.ts:14 - PUT
+\src\app\api\live\route.ts:3 - GET
+\src\app\api\notifications\route.ts:6 - GET
+\src\app\api\quotes\route.ts:26 - GET
+\src\app\api\ready\route.ts:45 - GET
+\src\app\api\search\route.ts:87 - GET
+\src\app\api\territories\route.ts:26 - GET
+\src\app\api\tickets\route.ts:26 - GET
+\src\app\clerk-proxy\[[...path]]\route.ts:19 - runtime
+\src\app\clerk-proxy\[[...path]]\route.ts:21 - GET
+\src\app\clerk-proxy\[[...path]]\route.ts:21 - POST
+\src\app\clerk-proxy\[[...path]]\route.ts:21 - PUT
+\src\app\clerk-proxy\[[...path]]\route.ts:21 - DELETE
+\src\app\clerk-proxy\[[...path]]\route.ts:21 - PATCH
+\src\app\onboarding\profile\page.tsx:6 - default
+\src\app\sign-in\[[...sign-in]]\page.tsx:3 - default
+\src\app\sign-up\[[...sign-up]]\page.tsx:3 - default
+\src\infrastructure\providers\communication\DemoPhoneProvider.ts:5 - DemoPhoneProvider
+\src\infrastructure\providers\communication\TwilioProvider.ts:5 - TwilioProvider
+\src\infrastructure\providers\email\DemoEmailProvider.ts:5 - DemoEmailProvider
+\src\infrastructure\providers\email\ResendProvider.ts:5 - ResendProvider
+\src\infrastructure\providers\storage\DemoStorageProvider.ts:5 - DemoStorageProvider
+\src\infrastructure\providers\storage\S3StorageProvider.ts:6 - S3StorageProvider
+\src\lib\jobs\providers\bullmq.provider.ts:5 - BullMQProvider
+\src\lib\providers\ai\ai-provider.factory.ts:7 - SupportedAIProvider (used in module)
+\src\lib\providers\ai\ai-provider.interface.ts:103 - AIToolRequest (used in module)
+\src\lib\providers\ai\gemini-vision.provider.ts:5 - GeminiVisionProvider
+\src\lib\providers\ai\vision-provider.interface.ts:1 - VisionInputType (used in module)
+\src\lib\providers\email\email-provider.interface.ts:1 - EmailProvider
+\src\lib\providers\webhook\webhook-security.ts:3 - WebhookSecurity
+\src\lib\queue\functions\cctv.vision.ts:10 - cctvVisionWorker
+\src\lib\queue\functions\outbox.worker.ts:32 - outboxWorkerHandler (used in module)
+\src\lib\webhooks\providers\clerk-verifier.ts:4 - ClerkWebhookVerifier
+\src\lib\webhooks\providers\generic-verifier.ts:4 - GenericWebhookVerifier
+\src\modules\ai\actions\assistant.actions.ts:12 - ChatMessage (used in module)
+\src\modules\ai\memory\memory.service.ts:6 - AIMemoryService
+\src\modules\ai\observability\token.service.ts:5 - AIObservabilityService
+\src\modules\ai\providers\provider.factory.ts:5 - ProviderFactory
+\src\modules\ai\rag\embedding.service.ts:5 - EmbeddingService
+\src\modules\ai\tools\config.ts:3 - CanonicalAITool (used in module)
+\src\modules\ai-permissions\types\index.ts:3 - CreateAIToolInput
+\src\modules\ai-permissions\types\index.ts:11 - RequestAIExecutionInput
+\src\modules\ai-permissions\types\index.ts:18 - ApproveAIExecutionInput
+\src\modules\cctv\actions\camera.actions.ts:96 - updateCameraAction
+\src\modules\cctv\actions\camera.actions.ts:100 - deleteCameraAction
+\src\modules\cctv\actions\camera.actions.ts:102 - simulateAIEventAction
+\src\modules\communication\actions\call.actions.ts:29 - getCallsAction
+\src\modules\communication\actions\chat.actions.ts:29 - startChatAction
+\src\modules\communication\actions\inbox.actions.ts:19 - _sendInternalMailAction (used in module)
+\src\modules\communication\actions\inbox.actions.ts:40 - _getInboxAction (used in module)
+\src\modules\communication\actions\inbox.actions.ts:50 - _archiveMailAction (used in module)
+\src\modules\communication\actions\presence.actions.ts:8 - heartbeatAction
+\src\modules\communication\email\email.service.ts:8 - sendEmail (used in module)
+\src\modules\communication\messaging\messaging.service.ts:11 - sendMessage (used in module)
+\src\modules\communication\notification\notification.service.ts:14 - createNotification
+\src\modules\communication\notification\notification.service.ts:7 - CreateNotificationInput (used in module)
+\src\modules\communication\storage\storage.service.ts:4 - generateRecordingAccessUrl
+\src\modules\communication\telephony\telephony.service.ts:9 - createCall
+\src\modules\communication\telephony\telephony.service.ts:70 - completeCall
+\src\modules\communication\telephony\telephony.service.ts:81 - processCallRecording
+\src\modules\communication\telephony\telephony.service.ts:120 - requestAITranscript
+\src\modules\communication\telephony\telephony.service.ts:137 - completeAITranscript
+\src\modules\communication\telephony\telephony.service.ts:155 - requestAISummary
+\src\modules\communication\telephony\telephony.service.ts:171 - completeAISummary
+\src\modules\communication\telephony\telephony.service.ts:185 - getCalls
+\src\modules\communication\telephony\telephony.service.ts:193 - getRecordings
+\src\modules\communication\telephony\telephony.service.ts:201 - getTranscripts
+\src\modules\communication\telephony\telephony.service.ts:211 - getAISummaries
+\src\modules\communication\validators\call.schema.ts:3 - CreateCallSchema
+\src\modules\communication\validators\email.schema.ts:3 - CreateEmailSchema
+\src\modules\communication\validators\message.schema.ts:3 - CreateMessageSchema
+\src\modules\communication\validators\notification.schema.ts:3 - MarkNotificationReadSchema
+\src\modules\communication\webhook\webhook.service.ts:6 - WebhookSignatureService
+\src\modules\core\events\outbox.service.ts:86 - cleanupOutbox
+\src\modules\core\providers\email.provider.ts:5 - EmailProvider (used in module)
+\src\modules\core\providers\email.provider.ts:9 - CoreEmailProvider (used in module)
+\src\modules\crm\actions\customer.actions.ts:199 - createLocationAction
+\src\modules\crm\actions\deal.actions.ts:158 - getDealsAction
+\src\modules\crm\actions\location.actions.ts:78 - deleteLocationAction
+\src\modules\crm\activity\activity.service.ts:5 - createTimelineEntry
+\src\modules\crm\bulk\customer.bulk.service.ts:7 - MAX_SYNC_BULK_SIZE (used in module)
+\src\modules\crm\bulk\customer.bulk.service.ts:9 - CustomerBulkService
+\src\modules\crm\bulk\lead.bulk.service.ts:7 - MAX_SYNC_BULK_SIZE (used in module)
+\src\modules\crm\bulk\lead.bulk.service.ts:9 - LeadBulkService
+\src\modules\crm\bulk\task.bulk.service.ts:6 - MAX_SYNC_BULK_SIZE (used in module)
+\src\modules\crm\bulk\task.bulk.service.ts:8 - TaskBulkService
+\src\modules\crm\deal\pipeline.service.ts:20 - createPipeline
+\src\modules\crm\deal\pipeline.service.ts:42 - createPipelineStage
+\src\modules\crm\document\document.service.ts:141 - getDocument
+\src\modules\crm\document\document.service.ts:7 - CreateDocumentInput (used in module)
+\src\modules\crm\location\location.service.ts:80 - getLocationById
+\src\modules\incident\actions\incident.actions.ts:111 - createIncidentAction
+\src\modules\incident\actions\incident.actions.ts:119 - assignIncidentAction
+\src\modules\incident\validators\incident.schema.ts:4 - CreateIncidentSchema
+\src\modules\incident\validators\incident.schema.ts:13 - UpdateIncidentStatusSchema
+\src\modules\incident\validators\incident.schema.ts:18 - AssignIncidentSchema
+\src\modules\recovery\scheduler\RetentionPolicyService.ts:14 - RetentionPolicyService
+\src\modules\recovery\scheduler\RPOMonitor.ts:4 - RPOMetrics (used in module)
+\src\modules\recovery\scheduler\RPOMonitor.ts:13 - RPOMonitor
+\src\modules\security\field-security\field-security.service.ts:6 - SecurityLevel (used in module)
+\src\modules\security\roles\role-management.service.ts:7 - RoleManagementService
+\src\modules\security-events\types\index.ts:3 - CreateSecurityEventInput
+\src\modules\security-events\types\index.ts:15 - SecurityEventFilterParams
+\src\app\(crm)\admin\approvals\page.tsx:7 - default
+\src\app\(crm)\admin\approvals\page.tsx:5 - dynamic
+\src\app\(crm)\admin\audit\page.tsx:8 - default
+\src\app\(crm)\admin\field-security\page.tsx:8 - default
+\src\app\(crm)\admin\integrations\page.tsx:4 - default
+\src\app\(crm)\admin\permissions\page.tsx:8 - default
+\src\app\(crm)\admin\users\page.tsx:8 - default
+\src\app\(crm)\admin\workflows\page.tsx:8 - default
+\src\app\(crm)\cameras\[id]\page.tsx:11 - default
+\src\app\(crm)\communication\[conversationId]\page.tsx:4 - default
+\src\app\(crm)\communication\calls\page.tsx:5 - default
+\src\app\(crm)\communication\chat\page.tsx:4 - default
+\src\app\(crm)\communication\inbox\page.tsx:3 - default
+\src\app\(crm)\communication\mail\page.tsx:4 - default
+\src\app\(crm)\communication\notifications\page.tsx:3 - default
+\src\app\(crm)\customers\[id]\actions.ts:101 - initiateCall
+\src\app\(crm)\customers\[id]\loading.tsx:2 - default
+\src\app\(crm)\customers\[id]\page.tsx:18 - default
+\src\app\(crm)\deals\[id]\page.tsx:12 - default
+\src\app\(crm)\employees\[employeeId]\page.tsx:10 - default
+\src\app\(crm)\incidents\[id]\page.tsx:7 - default
+\src\app\(crm)\leads\[id]\page.tsx:13 - default
+\src\app\(crm)\quotes\[id]\page.tsx:10 - default
+\src\app\(crm)\reports\communication\page.tsx:10 - default
+\src\app\(crm)\reports\sales\page.tsx:10 - default
+\src\app\(crm)\reports\security\page.tsx:11 - default
+\src\app\(crm)\settings\audit\loading.tsx:4 - default
+\src\app\(crm)\settings\audit\page.tsx:7 - default
+\src\app\(crm)\settings\integrations\page.tsx:21 - default
+\src\app\(crm)\tasks\[id]\page.tsx:16 - default
+\src\app\(crm)\tasks\workload\page.tsx:8 - default
+\src\app\(crm)\tickets\[id]\page.tsx:7 - default
+\src\app\api\ai\copilot\route.ts:48 - POST
+\src\app\api\ai\scoring\route.ts:44 - POST
+\src\app\api\auth\accept-invite\route.ts:170 - POST
+\src\app\api\cron\ai-retention\route.ts:67 - GET
+\src\app\api\cron\process-cctv-invalidation\route.ts:141 - GET
+\src\app\api\cron\process-cctv-retention\route.ts:141 - GET
+\src\app\api\cron\process-outbox\route.ts:52 - GET
+\src\app\api\cron\process-outbox\route.ts:54 - POST
+\src\app\api\health\live\route.ts:10 - GET
+\src\app\api\health\ready\route.ts:74 - GET
+\src\app\api\notifications\read-all\route.ts:6 - POST
+\src\app\api\pusher\auth\route.ts:64 - POST
+\src\app\api\realtime\auth\route.ts:8 - POST
+\src\app\api\webhooks\clerk\route.ts:117 - POST
+\src\app\api\webhooks\ingest\route.ts:139 - POST
+\src\app\api\webhooks\resend\route.ts:120 - POST
+\src\app\api\webhooks\twilio\route.ts:12 - POST
+\src\app\api\webhooks\whatsapp\route.ts:101 - GET
+\src\app\api\webhooks\whatsapp\route.ts:103 - POST
+\src\lib\jobs\workers\email\send-email.worker.ts:7 - EmailJobContext (used in module)
+\src\lib\jobs\workers\email\send-email.worker.ts:11 - SendEmailWorker
+\src\lib\jobs\workers\messaging\send-whatsapp.worker.ts:7 - SendWhatsAppContext (used in module)
+\src\lib\jobs\workers\messaging\send-whatsapp.worker.ts:11 - SendWhatsAppWorker
+\src\lib\jobs\workers\telephony\make-call.worker.ts:7 - MakeCallJobContext (used in module)
+\src\lib\jobs\workers\telephony\make-call.worker.ts:11 - MakeCallWorker
+\src\lib\jobs\workers\telephony\process-recording.worker.ts:6 - ProcessRecordingContext (used in module)
+\src\modules\communication\email\templates\engine.ts:1 - renderEmailTemplate
+\src\modules\communication\email\templates\engine.ts:11 - BASIC_WELCOME_TEMPLATE
+\src\app\(crm)\communication\chat\[id]\page.tsx:10 - default
+\src\app\(crm)\communication\mail\[id]\page.tsx:9 - default
+\src\app\api\ai\copilot\execute\route.ts:116 - POST
+\src\app\api\communication\call\signaling\route.ts:13 - POST
+\src\app\api\documents\[id]\download\route.ts:57 - GET
+\src\app\api\internal\backup\run\route.ts:62 - POST
+\src\app\api\internal\demo-storage\[id]\route.ts:48 - GET
+\src\app\api\internal\telemetry\error\route.ts:8 - POST
+\src\app\api\notifications\[id]\read\route.ts:6 - POST
+\src\app\api\quotes\[id]\download\route.ts:64 - GET
+\src\app\api\webhooks\mediamtx\auth\route.ts:120 - POST
+\src\app\api\webhooks\mediamtx\record\route.ts:231 - POST
+\src\app\api\webhooks\resend\inbound\route.ts:79 - POST
+\src\app\api\webhooks\twilio\inbound\route.ts:102 - POST
+\src\app\api\webhooks\twilio\recording\route.ts:68 - POST
+\src\app\api\webhooks\twilio\status\route.ts:98 - POST
+\src\app\api\cctv\cameras\[id]\stream\route.ts:51 - GET
+\src\app\api\cctv\cameras\[id]\whep\route.ts:164 - OPTIONS
+\src\app\api\cctv\cameras\[id]\whep\route.ts:160 - POST
+\src\app\api\cctv\cameras\[id]\whep\route.ts:161 - DELETE
+\src\app\api\cctv\cameras\[id]\whep\route.ts:162 - PATCH

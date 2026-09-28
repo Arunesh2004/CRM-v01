@@ -1,0 +1,91 @@
+
+--- Achieve this first, Rest later.docx ---
+fileciteturn9file11         4.
+fileciteturn9file6         5.
+fileciteturn9file0turn9file6         Customers and contacts.
+fileciteturn9file7         7.
+fileciteturn9file4turn9file18         8.
+fileciteturn9file3turn9file13         Continue auditing realtime authorization and tenant-channel authorization.
+fileciteturn9file15         12.
+fileciteturn9file5         13.
+fileciteturn9file5         14.
+fileciteturn9file8turn9file10         16.
+fileciteturn9file11         17.
+fileciteturn9file15         18.
+fileciteturn9file8turn9file16         20.
+--- fresh Roadmap.docx ---
+
+--- Goal.docx ---
+
+--- How to handle credentials.docx ---
+
+--- Project and Progress details till 12th september 2026.docx ---
+fileciteturn205file17         ADMIN_EMAIL must never become a permanent authorization bypass.
+fileciteturn205file5         5.2 Database and Prisma fracture         A major historical problem was migration/schema divergence.
+fileciteturn205file9         5.3 Application-only isolation → PostgreSQL RLS         The project learned that tenantId filtering in application queries is not sufficient as the sole security boundary.
+fileciteturn205file12         5.4 Serverless workers → persistent external workers         Early designs placed long-running processing, filesystem operations and lease heartbeats in serverless/API execution.
+fileciteturn205file15         5.5 Fake CCTV → MediaMTX + worker architecture         The early CCTV presentation was effectively a simulated stream.
+fileciteturn205file15         5.6 Brittle credentials → provider health/degradation         Earlier providers could crash when credentials were absent and mock implementations had created a risk of fake success.
+fileciteturn205file1         5.7 Realtime correction         Persistent/local WebSocket assumptions were rejected for the Vercel architecture.
+fileciteturn205file14         6.
+This is different from secretly returning fake production results.
+fileciteturn205file6         AI has a different criticality: if Gemini or another AI provider is absent, an AI job may be explicitly skipped/failed with a deterministic reason such as MISSING_CREDENTIALS.
+fileciteturn205file1         9.
+External integrations                 Client-specific APIs                 Mock/test adapter returning contract-valid responses, explicit demo status and deterministic failures.
+fileciteturn204file0         Earlier S4.4 closure established focused Lead tests 8/8 and Deal tests 12/12, with the full security suite reported at the then-current 104 files / 704 tests.
+fileciteturn205file0         14.
+fileciteturn205file13         16.
+Serverless setInterval-based long-running worker/lease architecture must not return.
+fileciteturn205file14         22.
+fileciteturn205file18         The current roadmap also defines client deployment as a separate activity from codebase stabilization: provision isolated infrastructure, configure secrets, apply migrations, configure providers, deploy workers/CCTV where required, then smoke-test, security-test and hand over.
+fileciteturn205file13         25.
+--- Recent Updated - 02 Date _ 16th September 2026.docx ---
+fileciteturn299file0      The credential policy requires use of legitimate credentials only in their intended deployment, forbids printing/pasting/committing secrets, forbids copying production credentials into test, and requires missing optional providers to degrade explicitly rather than fabricate success.
+fileciteturn299file1turn299file3         3.
+fileciteturn299file17         Final production certification was not complete.
+4.3 WebRTC/STUN Finding         No dedicated STUN/TURN environment-variable contract was found in the inspected WebRTC hook.
+Pusher is a realtime/signaling service and does not itself provide TURN media traversal.
+Missing TURN must be reported as a real infrastructure limitation, not hidden by a test workaround.
+fileciteturn299file1turn299file3         9.
+fileciteturn299file15         10.
+STUN/TURN/network traversal limitations.
+If Pusher signaling succeeds but media cannot establish because there is no TURN or network traversal is restricted, the correct result is signaling PASS plus media BLOCKED/NOT TESTED—not a fabricated overall media PASS.
+fileciteturn299file9         Local/E2E credentials → local test infrastructure only.
+fileciteturn299file3         13.
+fileciteturn299file9         Admin and Employee are both real application viewpoints.
+fileciteturn299file15         14.
+fileciteturn299file0turn299file17         19.
+fileciteturn299file6turn299file13         How to handle credentials — credential storage, environment separation, provider activation and failure/degradation policy.
+fileciteturn299file1turn299file3         Before asking for credentials — pre-credential product gate, client demo workflow, credential manifest and Admin/tenant operating model.
+fileciteturn299file9         Testing Conditions — realtime/WebRTC, communication security, authorization and tenant-isolation conditions.
+fileciteturn299file15         fresh Roadmap — permanent architecture and real-provider/browser E2E requirements.
+fileciteturn299file8         Updates From fresh roadmap till now and Future Plan — historical continuity and evidence-first execution model.
+fileciteturn299file2turn299file18             END OF CHECKPOINT — 16 SEPTEMBER 2026           
+--- Recent updates 01 - Date _ 15th September 2026.docx ---
+Verified /api/live, /api/ready and /api/health return HTTP 200.
+Hosted Deployment Defects and Resolutions         5.1 Health endpoint routing defect      Hosted verification initially returned protection/rewrite behavior for /api/live and /api/ready.
+Hosted health endpoints subsequently returned 200.
+Post-Migration Schema Evidence                          Control               Final result                 AIAnalysisJob.tenantId               Exists; NOT NULL                 CameraStreamInvalidation.tenantId               Exists; NOT NULL                 CameraStreamInvalidation.cameraId               Exists; NOT NULL                 AIAnalysisJob → Tenant.id               FK verified                 CameraStreamInvalidation → Tenant.id               FK verified                 CameraStreamInvalidation → Camera.id               FK verified                 AIAnalysisJob_tenantId_idx               Verified                 CameraStreamInvalidation_tenantId_idx               Verified                 AIAnalysisJob RLS               Enabled                 AIAnalysisJob FORCE RLS               Enabled                 CameraStreamInvalidation RLS               Enabled                 CameraStreamInvalidation FORCE RLS               Enabled                 Tenant isolation policies               Verified on both affected tables          The foreign-key query returned exactly three required relationships.
+The index query returned exactly two required tenant indexes.
+--- Testing Conditions.docx ---
+fileciteturn284file0         2.
+fileciteturn284file4      The testing program must therefore prove both the product itself and the ability to operate it safely when optional providers are missing.
+fileciteturn284file2         3.
+fileciteturn284file12         ADMIN_EMAIL or similar bootstrap mechanisms must never become permanent authorization bypasses.
+fileciteturn285file7         5.
+fileciteturn285file7         12.
+fileciteturn285file1         Admin → Employee message and Employee → Admin reply.
+fileciteturn285file1         16.
+fileciteturn284file13         Customer/contact communication history.
+fileciteturn284file12         19.
+fileciteturn285file10         21.
+fileciteturn285file10         Camera CRUD and location ownership.
+fileciteturn285file12         22.
+fileciteturn285file17         24.
+fileciteturn284file12         Concurrent Admin/Employee requests.
+fileciteturn284file14         Admin login and complete Admin workflow pass.
+fileciteturn284file14                      Gate           Required Result             Admin           PASS             Employee           PASS             Core CRM           PASS             RBAC           PASS             Tenant isolation           PASS or explicitly scoped evidence             Internal communication           PASS or explicitly deferred with architecture evidence             External communication           Actual provider state recorded             CCTV           Actual capability state recorded             AI           Actual capability state recorded             Realtime           Actual capability state recorded             Observability           PASS             No critical/high security defect           PASS             Credential handling           PASS             Known limitations           Documented             Client demo           PASS             Credential request           ONLY AFTER ABOVE GATES            38.
+fileciteturn284file3turn285file6turn285file7           
+--- Updates From fresh roadmap till now and Future Plan.docx ---
+Step 2 — Medium Findings                          Finding               Result             G3 Notification limit           Strictly bounded/validated; invalid and excessive values return 400.
+Phase 12 — Repeatable Customer Provisioning: Detailed Execution      The commercial deployment model depends on turning a buyer's infrastructure into configuration rather than a new code fork.

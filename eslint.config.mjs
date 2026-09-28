@@ -12,6 +12,10 @@ const eslintConfig = defineConfig([
     "out/**",
     "build/**",
     "next-env.d.ts",
+    // Project specific ignores for generated/scratch artifacts
+    "scratch/**",
+    "dist/**",
+    "voice-bridge/dist/**"
   ])
 ]);
 

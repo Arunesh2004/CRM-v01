@@ -21,7 +21,7 @@ async function simulateProviderBehavior(providerName: string): Promise<void> {
 }
 
 export class LoadTestEmailProvider implements EmailProvider {
-  async sendEmail(tenantId: string, payload: any): Promise<any> {
+  async sendEmail(tenantId: string, _payload: any): Promise<any> {
     await simulateProviderBehavior('Email(Resend)');
     return { success: true, messageId: `mock-msg-${Date.now()}` };
   }
@@ -57,7 +57,7 @@ export class LoadTestMessagingProvider implements MessagingProvider {
 }
 
 export class LoadTestCameraProvider implements CameraProvider {
-  async getStreamStatus(cameraId: string): Promise<any> { return { active: true }; }
+  async getStreamStatus(_cameraId: string): Promise<any> { return { active: true }; }
   async getProviderHealth(): Promise<any> { return { healthy: true }; }
   async generateStreamToken(tenantId: string, cameraId: string): Promise<any> {
     await simulateProviderBehavior('Camera(MediaMTX)');
@@ -68,8 +68,8 @@ export class LoadTestCameraProvider implements CameraProvider {
 
 import { AIProvider, AIResponse, AITool } from './ai/ai-provider.interface';
 export class LoadTestAIProvider implements AIProvider {
-  async generateResponse(prompt: any): Promise<any> { return { success: true, text: 'mock' }; }
-  async generateContent(tenantId: string, systemPrompt: string, userPrompt: string, tools?: AITool[]): Promise<any> {
+  async generateResponse(_prompt: any): Promise<any> { return { success: true, text: 'mock' }; }
+  async generateContent(tenantId: string, _systemPrompt: string, _userPrompt: string, _tools?: AITool[]): Promise<any> {
     await simulateProviderBehavior('AI(Gemini)');
     return { success: true, text: `Mock AI Load Test Response for ${tenantId}`, tokensUsed: 150 };
   }

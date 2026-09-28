@@ -31,7 +31,7 @@ export const notificationWorker = inngest.createFunction(
     const tenantId = event.data.tenantId;
 
     // STEP 1: Idempotent Database Write
-    const notification = await step.run('create-notification-db', async () => {
+    const _notification = await step.run('create-notification-db', async () => {
       // Use DB-level idempotency to guarantee duplicate worker executions cannot create duplicate notifications
       return await withIdempotency(
         tenantId,

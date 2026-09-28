@@ -1,0 +1,950 @@
+--- Testing Conditions.docx ---
+ 
+            TESTING CONDITIONS            AI Security + Business CRM Platform            Admin → Employee → Full Workflow → Security → Communication → Credential Readiness      Purpose: a complete evidence-first testing specification for the CRM before customer credentials are requested.
+It defines what must be tested, how it must be tested, how positive and negative paths are handled, and what evidence is required.
+It is not a declaration that every capability is currently implemented or production-certified.
+        1.
+Governing Principles         Evidence beats assumptions: code existence is not runtime proof.
+        Test the real hosted deployment for hosted claims; distinguish code-only, automated-test, hosted, authenticated-E2E, provider-E2E and production-certified evidence.
+        Never weaken authentication, authorization, RLS/FORCE RLS, SSRF, rate limits, webhook validation or tenant boundaries to make a test pass.
+        Never invent provider success.
+Missing credentials must result in explicit demo/test behavior or safe degradation according to capability criticality.
+        Never paste passwords, API keys, database URLs, cookies, tokens or private secrets into chat, source control, reports or logs.
+        Use synthetic/demo data.
+Never alter real customer data during testing.
+        Every PASS requires reproducible evidence.
+Use PASS / FAIL / BLOCKED / DEFERRED / NOT APPLICABLE.
+        Test happy paths AND unauthorized, malformed, duplicate, stale, timeout, retry and provider-failure paths.
+        Do not call implementation maturity production certification.
+The project explicitly keeps these separate.
+fileciteturn284file0         2.
+Architectural Context      The current target architecture is one codebase with a separately provisioned deployment/environment/infrastructure/credential set per company.
+Deployment isolation is the outer boundary; tenant isolation, application authorization and PostgreSQL RLS remain security boundaries inside a deployment.
+External vendors belong behind provider contracts/adapters, so customer credentials should configure the deployment rather than require a rewrite of CRM business logic.
+fileciteturn284file4      The testing program must therefore prove both the product itself and the ability to operate it safely when optional providers are missing.
+The current roadmap specifically identifies provider E2E, realtime/browser E2E, CCTV infrastructure, AI provider behavior, chaos/data-loss testing, DR, scale, provisioning and final certification as evidence areas that cannot be replaced by source inspection.
+fileciteturn284file2         3.
+Test Actors                       Actor           Required State           What This Actor Must Prove             Admin           Authorized CRM Admin mapped to the correct Tenant           Complete administrative and business workflow; employee creation; role assignment; security boundaries; communications.
+            Employee           Created/provisioned by Admin and mapped to the same Tenant           Every page/action permitted by actual role; correct tenant scope; forbidden actions denied; internal collaboration.
+            Manager / Department Head           Only if implemented           Intermediate RBAC and approval/management boundaries.
+            Second Employee           Strongly recommended           Employee-to-employee chat/calls/mail, permissions and collaboration.
+            Second Tenant           If infrastructure permits           Real cross-tenant isolation across independent tenants/deployments.
+           4.
+Account and Credential Conditions         Admin logs in through the normal Clerk flow; no authentication bypass.
+        Admin creates/invites Employee through the intended onboarding flow.
+        Employee should establish their own credentials where invitation/activation supports that model; Admin should not permanently know or store employee passwords.
+        Unknown Clerk identities must be denied safely.
+        Inactive/deactivated employees must lose access according to the lifecycle policy.
+        Credentials must never appear in evidence.
+Credentials previously exposed in uncontrolled transcripts are treated as compromised and rotated through the secure provider/deployment workflow.
+fileciteturn284file12         ADMIN_EMAIL or similar bootstrap mechanisms must never become permanent authorization bypasses.
+fileciteturn285file7         5.
+Preconditions                      Condition           Required Evidence             Deployment           Known production/demo commit, successful build, READY deployment.
+            Database           Correct target, schema/migration state and required security controls.
+            Auth           Clerk sign-in, identity mapping and protected-route behavior.
+            Health           Live/ready/health endpoints behave as designed.
+            Secrets           No committed/logged/exposed secrets.
+            Providers           Each capability classified READY / MISSING / MISCONFIGURED / UNAVAILABLE / DEMO.
+            Browser           Fresh unauthenticated session plus authorized Admin/Employee sessions.
+            Data           Synthetic test dataset with unique identifiers.
+            Logs           Sanitized, useful runtime evidence with secret redaction.
+           6.
+Master Execution Sequence         Freeze the release under test and record deployment/commit.
+        Run unauthenticated protection and public-health smoke tests.
+        Admin signs in.
+        Verify Admin → CRM User → Tenant → Role/Permissions mapping.
+        Admin tests every accessible page.
+        Admin tests every meaningful button/action.
+        Admin completes core CRM workflows.
+        Admin creates/invites Employee and assigns the intended role/department.
+        Verify employee lifecycle and audit evidence.
+        Admin logs out.
+        Employee logs in.
+        Verify Employee → CRM User → Tenant → Role/Permissions.
+        Employee tests every accessible page and action.
+        Employee attempts representative forbidden Admin actions and verifies secure denial.
+        Test internal chat, internal mail and internal calling/presence where implemented.
+        Test customer/external communication according to actual provider state.
+        Inspect browser console/network and production logs.
+        Run security/tenant-boundary tests.
+        Clean synthetic data safely.
+        Produce the evidence matrix and certification decision.
+        7.
+ADMIN — LOGIN AND SESSION         Fresh browser cannot access protected CRM pages without authentication.
+        Admin sign-in succeeds through Clerk.
+        Authenticated identity maps to exactly one intended CRM User.
+        Tenant is resolved server-side; client-supplied tenant identifiers are not trusted.
+        Role/permission set is loaded from the database.
+        Direct URL navigation, refresh and normal navigation all preserve correct authorization.
+        Logout terminates usable application access.
+        Stale/invalid/inactive sessions fail safely.
+        API endpoints retain appropriate 401/403 behavior rather than inappropriate UI redirects.
+        8.
+ADMIN — COMPLETE PAGE AUDIT      Enumerate the actual current route inventory from the repository and UI.
+Every page available to the Admin must be opened and exercised.
+                     Area           Required tests             Dashboard           Cards, charts, links, data scope, loading, empty/error states, refresh.
+            Customers           List, search, filters, pagination, create, view, edit, archive/delete where supported.
+            Contacts           List, create, associate, edit, delete/archive, search/filter.
+            Leads           List, filter, create, edit, details, lifecycle/conversion if supported.
+            Deals           List, create, edit, customer/lead links, lifecycle/status, persistence.
+            Quotes           Create, versions, pricing/discounts where present, submit, approval state, download.
+            Approvals           Queue, approve/reject, permission checks, self-approval prevention.
+            Tasks/Activities           Create, assign, update, completion/timeline where implemented.
+            Tickets/Incidents           If present: create, assign, status, priority, timeline, authorization.
+            Reporting/Analytics           Charts, metrics, date/domain filters, drill-down, bounded exports.
+            Search           Normal, empty, invalid, result navigation, tenant/permission scope.
+            Notifications           Unread, read, polling/realtime behavior, user/tenant scope.
+            Admin           Users, roles, organization/company controls, audit/operational views.
+            Settings           All visible forms, validation, save, permissions, persistence.
+            CCTV           If exposed: camera, health, stream/recording, secure degradation.
+            AI           Assistant/tools, authorization, audit and provider degradation.
+            Communication           Customer communication plus internal communication capabilities.
+           9.
+ADMIN — BUTTON/ACTION AUDIT         Create / Save / Update / Cancel / Delete / Archive.
+        Search / Filter / Sort / Pagination / Date ranges.
+        Assign / Reassign / Convert / Status changes / Approve / Reject.
+        View details / Edit / Tabs / Modals / Dropdowns / Back/Next.
+        Export / Download / Print where available.
+        Mark read / Retry / Refresh / Reconnect where available.
+        Employee creation/invitation / role assignment / activation / deactivation.
+        Every action must show a truthful loading/disabled/error state when prerequisites are unavailable.
+        10.
+ADMIN — END-TO-END BUSINESS WORKFLOW         Login as Admin.
+        Verify organization/company and dashboard.
+        Create synthetic Customer.
+        Create/associate Contact.
+        Create Lead.
+        Convert/promote Lead where supported.
+        Create Deal linked to correct Customer/Lead.
+        Create Quote.
+        Submit Quote for approval.
+        Test approval authorization and self-approval prevention.
+        Verify notification/reporting/search consequences.
+        Edit and archive/delete synthetic records where supported.
+        Create Employee, assign department/role and activate/invite.
+        Verify employee record and lifecycle.
+        Test Admin ↔ Employee communication capabilities.
+        Logout.
+        11.
+EMPLOYEE CREATION AND ONBOARDING         Admin creates/invites employee through intended UI.
+        Correct Tenant/company is assigned.
+        Correct department/designation is assigned.
+        Correct role/permissions are assigned.
+        Duplicate identity is handled safely.
+        Unknown/unrecognized identity is denied.
+        Invitation/activation state is correct.
+        Employee is not accidentally granted Admin privileges.
+        Creation and role changes are auditable where designed.
+        Deactivation/archive removes access according to policy.
+        Employee identity lifecycle remains tied to database/RBAC authorization.
+The roadmap defines Company → Department → Department Head → Employee onboarding as a target workflow.
+fileciteturn285file7         12.
+EMPLOYEE — LOGIN AND COMPLETE AUDIT         Admin logs out fully.
+        Employee signs in normally.
+        Verify Clerk identity maps to the intended CRM User.
+        Verify exact Tenant.
+        Verify exact role and permissions.
+        Verify Employee does not inherit Admin permissions.
+        Open every Employee-visible page.
+        Exercise every Employee-visible action.
+        Refresh pages and verify persistence.
+        Attempt representative forbidden Admin operations.
+        Verify secure denial at the server, not merely hidden UI.
+        Logout and verify access is terminated.
+        13.
+EMPLOYEE — ROLE × FEATURE × ACTION      Generate the real matrix from the implemented RBAC/permission model.
+Do not invent role names.
+                          Feature           View           Create           Update           Delete/Archive           Approve/Administer           Employee Expected             Customers           Test           Test if permitted           Test if permitted           Test if permitted           No unless explicitly permitted           Actual RBAC             Leads           Test           Test if permitted           Test if permitted           Test if permitted           No unless permitted           Actual RBAC             Deals           Test           Test if permitted           Test if permitted           Test if permitted           No unless permitted           Actual RBAC             Quotes           Test           Test if permitted           Test if permitted           Test if permitted           Approval-specific           Actual RBAC             Reports           Test           N/A           Filters           Export if permitted           No admin controls           Actual RBAC             Employee management           Only if permitted           No unless permitted           No unless permitted           No unless permitted           No           Must be server-enforced             Internal chat           Test           Test           Policy-dependent           Policy-dependent           N/A           Tenant/user scoped             Internal mail           Test           Test           Policy-dependent           Policy-dependent           N/A           Tenant/user scoped             Internal calls           Test           Initiate/accept if permitted           N/A           Call-history policy           N/A           Authorized participants only            14.
+INTERNAL COMMUNICATION — CHAT      Internal communication is a distinct CRM capability.
+The roadmap calls for internal messaging, presence, notifications and employee communication alongside external provider-backed communication.
+fileciteturn285file1         Admin → Employee message and Employee → Admin reply.
+        Employee A → Employee B where available.
+        Unread/read state.
+        Conversation history and ordering.
+        Search where implemented.
+        Attachments where implemented.
+        Notifications.
+        Reconnect/offline behavior.
+        Duplicate send/idempotency.
+        Forged sender/recipient/conversation/tenant identifiers.
+        Cross-tenant conversation access.
+        Unauthorized message access.
+        15.
+INTERNAL COMMUNICATION — CALLING         Use CRM identity, not phone number, for internal participant selection.
+        Outgoing call invitation.
+        Incoming call notification.
+        Accept/reject/busy/missed call.
+        Audio/video state.
+        Mute/camera controls where implemented.
+        Hang-up and terminal state.
+        Call history/CallLog linkage.
+        One-active-call race protection.
+        Permission removal during call.
+        Invalid/stale signaling.
+        Cross-tenant call attempt.
+        Realtime outage/missing-provider degradation.
+        Real browser-to-browser WebRTC must not be called E2E-certified without the required realtime/browser media infrastructure; the roadmap explicitly identifies dual-user browser E2E as a separate requirement.
+fileciteturn285file1         16.
+INTERNAL COMMUNICATION — MAIL         Admin → Employee internal mail.
+        Employee → Admin reply.
+        Employee → Employee mail.
+        Inbox/sent/read/unread.
+        Attachments where implemented.
+        Search/archive/delete according to retention policy.
+        Tenant isolation.
+        No unintended external delivery.
+        Clear separation from provider-backed external email.
+        17.
+EXTERNAL / CLIENT COMMUNICATION      External communication remains separate from CRM-native internal communication.
+Provider-specific behavior must remain behind contracts/adapters; credentials should configure the deployment rather than rewrite business logic.
+fileciteturn284file13         Customer/contact communication history.
+        External email when configured.
+        SMS when configured.
+        Telephony when configured.
+        Inbound webhook.
+        Signature validation.
+        Replay and idempotency.
+        Provider timeout/retry.
+        Missing credential/misconfiguration behavior.
+        No fake sent/delivered state.
+        No unintended recipient.
+        18.
+SECURITY — AUTHORIZATION / TENANT / IDOR         Unknown user denied.
+        Inactive user denied.
+        Expired/stale session handled safely.
+        Admin-only route blocked for Employee.
+        Role changes take effect correctly.
+        Cross-tenant reads fail.
+        Cross-tenant updates fail.
+        Cross-tenant deletes/archive fail.
+        Cross-tenant search fails.
+        Cross-tenant downloads fail.
+        Forged tenantId fails.
+        Forged resource ID fails.
+        Forged ownerId/userId fails.
+        Mass assignment attempts fail.
+        RLS and application authorization both enforce the boundary; Prisma filters alone are not the sole security layer.
+fileciteturn284file12         19.
+SECURITY — COMMUNICATION / REALTIME         Forged sender.
+        Forged recipient.
+        Forged conversation ID.
+        Cross-tenant conversation access.
+        Attachment IDOR.
+        Unauthorized call initiation/acceptance.
+        Presence leakage.
+        Unauthorized group membership.
+        Realtime channel spoofing.
+        Token/session replay where applicable.
+        Permission removal while subscribed.
+        Malformed/stale signaling.
+        20.
+SECURITY — WEBHOOK / AI / WORKERS         Invalid/missing webhook signature.
+        Replay/duplicate webhook.
+        Unknown provider identifier.
+        Wrong tenant context.
+        Idempotency behavior.
+        AI prompt injection cannot bypass authorization.
+        AI tools are controlled and tenant-aware.
+        AI cannot access unrestricted SQL/database operations.
+        Worker leases expire safely.
+        Fencing prevents stale worker writes.
+        Duplicate jobs/events are idempotent.
+        Poison jobs are handled.
+        Worker crash/recovery is safe.
+        Persistent CCTV work is not performed by Vercel serverless routes.
+fileciteturn285file10         21.
+CCTV / SECURITY OPERATIONS      Where CCTV is exposed, test the operational chain separately from code-only security.
+The intended architecture is Camera → Stream → Recording → authenticated webhook → ingestion job → node-affine worker → verified storage → AI job/event.
+fileciteturn285file10         Camera CRUD and location ownership.
+        RTSP credential encryption/protection.
+        SSRF protections including private/loopback/cloud-metadata/network edge cases.
+        Opaque stream path/token behavior.
+        Recording IDOR.
+        Signed playback/download authorization.
+        Webhook HMAC/authentication, nonce/replay/idempotency.
+        Node affinity and lease fencing.
+        Stale worker write rejection.
+        Partial upload / storage failure.
+        Worker crash before/after upload.
+        Disk pressure.
+        Local recording deletion only after verified durable storage and durable DB confirmation.
+fileciteturn285file12         22.
+AI TESTING         AI capability state is explicit.
+        Missing credentials produce safe skip/failure or explicitly marked demo mode.
+        Real provider output is never fabricated.
+        Tool calls are authorized per user/tenant.
+        Approval-sensitive actions are gated.
+        Prompt injection cannot cross authorization boundaries.
+        AI results do not leak secrets.
+        AI provider timeout/retry/degradation is deterministic.
+        AI actions/tool calls are audited appropriately.
+        CCTV AI is not treated as production-real until the real CCTV pipeline is proven.
+        23.
+PROVIDER-MISSING CONDITIONS                       Capability           Missing Credential/Infrastructure           Required Behavior             AI           Gemini or selected provider absent           Explicit degraded/demo state; never fake production inference.
+            External Email           Resend/selected provider absent           No external send; no fake delivered state.
+            SMS/Telephony           Twilio/other absent           No unintended send/call; explicit degradation.
+            Realtime           Managed provider absent           Safe polling/demo/unavailable state; authorization remains enforced.
+            CCTV           MediaMTX/camera absent           No fake stream/recording/token.
+            Storage           S3/R2/etc.
+absent           No fake durable upload or signed URL.
+            Workers           Inngest/worker infrastructure absent           No false completion; safe retry/quarantine semantics.
+            Redis           Unavailable           No security bypass; capability blocks/degrades according to criticality.
+        The project explicitly requires missing optional providers to degrade safely, while critical capabilities must block/retry/quarantine rather than fabricate success.
+fileciteturn285file17         24.
+DATA INTEGRITY / BUSINESS RULES         Customer/contact relationships remain valid.
+        Lead lifecycle remains consistent.
+        Deal → Customer/Lead relationships are validated.
+        Deal → Quote relationship is validated.
+        Quote approval transitions are valid.
+        Self-approval prevention works.
+        Duplicate requests/submissions are safely handled where idempotency is required.
+        Soft-delete/archive rules are respected.
+        Audit events occur where designed.
+        Commercial money precision/rounding rules remain unchanged during testing.
+        Test data cleanup never touches unrelated real records.
+        25.
+REPORTING / SEARCH / EXPORT         Dashboard metrics use correct tenant data.
+        Date filters are server-enforced.
+        Domain filters work.
+        Search is tenant/permission scoped.
+        Empty results are safe.
+        Pagination works.
+        CSV export is a real file, correctly scoped, or honestly unavailable/degraded.
+        Quote/download behavior is real or honestly degraded.
+        Exports respect authorization and rate limits.
+        No large unbounded export path is introduced merely for testing.
+        26.
+NOTIFICATIONS / REALTIME         Notification creation.
+        User-specific scope.
+        Tenant-specific scope.
+        Unread/read persistence.
+        Polling fallback.
+        Managed channel authorization where enabled.
+        Cross-tenant channel spoofing.
+        Duplicate suppression.
+        Retry/backoff/dead-letter behavior where applicable.
+        Permission removal during realtime subscription.
+        27.
+BROWSER / UI QUALITY         No React/hydration errors.
+        No blank authenticated pages.
+        No unexplained console-critical errors.
+        No unexplained 500/502/503 requests.
+        Loading states work.
+        Empty states work.
+        Error states are truthful and usable.
+        Navigation and refresh work.
+        Buttons do not silently do nothing.
+        Forms validate correctly.
+        UI does not claim success before the backend confirms it.
+        Responsive behavior is acceptable for the supported client workflow.
+        28.
+OBSERVABILITY / OPERATIONS         Application errors are structured and traceable.
+        Secrets are redacted.
+        Provider errors expose capability state without secrets.
+        Health/readiness/liveness reflect dependency state.
+        AUTH_BOOTSTRAP/system-operation errors are visible.
+        Database connection/pooling failures are observable.
+        Worker queue/lease/retry state is observable where applicable.
+        Provider outages can be diagnosed from logs without exposing customer secrets.
+        29.
+SCALE / CONCURRENCY      Use measured evidence.
+Historical load evidence is not a blanket enterprise guarantee; final topology must be tested separately.
+The project recorded approximately 375.94 ops/sec at concurrency 50 with zero P2028 and a noisy-neighbor degradation result around 42.11%.
+fileciteturn284file12         Concurrent Admin/Employee requests.
+        Concurrent CRUD.
+        Concurrent searches and pagination.
+        Concurrent notifications/outbox work.
+        Concurrent communication events.
+        Database connection/pooling behavior.
+        Rate limiting and abuse controls.
+        Duplicate requests/jobs.
+        p50/p95/p99 latency and error rate.
+        30.
+Credential-Readiness Gate      Before asking a client for credentials, prove the CRM is a working hosted product independently of those credentials.
+The existing acceptance document requires important pages/actions, authentication, authorization, tenant isolation, database security, honest degradation and provider-specific activation readiness before credential collection.
+fileciteturn284file14         Admin login and complete Admin workflow pass.
+        Admin can create/invite Employee through the intended lifecycle.
+        Employee login and complete permitted workflow pass.
+        Forbidden Employee actions are server-side denied.
+        Core CRM workflows are usable end-to-end.
+        Important buttons/actions have been exercised.
+        Internal communication capabilities are either working or explicitly documented as unimplemented/deferred.
+        External providers are optional for core functionality and degrade honestly.
+        Tenant/RLS/RBAC/IDOR evidence is satisfactory.
+        No unresolved critical/high security defect remains.
+        Known limitations are documented.
+        Secure credential collection and per-company secret storage are prepared.
+        Customer credentials will activate infrastructure, not rescue unfinished core product.
+        31.
+Client Demonstration Script         Open a clean browser.
+        Admin signs in.
+        Admin demonstrates dashboard and navigation.
+        Admin demonstrates Customers → Contacts → Leads → Deals → Quotes → Approvals → Reporting/Search.
+        Admin demonstrates important buttons/actions.
+        Admin demonstrates notifications and communication.
+        Admin opens Employee Management.
+        Admin creates/invites Employee and assigns role/department.
+        Admin verifies employee state.
+        Admin logs out.
+        Employee signs in.
+        Employee demonstrates dashboard and every permitted page.
+        Employee demonstrates every permitted CRM action.
+        Employee attempts a representative forbidden Admin action and receives secure denial.
+        Employee communicates with Admin through available internal channels.
+        Admin responds.
+        Provider-dependent external capabilities are shown only with truthful READY/DEMO/DEGRADED labels.
+        Logout and review known limitations.
+        32.
+Evidence Matrix Template                             Test ID           Actor           Area           Action           Expected           Actual           Evidence           Status           Release                                                                     PASS/FAIL/BLOCKED                                                                             PASS/FAIL/BLOCKED                                                                             PASS/FAIL/BLOCKED                                                                             PASS/FAIL/BLOCKED                                                                             PASS/FAIL/BLOCKED                    33.
+Status Definitions                      Status           Meaning             PASS           Executed and expected behavior observed with evidence.
+            FAIL           Executed and requirement not met.
+            BLOCKED           Required authorized identity, infrastructure, provider, browser capability or other prerequisite unavailable.
+            DEFERRED           Explicitly outside the current phase and recorded on roadmap.
+            NOT APPLICABLE           Capability is not selected/implemented for this deployment and does not constitute a defect.
+            CODE VERIFIED ONLY           Implementation/test evidence exists but requested runtime execution was not performed.
+            UNVALIDATED           Insufficient evidence for a runtime claim.
+           34.
+Final Certification Levels                      Decision           Meaning             READY FOR CLIENT DEMO           Admin + Employee hosted workflows, important UI/actions and critical security behavior have actually been exercised; no demo-blocking defect remains.
+            CONDITIONALLY READY           Demo is usable but a named non-core evidence/provider/infrastructure condition remains.
+            NOT READY           A product, UI, security, authorization, data-integrity or deployment defect prevents a trustworthy demo.
+            BLOCKED           Required proof cannot be generated because an authorized identity/infrastructure/test capability is unavailable.
+            READY TO REQUEST CREDENTIALS           Client-demo gate passed and secure provider credential collection/activation is prepared.
+            FULLY PRODUCTION CERTIFIED           Separate final deployment-specific provider, DR, scale, operational, provisioning and security certification has passed.
+           35.
+Non-Negotiable Negative Tests         Unknown user → DENY.
+        Inactive user → DENY.
+        Employee → Admin-only action → DENY.
+        Tenant A → Tenant B resource → DENY.
+        Forged tenantId → IGNORE/DENY.
+        Forged resource owner → DENY.
+        Invalid webhook signature → DENY.
+        Replay webhook → reject/suppress.
+        Duplicate event → idempotent.
+        AI prompt injection → authorization unchanged.
+        Missing provider credential → explicit degradation, not fake success.
+        Storage failure → never claim durable recording.
+        Stale worker → write rejected by fencing.
+        Realtime channel spoof → DENY.
+        Unauthorized attachment/download → DENY.
+        Expired session → DENY.
+        Logout → protected operation no longer succeeds.
+        36.
+What Must Never Be Claimed         Do not call a code-only feature E2E verified.
+        Do not call a local test production-certified.
+        Do not call a missing-provider capability operational.
+        Do not call physical two-deployment isolation proven without an actual A/B test.
+        Do not call DR proven without a restore drill.
+        Do not call WebRTC browser-to-browser E2E proven without the required dual-user/browser/media infrastructure.
+        Do not call AI production inference proven when the real provider was not exercised.
+        Do not call CCTV operationally proven without the real stream/recording/storage/worker chain.
+        Do not call enterprise scale proven from historical load tests alone.
+        Do not request customer credentials to hide an unfinished core product.
+        37.
+Final Release Gate      The final decision must be based on the complete evidence matrix.
+The project's documented one-line rule is: show the working product, prove security and architecture, confirm required integrations, request only necessary credentials, activate one provider at a time, E2E verify, then certify.
+fileciteturn284file14                      Gate           Required Result             Admin           PASS             Employee           PASS             Core CRM           PASS             RBAC           PASS             Tenant isolation           PASS or explicitly scoped evidence             Internal communication           PASS or explicitly deferred with architecture evidence             External communication           Actual provider state recorded             CCTV           Actual capability state recorded             AI           Actual capability state recorded             Realtime           Actual capability state recorded             Observability           PASS             No critical/high security defect           PASS             Credential handling           PASS             Known limitations           Documented             Client demo           PASS             Credential request           ONLY AFTER ABOVE GATES            38.
+Source Basis      This document was prepared from the supplied CRM current-state handovers, progress records, fresh roadmap, remaining roadmap/operating plan, credential-handling material, recent 15 September 2026 update and the existing pre-credential acceptance document.
+The source material establishes the evidence-first rule, per-company isolated deployment model, RBAC/tenant/RLS security model, provider abstraction, employee onboarding target, internal communication/realtime direction, CCTV/worker safeguards, and the distinction between implementation and final production certification.
+fileciteturn284file3turn285file6turn285file7           
+--- Goal.docx ---
+ 
+         GOAL             Architecture, Product Completion, Provider Agnosticism &amp; Final Certification            CRM — AI Security + Business CRM SaaS                       Executive Goal     Build the CRM as a strong, provider-agnostic platform whose core business, security, tenant, authorization, workflow and product logic does not need to be rewritten when a real client brings different external infrastructure.
+Client-specific credentials and configuration should plug into explicit, secure provider contracts/adapters.
+The platform must then be health-checked, integration-certified and made operational without redesigning the core product.
+            1.
+Purpose of This Goal      This document establishes a permanent product and architecture goal for the CRM project.
+The objective is not merely to finish screens, APIs, or individual integrations.
+The objective is to build a durable platform core that remains stable while external vendors and client infrastructure vary.
+   The central architectural boundary is between the CRM's own business/security/domain logic and external systems such as email, telephony, realtime transport, storage, AI providers, CCTV streaming infrastructure, and related services.
+External systems must be integrated through controlled boundaries rather than becoming embedded throughout the product.
+   The project must therefore be evaluated on two separate dimensions: implementation maturity and real-world certification maturity.
+A missing external credential is not automatically a missing application feature; similarly, an abstraction in source code is not proof that an arbitrary future provider will work.
+        2.
+Current Product Maturity      The current planning estimate is approximately 65–70% of the final product, with a best single-number estimate of about 67%.
+This is a directional planning estimate, not a measured KPI, code-coverage figure, or contractual readiness score.
+                    Dimension           Estimate           What it measures             Core engineering/platform foundation           ~80–85%           Architecture, security boundaries, abstractions, core infrastructure and substantial backend foundations.
+            Application/product functionality           ~65–70%           Implemented product capability across CRM, communication, realtime, CCTV, AI, workforce, reporting and operations.
+            Fully production-certified product           ~35–45%           Real-provider E2E, operational drills, scale evidence, client provisioning and final production certification.
+        The lower production-certification percentage must not be interpreted as “only 35–45% of the product has been built.” Much of that gap consists of evidence that cannot honestly be generated until isolated, client-like infrastructure and legitimate credentials are available.
+        3.
+Capability-Level Planning Estimate         Core architecture and security — 80–85%         CRM — 85–95%         Revenue foundation — 80–90%         Communication — 70–80%         Realtime/internal calling — 70–80%         CCTV core — 85–90%         AI — 50–60%         Workforce/organization — 85–90%         Reporting — 70–80%         Workers/operations — 70–80%         Disaster recovery — 70–80%         Scale/load certification — 50–60%         Client provisioning — 60–70%         Final production certification — 35–45%         4.
+The Core Requirement: Credentials Should Configure, Not Rebuild      The fundamental requirement is that when a real client supplies legitimate credentials, endpoints, identifiers and supported infrastructure, the deployment should become operational primarily through configuration and certification—not by rewriting the CRM's core business logic.
+            Client infrastructure           ↓   credentials + configuration           ↓   provider contract / adapter           ↓   health checks + capability detection           ↓   sandbox / integration certification           ↓   READY      This means provider-specific implementation belongs at the boundary.
+The CRM core should own business meaning, authorization, tenant isolation, lifecycle, auditability, workflows and domain rules.
+The external adapter should translate those requirements into the provider's API/protocol semantics.
+        5.
+What “Regardless of the Platform” Means      “Regardless of the platform” should be treated as provider/platform independence, not as a literal promise that every arbitrary vendor on earth will work with one credential field and zero integration effort.
+External platforms can expose fundamentally different APIs, protocols, authentication models, webhook systems and capabilities.
+                      Correct interpretation     For every supported integration class, the CRM core remains stable and external systems are connected through explicit provider contracts/adapters.
+If a new vendor is fundamentally different, the expected engineering work is isolated to a compatible adapter or capability layer—not a rewrite of CRM business logic, tenant isolation, authorization, workflows or core domain architecture.
+            Do not embed Twilio-specific calls throughout CRM calling logic.
+        Do not assume every email provider has identical webhook or idempotency semantics.
+        Do not assume every realtime provider behaves exactly like Pusher.
+        Do not assume every object store is identical to Amazon S3.
+        Do not assume every CCTV vendor exposes RTSP/RTSPS or the same cloud API.
+        Do not assume every AI provider has identical models, tool calling, limits or error behavior.
+        6.
+Provider-Agnostic Architecture         6.1 Telephony             CRM Calling        ↓   TelephonyProvider contract        ├── Twilio adapter        ├── Other provider adapter        └── Future provider adapter      The CRM owns CallSession, authorization, participants, lifecycle, audit and business meaning.
+The adapter owns provider-specific authentication, API requests, provider identifiers, webhooks and capabilities.
+        6.2 Email/Messaging             CRM communication          ↓   Messaging / Email provider contract          ├── Resend          └── Future supported providers      The core normalizes provider delivery states into application semantics while provider-specific details remain at the boundary.
+        6.3 Storage             StorageProvider         ├── S3         ├── S3-compatible endpoint         ├── R2         └── MinIO / future adapter      The application owns authorization, object identity, tenant-safe key construction and lifecycle policy; the adapter owns provider-specific storage operations.
+        6.4 Realtime             CallSession / notifications / presence                    ↓   RealtimeAdapter                    ├── Pusher                    └── Future realtime implementation      Pusher is a transport implementation, not the ultimate authorization boundary.
+Database state and server-side authorization remain authoritative.
+        6.5 AI             AI Assistant / Security Intelligence                 ↓   AI Provider abstraction          ├── Gemini          ├── OpenAI          └── Anthropic / future provider      AI providers generate or process information; they never become the authorization layer.
+Tenant scope, permissions, tools and high-impact approvals remain server-side.
+        6.6 CCTV             CCTV application         ↓   camera / stream / storage abstractions         ├── RTSP / RTSPS         ├── MediaMTX / WHEP         └── S3-compatible recording storage      CCTV compatibility is capability-driven.
+A vendor that does not expose a required protocol needs an adapter or another supported integration path; credentials alone cannot translate incompatible protocols.
+        7.
+Credential-Ready vs Universal      The platform should be credential-ready and configuration-ready for every supported integration.
+It must not claim universal compatibility with unknown vendors.
+Credentials authenticate an integration; they do not translate incompatible APIs, protocols or missing capabilities.
+                      Operational standard     Supported provider + correct credentials/configuration + required capabilities + health checks + integration certification = operational client deployment.
+            8.
+Provider-Agnostic Integration Certification Gate         Contract — a stable internal interface defines what the CRM needs.
+        Adapter — provider-specific behavior is isolated behind that interface.
+        Configuration schema — required variables, endpoints, IDs and non-secret settings are explicit.
+        Credential handling — secrets are injected through deployment configuration and never placed in source code or chat.
+        Health check — the deployment can determine whether the provider is reachable and correctly configured.
+        Capability detection — unsupported features are identified explicitly rather than silently assumed.
+        Failure semantics — timeout, authentication, rate-limit, permanent-error and unavailable-provider behavior is defined.
+        Idempotency strategy — documented provider idempotency is used where supported; unsupported idempotency is explicitly classified.
+        Security boundary — tenant, authorization and object-level access remain under CRM control.
+        Sandbox E2E — legitimate non-Production infrastructure is used to verify the real integration.
+        Production certification — final deployment-specific smoke, security and operational evidence proves readiness.
+        9.
+Existing Work That Demonstrates the Goal         Communication:     CRM → EventOutbox → Inngest → ProviderFactory → provider adapter.
+The core workflow is separated from the external provider.
+        Realtime/internal calling:     CallSession owns the business lifecycle; RealtimeAdapter handles transport; Pusher is not treated as the ultimate authorization boundary.
+        CCTV storage:     Recording authorization and storage identity remain application concerns while S3-compatible storage is behind a provider abstraction.
+        AI:     Assistant authorization, ContextBuilder and ToolRegistry remain application-side while Gemini is an external provider implementation.
+        10.
+New Client Deployment Workflow         Create the isolated client deployment/environment.
+        Provision the client's database and required application infrastructure.
+        Configure the client's external provider credentials and endpoints.
+        Run configuration validation and provider health checks.
+        Run provider capability checks.
+        Run non-destructive integration certification.
+        Run final smoke/security checks.
+        Record evidence and mark the deployment READY.
+     The unacceptable outcome is discovering during client onboarding that a vendor requires rewriting core business logic, tenant isolation, authorization, workflow architecture or the fundamental communication/CCTV/AI architecture.
+        11.
+Required Failure Semantics         Credentials missing or invalid.
+        Provider endpoint unreachable.
+        Provider timeout.
+        Provider rate limit.
+        Permanent provider validation error.
+        Malformed or unauthenticated webhook.
+        Duplicate webhook.
+        Out-of-order webhook.
+        Provider lacks required idempotency support.
+        Provider lacks a required capability.
+        Temporary provider outage.
+     Every failure must be explicit and observable.
+The platform must never fabricate successful calls, emails, recordings, AI analysis, detections or realtime connections.
+        12.
+Idempotency Must Be Honest      Provider independence does not mean pretending all providers support exactly-once delivery.
+Application-level job identity and provider-level idempotency are different concepts.
+     When a provider documents an idempotency mechanism, use it correctly.
+When a provider or SDK does not support one, document the limitation and use the safest supported recovery behavior.
+Bounded retries reduce operational risk but do not magically make a non-idempotent provider exactly-once.
+                      Critical principle     Never claim an integration is idempotent merely because an internal idempotency key exists.
+The external provider must actually honor the mechanism, or the duplicate-delivery risk must remain explicit.
+            13.
+Evidence Levels         CODE IMPLEMENTED —     The required application logic exists.
+        AUTOMATED TEST VERIFIED —     Tests prove behavior in the project's test infrastructure.
+        REAL EXTERNAL E2E VERIFIED —     Legitimate non-Production infrastructure was exercised end-to-end.
+        PRODUCTION CERTIFIED —     The deployment passed final production-safe operational, security and integration certification.
+     These levels are not interchangeable.
+If real infrastructure is unavailable, the correct status is BLOCKED, not a simulated E2E pass.
+        14.
+Why ~67% Product Completion Is Consistent      The project already contains a substantial engineering foundation and many mature capabilities.
+The remaining gap combines genuine product development with external certification.
+Production certification is lower because the project has deliberately refused to claim evidence it does not possess.
+     Communication has substantial implementation and automated security verification, while real Resend/Twilio sandbox certification is blocked without legitimate non-Production credentials.
+Realtime/internal calling has substantial CallSession, Pusher and WebRTC implementation, while real two-browser certification is blocked without isolated realtime infrastructure.
+CCTV has substantial security and operational implementation, while real MediaMTX, RTSP and storage E2E remains infrastructure-dependent.
+        15.
+Genuine Product Work Still Remaining         AI assistant and security intelligence completion.
+        Real CCTV AI inference where required by product scope.
+        Remaining communication functionality and UX where incomplete.
+        Remaining revenue, quotations and approval capabilities.
+        Notifications and workflow/background-processing completion.
+        Enterprise security hardening.
+        Observability and operational tooling.
+        Disaster recovery operational certification.
+        Concurrency and scale testing.
+        Repeatable customer provisioning.
+        Final production certification.
+        16.
+What Must Not Be Rebuilt Repeatedly         Tenant isolation architecture.
+        Core CRM domain logic.
+        Authorization/RBAC model.
+        CallSession architecture.
+        CCTV security foundations.
+        Provider abstraction layers that pass audit.
+        Correct EventOutbox architecture and semantics.
+        Security testing foundations.
+        17.
+Definition of a Successful Final Product      The final product is successful when a new isolated client deployment can be configured with that client's supported infrastructure and credentials, pass automated and real integration certification, and operate without rewriting the CRM's core architecture.
+            CORE PRODUCT     ├── CRM     ├── Security / tenant isolation     ├── Authorization / RBAC     ├── Workflows / workers     ├── Reporting     └── Domain logic             │             ▼   PROVIDER / INFRASTRUCTURE BOUNDARIES     ├── Email / Messaging     ├── Telephony     ├── Realtime     ├── AI     ├── Storage     └── CCTV / streaming             │             ▼   CLIENT-SPECIFIC INFRASTRUCTURE         18.
+Final Acceptance Criteria         Core business logic is independent of individual external vendors.
+        Every supported external dependency has an explicit provider contract or adapter boundary.
+        Client-specific credentials are configuration, not core-code changes.
+        Secrets are never exposed in chat, source code or logs.
+        Tenant isolation remains under application/database control.
+        Provider failures cannot bypass authorization or security controls.
+        Provider capabilities are explicit and unsupported features fail safely.
+        Retry and idempotency semantics are documented per integration.
+        Webhook authenticity is cryptographically verified where supported.
+        External identifiers are correlated through authoritative application records rather than untrusted tenant metadata.
+        Automated tests cover adversarial security, concurrency and failure conditions.
+        Real non-Production E2E is performed whenever legitimate infrastructure is available.
+        Missing infrastructure is recorded as BLOCKED rather than hidden by mocks.
+        Production certification occurs only after application and external-integration evidence exists.
+        A new supported client provider does not require rewriting the CRM core domain architecture.
+        19.
+Final Strategic Principle                       THE GOAL     We are not merely building a CRM that happens to connect to today's vendors.
+We are building a strong product core with controlled integration boundaries.
+The product should remain stable while client-specific infrastructure changes.
+Credentials configure integrations; adapters translate provider-specific behavior; health checks and capability detection expose compatibility; security remains inside the platform; real E2E certification proves the deployment.
+This standard governs every remaining phase and the final release gate.
+            20.
+Permanent Engineering Questions      Before accepting any future integration or feature, ask:         Does this put provider-specific behavior into the core domain?         Can another supported provider be plugged in without rewriting business logic?         What happens when credentials are missing?         What happens when the provider fails?         What is the provider's actual idempotency capability?         How is the tenant determined authoritatively?         Where is server-side authorization enforced?         What evidence proves this works with a real provider?         If real infrastructure is unavailable, is the limitation explicitly recorded?         Would a new client require core code changes or only supported adapter/configuration work?            END OF GOAL DOCUMENT           
+--- fresh Roadmap.docx ---
+ 
+            FRESH ROADMAP            AI Security + Business CRM SaaS — Current State to Final Certification      Baseline: 13 September 2026.
+This is the forward execution roadmap.
+Historical plans remain evidence, but completed historical phases must not be replayed.
+        1.
+Executive Direction      The project is on the correct architectural path.
+The product is an AI Security + Business CRM SaaS with isolated customer deployments: one codebase, separate environment/infrastructure/credentials per customer company.
+Platform subscription billing/payment processing is deprecated; business revenue, products, pricing, quotations, approvals and reporting remain.
+     Planning estimate at this checkpoint: engineering/platform foundation ~80–85%; complete product functionality ~62–67%; production-certified confidence ~35–40%.
+These are planning estimates, not KPIs.
+        2.
+Non-Negotiable Rules         Evidence beats assumptions; actual source and executable tests beat stale documentation.
+        Never restart completed work.
+Reconcile every old OPEN item against the repository first.
+        Never request, print, commit or expose credentials/secrets.
+Missing optional providers must degrade explicitly; never fake success.
+        Production is read-only unless explicitly authorized.
+No destructive SQL, reset, migration experimentation or credential rotation without authorization.
+        Never claim full-suite PASS while inherited failures remain.
+Classify PASS / FAIL / BLOCKED / KNOWN INHERITED FAILURE.
+        Server authorization is authoritative; UI checks are UX only.
+Preserve tenant isolation, RBAC, soft-delete, auditability, idempotency and ownership.
+        Do not add schema changes unless genuinely required.
+Never use destructive git cleanup such as git clean -fd or git reset --hard without authorization.
+        Every phase ends with focused tests, relevant broader tests, TypeScript/Prisma/lint as applicable, diff review and explicit production status.
+        3.
+Architectural Baseline                       Area           Current direction           Forward rule             Deployment           Separate isolated deployment/environment/infrastructure/credentials per company           Configuration-driven provisioning; no business-logic forks.
+            Tenant security           Application authorization + tenant context + PostgreSQL RLS           Never rely on one layer alone.
+            DB roles           crm_app_user: NOBYPASSRLS; crm_system_user: BYPASSRLS; neither owns app tables           Keep app/system boundaries explicit.
+            AI           Real Gemini provider abstraction, controlled tools, safe degradation           No fake inference; audit tool actions.
+            Realtime           Pusher-oriented abstraction; CallSession; server-relayed WebRTC signaling           Real provider/browser E2E still required.
+            CCTV           MediaMTX + durable worker + object storage           No persistent CCTV worker/filesystem work in serverless routes.
+            Storage           S3-compatible provider + signed URLs           Real isolated object storage for production.
+            Billing           No platform subscription/payment processing           Retain business revenue capabilities.
+           4.
+Already Substantially Complete — Do Not Rebuild         Canonical migration/baseline and production reconciliation work.
+        Core CRM customer/contact/lead/pipeline/deal lifecycle, including contact update/archive and deal update/archive.
+        Customer 360 timeline and mobile UX.
+        R.14.6 security/completeness hardening; 28/28 focused tests pass.
+        CCTV R01–R09 security hardening; secure WHEP/webhook/path/recording controls; S3 signed recording playback.
+        AI Gemini provider boundary, safe degradation and authorization-aware tool foundations.
+        CallSession, concurrency protection, server-relayed WebRTC signaling and browser WebRTC hook.
+        Reporting date filtering, domain reports, exports, drill-downs and security/tenant checks.
+        Demo provisioning safety and provider failure/idempotency patterns.
+        5.
+Known Limitations / Blockers         Historical full-suite DR timeouts remain unless newly resolved: global retention discovery and global RPO inspection in dr-remediation.test.ts.
+        Real browser-to-browser WebRTC E2E requires isolated real Pusher infrastructure/credentials and browser media/dual-auth setup.
+        CCTV real operational E2E requires legitimate MediaMTX, RTSP camera, browser WebRTC and isolated object-storage infrastructure.
+        AI production behavior depends on legitimate provider credentials; missing credentials must degrade safely.
+        Production confidence remains below code maturity because real infrastructure, DR, load, provisioning and operational evidence remain.
+        6.
+PHASE 0 — Fresh Reconciliation Gate         Inspect git branch, HEAD, origin/main and working tree.
+        Read latest handovers, progress, roadmap and credential-handling documents.
+        Build a live capability matrix: feature, implementation, tests, production evidence, blocker, remaining work.
+        Reconcile every historical OPEN item against source/tests.
+        Inventory schema/migration state and provider readiness.
+        Select the next phase by security risk, user value, dependencies and production-readiness impact.
+     Exit: current-state matrix is documented and the next phase has explicit acceptance criteria.
+        7.
+PHASE 1 — Workforce / Organization / Employee Completion         Complete company → department → head → employee structure.
+        Complete invitations/onboarding using existing auth boundaries.
+        Complete role/permission assignment and server enforcement.
+        Guarantee company boundaries and safe deactivation/archive semantics.
+        Integrate employees with internal calling/messaging/presence.
+        Audit invitations, role changes and lifecycle events.
+        Add negative authorization and cross-tenant tests.
+        8.
+PHASE 2 — Communication Completion         Complete internal messaging UI/persistence and unified inbox/thread/history.
+        Complete customer/contact communication timeline.
+        Complete email/SMS/external adapters where configured.
+        Implement provider readiness/failure, retry and idempotency behavior.
+        Complete attachments and security limits.
+        Complete presence/notifications through realtime abstraction.
+        Test authorization, tenant isolation, duplicates, retries and provider outages.
+        9.
+PHASE 3 — Realtime + Internal Calling         Complete private-channel authorization and tenant/user channel naming.
+        Verify complete CallSession lifecycle and terminal-state protection.
+        Verify one-active-call race protection.
+        Complete browser media, peer lifecycle, cleanup and failure handling.
+        Create isolated real Pusher E2E environment when credentials are legitimately available.
+        Run dual-user browser E2E; verify signaling, CallLog linkage, permissions and outage behavior.
+        10.
+PHASE 4 — CCTV Operational Completion         Provision real MediaMTX per isolated deployment.
+        Connect legitimate RTSP/RTSPS camera source.
+        Verify SSRF/credential protection and opaque path/JWT/WHEP flow.
+        Verify recording daemon, leases, fencing, stale recovery and node affinity.
+        Verify real S3/R2/MinIO-compatible upload and signed playback/download.
+        Verify retention and deletion semantics.
+        Verify webhook authentication, nonce/idempotency and replay protection.
+        Verify events/incidents/alerts/audit.
+        Enable CCTV AI only after real infrastructure is proven.
+        11.
+PHASE 5 — AI Assistant + Security Intelligence         Complete controlled tool registry and per-tool authorization.
+        Complete CRM/security summaries and reporting assistance.
+        Make privileged/approval-sensitive actions explicitly gated.
+        Audit AI actions/tool calls without unnecessary prompt/PII logging.
+        Complete prompt-injection boundaries and negative tests.
+        Implement provider timeout/retry/error/degradation.
+        Complete CCTV AI jobs/events where infrastructure exists.
+        Verify cost precision and secret protection.
+        12.
+PHASE 6 — Revenue / Quotes / Approvals         Complete products, pricing and price-book lifecycle.
+        Complete quotations and quote versions.
+        Complete discounts and approvals.
+        Complete revenue reporting.
+        Preserve Decimal(19,4) commercial money and Decimal(19,8) AI provider cost, HALF_UP, 2-decimal display.
+        Do not convert Deal.value merely for consistency.
+        Test authorization, audit, tenant isolation, lifecycle and approval concurrency.
+        13.
+PHASE 7 — Reporting / Analytics Finalization         Complete required CRM/sales/security/communication reports.
+        Keep date filtering server-enforced.
+        Complete authorized bounded exports and drill-downs.
+        Complete useful domain filters.
+        Validate tenant/RBAC enforcement.
+        Validate realistic large datasets and aggregation performance.
+        Remove remaining fake/simulated reporting states.
+        14.
+PHASE 8 — Notifications / Workflow / Background Processing         Complete notification lifecycle and preferences.
+        Complete authenticated outbox processing.
+        Verify retries, backoff and dead-letter behavior where applicable.
+        Verify idempotency and duplicate suppression.
+        Verify worker leases, stale recovery and concurrency fences.
+        Add queue/worker latency, failure and retry observability.
+        Test multi-tenant worker isolation.
+        15.
+PHASE 9 — Enterprise Security Hardening         Run complete authorization matrix.
+        Run cross-tenant adversarial tests across CRM, communication, CCTV, AI, reports and workforce.
+        Audit raw SQL for parameterization and justified system-only use.
+        Verify RLS/application authorization alignment.
+        Verify append-only AuditLog.
+        Verify encrypted/isolated credentials and log redaction.
+        Verify SSRF, file/path and symlink boundaries.
+        Verify rate/request-size/abuse controls where applicable.
+        Verify safe defaults for missing providers.
+        16.
+PHASE 10 — Observability + DR         Resolve or certify inherited DR failures.
+        Document backups, frequency, retention and integrity.
+        Perform isolated restore drills.
+        Measure RPO and RTO.
+        Verify application/workers/queues after recovery.
+        Verify tenant isolation after restore.
+        Verify retention/deletion after restore.
+        Create runbooks for provider outage, DB recovery, worker failure, CCTV node failure and credential rotation.
+        Add production-grade health/metrics/alerts.
+        17.
+PHASE 11 — Scale / Concurrency / Load         Define target concurrency per isolated company.
+        Load-test auth, CRM, communication/outbox, CallSession/signaling, CCTV ingestion and reporting.
+        Test DB connections/pooling.
+        Test duplicate worker delivery and idempotency.
+        Measure p50/p95/p99 latency, throughput and errors.
+        Fix evidence-backed bottlenecks.
+        Repeat security tests after performance changes.
+        18.
+PHASE 12 — Repeatable Customer Provisioning         Create deterministic new-company provisioning.
+        Provision isolated deployment/environment/database/auth/providers.
+        Apply canonical baseline/migrations.
+        Create required roles and initial administrator safely.
+        Configure optional providers without requiring them.
+        Run health, tenant-isolation and representative capability smoke tests.
+        Produce machine-readable/customer-facing certification evidence.
+        Ensure no business-logic code fork is required.
+        19.
+PHASE 13 — Production Certification         Read-only structural/schema/migration checks.
+        Role/RLS/native-object fingerprints.
+        Health and authentication/authorization smoke tests.
+        Provider readiness verification.
+        Safe critical workflow checks.
+        Observability/alerting verification.
+        Backup/DR evidence.
+        Security evidence.
+        Confirm no production mocks/placeholders/fake success.
+        Document all residual limitations.
+        20.
+PHASE 14 — Final Product Certification / Release Gate         Core CRM certified.
+        Communication/calling/email/SMS certified according to configured providers.
+        CCTV real E2E certified where deployed.
+        AI certified with real provider or safely disabled.
+        Realtime certified where enabled.
+        Employees/departments/roles/onboarding certified.
+        Revenue/quotes/approvals/reporting certified.
+        Tenant/security/RBAC/RLS certified.
+        Workers/queues/retry/idempotency certified.
+        Observability/DR/RPO/RTO certified.
+        Scale/concurrency evidence recorded.
+        Customer-isolated provisioning certified.
+        Security audit clean or residual risks explicitly accepted.
+        Final production smoke test passes.
+        Release and customer handoff documentation complete.
+        21.
+Definition of Done — Whole Product         Every promised capability has a real implementation or explicit disabled/unavailable state.
+        Security-sensitive capabilities have negative-path tests.
+        Tenant-sensitive capabilities have cross-tenant tests.
+        External providers have explicit readiness/failure semantics.
+        No production path uses fake success.
+        Workers/queues have retry, idempotency and concurrency evidence.
+        CCTV, AI and realtime have real infrastructure evidence where enabled.
+        DR has demonstrated restore and measured RPO/RTO.
+        Scale/concurrency behavior is measured.
+        New customer provisioning is repeatable.
+        Production certification is deployment-specific and evidence-based.
+        Documentation matches the repository.
+        22.
+Execution Protocol for Every Phase         Audit current state.
+        Write acceptance criteria.
+        Inspect existing architecture.
+        Implement smallest complete change.
+        Add focused security/functional tests.
+        Run focused tests.
+        Run TypeScript/Prisma/relevant lint.
+        Run broader relevant suites.
+        Inspect diff and git status.
+        Document blockers and production status.
+        Commit only intentional changes according to workflow.
+        Update live roadmap/status matrix before selecting the next phase.
+        23.
+Credential Handling         Use legitimate credentials only in intended secret stores/environments.
+        Never paste secrets into chat or documentation.
+        Never commit credentials.
+        Never fabricate credentials or provider success.
+        Classify provider readiness as READY / MISSING_CREDENTIALS / MISCONFIGURED / UNAVAILABLE as appropriate.
+        Optional providers degrade safely; critical providers fail explicitly.
+        Each customer deployment receives its own provider credentials and isolation.
+        24.
+Final Progress Dashboard                       Capability           Current direction           Final evidence             Core CRM           Substantially complete           Integration + production smoke             Workforce           Remaining           Real onboarding/RBAC/company flow             Communication           Partial/substantial           Provider + retry/idempotency evidence             Realtime/calling           Partial/substantial           Real provider + dual-browser E2E             CCTV           Strong foundation           Real camera/MediaMTX/worker/storage E2E             AI           Foundation           Real provider + tool/RBAC/audit E2E             Revenue/quotes           Substantial           Lifecycle/approval/security evidence             Reporting           Substantial           Large-data/security/export evidence             Workers/queues           Partial/substantial           Concurrency/failure evidence             Observability           Partial           Production metrics/alerts/runbooks             DR           Partial           Restore + RPO/RTO             Scale           Partial           Load/concurrency certification             Provisioning           Partial           Repeatable isolated deployment certification             Production certification           Not complete           Deployment-specific final evidence            25.
+Strategic End State      The finish line is not a number of screens, files, commits or roadmap checkboxes.
+The product is finished when its intended capabilities are usable, secure, tenant-isolated, observable, recoverable, scalable and proven against the real infrastructure they depend on.
+     The forward strategy is therefore: reconcile → prioritize genuine gaps → implement → adversarial test → verify integrations → certify operations → certify isolated customer provisioning → certify production → release.
+     This roadmap intentionally preserves the project's security-first and evidence-first direction while replacing stale historical sequencing with a live, capability-based execution model.
+          
+--- How to handle credentials.docx ---
+ 
+         How to handle credentials            AI Security + Business CRM SaaS   Credential, provider, deployment, demo-mode, and buyer-provisioning policy         1.
+Purpose      This is the operating policy for credentials across development, testing, Production, and future buyer deployments.
+It explains what must be real, what may safely degrade, how secrets are stored, and how buyer-specific infrastructure is configured.
+        2.
+Fundamental architecture      The CRM is intended to use isolated deployments per company/customer.
+Credentials belong to the deployment they serve and must never be shared between customers.
+        Current deployment: use the real credentials already legitimately configured for it.
+        Optional provider missing: keep the CRM usable through safe disabled/degraded behavior where supported.
+        Buyer purchase: create an isolated client deployment and configure that client's own credentials.
+        Provider portability is required, but a different provider works only when an existing adapter/interface and runtime support it; otherwise a new adapter/integration is required.
+        3.
+Core vs optional credentials      Core security infrastructure must remain real: database, authentication, authorization/RBAC, tenant isolation/RLS, encryption/signing, audit integrity, and other security-critical dependencies.
+     Optional credentials may cover email, SMS/voice, WhatsApp, AI, CCTV, storage, realtime, background jobs, and other integrations.
+Their absence must not unnecessarily crash the core CRM.
+        4.
+Missing credentials: correct behavior      If an optional credential is absent, the system should use an explicit unavailable/degraded state or an existing safe demo workflow.
+It must never pretend an external operation succeeded.
+        Good: “Email provider not configured.”         Good: “Demo mode — no external message was sent.”         Bad: “Email sent successfully” when no email was sent.
+        Bad: fake provider message IDs, fake delivery timestamps, or fake delivery records.
+        5.
+Never use fake credentials         Never invent API keys, passwords, database URLs, tokens, webhook secrets, signing keys, or encryption keys.
+        Never add random demo credentials to Production just to make a feature appear configured.
+        Never use another customer's credentials.
+        Never use developer credentials as a hidden Production fallback.
+        Never silently fall back from one provider to another.
+        6.
+Current project credential model      Credentials already obtained for the current project are stored in the appropriate Vercel environment/secret store.
+Secret values must never be printed in chat, reports, source control, screenshots, or temporary files.
+     Configuration inventories should contain only metadata such as CONFIGURED, NOT CONFIGURED, UNKNOWN, or DEFERRED.
+        7.
+Environment separation         Local/E2E credentials → local test infrastructure only.
+        Preview/Staging credentials → isolated non-Production resources only.
+        Production credentials → Production only.
+        Client credentials → that client's isolated deployment only.
+        Never copy Production credentials into local, staging, preview, demo, or test environments.
+        Never copy one client's credentials into another client's deployment.
+        8.
+Current provider examples                        Category           Current project           Configured →           Missing →           Buyer later             Database           PostgreSQL/Supabase deployment           Real database           Core blocked           Client-selected compatible PostgreSQL infrastructure             Authentication           Clerk           Real authentication           Core blocked           Client-selected supported authentication             Redis           Redis configuration           Real cache/rate limiting           Feature-dependent/degraded           Client Redis             Email           Resend adapter           Real email           Unavailable/degraded           Supported client email provider             SMS/Voice           Twilio adapter           Real provider           Unavailable/degraded           Supported client provider             WhatsApp           WhatsApp/Meta integration           Real provider           Unavailable/degraded           Supported client integration             AI           Gemini integration           Real AI           Disabled/degraded           Supported client AI provider             Storage           S3-compatible architecture where supported           Real storage           Feature-dependent/degraded           Supported client storage             CCTV           MediaMTX/external infrastructure           Real CCTV           Disabled/deferred           Client CCTV infrastructure             Realtime           Provider-dependent           Real realtime           Demo/degraded if supported           Supported client realtime provider             Jobs           Inngest/worker architecture           Real jobs           Feature-dependent/degraded           Client job infrastructure         These examples describe the current direction, not universal provider support.
+A buyer's alternative provider requires an existing adapter or a future adapter.
+        9.
+Provider portability         SUPPORTED NOW → configure it for the client.
+        SUPPORTED THROUGH EXISTING INTERFACE → use the compatible implementation.
+        NO ADAPTER → implement and validate an adapter before claiming support.
+        UNSUPPORTED → credentials alone do not make it work.
+        10.
+Infrastructure portability      A buyer may choose different infrastructure, but compatibility must be verified rather than assumed.
+        AWS instead of Supabase: potentially suitable when the target supplies the PostgreSQL/extensions/features the application actually requires.
+        Another PostgreSQL host: not automatically equivalent if provider-specific services are required.
+        Hostinger instead of Vercel: requires verification of Next.js/Node runtime, workers, cron/background jobs, realtime, storage, and other dependencies.
+        Credentials cannot replace infrastructure components the software genuinely needs.
+        11.
+Buyer provisioning model         Create the buyer's isolated deployment/environment.
+        Provision or connect the buyer's database/infrastructure.
+        Configure authentication and encryption/security settings.
+        Configure providers selected by the buyer.
+        Store secrets in that client's deployment secret store.
+        Validate configuration without exposing secret values.
+        Enable only integrations whose prerequisites are configured.
+        Run client-specific security/integration/production certification.
+        Freeze the certified environment.
+        12.
+Replacing current providers for a buyer      The current project's credentials are not the buyer's credentials.
+A buyer's isolated deployment receives client-specific values.
+If the buyer selects a different supported provider, configure its adapter.
+If no adapter exists, implement one during the appropriate engineering phase before claiming support.
+     Never overwrite one deployment's credentials to configure another customer.
+        13.
+Secret handling rules         Do not ask users to paste secrets into chat when a secure secret-management path exists.
+        Never print secret values in terminal output, logs, reports, screenshots, or documentation.
+        Never commit secrets to Git.
+        Never create .env.production.local with real Production credentials for temporary testing.
+        Do not pull secrets locally merely to prove presence when safe metadata can establish it.
+        If a secret is exposed, treat it as compromised and rotate it through the provider/Vercel secret-management workflow.
+        14.
+Production testing         Production is not a sandbox.
+        Prefer read-only health/configuration checks.
+        Do not send test email/SMS/WhatsApp or make calls from Production unless explicitly authorized and using a known-safe test resource.
+        Do not seed fake data into Production unless an approved dedicated demo-tenant procedure exists.
+        Do not change Production credentials merely to make certification pass.
+        15.
+Failure semantics      Missing configuration must be distinguishable from provider outage, authentication failure, rate limiting, and other runtime failures.
+Optional-provider failures should affect the specific operation/feature, not unrelated CRM functionality.
+A missing provider must never become a fake success.
+        16.
+Quick decision tree         Credential present? → use the configured real provider.
+        Credential absent? → Is it CORE? If yes, fail/block safely.
+        Optional? → Is safe degraded/demo behavior available? If yes, use it.
+        No safe fallback? → disable the affected feature and report provider not configured.
+        Buyer arrives? → provision an isolated deployment and configure the buyer's credentials there.
+        Buyer chooses a new provider? → check adapter support; add and validate an adapter only when required.
+        17.
+Non-negotiable rules         Core security credentials are always real.
+        No fake credentials.
+        No secret values in chat or documentation.
+        No cross-customer credential sharing.
+        No hidden fallback to Production credentials.
+        No fake success for external operations.
+        Optional providers must not unnecessarily prevent the core CRM from running.
+        Buyer credentials belong only to the buyer's isolated deployment.
+        Provider portability must be based on actual adapter/runtime compatibility.
+        Certification must never weaken security.
+        18.
+Final operating principle         Use what we legitimately have today.
+Safely degrade what we do not have.
+When a buyer arrives, configure that buyer's own infrastructure and credentials in that buyer's isolated deployment.
+          

@@ -49,7 +49,6 @@ export function NotificationCenter() {
     if (user) {
       // eslint-disable-next-line react-hooks/set-state-in-effect -- False positive: fetchNotifications contains only asynchronous setState after network fetch
       fetchNotifications();
-      // eslint-disable-next-line react-hooks/set-state-in-effect -- False positive: fetchNotifications contains only asynchronous setState after network fetch
       const interval = setInterval(fetchNotifications, 60000);
       return () => clearInterval(interval);
     }

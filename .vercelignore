@@ -1,0 +1,25 @@
+# Testing Artifacts
+test-results/
+trace_extracted*/
+trace_urls.txt
+
+# Documentation
+*.docx
+docs/
+*.md
+!README.md
+
+# Scratch Scripts
+test-*.js
+test-*.mjs
+test-*.ts
+verify-*.js
+check_*.js
+check_*.ts
+generate_*.js
+run_*.js
+production_*.sql
+check_*.sql
+
+# Temp DB folders
+database/migrations_temp_130/

@@ -1,7 +1,4 @@
-import prisma from '@db/utils/prisma';
 import { NotificationType } from '@prisma/client';
-import { NotificationProviderFactory } from '@/infrastructure/notification/notification.factory';
-import { Logger } from '@/lib/logger/logger';
 
 export interface CreateNotificationParams {
   tenantId: string;

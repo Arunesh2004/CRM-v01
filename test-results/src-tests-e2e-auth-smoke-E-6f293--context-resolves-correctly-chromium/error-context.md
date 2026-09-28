@@ -1,0 +1,205 @@
+# Instructions
+
+- Following Playwright test failed.
+- Explain why, be concise, respect Playwright best practices.
+- Provide a snippet of code with the fix, if possible.
+
+# Test info
+
+- Name: src\tests\e2e\auth-smoke.spec.ts >> E2E Authentication Smoke Test >> Admin A context resolves correctly
+- Location: src\tests\e2e\auth-smoke.spec.ts:4:7
+
+# Error details
+
+```
+Test timeout of 60000ms exceeded.
+```
+
+# Page snapshot
+
+```yaml
+- generic [active] [ref=e1]:
+  - generic [ref=e2]:
+    - region "Notifications alt+T"
+    - complementary [ref=e3]:
+      - generic [ref=e8]:
+        - paragraph [ref=e9]: Tenant A E2ECRM
+        - paragraph [ref=e10]: Security Suite
+      - navigation [ref=e11]:
+        - generic [ref=e12]:
+          - paragraph [ref=e13]: Overview
+          - link "Dashboard" [ref=e15] [cursor=pointer]:
+            - /url: /dashboard
+        - generic [ref=e22]:
+          - paragraph [ref=e23]: CRM
+          - generic [ref=e24]:
+            - link "Leads" [ref=e25] [cursor=pointer]:
+              - /url: /leads
+            - link "Customers" [ref=e31] [cursor=pointer]:
+              - /url: /customers
+            - link "Deals" [ref=e38] [cursor=pointer]:
+              - /url: /deals
+            - link "Quotes" [ref=e42] [cursor=pointer]:
+              - /url: /quotes
+            - link "Territories" [ref=e46] [cursor=pointer]:
+              - /url: /territories
+            - link "Locations" [ref=e51] [cursor=pointer]:
+              - /url: /locations
+        - generic [ref=e56]:
+          - paragraph [ref=e57]: Workspace
+          - generic [ref=e58]:
+            - link "Tasks" [ref=e59] [cursor=pointer]:
+              - /url: /tasks
+            - link "Tickets" [ref=e64] [cursor=pointer]:
+              - /url: /tickets
+            - link "Chat" [ref=e68] [cursor=pointer]:
+              - /url: /chat
+            - link "Communications" [ref=e72] [cursor=pointer]:
+              - /url: /communications
+        - generic [ref=e76]:
+          - paragraph [ref=e77]: Security Ops
+          - generic [ref=e78]:
+            - link "Cameras" [ref=e79] [cursor=pointer]:
+              - /url: /cameras
+            - link "Incidents" [ref=e84] [cursor=pointer]:
+              - /url: /incidents
+            - link "Monitoring" [ref=e88] [cursor=pointer]:
+              - /url: /monitoring
+        - generic [ref=e92]:
+          - paragraph [ref=e93]: Insights
+          - generic [ref=e94]:
+            - link "Reports" [ref=e95] [cursor=pointer]:
+              - /url: /reports
+            - link "Analytics" [ref=e99] [cursor=pointer]:
+              - /url: /analytics
+            - link "AI Assistant" [ref=e103] [cursor=pointer]:
+              - /url: /assistant
+        - generic [ref=e108]:
+          - paragraph [ref=e109]: System
+          - generic [ref=e110]:
+            - link "Approvals" [ref=e111] [cursor=pointer]:
+              - /url: /admin/approvals
+            - link "Settings" [ref=e115] [cursor=pointer]:
+              - /url: /settings/employees
+      - generic [ref=e121]:
+        - generic [ref=e122]: U
+        - generic [ref=e123]:
+          - paragraph [ref=e124]: User
+          - paragraph [ref=e125]: tenant admin
+    - main [ref=e126]:
+      - generic [ref=e127]:
+        - heading "Dashboard" [level=1] [ref=e129]
+        - button "Search... ⌘ K" [ref=e131]:
+          - generic [ref=e135]: Search...
+          - generic [ref=e136]:
+            - generic [ref=e137]: ⌘
+            - text: K
+        - generic [ref=e138]:
+          - button "Quick Add" [ref=e140]
+          - button "AI Assistant" [ref=e142]
+          - button [ref=e147]
+          - generic [ref=e152] [cursor=pointer]:
+            - generic [ref=e153]: U
+            - generic [ref=e154]: User
+      - generic [ref=e157]:
+        - generic [ref=e158]:
+          - generic [ref=e159]:
+            - paragraph [ref=e160]: Command Center 🛡️
+            - paragraph [ref=e161]: Real-time operations overview for your security deployment.
+          - link "View Leads" [ref=e163] [cursor=pointer]:
+            - /url: /leads
+        - generic [ref=e168]:
+          - link [ref=e170] [cursor=pointer]:
+            - /url: /customers
+            - generic [ref=e171]:
+              - paragraph [ref=e179]: "0"
+              - paragraph [ref=e180]: Total Customers
+          - link [ref=e182] [cursor=pointer]:
+            - /url: /leads
+            - generic [ref=e183]:
+              - paragraph [ref=e190]: "0"
+              - paragraph [ref=e191]: Active Leads
+          - link [ref=e193] [cursor=pointer]:
+            - /url: /tasks
+            - generic [ref=e194]:
+              - paragraph [ref=e200]: "0"
+              - paragraph [ref=e201]: Pending Tasks
+          - generic [ref=e203]:
+            - paragraph [ref=e208]: "0"
+            - paragraph [ref=e209]: Total Calls
+          - generic [ref=e211]:
+            - paragraph [ref=e217]: "0"
+            - paragraph [ref=e218]: Total Emails
+          - generic [ref=e220]:
+            - paragraph [ref=e225]: "7"
+            - paragraph [ref=e226]: Total Messages
+          - link [ref=e228] [cursor=pointer]:
+            - /url: /incidents
+            - generic [ref=e229]:
+              - paragraph [ref=e234]: "0"
+              - paragraph [ref=e235]: Security Incidents
+        - generic [ref=e236]:
+          - generic [ref=e237]:
+            - generic [ref=e238]:
+              - generic [ref=e239]:
+                - paragraph [ref=e240]: Sales Trend
+                - paragraph [ref=e241]: Last 6 months
+              - generic [ref=e242]: Live
+            - application [ref=e249]:
+              - generic [ref=e250]:
+                - generic [ref=e251]:
+                  - generic [ref=e252]: Apr
+                  - generic [ref=e254]: May
+                  - generic [ref=e256]: Jun
+                  - generic [ref=e258]: Jul
+                  - generic [ref=e260]: Aug
+                  - generic [ref=e262]: Sep
+                - generic [ref=e264]:
+                  - generic [ref=e265]: ₹0
+                  - generic [ref=e267]: ₹1
+                  - generic [ref=e269]: ₹2
+                  - generic [ref=e271]: ₹3
+                  - generic [ref=e273]: ₹4
+          - generic [ref=e275]:
+            - generic [ref=e276]:
+              - paragraph [ref=e277]: Recent Activity
+              - link "View report" [ref=e278] [cursor=pointer]:
+                - /url: /reports
+            - generic [ref=e279]:
+              - heading "No Activity Yet" [level=3] [ref=e284]
+              - paragraph [ref=e285]: Team operations will appear here.
+    - button "Toggle AI Assistant" [ref=e286]
+    - dialog "AI Assistant":
+      - generic:
+        - generic:
+          - generic:
+            - paragraph: Nexus AI
+            - paragraph: Online
+        - generic:
+          - button "Expand"
+          - button "Close"
+      - generic:
+        - generic:
+          - generic:
+            - paragraph: How can I help?
+            - paragraph: Ask about leads, tasks, incidents, or anything in your CRM.
+          - generic:
+            - button "What are my tasks today?"
+            - button "Which leads need follow-up?"
+            - button "Show critical incidents"
+      - generic:
+        - generic:
+          - textbox "Ask me anything…"
+          - button "Send" [disabled]
+  - generic [ref=e294] [cursor=pointer]:
+    - button "Open Next.js Dev Tools" [ref=e295]
+    - generic [ref=e299]:
+      - button "Open issues overlay" [ref=e300]:
+        - generic [ref=e301]:
+          - generic [ref=e302]: "0"
+          - generic [ref=e303]: "1"
+        - generic [ref=e304]: Issue
+      - button "Collapse issues badge" [ref=e305]
+  - alert [ref=e308]
+  - generic [ref=e309]: ₹0
+```
