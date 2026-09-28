@@ -24,9 +24,6 @@ const isPublicRoute = createRouteMatcher([
   '/api/webhooks/(.*)',
   '/api/inngest',
   '/api/auth/(.*)', // Native Auth Endpoints
-  // Staging-only verifier authenticates itself with STAGING_VERIFIER_SECRET.
-  // Keep this exact endpoint outside Clerk redirect handling so the verifier can execute.
-  '/api/diagnostic/staging-verifier',
   '/__clerk(.*)',  // Clerk Frontend API proxy
 ]);
 
