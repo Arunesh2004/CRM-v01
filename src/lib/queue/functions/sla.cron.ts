@@ -53,7 +53,7 @@ export const slaEvaluateWorker = inngest.createFunction(
     id: 'sla-evaluate-worker',
     triggers: [{ event: 'sla.evaluate' }],
     concurrency: {
-      limit: 10,
+      limit: 5,
       key: 'event.data.tenantId' // Prevent one tenant from monopolizing workers
     },
      
