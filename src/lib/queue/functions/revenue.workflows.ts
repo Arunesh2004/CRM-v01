@@ -10,7 +10,7 @@ export const quoteApprovedWorker = inngest.createFunction(
   {
     id: 'quote-approved-worker',
     triggers: [{ event: 'QUOTE_APPROVED' }],
-    concurrency: { limit: 10, key: 'event.data.tenantId' }
+    concurrency: { limit: 5, key: 'event.data.tenantId' }
   },
   async ({ event, step }) => {
     return await step.run('process-quote-approval', async () => {

@@ -8,7 +8,7 @@ export const outboxWorker = inngest.createFunction(
     id: 'outbox-worker',
     triggers: [{ event: 'outbox.process' }],
     concurrency: {
-      limit: 10,
+      limit: 5,
       key: 'event.data.tenantId' 
     },
     retries: 3,

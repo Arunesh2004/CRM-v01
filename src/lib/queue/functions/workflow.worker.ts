@@ -7,7 +7,7 @@ export const workflowWorker = inngest.createFunction(
     id: 'workflow-execute-worker',
     triggers: [{ event: 'workflow.execute' }],
     concurrency: {
-      limit: 10,
+      limit: 5,
       key: 'event.data.tenantId' // Prevent API limits from being exhausted by a single tenant
     },
     onFailure: async ({ event, error }) => {

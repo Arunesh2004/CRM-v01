@@ -8,7 +8,7 @@ export const webhookWorker = inngest.createFunction(
     id: 'webhook-worker',
     triggers: [{ event: 'webhook.ingested' }],
     concurrency: {
-      limit: 10,
+      limit: 5,
       key: 'event.data.tenantId'
     },
     onFailure: async ({ event, error }) => {
