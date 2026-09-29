@@ -173,6 +173,12 @@ export default function MailInterface({ userId }: { userId: string }) {
                 <Archive className="w-5 h-5" />
               </button>
             </div>
+            {/*
+              SECURITY: bodyHtml is sanitized by sanitizeEmailHtml() in inbox.actions.ts
+              (the storage-layer trust boundary) before it is ever written to the database.
+              This dangerouslySetInnerHTML therefore only renders DOMPurify-scrubbed HTML.
+              Do NOT remove the sanitization call in inbox.actions.ts without a security review.
+            */}
             <div className="flex-1 overflow-y-auto prose max-w-none text-gray-800" dangerouslySetInnerHTML={{ __html: activeMail.message?.bodyHtml || '' }} />
             
             {/* Structured CRM References rendering block */}

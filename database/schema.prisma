@@ -1106,6 +1106,7 @@ model CameraStreamInvalidation {
   @@unique([cameraId, streamVersion])
   @@index([cameraId])
   @@index([status, nextAttemptAt])
+  @@index([tenantId])
 }
 
 model CCTVNode {
@@ -1176,7 +1177,7 @@ model AIAnalysisJob {
   createdAt      DateTime  @default(now())
   updatedAt      DateTime  @updatedAt
 
-  tenant    Tenant    @relation(fields: [tenantId], references: [id])
+  tenant    Tenant    @relation(fields: [tenantId], references: [id], onDelete: Cascade)
   recording Recording @relation(fields: [recordingId], references: [id], onDelete: Cascade)
 
   @@index([tenantId])

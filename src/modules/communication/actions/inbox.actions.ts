@@ -5,6 +5,7 @@ import { MailService } from '../mail.service';
 import { DistributedRateLimiter } from '@/lib/rate-limit/rate-limiter';
 import { z } from 'zod';
 import { withServerActionContext } from '@/lib/observability/server-action';
+import { sanitizeEmailHtml } from '@/lib/security/sanitization';
 
 const SendInternalMailSchema = z.object({
   subject: z.string().min(1).max(255),
@@ -28,7 +29,7 @@ export async function _sendInternalMailAction(data: z.infer<typeof SendInternalM
     user.tenantId,
     user.id,
     parsed.subject,
-    parsed.bodyHtml,
+    sanitizeEmailHtml(parsed.bodyHtml),   // XSS boundary: strip active content before storage
     parsed.toIds,
     parsed.ccIds || [],
     parsed.bccIds || []

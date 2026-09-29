@@ -2,22 +2,14 @@ import { describe, it, expect, beforeAll, afterAll, vi } from 'vitest';
 import crypto from 'crypto';
 import { executeAsSystem, SystemOperation } from '@db/utils/prisma-system';
 import { generateRecordingDownloadUrl } from '@/modules/cctv/recording.service';
-import { auth } from '@clerk/nextjs/server';
 import { requireAuth } from '@/lib/auth';
 import { resolveSession } from '@/lib/auth/session';
-
-vi.mock('@clerk/nextjs/server', () => ({
-  auth: vi.fn(),
-  clerkClient: {}
-}));
-
+// Mock Native Auth
 vi.mock('@/lib/auth/session', () => ({
   resolveSession: vi.fn()
 }));
 
 function setTestAuthContext(userId: string, tenantId: string) {
-  // Mock Clerk for any lingering dependencies
-  vi.mocked(auth).mockReturnValue({ userId: `clerk_${userId}`, orgId: tenantId } as any);
 
   // Mock Native Auth
   vi.mocked(resolveSession).mockImplementation(async () => {
@@ -37,7 +29,6 @@ function setTestAuthContext(userId: string, tenantId: string) {
 }
 
 function clearTestAuthContext() {
-  vi.mocked(auth).mockReturnValue({ userId: null, orgId: null } as any);
   vi.mocked(resolveSession).mockResolvedValue(null);
 }
 describe('R07: Recording Download IDOR', () => {

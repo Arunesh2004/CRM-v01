@@ -29,6 +29,7 @@ export type Events = {
 // Create a client to send and receive events
 export const inngest = new Inngest({ 
   id: 'ai-security-crm',
+  env: process.env.INNGEST_ENV,
   eventKey: process.env.INNGEST_EVENT_KEY || 'local',
   schemas: {
     events: {} as Events,

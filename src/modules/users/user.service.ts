@@ -2,8 +2,6 @@ import { Prisma } from '@prisma/client';
 import prisma from '@db/utils/prisma';
 import { withTenant, withTenantTransaction } from '@db/utils/prisma-tenant';
 import { requireAuth, requireTenant, requirePermission, invalidateUserCache } from '@/lib/auth';
-import { clerkClient } from '@clerk/nextjs/server';
-
 import globalPrisma from '@db/utils/prisma';
 import { validateDepartmentScope } from '../security/abac/department-scope';
 import { emailProvider } from '../core/providers/email.provider';
@@ -251,16 +249,8 @@ export async function disableEmployee(userId: string) {
     data: { status: 'INACTIVE' }
   });
 
-  // Remove from Clerk identity (forces logout/blocks login)
-  if (userToRemove.clerkId) {
-    const client = await clerkClient();
-    try {
-      await client.users.deleteUser(userToRemove.clerkId);
-      await invalidateUserCache(userToRemove.clerkId);
-    } catch (e) {
-      Logger.warn("Failed to delete Clerk user or already deleted:", e);
-    }
-  }
+  // Remove native session cache if needed
+  await invalidateUserCache(userToRemove.id);
 
   // Log Audit using the new service format
   const { createAuditLog } = await import('../audit/audit.service');
@@ -338,9 +328,7 @@ export async function updateEmployeeRole(userId: string, newRoleName: string) {
     metadata: { newRole: newRoleName }
   });
 
-  if (userToUpdate.clerkId) {
-    await invalidateUserCache(userToUpdate.clerkId);
-  }
+  await invalidateUserCache(userToUpdate.id);
 
   return { success: true };
 }
@@ -406,9 +394,7 @@ export async function reassignDepartment(userId: string, newDepartmentId: string
     metadata: { newDepartmentId }
   });
 
-  if (userToUpdate.clerkId) {
-    await invalidateUserCache(userToUpdate.clerkId);
-  }
+  await invalidateUserCache(userToUpdate.id);
 
   return { success: true };
 }

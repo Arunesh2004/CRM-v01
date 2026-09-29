@@ -7,7 +7,8 @@ import { createPriceBookEntryAction, updatePriceBookEntryAction } from '@/module
 import { toast } from 'sonner';
 import type { PriceBook, PriceBookEntry, Product } from '@prisma/client';
 
-type PriceBookEntryWithProduct = PriceBookEntry & { product: Product };
+type OmitUnitPrice<T> = Omit<T, 'unitPrice'>;
+type PriceBookEntryWithProduct = OmitUnitPrice<PriceBookEntry> & { unitPrice: string, product: Product };
 
 export function PriceBookDetailClient({ 
   priceBook, 

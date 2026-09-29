@@ -5,21 +5,12 @@ import { createCamera, updateCamera, deleteCamera, setCameraCredentials, getCame
 import { getCameraRecordings } from '@/modules/cctv/recording.service';
 import { generateStreamToken } from '@/modules/cctv/stream.service';
 import { resolveSession } from '@/lib/auth/session';
-import { auth } from '@clerk/nextjs/server';
-
-vi.mock('@clerk/nextjs/server', () => ({
-  auth: vi.fn(),
-  clerkClient: {}
-}));
 
 vi.mock('@/lib/auth/session', () => ({
   resolveSession: vi.fn()
 }));
 
 function setTestAuthContext(userId: string, tenantId: string) {
-  // Mock Clerk for any lingering dependencies
-  vi.mocked(auth).mockReturnValue({ userId: `clerk_${userId}`, orgId: tenantId } as any);
-
   // Mock Native Auth
   vi.mocked(resolveSession).mockImplementation(async () => {
     return executeAsSystem(SystemOperation.AUTH_BOOTSTRAP, async (tx) => {
@@ -38,7 +29,6 @@ function setTestAuthContext(userId: string, tenantId: string) {
 }
 
 function clearTestAuthContext() {
-  vi.mocked(auth).mockReturnValue({ userId: null, orgId: null } as any);
   vi.mocked(resolveSession).mockResolvedValue(null);
 }
 

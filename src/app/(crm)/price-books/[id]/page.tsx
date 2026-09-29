@@ -57,7 +57,7 @@ export default async function PriceBookDetailPage({ params }: { params: Promise<
 
       <PriceBookDetailClient 
         priceBook={priceBook} 
-        entries={entries} 
+        entries={entries.map(e => ({ ...e, unitPrice: e.unitPrice.toString() }))} 
         products={products}
         canManage={canManage} 
       />

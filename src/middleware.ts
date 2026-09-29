@@ -23,7 +23,6 @@ const publicRoutePatterns = [
   /^\/api\/webhooks\/(.*)$/,
   /^\/api\/inngest$/,
   /^\/api\/auth\/(.*)$/, // Native Auth Endpoints
-  /^\/__clerk(.*)$/,  // Clerk Frontend API proxy (retained for Phase 3/5 dependencies)
 ];
 
 function isPublicRoute(request: NextRequest) {
@@ -50,16 +49,16 @@ function isLoadTestRequest(req: Request): boolean {
 function applySecurityHeaders(response: NextResponse, request: NextRequest): NextResponse {
   const isProduction = process.env.NODE_ENV === 'production' || process.env.VERCEL_ENV === 'production';
   const scriptSrc = isProduction
-    ? "script-src 'self' 'unsafe-inline' https://clerk.com https://*.clerk.com https://*.clerk.accounts.dev"
-    : "script-src 'self' 'unsafe-eval' 'unsafe-inline' https://clerk.com https://*.clerk.com https://*.clerk.accounts.dev";
+    ? "script-src 'self' 'unsafe-inline'"
+    : "script-src 'self' 'unsafe-eval' 'unsafe-inline'";
 
   const csp = [
     "default-src 'self'",
     scriptSrc,
-    "connect-src 'self' https://*.clerk.com https://*.clerk.accounts.dev wss://*.clerk.com",
+    "connect-src 'self'",
     "frame-src 'self'",
     "worker-src 'self' blob:",
-    "img-src 'self' data: https://img.clerk.com",
+    "img-src 'self' data:",
     "style-src 'self' 'unsafe-inline'",
   ].join('; ');
 
@@ -88,7 +87,6 @@ const handleRateLimiting = async (request: NextRequest, ip: string) => {
   if (
     pathname.startsWith('/sign-in') ||
     pathname.startsWith('/sign-up') ||
-    pathname.startsWith('/__clerk') ||
     pathname.startsWith('/api/auth') // Native Auth handles its own Application Rate Limiting
   ) {
     return null;

@@ -1,4 +1,4 @@
-import { ClerkProvider } from '@clerk/nextjs'
+
 import { SessionProvider } from '@/lib/auth/SessionProvider'
 
 import { Suspense } from 'react'
@@ -32,8 +32,6 @@ export const metadata: Metadata = {
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   const missingVars: string[] = [];
-  if (!process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY) missingVars.push('NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY');
-  if (!process.env.CLERK_SECRET_KEY) missingVars.push('CLERK_SECRET_KEY');
   if (!process.env.DATABASE_URL) missingVars.push('DATABASE_URL');
 
   if (missingVars.length > 0) {
@@ -51,11 +49,9 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
       className={`${spaceGrotesk.variable} ${inter.variable} ${ibmPlexMono.variable} h-full antialiased dark`}
     >
       <body className="min-h-full flex flex-col bg-[#070B18] text-[#E7EAF5]">
-        <ClerkProvider>
-          <SessionProvider>
-            {children}
-          </SessionProvider>
-        </ClerkProvider>
+        <SessionProvider>
+          {children}
+        </SessionProvider>
       </body>
     </html>
   );

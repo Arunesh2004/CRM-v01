@@ -76,7 +76,15 @@ export default async function MailDetailPage({ params }: { params: Promise<{ id:
             </div>
             <div className="text-sm text-white whitespace-pre-wrap">
               {message.bodyHtml ? (
-                <div dangerouslySetInnerHTML={{ __html: message.bodyHtml }} />
+                <>
+                  {/*
+                    SECURITY: bodyHtml is sanitized by sanitizeEmailHtml() in inbox.actions.ts
+                    (the storage-layer trust boundary) before it is ever written to the database.
+                    This dangerouslySetInnerHTML therefore only renders DOMPurify-scrubbed HTML.
+                    Do NOT remove the sanitization call in inbox.actions.ts without a security review.
+                  */}
+                  <div dangerouslySetInnerHTML={{ __html: message.bodyHtml }} />
+                </>
               ) : (
                 message.bodyText
               )}
