@@ -1,0 +1,43 @@
+name: Staging E2E Gemini Validation
+
+on:
+  workflow_dispatch:
+    inputs:
+      confirm_target:
+        description: 'Confirm target is exactly crm-v01-staging'
+        required: true
+        default: ''
+
+permissions:
+  contents: read
+
+jobs:
+  e2e:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Verify Target Confirmation
+        run: |
+          if [ "${{ github.event.inputs.confirm_target }}" != "crm-v01-staging" ]; then
+            echo "Error: Target confirmation must be exactly 'crm-v01-staging'"
+            exit 1
+          fi
+
+      - name: Checkout Repository
+        uses: actions/checkout@v3
+      
+      - name: Setup Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: '20'
+          cache: 'npm'
+          
+      - name: Install Dependencies
+        run: npm ci
+
+      - name: Safe Network Connectivity Check
+        run: nc -zv aws-0-ap-northeast-2.pooler.supabase.com 5432
+          
+      - name: Execute Gemini E2E Harness
+        env:
+          CRM_STAGING_SYSTEM_PASSWORD: ${{ secrets.CRM_STAGING_SYSTEM_PASSWORD }}
+        run: npx tsx scripts/run-gemini-e2e.ts
