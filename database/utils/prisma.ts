@@ -10,8 +10,13 @@ const connectionUrl = process.env.DATABASE_URL;
 
 const getBasePrismaClient = () => {
   let url = process.env.DATABASE_URL;
-  if (url && !url.includes('pgbouncer=true')) {
-    url += (url.includes('?') ? '&' : '?') + 'pgbouncer=true';
+  if (url) {
+    if (!url.includes('pgbouncer=true')) {
+      url += (url.includes('?') ? '&' : '?') + 'pgbouncer=true';
+    }
+    if (!url.includes('connection_limit=')) {
+      url += '&connection_limit=1';
+    }
   }
   
   return new PrismaClient({
