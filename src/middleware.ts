@@ -121,8 +121,21 @@ const handleRateLimiting = async (request: NextRequest, ip: string) => {
       if (!success) {
         return new NextResponse('Too Many Requests', { status: 429 });
       }
-    } catch (error) {
+    } catch (error: unknown) {
       if (isHighRisk) {
+        const errObj = error instanceof Error ? error : (typeof error === 'object' && error !== null ? error as Record<string, unknown> : {});
+        const errName = (errObj instanceof Error) ? errObj.name : (typeof errObj.name === 'string' ? errObj.name : 'Unknown');
+        const errClass = error?.constructor?.name || 'UnknownClass';
+        const rawMsg = (errObj instanceof Error) ? errObj.message : (typeof errObj.message === 'string' ? errObj.message : String(error));
+        
+        const safeMsg = rawMsg
+          .replace(/(Bearer\s+)[A-Za-z0-9-_=]+/ig, '$1[REDACTED]')
+          .replace(/(https?:\/\/)[^\s"']+/ig, '$1[REDACTED]')
+          .replace(/(redis:\/\/)[^\s"']+/ig, '$1[REDACTED]')
+          .replace(/[A-Za-z0-9-_]{24,}/g, '[REDACTED_TOKEN]');
+
+        console.error(`[RateLimiterDiagnostic] Class: ${errClass} | Name: ${errName} | Msg: ${safeMsg}`);
+
         return new NextResponse('Service Unavailable', { status: 503 });
       }
     }
