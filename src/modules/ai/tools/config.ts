@@ -7,6 +7,11 @@ export interface CanonicalAITool {
   requiredAction: Action;
   requiresApproval: boolean;
   riskLevel: 'LOW' | 'MODERATE' | 'HIGH' | 'CRITICAL';
+  parameters?: {
+    type: string;
+    properties: Record<string, any>;
+    required?: string[];
+  };
 }
 
 export const CANONICAL_AI_TOOLS: CanonicalAITool[] = [
@@ -17,7 +22,20 @@ export const CANONICAL_AI_TOOLS: CanonicalAITool[] = [
     requiredResource: 'TASK',
     requiredAction: 'CREATE',
     requiresApproval: false,
-    riskLevel: 'MODERATE'
+    riskLevel: 'MODERATE',
+    parameters: {
+      type: 'OBJECT',
+      properties: {
+        title: { type: 'string', description: 'Title of the task' },
+        description: { type: 'string', description: 'Optional description of the task' },
+        dueDate: { type: 'string', description: 'Optional due date for the task' },
+        priority: { type: 'string', enum: ['LOW', 'MEDIUM', 'HIGH', 'URGENT'], description: 'Optional priority' },
+        assignedUserId: { type: 'string', description: 'Optional assigned user ID' },
+        leadId: { type: 'string', description: 'Optional lead ID' },
+        customerId: { type: 'string', description: 'Optional customer ID' }
+      },
+      required: ['title']
+    }
   },
   {
     name: 'CREATE_TICKET',
@@ -25,7 +43,17 @@ export const CANONICAL_AI_TOOLS: CanonicalAITool[] = [
     requiredResource: 'TICKET',
     requiredAction: 'CREATE',
     requiresApproval: false,
-    riskLevel: 'MODERATE'
+    riskLevel: 'MODERATE',
+    parameters: {
+      type: 'OBJECT',
+      properties: {
+        customerId: { type: 'string', description: 'ID of the customer' },
+        subject: { type: 'string', description: 'Subject of the ticket' },
+        description: { type: 'string', description: 'Description of the issue' },
+        priority: { type: 'string', description: 'Priority of the ticket' }
+      },
+      required: ['customerId', 'subject', 'description', 'priority']
+    }
   },
   {
     name: 'CREATE_INCIDENT',
@@ -33,7 +61,19 @@ export const CANONICAL_AI_TOOLS: CanonicalAITool[] = [
     requiredResource: 'INCIDENT',
     requiredAction: 'CREATE',
     requiresApproval: false,
-    riskLevel: 'HIGH'
+    riskLevel: 'HIGH',
+    parameters: {
+      type: 'OBJECT',
+      properties: {
+        locationId: { type: 'string', description: 'ID of the location' },
+        cameraId: { type: 'string', description: 'ID of the camera' },
+        aiEventId: { type: 'string', description: 'ID of the AI Event' },
+        title: { type: 'string', description: 'Title of the incident' },
+        description: { type: 'string', description: 'Optional description of the incident' },
+        severity: { type: 'string', enum: ['INFO', 'LOW', 'MEDIUM', 'HIGH', 'CRITICAL'], description: 'Severity of the incident' }
+      },
+      required: ['locationId', 'cameraId', 'aiEventId', 'title', 'severity']
+    }
   },
   
   // --- CRM TOOLS ---
